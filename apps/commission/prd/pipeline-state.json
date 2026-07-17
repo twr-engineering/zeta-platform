@@ -93,8 +93,8 @@
   "build": {
     "devUrl": null,
     "packageManager": "pnpm",
-    "context7Available": false,
-    "supabaseProject": null,
+    "context7Available": true,
+    "supabaseProject": "sgerctvrcvlmortmhenh",
     "firebaseProject": null,
     "completedFeatures": [],
     "foundationHandoff": null

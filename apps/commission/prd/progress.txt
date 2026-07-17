@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-17T18:35:00+08:00
+# Last Updated: 2026-07-17T19:45:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -8,7 +8,7 @@
 # Build order (Master PRD §5): M0 → M1 → M4+M5 (interleaved) → M6 → M2 → M3 → M7 → M8 → M9 → M10.
 # MVP cut (Master PRD §8): M0 + M1 + M4 + M5 + M6-core (sections 1,3,4,8 + data health; 2/6 with manual target) + M9-minimal.
 
-- [ ] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
+- [x] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
 - [ ] M0.1: Auth & personal workspace
 - [ ] M0.2: Tax settings & audit trail
 - [ ] M0.3: Configuration lists
@@ -55,17 +55,64 @@
 - [ ] M10.4: Contextual help placements & empty states across modules
 - [ ] M10.5: Mobile, end-to-end scripts & hardening
 - [ ] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
-- [ ] `pnpm run build` clean
+- [x] `pnpm run build` clean
 
 ## Current Status
-Scaffolded — awaiting Foundation
+Foundation built — awaiting Supabase credentials + live verification
 
 ## Completed Tasks
-(none yet)
+- Foundation (2026-07-17): Next.js 15.5.20 App Router + TypeScript + Tailwind v4 + Shadcn UI
+  (base-nova style, @base-ui/react primitives) scaffolded into the repo root; pnpm.
+  - Supabase SSR auth per current @supabase/ssr docs: src/lib/supabase/{client,server,middleware,env}.ts,
+    src/middleware.ts, login/register/reset-password/update-password + /auth/confirm route handler.
+    All client creation is lazy — `pnpm run build` passes on PLACEHOLDER env values.
+  - Fails closed while unconfigured: protected routes divert to /setup-required rather than
+    rendering unauthenticated.
+  - Foundation migrations (supabase/migrations/, M0 §3): profiles, workspace (deal_id_sequence,
+    PHP-locked, Asia/Manila), membership (single-owner v1 invariant, role enum reserved for v2),
+    tax_settings (exact numeric + range checks), audit_log_entry (append-only via trigger).
+    RLS on all five tables via app.is_workspace_member(). Signup trigger bootstraps profile +
+    workspace + owner membership + default tax settings atomically.
+  - App shell: header + responsive sidebar (drawer < lg) over all 10 nav surfaces from
+    design/screens.md; protected (app) route group; module stubs carry honest empty states
+    (no mock data, no fabricated ₱ figures); /settings renders the REAL tax_settings row.
+  - Shared plumbing in src/lib/: money/ (decimal.js, ₱ #,##0.00, 2dp/4dp percents, ₱0.50
+    tolerance, half-up centavo rounding), date/manila.ts (Asia/Manila civil dates,
+    monthsBetween for the chase flag).
+  - Affordance primitives (Master PRD §4.4): InputField (blue) + LockedValue (lock icon +
+    formula tooltip), with theme tokens in globals.css.
+
+## Verification performed (2026-07-17, without hosted Supabase)
+- `pnpm run build` clean; `pnpm run lint` clean. All 10 authenticated routes resolve as
+  ƒ (Dynamic) — none prerendered, which is what makes the placeholder-env build safe.
+- Money/date helpers exercised against PRD-stated figures — 40/40 pass, incl. D021's Net List
+  leg ₱7,142,857.14, the ₱50,000 Inclusive split (44,642.86 / 5,357.14 / 4,464.29 / 45,535.71),
+  EWT@5% = 2,232.14, half-up rounding, and the Manila day-roll.
+  NOTE: plumbing checks only — the M1 engine owns the real fixture suite.
+- Migrations applied and exercised on a THROWAWAY LOCAL Postgres 17 (no Docker, no
+  `supabase start`) with a stubbed auth schema. Verified: AC1 defaults (12%/10%/₱3.6M/3),
+  bootstrap atomicity (forced failure rolls back user+profile+workspace), all range checks,
+  v1 single-membership/single-workspace invariants, append-only audit (incl. superuser),
+  forged-actor rejection, and AC9 tenant isolation (cross-workspace read = 0 rows,
+  update = 0 rows, anonymous = 0).
+  This is NOT a substitute for verification against the real hosted project.
+
+## Bugs found and fixed during that verification
+- app.is_workspace_member() referenced public.membership before it existed; SQL-language
+  function bodies are validated at CREATE time, so the first `db push` would have failed.
+  Predicates moved into the workspace/membership migration, after the tables.
+- audit_log_entry.actor_user_id had ON DELETE SET NULL, which is an UPDATE — the append-only
+  trigger rejected it, deadlocking account deletion. It also erased *who acted*. Now a bare
+  uuid with no FK, pinned to auth.uid() by RLS.
+- Deleting a user stranded the workspace, tax_settings and audit rows (nothing links
+  workspace → auth.users), leaving unreachable financial data and breaking M0.4's
+  data-ownership guarantee. Added app.reap_orphaned_workspace() on last-member-out.
 
 ## Blockers
-- CONTEXT7_API_KEY not set — integrations will be written without current docs lookup unless provided
-- Supabase project credentials not yet in .env.local
+- Supabase hosted-project credentials pending from user (URL, anon key, service role key;
+  no Docker/local stack per user instruction). Until they land: migrations are UNAPPLIED
+  against a real project, no live signup/login has run, and src/types/database.ts is
+  hand-written and must be regenerated via `npx supabase gen types typescript --linked`.
 
 ## Notes
 - PRD: discovery/prd.md (Master PRD, verbatim). Module specs: discovery/source/M{0..10}_PRD.md + _Milestones.md
