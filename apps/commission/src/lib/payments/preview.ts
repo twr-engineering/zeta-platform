@@ -83,6 +83,8 @@ export async function previewPayment(
       bookedDate: deal.deal.booked_date,
       today: manilaToday(),
       receivableStatus: receivable?.status ?? null,
+      receivableId: receivable?.id ?? null,
+      receivableVersion: receivable?.version ?? null,
       duplicates,
     });
   } catch {

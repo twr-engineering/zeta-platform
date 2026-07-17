@@ -220,12 +220,12 @@ test("a pre-booking date warns amber but still saves (AC11)", async ({ page }) =
   await expect(page.getByTestId("payment-undone")).toBeVisible();
 });
 
-test("logging against a Closed receivable warns with a (deferred) reopen prompt (AC9)", async ({
+test("logging against a Closed receivable warns and the reopen prompt is live (rule 7)", async ({
   page,
 }) => {
+  // Updated: M4.3 makes the reopen action live (was a disabled/deferred prompt), 2026-07-18.
   test.skip(!HAVE_WORKBOOK, "real workbook not present");
-  // Close D005's receivable directly — M4.3's status lifecycle isn't built yet, so
-  // the reopen action is deferred; this proves the WARN + prompt contract (rule 7).
+  // Close D005's receivable directly, then prove the fast-entry banner reopens it.
   const { error } = await admin
     .from("receivable")
     .update({ status: "closed" })
@@ -240,12 +240,27 @@ test("logging against a Closed receivable warns with a (deferred) reopen prompt 
   await page.getByTestId("payment-deal-option-D005").click();
   await page.getByTestId("field-grossAmount").fill("10000");
 
-  // The amber banner names the status and offers reopen (disabled — arrives M4.3).
+  // The amber banner names the status and offers reopen (now ENABLED — M4.3).
   await expect(page.getByTestId("payment-warning-receivable_closed")).toBeVisible();
   const reopen = page.getByTestId("payment-reopen-receivable");
   await expect(reopen).toBeVisible();
-  await expect(reopen).toBeDisabled();
+  await expect(reopen).toBeEnabled();
   await expect(page.getByTestId("payment-submit")).toHaveText(/Log anyway/);
+
+  // Reopen → the receivable goes Open, the preview re-runs and the Closed warning
+  // clears (the submit returns to "Log release").
+  await reopen.click();
+  await expect(page.getByTestId("payment-warning-receivable_closed")).toBeHidden();
+  await expect(page.getByTestId("payment-submit")).toHaveText(/Log release/);
+
+  // The receivable is Open again server-side.
+  const { data } = await admin
+    .from("receivable")
+    .select("status")
+    .eq("workspace_id", workspaceId)
+    .eq("deal_code", "D005")
+    .single();
+  expect((data as { status: string } | null)?.status).toBe("open");
 });
 
 test("the form is usable one-handed at 360px (mobile)", async ({ page }) => {

@@ -79,6 +79,9 @@ export function PaymentForm({ deals, today, initialDealId = "" }: PaymentFormPro
   const [warnings, setWarnings] = useState<PaymentWarning[]>([]);
   const [previewing, setPreviewing] = useState(false);
   const [hint, setHint] = useState<string | undefined>();
+  // Bumped after an inline receivable reopen so the preview re-runs and the
+  // Closed/Cancelled warning clears (the status is now Open).
+  const [reopenNonce, setReopenNonce] = useState(0);
 
   const [toast, setToast] = useState<SavedPayment | null>(null);
 
@@ -131,7 +134,7 @@ export function PaymentForm({ deals, today, initialDealId = "" }: PaymentFormPro
     }, 200);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rawKey]);
+  }, [rawKey, reopenNonce]);
 
   // A successful save: surface the toast, reset for the next entry, refresh so the
   // picker's balance hints reflect the new collected total. Handled once per save
@@ -261,7 +264,20 @@ export function PaymentForm({ deals, today, initialDealId = "" }: PaymentFormPro
           />
         </div>
 
-        <PaymentWarnings warnings={warnings} />
+        <PaymentWarnings
+          warnings={warnings}
+          onReopened={() => {
+            // Drop the resolved status warning immediately, then re-preview to
+            // reconcile against the now-Open receivable.
+            setWarnings((w) =>
+              w.filter(
+                (x) => x.key !== "receivable_closed" && x.key !== "receivable_cancelled"
+              )
+            );
+            setReopenNonce((n) => n + 1);
+            router.refresh();
+          }}
+        />
         <FormStatus state={state} />
 
         {/* Thumb-reach save: sticky to the bottom of the viewport on phones, inline

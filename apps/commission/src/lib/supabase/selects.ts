@@ -211,6 +211,7 @@ export const RECEIVABLE_SELECT = [
   "age_months",
   "days_to_first_release",
   "chase_priority::text",
+  "override_review_flagged_at",
   "archived_at",
   "version",
   "created_by",

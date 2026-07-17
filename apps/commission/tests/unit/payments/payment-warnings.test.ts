@@ -91,3 +91,44 @@ test("warnings compose — future + pre-booking are independent (booked after a 
   assert.ok(keys(w).includes("future_date"));
   assert.ok(keys(w).includes("pre_booking_date"));
 });
+
+// --- M4.3: the Closed/Cancelled warning carries the reopen target --------------
+
+test("M4.3 — Closed warning carries receivableId + version when provided", () => {
+  const w = computePaymentWarnings({
+    input: pay(),
+    bookedDate: "2026-01-01",
+    today: "2026-07-20",
+    receivableStatus: "closed",
+    receivableId: "22222222-2222-2222-2222-222222222222",
+    receivableVersion: 4,
+  });
+  const closed = w.find((x) => x.key === "receivable_closed")!;
+  assert.equal(closed.receivableId, "22222222-2222-2222-2222-222222222222");
+  assert.equal(closed.receivableVersion, 4);
+});
+
+test("M4.3 — reopen target absent when id/version unknown (no inline reopen offered)", () => {
+  const w = computePaymentWarnings({
+    input: pay(),
+    bookedDate: "2026-01-01",
+    today: "2026-07-20",
+    receivableStatus: "cancelled",
+  });
+  const cancelled = w.find((x) => x.key === "receivable_cancelled")!;
+  assert.equal(cancelled.receivableId, undefined);
+  assert.equal(cancelled.receivableVersion, undefined);
+});
+
+test("M4.3 — a version of 0 still attaches (nullish check, not falsy)", () => {
+  const w = computePaymentWarnings({
+    input: pay(),
+    bookedDate: "2026-01-01",
+    today: "2026-07-20",
+    receivableStatus: "closed",
+    receivableId: "33333333-3333-3333-3333-333333333333",
+    receivableVersion: 0,
+  });
+  const closed = w.find((x) => x.key === "receivable_closed")!;
+  assert.equal(closed.receivableVersion, 0);
+});

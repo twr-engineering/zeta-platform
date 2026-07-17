@@ -725,6 +725,7 @@ export type Database = {
           lead_source_id: string
           months_idle: number | null
           next_action_note: string | null
+          override_review_flagged_at: string | null
           pct_collected: number | null
           property_details: string
           status: Database["public"]["Enums"]["receivable_status"]
@@ -761,6 +762,7 @@ export type Database = {
           lead_source_id: string
           months_idle?: number | null
           next_action_note?: string | null
+          override_review_flagged_at?: string | null
           pct_collected?: number | null
           property_details: string
           status?: Database["public"]["Enums"]["receivable_status"]
@@ -797,6 +799,7 @@ export type Database = {
           lead_source_id?: string
           months_idle?: number | null
           next_action_note?: string | null
+          override_review_flagged_at?: string | null
           pct_collected?: number | null
           property_details?: string
           status?: Database["public"]["Enums"]["receivable_status"]
@@ -1109,6 +1112,22 @@ export type Database = {
         Args: { p_job_id: string; p_results: Json }
         Returns: Json
       }
+      cancel_receivable: {
+        Args: {
+          p_expected_version: number
+          p_reason: string
+          p_receivable_id: string
+        }
+        Returns: Json
+      }
+      clear_override_review_flag: {
+        Args: { p_receivable_id: string }
+        Returns: Json
+      }
+      close_receivable: {
+        Args: { p_expected_version: number; p_receivable_id: string }
+        Returns: Json
+      }
       complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
       consume_deal_events: { Args: { p_limit?: number }; Returns: Json }
       consume_payment_events: { Args: { p_limit?: number }; Returns: Json }
@@ -1249,6 +1268,10 @@ export type Database = {
           }
       rename_profile: { Args: { p_display_name: string }; Returns: Json }
       rename_workspace: { Args: { p_name: string }; Returns: Json }
+      reopen_receivable: {
+        Args: { p_expected_version: number; p_receivable_id: string }
+        Returns: Json
+      }
       reorder_lead_source: {
         Args: { p_id: string; p_position: number }
         Returns: Json

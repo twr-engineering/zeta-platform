@@ -22,9 +22,10 @@ const STATUS_LABEL: Record<ReceivableStatus, string> = {
 /**
  * The receivables ledger (M4). One receivable per deal, created automatically from
  * the deal event log — there is no create button, by design (§6). M4.1 renders the
- * real (RLS-scoped, money-exact) list and its empty state; the full ledger — filters,
- * chase-priority sort, % progress bars, the Adjust/Close/Cancel flows — is M4.4, and
- * the payment-derived money columns fill in with M4.2.
+ * real (RLS-scoped, money-exact) list and its empty state; M4.2 filled the money
+ * columns; M4.3 surfaces the restated-override "review" flag inline. The full ledger
+ * — filters, % progress bars, and the Adjust/Close/Cancel/Reopen dialogs (with their
+ * variance/write-off previews and the restated-override banner) — is M4.4.
  */
 export default async function CollectiblesPage() {
   const receivables = await listReceivables({ includeArchived: false });
@@ -99,6 +100,15 @@ export default async function CollectiblesPage() {
                         )}`}
                       >
                         ●
+                      </span>
+                    )}
+                    {r.override_review_flagged_at !== null && (
+                      <span
+                        className="ml-1 rounded bg-amber-100 px-1 text-[10px] font-medium uppercase text-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
+                        title="The deal was edited after this confirmed collectible was set — review it (full banner + controls arrive with M4.4)."
+                        data-testid="override-review-flag"
+                      >
+                        review
                       </span>
                     )}
                   </td>

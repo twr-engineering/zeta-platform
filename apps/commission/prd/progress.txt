@@ -22,7 +22,7 @@
 - [x] M5.1: Payment schema, split snapshot & events
 - [x] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
 - [x] M5.2: Fast-entry form & split preview
-- [ ] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
+- [x] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
 - [ ] M5.3: Payments list, per-deal panel & exports
 - [ ] M4.4: Ledger UI, detail view, downstream projections & hardening
 - [ ] M5.4: Hardening, access control & performance
@@ -58,6 +58,128 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M4.3 COMPLETE — Status lifecycle, Confirmed Collectible override, variance &
+write-off. The full business layer on M4.1's entity + M4.2's collections math:
+Open→Closed / Open→Cancelled / reopen both ways, each FRICTION-GATED (explicit
+confirmation token at the action layer, rejected without it — AC7) + version-locked
++ audited old→new; variance frozen-for-display on Close (Rule N = collected −
+total_collectible) and written_off on Cancel (Rule O = total_collectible −
+collected, cash kept); a REQUIRED free-text cancel reason (Q20 default) on the
+audit; the restated-override review flag (§4 rule 7); and the M6 §7 data-health
+feeds. M5.2's disabled reopen button is now LIVE.
+
+ONE additive migration, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718080000_m43_status_lifecycle.sql
+    · receivable.override_review_flagged_at (timestamptz, null = no review) — the
+      §4 rule 7 restated-override flag; carries the edit date for M4.4's banner.
+    · app.recompute_receivable_payment_fields EXTENDED (same signature) with the
+      status-driven residual: variance = collected − total_collectible when Closed
+      (Rule N), written_off = total_collectible − collected when Cancelled (Rule O),
+      both null when Open. Pure differences of STORED values (never tax math). This
+      is the SINGLE home of Rule N/O — so a late payment to a Closed row moves
+      variance (AC5 / edge case 8), a deal edit restates it (§4 rule 7), and reopen
+      clears both. Both consumers + all three transitions pick it up. Still absolute
+      (idempotent); months_idle/age_months stay read-time.
+    · public.close_receivable(id, expected_version) — Open→Closed: freezes variance,
+      nulls idle counters, audits status+variance. NOT blocked on a non-zero balance
+      (closing short is the Corrections doctrine's Variance path, §3.3 case 3).
+      stale_version / not_open guards.
+    · public.cancel_receivable(id, expected_version, reason) — Open→Cancelled:
+      written_off per Rule O; reason REQUIRED (Q20) → reason_required, captured on
+      the audit (no reason-code taxonomy, §10). stale_version / not_open.
+    · public.reopen_receivable(id, expected_version) — Closed/Cancelled→Open
+      (unlimited, OQ4; audited): clears variance/written_off, resumes balance/aging.
+      not_reopenable when already Open.
+    · public.clear_override_review_flag(id) — the explicit audited "reviewed" action.
+    · public.set_confirmed_collectible EXTENDED (same signature): reviewing the
+      override (set/change/clear) clears the flag, and it now restates the
+      payment-derived money so a changed override moves balance in the same call.
+    · public.consume_deal_events EXTENDED (same signature): after restating, raises
+      override_review_flagged_at = the edit's occurred_at when the receivable carried
+      a confirmed_collectible AND the deal's booked/default MOVED (captured from the
+      pre-image, so it never trips on the initial create). Still idempotent+resumable.
+
+  All money-restating transitions are FRICTION-GATED at the ACTION layer (the deal
+  edit gate's pattern): the DB functions are the single writer + audit; the explicit
+  confirmation token (checkConfirmation, M0 §3.2) is enforced in
+  src/lib/receivables/actions.ts before the RPC — a request without it never reaches
+  the DB (AC7). Tenant isolation is RLS (a cross-workspace id finds no row → the
+  function raises "not found", no change, no audit — AC9). Optimistic-locked on
+  version, mirroring update_deal/update_payment. Variance/written_off are computed in
+  SQL ONLY as pure differences of stored values (no tax math), matching the money
+  discipline.
+
+APP LAYER (src/lib/receivables/):
+  - actions.ts: closeReceivable / cancelReceivable / reopenReceivable (guard →
+    gateTransition [id + version + checkConfirmation 'checked'] → RPC → specific
+    copy per reason) + reviewOverrideFlag (plain audited edit, no gate). Extends the
+    ReceivableResult reason union. revalidates /collectibles + audit log.
+  - health.ts (M6 §7 data-health feeds for M6.1): getFullyPaidNotClosed (b: open,
+    balance ≤ 0), getClosedVarianceOverTolerance (c: closed, |variance| > ₱0.50 — the
+    ₱0.50 tolerance lives ONLY here, ±0.50 boundary EXCLUDED via two range filters),
+    getReferralFeesOwed (d: deal.referral_out > 0 AND referral_paid = false — read
+    from M1's fields, the receivable carries no referral data), + getReceivableHealth
+    aggregate with counts. (a) is structurally impossible (default Open); (e)/(f)
+    dropped per M6 rule 17 — not built.
+  - queries.ts / selects.ts: RECEIVABLE_SELECT gains override_review_flagged_at
+    (flows onto the Receivable entity via the regenerated types).
+
+M5.2 REOPEN WIRED LIVE. warnings.ts: the Closed/Cancelled PaymentWarning now carries
+receivableId + receivableVersion (preview.ts passes them from getReceivableByDealId).
+payment-warnings.tsx: the reopen button is a friction-gated <form action={reopenReceivable}>
+(confirmation token in a hidden field — the click IS the deliberate act, like the
+save toast's undo); on success onReopened() bumps a reopenNonce in payment-form.tsx
+that re-runs the preview so the Closed warning clears and the payment lands on an
+Open receivable. "Log anyway" still works (M4 shows the over-collection in Variance).
+
+MINIMAL LEDGER HOOK (M4.4 owns the full ledger/detail): /collectibles shows a small
+amber "review" chip on an overridden row whose override_review_flagged_at is set. The
+Close/Cancel/Reopen dialogs (with variance/write-off previews) + the full
+restated-override banner + the Adjust… Corrections flow are M4.4 per the Milestones
+split — deferred with a note in the page.
+
+TYPES. database.generated.ts regenerated (Management API types endpoint) — additive:
+receivable.override_review_flagged_at + the four new functions (close/cancel/reopen/
+clear_override_review_flag, all Returns Json, non-money args → no database.ts money
+override needed).
+
+VERIFIED (live, real JWTs, 2 throwaway workspaces deleted after — 47/47,
+scripts/live-m43-check.mts): the 7 workbook Closed fixtures (D001/D004/D006/D017–D020)
+variance 0.00; D004 reopen → balance recomputes 0.00 → re-close → variance 0.00 exact;
+D021 close → variance −309,948.98 (collected 44,642.86 − collectible 354,591.84) →
+surfaces in health(c) → reopen → variance null, balance back 309,948.98; cancel D005
+(open unpaid) → written_off 675,000.00 (full collectible), reopen → cleared; cancel
+without reason → reason_required; override note-missing → note_required, set → total
+600,000 + balance recomputed, clear → default 630,813.93; restated flag via a REAL
+synthetic deal edit (create_deal → set override → update_deal moving default
+500k→600k) → flag SET, override survives (confirmed/total still 480,000), default
+restated 600,000 under the override → clear_override_review_flag clears → re-edit
+re-flags → re-confirm clears; data-health constructed cases each surface EXACTLY the
+built row (b: overpaid D002 balance −23,500; c: short-closed D007 variance −180,000;
+d: a synthetic referral-out-unpaid deal) and baseline empty; optimistic lock
+(stale_version, status untouched); not_reopenable on an Open row; AC9 tenant B sees 0
+receivables + cannot close A's receivable ("not found", A untouched, no audit written).
+test:unit 247/247 (+3 warning reopen-target enrichment); build:check + lint clean;
+Playwright single-worker on a clean reseed — 48 passed + the updated reopen spec
+(disabled→ENABLED→click→warning clears→D005 Open) green after fixing an invalid
+nested <form> in the reopen banner (dispatch the action via onClick+FormData instead,
+since the banner renders inside the payment form). Real account untouched; throwaway
+workspaces deleted (no m43 users/flags residue).
+
+HANDOFF NOTES for M4.4 / M6:
+  - M4.4 (ledger/detail): the transition RPCs + actions exist — build the Close/Cancel
+    dialogs (variance/write-off preview via the returned values), the Adjust… three-
+    case Corrections flow (Edit deal → M1 / Confirm collectible → set_confirmed_collectible
+    / Close short → close_receivable), and the restated-override banner (read
+    override_review_flagged_at; the "reviewed" button → reviewOverrideFlag). The status
+    timeline reads the receivable audit entries (status/variance/written_off/cancel_reason
+    field changes). Every gated form must submit the confirmation token + expectedVersion.
+  - M6 (data health / position): consume src/lib/receivables/health.ts for §7 checks
+    (b)/(c)/(d) + counts. Position totals: Σ variance over Closed + Σ written_off over
+    Cancelled are now real receivable columns (recompute keeps them consistent).
+    Closed/Cancelled rows are excluded from aging/chase by filtering status='open'.
+
 **M5.2 COMPLETE — Fast-entry form & split preview: the daily-heartbeat surface.
 "Log a release in under 30 seconds, one-handed." /payments/new pairs a type-ahead
 deal picker (pure client filter over a preloaded index — 0.97ms/5 keystrokes over

@@ -24,6 +24,13 @@ export type PaymentWarningKey =
 export type PaymentWarning = {
   key: PaymentWarningKey;
   message: string;
+  /**
+   * For the Closed/Cancelled warnings only: the receivable's id + optimistic-lock
+   * version, so M5.2's banner can drive the friction-gated "Reopen receivable"
+   * action (M4.3's reopen_receivable) inline (§4 rule 7). Absent on the others.
+   */
+  receivableId?: string;
+  receivableVersion?: number;
 };
 
 /** An existing payment that matches (same deal + gross + date) — rule 3. */
@@ -40,6 +47,9 @@ export type PaymentWarningContext = {
   today: string;
   /** The deal's receivable status, if known (rule 7). */
   receivableStatus?: ReceivableStatus | null;
+  /** The receivable's id + version, so the banner can offer an inline reopen. */
+  receivableId?: string | null;
+  receivableVersion?: number | null;
   /** Same deal + gross + date matches already logged (rule 3). */
   duplicates?: readonly DuplicatePaymentMatch[];
 };
@@ -81,16 +91,22 @@ export function computePaymentWarnings(
   }
 
   // Rule 7 — logging against a Closed/Cancelled receivable. Late releases happen;
-  // the warning names the status and (in M5.2) offers "Reopen receivable".
+  // the warning names the status and offers an inline "Reopen receivable" (M4.3).
+  const reopenTarget =
+    ctx.receivableId != null && ctx.receivableVersion != null
+      ? { receivableId: ctx.receivableId, receivableVersion: ctx.receivableVersion }
+      : {};
   if (ctx.receivableStatus === "closed") {
     warnings.push({
       key: "receivable_closed",
       message: "This deal's receivable is Closed. Logging will over-collect it — reopen the receivable to resume balance tracking, or continue anyway.",
+      ...reopenTarget,
     });
   } else if (ctx.receivableStatus === "cancelled") {
     warnings.push({
       key: "receivable_cancelled",
       message: "This deal's receivable is Cancelled. Reopen it to resume balance tracking, or continue anyway.",
+      ...reopenTarget,
     });
   }
 
