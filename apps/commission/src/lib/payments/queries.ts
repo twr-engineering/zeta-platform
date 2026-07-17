@@ -29,11 +29,13 @@ export type PaymentRow = Payment & {
     client_name: string;
     property_details: string;
     deal_type: Deal["deal_type"];
-    developer: { name: string } | null;
+    /** The deal's CURRENT VAT basis — the stale-basis anchor (FR-M5-12, §6.4). */
+    vat_basis: Deal["vat_basis"];
+    developer: { id: string; name: string } | null;
   } | null;
 };
 
-const PAYMENT_LIST_SELECT = `${PAYMENT_SELECT},deal:deal_id(deal_code,booked_year,client_name,property_details,deal_type,developer:developer_id(name))`;
+const PAYMENT_LIST_SELECT = `${PAYMENT_SELECT},deal:deal_id(deal_code,booked_year,client_name,property_details,deal_type,vat_basis,developer:developer_id(id,name))`;
 
 export type ListPaymentsOptions = {
   /** Include soft-deleted payments. Default false. */
@@ -108,6 +110,25 @@ export async function listActivePaymentDeals(): Promise<PaymentDealOption[]> {
     receivable_status: row.receivable?.status ?? null,
     balance: row.receivable?.balance ?? null,
   }));
+}
+
+/**
+ * The workspace's CURRENT tax rates — the stale-basis anchors (FR-M5-12). Read
+ * UNCACHED (a direct RLS-scoped select), deliberately: the ⚠ indicator is a
+ * correctness signal that must reflect the live settings, not the `unstable_cache`
+ * snapshot the rest of the app reads for the engine. A cached rate could show a
+ * wrong stale state for the life of the cache; this one always tells the truth.
+ * Defaults to "0" when tax settings are missing (mid-bootstrap) — nothing is flagged.
+ */
+export async function getWorkspaceRates(): Promise<{ ewt_rate: string; vat_rate: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tax_settings")
+    .select("ewt_rate::text, vat_rate::text")
+    .maybeSingle<{ ewt_rate: string; vat_rate: string }>();
+
+  if (error) throw new Error(`Could not read your tax settings: ${error.message}`);
+  return { ewt_rate: data?.ewt_rate ?? "0", vat_rate: data?.vat_rate ?? "0" };
 }
 
 /** A single payment by id, or null (RLS makes another tenant's payment invisible). */

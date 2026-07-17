@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ReceivableControls } from "@/components/receivables/receivable-controls";
-import { ReceivablePayments } from "@/components/receivables/receivable-payments";
+import { DealPaymentsPanel } from "@/components/payments/deal-payments-panel";
 import { ReceivableTimeline } from "@/components/receivables/receivable-timeline";
 import { RestatedOverrideBanner } from "@/components/receivables/restated-override-banner";
 import {
@@ -23,7 +23,7 @@ import {
   receivablePayor,
 } from "@/lib/receivables/queries";
 import { getDealByCode } from "@/lib/deals/queries";
-import { listPayments } from "@/lib/payments/queries";
+import { getWorkspaceRates, listPayments } from "@/lib/payments/queries";
 import { formatManilaDate } from "@/lib/date/manila";
 import { formatPHP, formatRateAsPercent } from "@/lib/money";
 import { dealDetailPath, paymentNewPath, ROUTES } from "@/lib/routes";
@@ -49,10 +49,11 @@ export default async function CollectibleDetailPage({ params }: PageProps) {
   const receivable = await getReceivableByDealCode(dealCode);
   if (!receivable) notFound();
 
-  const [deal, payments, history] = await Promise.all([
+  const [deal, payments, history, currentRates] = await Promise.all([
     getDealByCode(dealCode),
     listPayments({ dealId: receivable.deal_id }),
     receivableAuditHistory(receivable.id),
+    getWorkspaceRates(),
   ]);
 
   const negativeBalance =
@@ -228,25 +229,21 @@ export default async function CollectibleDetailPage({ params }: PageProps) {
         </Card>
       </div>
 
-      {/* Payment history (read-only, from M5) */}
+      {/* Payment history + running total (the unified per-deal panel, M5.3 §6.3) */}
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
-          <div>
-            <CardTitle>Payment history</CardTitle>
-            <CardDescription>Every release logged against this deal, newest first.</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            nativeButton={false}
-            render={<Link href={paymentNewPath(receivable.deal_id)} />}
-            data-testid="link-log-payment-2"
-          >
-            <Banknote className="size-4" /> Log a payment
-          </Button>
+        <CardHeader>
+          <CardTitle>Payment history</CardTitle>
+          <CardDescription>Every release logged against this deal, newest first.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ReceivablePayments payments={payments} />
+          <DealPaymentsPanel
+            payments={payments}
+            dealId={receivable.deal_id}
+            collectedNet={receivable.collected_net}
+            totalCollectible={receivable.total_collectible}
+            pctCollected={receivable.pct_collected}
+            currentRates={currentRates}
+          />
         </CardContent>
       </Card>
 

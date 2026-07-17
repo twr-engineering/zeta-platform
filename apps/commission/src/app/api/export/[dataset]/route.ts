@@ -76,6 +76,15 @@ export async function GET(request: Request, context: RouteContext) {
   const hasBalance = params.get("hasBalance") === "true";
   const overridden = params.get("overridden") === "true";
   const text = params.get("q") ?? undefined;
+  // Payments list (FR-M5-11): month_paid + payment_type ride along too.
+  const monthParam = params.get("month");
+  const month =
+    monthParam && /^\d{1,2}$/.test(monthParam) && Number(monthParam) >= 1 && Number(monthParam) <= 12
+      ? Number(monthParam)
+      : undefined;
+  const typeParam = params.get("type");
+  const paymentType =
+    typeParam === "commission" || typeParam === "incentive" ? typeParam : undefined;
 
   const data = await loadExportDataset(dataset, {
     year,
@@ -85,6 +94,8 @@ export async function GET(request: Request, context: RouteContext) {
     hasBalance,
     overridden,
     text,
+    month,
+    paymentType,
   });
   const filename = exportFilename(data.name, format, manilaToday());
 

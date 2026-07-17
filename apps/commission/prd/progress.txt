@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T18:30:00+08:00
+# Last Updated: 2026-07-18T20:15:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -23,7 +23,7 @@
 - [x] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
 - [x] M5.2: Fast-entry form & split preview
 - [x] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
-- [ ] M5.3: Payments list, per-deal panel & exports
+- [x] M5.3: Payments list, per-deal panel & exports
 - [x] M4.4: Ledger UI, detail view, downstream projections & hardening  ← M4 COMPLETE
 - [ ] M5.4: Hardening, access control & performance
 - [ ] M6.1: Aggregation read models + reconciliation suite
@@ -58,6 +58,73 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M5.3 COMPLETE — Payments list, per-deal panel, edit/recompute & exports. The
+READ side of the daily-use surface, over M5.1's schema/RPCs + M5.2's engine
+round-trip. No migration — pure UI + read models over what M5.1/M4.2 already built.
+
+PAYMENTS LIST at /payments (replaces the M5 stub). Server component = ONE RLS-scoped
+listPayments() + getWorkspaceRates(); PaymentsList (client) filters/paginates/totals
+over those rows (§8 budget, measured below). Newest-first (rule 18), all §6.2 columns
+(Date · Deal[linked] · Year · Developer · Client · Property · Type badge · Gross · Net
+of VAT · VAT · EWT · Net Cash · Note) with ₱ right-aligned exact strings; sticky header;
+a PINNED totals row summing the FILTERED set at FULL precision (toMoney over stored
+::text, never rounded cells). Filters: text (deal/client/property/note), year-paid,
+month, developer, type — all client-side. Zero-tax cells read "untaxed" not bare ₱0.00
+(§6.4). CSV/XLSX export links carry the active filters (AC15) via the M4.4 export-filter
+pattern (DealExportFilters extended with month/paymentType; the route parses them; the
+payments loader mirrors the list's predicate field-for-field). 360px cards (date, deal,
+gross, net cash, type badge). Empty state → Log a release / Import.
+
+STALE-BASIS ⚠ (FR-M5-12, §6.4). src/lib/payments/stale.ts (PURE, unit-tested):
+staleBasisReasons/isStaleBasis/staleBasisExplanation compare a payment's stored
+vat_basis_used/ewt_rate_used/vat_rate_used against the deal's CURRENT vat_basis + the
+workspace's CURRENT rates (rates compared as decimals, never centavo-rounded). Any drift
+→ a ⚠ badge with a "captured under X → now Y" tooltip, linking to the edit screen. The
+current rates are read UNCACHED (getWorkspaceRates, a direct RLS-scoped select) — the
+indicator is a correctness signal that must reflect the LIVE settings, not the
+unstable_cache snapshot the engine reads (a cached rate could show a wrong stale state).
+
+EDIT / RECOMPUTE at /payments/[id]/edit (FR-M5-07/10). Gross/date/type/note editable;
+deal fixed (delete + re-log to move). previewPayment (the SAME engine round-trip as fast-
+entry — never re-implemented) drives a SIDE-BY-SIDE "Stored vs If recomputed" split, with
+changed lines highlighted (§6.2). Saving RE-SNAPSHOTS at the deal+settings as they are now
+(§3.3.2) through M5.1's update_payment (optimistic-locked); friction-gated via ConfirmGate
+(mode 'checked' → the action's checkConfirmation), wrapped so the redirect survives the
+gate unmounting on success. A stale row lands here to OPT INTO a per-payment recompute
+(§3.3.3, never bulk) — the primary button reads "Recompute this payment's split". Delete is
+friction-gated too and the confirmation STATES the receivable restatement (Collected −Net,
+balance +Net — rule 10). The receivable restates synchronously (M4.2 already wired into
+payments/actions).
+
+PER-DEAL PANEL UNIFIED. src/components/payments/deal-payments-panel.tsx is the ONE
+component (running collected total vs Total Collectible — "₱44,642.86 of ₱354,591.84 ·
+12.6%", ties to M4 centavo-exact, AC17; newest-first splits; per-row stale ⚠ + Edit link;
+"Log a payment" prefill). M4.4's receivable-payments.tsx is DELETED/ABSORBED — the panel now
+renders on BOTH the receivable detail (/collectibles/[dealCode]) and the deal detail
+(/deals/[code], replacing the bare cross-link stub). Both pages pass the receivable's
+collected_net/total_collectible/pct + getWorkspaceRates.
+
+PERF (measured live, scripts/perf-payments.ts, 1,000 throwaway payments): payments-list
+read P95 268.6 ms (< 500). Direct service-role seed (engine-computed splits); user deleted
+after (orphan reaper takes the workspace).
+
+VERIFIED: browser e2e tests/e2e/payments-list.spec.ts 8/8 (real v30.20 import → 8 payments
+newest-first, D021 07-09 row 44,642.86/4,464.29/45,535.71 exact + Incentive badge, D004
+"untaxed"; type=Incentive→1 row + export href carries type=incentive; text=D004→1; edit D021
+gross 50k→60k side-by-side 53,571.43 → confirm → stored re-snapshot 53,571.43 + balance
+301,020.41 synchronous → revert 309,948.98; EWT 10%→5% via the REAL settings gate → 8 stale
+flags → recompute ONE (D021→EWT 2,232.14 @0.0500) → others untouched (D006 still 0.1000) →
+7 flags → restore; delete D019 → gate → receivable restated; deal-detail panel running total
+44,642.86 of 354,591.84; 360px cards no overflow; console clean). test:unit 273/273 (+7
+stale-basis). build:check + lint clean. Real account untouched; throwaway users deleted
+(delta-residue zero).
+
+NOTE (design): the stale-basis indicator is deliberately sensitive to EWT/VAT rate drift as
+well as vat_basis drift (team-lead brief + AC7 verification). §3.3.4 says a mid-year rate
+change leaves old splits CORRECT — so the ⚠ is informational ("captured under a different
+rate"), never an auto-recompute; the recompute is always the agent's explicit, per-payment
+choice on the edit screen.**
+
 **M4.4 COMPLETE — Ledger UI, detail view, downstream projections & hardening.
 M4 IS COMPLETE. No migration this milestone — the whole surface is UI + pure
 read models over the RPCs/columns M4.1–M4.3 already built.

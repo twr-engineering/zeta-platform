@@ -14,7 +14,8 @@
     "test:perf": "node --import ./tests/alias-hooks.mjs --test \"tests/unit/perf.test.ts\"",
     "seed:dev": "node scripts/seed-dev.mjs",
     "perf:recompute": "node --import ./tests/alias-hooks.mjs scripts/perf-recompute.ts",
-    "perf:receivables": "node --import ./tests/alias-hooks.mjs scripts/perf-receivables.ts"
+    "perf:receivables": "node --import ./tests/alias-hooks.mjs scripts/perf-receivables.ts",
+    "perf:payments": "node --import ./tests/alias-hooks.mjs scripts/perf-payments.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

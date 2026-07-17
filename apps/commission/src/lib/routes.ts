@@ -45,6 +45,11 @@ export function paymentNewPath(dealId?: string): string {
   return dealId ? `${ROUTES.paymentNew}?deal=${encodeURIComponent(dealId)}` : ROUTES.paymentNew;
 }
 
+/** A payment's edit / recompute screen, keyed on its id (M5.3, FR-M5-07/10). */
+export function paymentEditPath(id: string): string {
+  return `/payments/${encodeURIComponent(id)}/edit`;
+}
+
 /** A deal's detail / edit routes, keyed on its permanent code (D021). */
 export function dealDetailPath(code: string): string {
   return `/deals/${encodeURIComponent(code)}`;

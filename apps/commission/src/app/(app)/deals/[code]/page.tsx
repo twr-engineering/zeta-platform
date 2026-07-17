@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/card";
 import { DealDetailActions } from "@/components/deals/deal-detail-actions";
 import { DealAuditHistory } from "@/components/deals/deal-audit-history";
+import { DealPaymentsPanel } from "@/components/payments/deal-payments-panel";
 import { dealAuditHistory, getDealByCode } from "@/lib/deals/queries";
+import { getWorkspaceRates, listPayments } from "@/lib/payments/queries";
+import { getReceivableByDealId } from "@/lib/receivables/queries";
 import {
   allDevelopers,
   allLeadSources,
@@ -54,12 +57,16 @@ export default async function DealDetailPage({ params }: PageProps) {
   const deal = await getDealByCode(code);
   if (!deal) notFound();
 
-  const [developers, propertyTypes, leadSources, history] = await Promise.all([
-    allDevelopers(),
-    allPropertyTypes(),
-    allLeadSources(),
-    dealAuditHistory(deal.id),
-  ]);
+  const [developers, propertyTypes, leadSources, history, payments, receivable, currentRates] =
+    await Promise.all([
+      allDevelopers(),
+      allPropertyTypes(),
+      allLeadSources(),
+      dealAuditHistory(deal.id),
+      listPayments({ dealId: deal.id }),
+      getReceivableByDealId(deal.id),
+      getWorkspaceRates(),
+    ]);
 
   const developerName = deal.developer_id
     ? developers.find((d) => d.id === deal.developer_id)?.name ?? "—"
@@ -206,6 +213,24 @@ export default async function DealDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Payment history + running total (the unified per-deal panel, M5.3 §6.3) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Payments</CardTitle>
+          <CardDescription>Every release logged against this deal, newest first.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DealPaymentsPanel
+            payments={payments}
+            dealId={deal.id}
+            collectedNet={receivable?.collected_net ?? null}
+            totalCollectible={receivable?.total_collectible ?? null}
+            pctCollected={receivable?.pct_collected ?? null}
+            currentRates={currentRates}
+          />
+        </CardContent>
+      </Card>
 
       {/* Audit history */}
       <Card>

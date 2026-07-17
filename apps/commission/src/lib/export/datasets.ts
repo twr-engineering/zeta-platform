@@ -258,6 +258,11 @@ export type DealExportFilters = {
   hasBalance?: boolean;
   overridden?: boolean;
   text?: string;
+  /** Payments list (FR-M5-11, §6.2): month_paid + payment_type. `year` is read as
+   * year_paid, `developerId` as the deal's developer, `text` over the same fields
+   * the on-screen search covers — so the download matches the screen (AC8). */
+  month?: number;
+  paymentType?: PaymentRow["payment_type"];
 };
 
 export async function loadExportDataset(
@@ -311,10 +316,26 @@ export async function loadExportDataset(
       });
     }
     case "payments": {
-      // Mirror the deals/receivables active-vs-archived exclusive view.
-      const rows = (await listPayments({ includeArchived: true })).filter((p) =>
-        filters.archived ? p.archived_at !== null : p.archived_at === null
-      );
+      // The payments list's on-screen filters ride along so the download ties to
+      // exactly what is shown (AC8, FR-M5-11). Mirrors payments-list.tsx's client
+      // filter predicate field-for-field; money/identity are read-time joins.
+      const needle = filters.text?.trim().toLowerCase() ?? "";
+      const rows = (await listPayments({ includeArchived: true })).filter((p) => {
+        if (filters.archived ? p.archived_at === null : p.archived_at !== null) return false;
+        if (filters.year !== undefined && p.year_paid !== filters.year) return false;
+        if (filters.month !== undefined && p.month_paid !== filters.month) return false;
+        if (filters.paymentType && p.payment_type !== filters.paymentType) return false;
+        if (filters.developerId !== undefined) {
+          const devId = p.deal?.developer?.id ?? null;
+          if (filters.developerId === "none" ? devId !== null : devId !== filters.developerId)
+            return false;
+        }
+        if (needle) {
+          const hay = `${p.deal?.deal_code ?? ""} ${p.deal?.client_name ?? ""} ${p.deal?.property_details ?? ""} ${p.reference_note ?? ""}`.toLowerCase();
+          if (!hay.includes(needle)) return false;
+        }
+        return true;
+      });
       return dataset({
         name: "payments",
         sheet: "Payments",
