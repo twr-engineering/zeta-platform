@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-17T19:45:00+08:00
+# Last Updated: 2026-07-17T20:05:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -9,7 +9,7 @@
 # MVP cut (Master PRD §8): M0 + M1 + M4 + M5 + M6-core (sections 1,3,4,8 + data health; 2/6 with manual target) + M9-minimal.
 
 - [x] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
-- [ ] M0.1: Auth & personal workspace
+- [x] M0.1: Auth & personal workspace
 - [ ] M0.2: Tax settings & audit trail
 - [ ] M0.3: Configuration lists
 - [ ] M0.4: Account polish & data ownership
@@ -58,11 +58,140 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-Foundation complete — awaiting user dev-server start.
-Migrations applied to hosted Supabase (sgerctvrcvlmortmhenh); signup -> confirm -> login ->
-session and AC9 tenant isolation all verified live. Ready for M0.1 feature work.
+M0.1 complete. Settings area (6 sections), friction-gate primitive, audit hook, audited
+workspace rename, dev seed script and CI are in. Rename + audit + AC9 isolation verified
+live against hosted Supabase with real JWTs (16/16). Next: M0.2 (tax settings editable +
+audit viewer), whose first job is to make the audit write atomic — see the caveat in
+src/lib/audit/write.ts.
 
 ## Completed Tasks
+- M0.1 Auth & personal workspace (2026-07-17) — the gap between Foundation's output and
+  M0.1's full deliverables checklist. Foundation already had auth, the signup bootstrap,
+  tenant scoping and the app shell; this pass added:
+  - Settings AREA (M0 §6) replacing the single flat page: nested layout + left-nav with all
+    six sections — General, Tax Settings, Property Types, Developers, Lead Sources, Audit
+    Log. /settings redirects to General. The nav is the left column at lg+ and a scrolling
+    strip below that, because a 240px sidebar inside a 360px viewport leaves no room for
+    the settings themselves. Foundation's tax view moved to /settings/tax unchanged.
+  - Friction-gate confirmation primitive (M0 §3.2, rule 9) — the v1 replacement for
+    role-gating, reused by every later module. Two halves, and the SERVER half is the gate:
+      src/lib/friction/gate.ts        checkConfirmation() — typed/checked contract
+      src/components/friction/confirm-gate.tsx   AlertDialog that collects the answer
+    M0 test plan #7 requires forged requests without the token to be rejected, so a
+    client-only modal would have been theater. 9 unit tests cover the contract.
+    NOTE: no production consumer yet — M0.1 has no destructive or money-restating action.
+    Its first consumer is M0.2's tax-rate change. Deliberately NOT applied to the rename
+    (rule 9 reserves gates for destructive/money-restating acts; gating an ordinary edit
+    trains click-through and breaks the gate for the case that matters).
+  - Audit hook (M0.1 "audit hook"; table was Foundation's): src/lib/audit/write.ts —
+    writeAuditEntry() + diffFields(), decimals as strings.
+  - Workspace rename (M0 §3.1, FR-M0-02: name defaulted at signup, editable), audited per
+    rule 12, on Settings → General. General also surfaces account identity and workspace
+    details read-only — M0.4 owns the editable account screen.
+  - Shared form plumbing: src/lib/forms/action-state.ts (one ActionState, was auth-only);
+    form-status.tsx moved auth/ -> forms/ now that settings uses it too.
+  - Dev fixtures: scripts/seed-dev.mjs (`pnpm run seed:dev`, --check/--delete) creating
+    M0.1's demo-script agents (agent@solo.test "JD", agent2@solo.test "Maria"). Creates
+    USERS only and lets the signup bootstrap build the rest, so seeding exercises the real
+    path; seeds no lists (M0 rule 11 — nothing seeded silently; that is M0.3's offer flow).
+  - CI: .github/workflows/ci.yml — lint + unit tests + build on placeholder env (Node 22:
+    the unit tests are TS run directly by `node --test`, which needs 22.18+ type stripping).
+  - tests/unit/friction-gate.test.ts (9) + tests/e2e/auth-workspace.spec.ts (9).
+  - Typography (user request, 2026-07-17): Geist -> Inter + Inter Tight for headings, which
+    also fixed --font-heading being aliased to --font-sans (headings never differentiated).
+    No brand mandate exists in the handoff package — design/brand-guidelines.md §1.
+
+## Verification performed for M0.1 (2026-07-17)
+- `pnpm run build:check` clean; `pnpm run lint` clean; `pnpm run test:unit` 9/9.
+- Live against hosted Supabase (sgerctvrcvlmortmhenh) with REAL user JWTs, 16/16 — the
+  database half of the rename + audit path, i.e. what renameWorkspace does underneath:
+  bootstrap names the workspace from display_name; rename returns the row; audit insert
+  accepted with old→new as strings; forged actor refused (42501); audit UPDATE impossible;
+  AC9 — B's cross-tenant rename is a 0-row no-op and A's name is unchanged; B cannot read
+  A's audit trail; blank name refused by the DB constraint (23514); workspace count
+  1 -> 3 -> 1, so the orphan reaper fired and the test users left zero trace.
+- NOTE the project is NOT empty: it holds a real developer account
+  (juliusbaliling25@gmail.com / "julius's Book"). Residue checks must measure a DELTA
+  against a baseline, not assert an absolute count of zero, and must never delete it.
+- REAL BROWSER FLOW driven against http://localhost:3000 (m01-check@zeta.test), every step:
+  1. /register form submitted -> reached GoTrue and returned "email rate limit exceeded"
+     (see the SMTP blocker below). Form surfaced the real error correctly.
+  2. Unconfirmed user minted via admin generateLink (no mail sent); confirmed?=false, i.e.
+     mailer_autoconfirm really is off.
+  3. Login BEFORE confirming -> refused, stayed on /login.
+  4. /auth/confirm?token_hash=…&type=signup -> real route handler established the session
+     and landed on /dashboard as "M01 Check's Book" (bootstrap named it from display_name).
+  5. Refresh -> still signed in.
+  6. /settings -> redirects to /settings/general; all 6 sections reachable.
+  7. Tax settings render AC1 exactly: 12.00% / 10.00% / ₱ 3,600,000.00 / 3 months, VAT
+     registration shown unconfirmed.
+  8. Renamed the workspace in the UI -> header updated live, success message shown, and the
+     DB carried the audit entry: workspace/update, actor = the real user, field_changes
+     {"name":{"old":"M01 Check's Book","new":"JD's Book of Business"}}. Survived a reload.
+  9. 360px: no horizontal overflow on general/tax/audit-log; nav and inputs usable.
+ 10. Sign out -> /login; revisiting /dashboard and /settings/general both divert to /login
+     with ?next= preserved. Session genuinely dead.
+ 11. Test user deleted; counts returned exactly to baseline (the audit entry cascaded away
+     with the workspace) — zero residue.
+- `pnpm run seed:dev` exercised: created "JD's Book" + "Maria's Book" at AC1 defaults with
+  rates printing as exact strings (0.1200 / 3600000.00), then --delete removed both and the
+  reaper left nothing. `npx playwright test` 9/9 green against those fixtures.
+  Fixtures were deleted afterwards to leave the project at baseline — re-run seed:dev
+  before the e2e suite, which depends on them.
+
+## Bugs found and fixed during M0.1 browser verification (all pre-existing, none caught before)
+- P0 — THE ACCOUNT MENU NEVER OPENED, so sign-out was unreachable from the UI entirely.
+  src/components/layout/app-header.tsx put DropdownMenuLabel directly inside
+  DropdownMenuContent. That label is Base UI's Menu.GroupLabel, which throws
+  "MenuGroupContext is missing" outside a Menu.Group; the throw killed the popup's whole
+  render, so nothing appeared. Fixed by wrapping it in DropdownMenuGroup. This is exactly
+  the class of bug a browser catches and a build never does — the foundation's own report
+  flagged "no end-to-end browser signup/login yet" as the gap, and this was hiding in it.
+- Page titles under /settings lost the root's "%s · ZETA GCI + Collections" template (tab
+  read "General"). A plain `title` on the settings layout displaces the template for its
+  children; removed it, since each section page sets its own title.
+- Playwright's default 5s expect timeout is shorter than a cold `next dev` route compile
+  (a first server action measured ~2s, more on a cold start), which produced e2e failures
+  that looked like app bugs but were the harness racing the compiler. playwright.config.ts
+  now sets expect.timeout to 15s.
+
+## Footguns closed (these cost real time — do not reintroduce)
+- `pnpm run build` while the dev server is running CORRUPTS ITS .next AND KILLS IT — both
+  write to the same directory. Use `pnpm run build:check` (NEXT_DIST_DIR=.next-build) for
+  any verification build. `pnpm run build` stays as-is for Vercel.
+- The dev server watches the project root, and its ignore list is only node_modules/.git/
+  .next. `.playwright-mcp/` gets a page snapshot + console log written on EVERY browser
+  tool call, which drove the dev server into a permanent recompile loop and stalled
+  in-flight requests. next.config.ts now extends webpack watchOptions.ignored to cover
+  .playwright-mcp, .next-build, test-results and playwright-report. NOTE: that hook does
+  NOT run under `next dev --turbopack`, and Turbopack has no exclusion option — if dev
+  moves to Turbopack these dirs must move outside the project root instead.
+
+## Known gaps / decisions taken in M0.1
+- Google OAuth (M0.1 lists it as optional, "if the stack makes it ≤ half a day"): SKIPPED.
+  It needs a Google Cloud OAuth client plus provider config in the Supabase dashboard —
+  neither doable from here, and neither verifiable. Email+password with verification (the
+  FR-M0-01 requirement) is done. Revisit when someone has console access.
+- Audit atomicity: PostgREST gives no transaction across two calls, so rename updates then
+  writes the entry. A failed entry insert leaves an unaudited change (rule 12). It fails
+  LOUDLY rather than silently, and M0.2 — which owns the durable write path — should make
+  the pair atomic. Do not add more callers on the two-call pattern first.
+- BLOCKER FOR REAL SIGNUPS (found in the browser, not theoretical): the project is on
+  Supabase's BUILT-IN email sender, which is rate-limited to a handful per hour and is
+  explicitly not for production. A browser signup returned "email rate limit exceeded"
+  after only a few attempts — a real agent hitting this cannot confirm their account, and
+  FR-M0-01 requires verification. A transactional email provider (Resend/Postmark/SES) must
+  be configured in Supabase Auth → SMTP before anyone but us signs up. The register form
+  itself is correct — it surfaced the server's real error rather than swallowing it.
+  Workaround for testing: admin generateLink({type:'signup'}) mints a real token_hash
+  WITHOUT sending mail; feed it to /auth/confirm?token_hash=…&type=signup.
+- Sign-in maps every GoTrue error (including email_not_confirmed) to "Incorrect email or
+  password." That is a deliberate anti-enumeration choice of Foundation's and it is right,
+  but it means an unconfirmed agent gets no hint to check their inbox. Worth revisiting in
+  M10's onboarding copy — a "resend confirmation" affordance on the login page solves it
+  without becoming an enumeration oracle.
+
+## Completed Tasks (Foundation)
 - Foundation (2026-07-17): Next.js 15.5.20 App Router + TypeScript + Tailwind v4 + Shadcn UI
   (base-nova style, @base-ui/react primitives) scaffolded into the repo root; pnpm.
   - Supabase SSR auth per current @supabase/ssr docs: src/lib/supabase/{client,server,middleware,env}.ts,

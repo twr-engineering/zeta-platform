@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:check": "NEXT_DIST_DIR=.next-build next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:unit": "node --test \"tests/unit/**/*.test.ts\"",
+    "seed:dev": "node scripts/seed-dev.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

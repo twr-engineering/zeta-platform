@@ -5,6 +5,9 @@ node_modules/
 
 # Build outputs
 .next/
+# Scratch dir for `pnpm run build:check` — a verification build that must not
+# clobber a running dev server's .next. See next.config.ts.
+.next-build/
 out/
 build/
 dist/
@@ -44,6 +47,12 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+# Playwright MCP scratch — a page snapshot + console log per browser tool call.
+# Also excluded from the dev watcher in next.config.ts: these are rewritten on
+# every browser step, and watching them makes the dev server recompile in a loop.
+.playwright-mcp/
 
 # TypeScript
 *.tsbuildinfo

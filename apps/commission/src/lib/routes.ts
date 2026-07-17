@@ -20,6 +20,12 @@ export const ROUTES = {
   reports: "/reports",
   search: "/search",
   settings: "/settings",
+  settingsGeneral: "/settings/general",
+  settingsTax: "/settings/tax",
+  settingsPropertyTypes: "/settings/property-types",
+  settingsDevelopers: "/settings/developers",
+  settingsLeadSources: "/settings/lead-sources",
+  settingsAuditLog: "/settings/audit-log",
 } as const;
 
 /**
@@ -64,4 +70,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.reports, label: "Reports", module: "M8" },
   { href: ROUTES.search, label: "Search", module: "M9" },
   { href: ROUTES.settings, label: "Settings", module: "M0" },
+];
+
+/**
+ * Settings left-nav (M0 §6). The order is the PRD's, not alphabetical: General
+ * and Tax Settings are what a new agent touches first, and the Audit Log reads
+ * as a footer to the rest.
+ */
+export const SETTINGS_NAV_ITEMS: readonly NavItem[] = [
+  { href: ROUTES.settingsGeneral, label: "General", module: "M0.1" },
+  { href: ROUTES.settingsTax, label: "Tax Settings", module: "M0.2" },
+  { href: ROUTES.settingsPropertyTypes, label: "Property Types", module: "M0.3" },
+  { href: ROUTES.settingsDevelopers, label: "Developers", module: "M0.3" },
+  { href: ROUTES.settingsLeadSources, label: "Lead Sources", module: "M0.3" },
+  { href: ROUTES.settingsAuditLog, label: "Audit Log", module: "M0.2" },
 ];

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 import { InputField } from "@/components/affordance/input-field";
 import { Label } from "@/components/ui/label";
-import { FormStatus, SubmitButton } from "./form-status";
+import { FormStatus, SubmitButton } from "@/components/forms/form-status";
 import { signIn, type ActionState } from "@/lib/auth/actions";
 import { ROUTES } from "@/lib/routes";
 

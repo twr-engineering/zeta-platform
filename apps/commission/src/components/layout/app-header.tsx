@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -57,14 +58,21 @@ export function AppHeader({
             }
           />
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="truncate font-normal">
-              <span className="block text-sm font-medium">
-                {displayName ?? "Agent"}
-              </span>
-              <span className="block truncate text-xs text-muted-foreground">
-                {email}
-              </span>
-            </DropdownMenuLabel>
+            {/* The DropdownMenuGroup is required, not decorative: the label is
+                Base UI's Menu.GroupLabel, which throws "MenuGroupContext is
+                missing" outside a Menu.Group. That throw killed the whole popup
+                render, so the menu never opened and sign-out was unreachable
+                from the UI entirely (found by driving a browser, 2026-07-17). */}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="truncate font-normal">
+                <span className="block text-sm font-medium">
+                  {displayName ?? "Agent"}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {email}
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               render={

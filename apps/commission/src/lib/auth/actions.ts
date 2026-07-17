@@ -8,6 +8,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { ROUTES, isPublicPath } from "@/lib/routes";
+import type { ActionState } from "@/lib/forms/action-state";
 
 /**
  * Auth server actions (M0 FR-M0-01).
@@ -17,11 +18,11 @@ import { ROUTES, isPublicPath } from "@/lib/routes";
  * outcome, and an unhandled throw would surface as a 500 error page.
  */
 
-export type ActionState = {
-  error: string | null;
-  /** Set on flows that finish without navigating (e.g. "check your email"). */
-  message?: string;
-};
+// Re-exported for the auth forms that already import it from here. The type
+// itself now lives in @/lib/forms/action-state, shared with settings — a
+// "use server" module may only export async functions, but a type is erased at
+// compile time, so this costs nothing at runtime.
+export type { ActionState };
 
 const emailSchema = z
   .string()

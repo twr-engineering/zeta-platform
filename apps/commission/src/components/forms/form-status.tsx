@@ -5,7 +5,7 @@ import { CircleAlert, CircleCheck } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { ActionState } from "@/lib/auth/actions";
+import type { ActionState } from "@/lib/forms/action-state";
 
 /** Submit button that reflects the enclosing form's pending state. */
 export function SubmitButton({

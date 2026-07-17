@@ -1,0 +1,50 @@
+name: CI
+
+# M0.1 deliverable: "CI + migrations + seed script for dev fixtures".
+#
+# Lint, typecheck/build, and unit tests on every push and PR. No secrets are
+# used: the build runs on PLACEHOLDER credentials, which the foundation made
+# safe by keeping every authenticated route dynamic (a prerendered route would
+# construct a Supabase client at build time and fail). If someone accidentally
+# makes an authenticated route static, this job is what catches it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: PLACEHOLDER_PENDING_CREDENTIALS
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: PLACEHOLDER_PENDING_CREDENTIALS
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22, not 20: the unit tests are TypeScript run directly by
+          # `node --test`, and type stripping only became on-by-default in
+          # 22.18. On 20 they do not run at all.
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Unit tests
+        run: pnpm run test:unit
+
+      # Also typechecks — `next build` runs tsc, which is what enforces the
+      # money-safe types (a float in a rate column fails to compile).
+      - name: Build
+        run: pnpm run build

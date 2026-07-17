@@ -4,7 +4,7 @@ import { useActionState } from "react";
 
 import { InputField } from "@/components/affordance/input-field";
 import { Label } from "@/components/ui/label";
-import { FormStatus, SubmitButton } from "./form-status";
+import { FormStatus, SubmitButton } from "@/components/forms/form-status";
 import { requestPasswordReset, type ActionState } from "@/lib/auth/actions";
 
 const INITIAL: ActionState = { error: null };

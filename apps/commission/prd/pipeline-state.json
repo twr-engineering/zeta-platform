@@ -91,12 +91,13 @@
     ]
   },
   "build": {
-    "devUrl": null,
+    "devUrl": "http://localhost:3000",
     "packageManager": "pnpm",
     "context7Available": true,
     "supabaseProject": "sgerctvrcvlmortmhenh",
     "firebaseProject": null,
-    "completedFeatures": [],
+    "completedFeatures": ["M0.1"],
+    "m01Handoff": "M0.1 done. Settings AREA at /settings/{general,tax,property-types,developers,lead-sources,audit-log} — /settings redirects to general; add M0.2/M0.3 screens INTO these existing sections (SETTINGS_NAV_ITEMS in src/lib/routes.ts). Friction-gate primitive ready and unit-tested but has NO consumer yet: M0.2's tax-rate change is its first — src/lib/friction/gate.ts checkConfirmation() MUST be called server-side first in any gated action (M0 test plan #7 requires forged requests to be rejected; the modal alone is theater). Audit hook at src/lib/audit/write.ts (writeAuditEntry + diffFields) — M0.2 owns making the update+audit pair ATOMIC; it is currently two calls and a failed audit insert leaves an unaudited change (fails loudly). ActionState now lives in src/lib/forms/action-state.ts; FormStatus/SubmitButton moved to src/components/forms/. VERIFICATION FOOTGUNS: never `pnpm run build` while the dev server runs (shared .next — it kills the server); use `pnpm run build:check`. next.config.ts extends webpack watchOptions.ignored for .playwright-mcp/.next-build/test-results/playwright-report because the dev server otherwise recompiles in a loop on every browser tool call (breaks under --turbopack). BLOCKER before real users: Supabase built-in SMTP is rate-limited (~few/hour) — browser signup hit 'email rate limit exceeded'; configure a transactional provider. Test with admin generateLink({type:'signup'}) -> /auth/confirm?token_hash=…&type=signup (sends no mail). Google OAuth skipped (optional in M0.1; needs console access). `pnpm run seed:dev` creates agent@solo.test/agent2@solo.test — the e2e suite depends on them and they are NOT currently seeded. The hosted project holds the developer's REAL account (juliusbaliling25@gmail.com) — never delete it; residue checks must be a delta against baseline.",
     "foundationHandoff": "Commits c1e56aa + 239366a. Next.js 15.5.20 App Router + Tailwind v4 + Shadcn (base-nova/@base-ui), @supabase/ssr 0.12.3, decimal.js, zod. 6 migrations applied live via Management API (profiles, workspace w/ deal_id_sequence, membership single-owner, tax_settings exact-numeric, append-only audit_log_entry, signup bootstrap); 5 tables/9 RLS policies verified; signup trigger + AC9 tenant isolation + orphan reaper proven live with real JWTs; test users removed (0 residue). Auth site_url + redirect allowlist set to http://localhost:3000. CRITICAL pattern for all feature passes: PostgREST returns numeric as JSON float — money/rate columns MUST be selected ::text (src/lib/supabase/selects.ts) with typed overrides in src/types/database.ts (never select('*') on money tables); regen types into database.generated.ts only. 10 protected routes + auth pages; no dev-server/browser auth run yet."
   },
   "phases": {
@@ -105,7 +106,7 @@
     "scaffold": { "status": "completed", "startedAt": "2026-07-17T18:25:00+08:00", "completedAt": "2026-07-17T18:35:00+08:00" },
     "foundation": { "status": "completed", "startedAt": "2026-07-17T18:40:00+08:00", "completedAt": "2026-07-17T19:20:00+08:00" },
     "figma": { "status": "skipped", "startedAt": null, "completedAt": null },
-    "features": { "status": "pending", "startedAt": null, "completedAt": null },
+    "features": { "status": "in_progress", "startedAt": "2026-07-17T19:40:00+08:00", "completedAt": null },
     "qa": { "status": "pending", "startedAt": null, "completedAt": null },
     "deploy": { "status": "pending", "startedAt": null, "completedAt": null }
   },

@@ -1,19 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Inter_Tight, Geist_Mono } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-// globals.css maps --font-sans / --font-mono into the Tailwind theme, so these
-// must supply those exact variable names.
-const geistSans = Geist({
+// globals.css maps --font-sans / --font-heading / --font-mono into the Tailwind
+// theme, so these must supply those exact variable names.
+
+// Inter carries the product because this is a money app read on a phone: it
+// holds up at 360px, and its `tnum` figures let ₱ columns align digit-to-digit
+// (see the `tabular-nums` in the affordance primitives). `display: swap` keeps
+// first paint honest on a slow mobile connection rather than blocking on fonts.
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Inter Tight only for headings — same skeleton as Inter, tighter fit. It gives
+// the hierarchy a voice without introducing a second typeface's quirks into
+// figures the agent has to read carefully.
+const interTight = Inter_Tight({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -40,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${interTight.variable} ${geistMono.variable} antialiased`}
       >
         <TooltipProvider>{children}</TooltipProvider>
       </body>
