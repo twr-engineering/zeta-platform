@@ -13,7 +13,7 @@
 - [x] M0.2: Tax settings & audit trail
 - [x] M0.3: Configuration lists
 - [x] M0.4: Account polish & data ownership  ← M0 COMPLETE
-- [ ] M1.1: Calculation engine library
+- [x] M1.1: Calculation engine library
 - [ ] M1.2: Deal CRUD with permanent IDs
 - [ ] M1.3: Deal entry UI & list
 - [ ] M1.4: v30.x workbook importer
@@ -58,7 +58,53 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-**M0 COMPLETE.** M0.4 closed the account and data-ownership gap: the account screen is now
+**M1.1 COMPLETE — the calculation engine, the single source of money truth.** A pure,
+deterministic, side-effect-free TypeScript library at `src/lib/engine/` (no I/O, no DB, no
+clock): `computeDeal(input, settings)` implements Rules A–J; `computePaymentSplit(input,
+settings)` is co-located for M5 (WORKBOOK §4); `isSplitAtSourceRisk(input)` is the one pure
+warning predicate (edge case 16). All arithmetic is decimal.js via `@/lib/money` (precision
+28, ROUND_HALF_UP) — the words `number`/`parseFloat` never touch money; rates/amounts enter
+as exact decimal strings and leave as centavo strings (yield as a 6dp rate). Full precision
+runs through every step and rounds to centavos ONLY at the output boundary
+(`src/lib/engine/ROUNDING.md`); the tripwire test proves per-step rounding gives the wrong
+answer (178.58 vs the correct 178.57 on a billed-100 + incentive-100 inclusive deal).
+
+All 21 workbook deals (D001–D021) reproduce every computed column to the centavo, alongside
+the §9.1 hand-derivations, edge cases 1–7 & 14–17, and the non-VAT registration gate
+(fixture N1). OQ defaults are implemented and marked in code: OQ1 resolved-by-removal
+(vat_basis is an invariant enum {inclusive, n/a}; `exclusive` has no code path; Exclusive-style
+bills book via the Fixed-on-VAT-inclusive escape hatch, 112,000 → 100,000.00); OQ2 memo base
+= GCI + taxable incentive, NOT net of referral-out (marked in `deal.ts`); Q2 non-VAT gate
+(no ÷1.12, VAT memo 0, EWT still applies, default 5%). Property-based invariants via
+fast-check (new dev dep). 100% line/branch/function coverage on every engine file. Verified:
+test:unit 140/140 (74 M0 + 66 engine), `test:engine:coverage` 100%, build:check + lint clean,
+Playwright 33/33 on a clean reseed. NO migrations, NO schema, NO UI this milestone — pure lib.
+
+Next: M1.2 (Deal CRUD with permanent IDs) — import `{ computeDeal, computePaymentSplit }`
+from `@/lib/engine`, call it in-transaction and persist `DealDerived`; then wire the M0.3
+reference_count SQL bodies and add the deals dataset to `loadWorkspaceExport` (M0.4). See the
+M1.1 handoff in pipeline-state.json for the full input/output contract.
+
+## Completed Tasks (M1.1)
+- M1.1 Calculation engine library (2026-07-18):
+  - PURE LIB src/lib/engine/: types.ts (string-bound input/output contract), deal.ts
+    (computeDeal, Rules A–J), payment-split.ts (computePaymentSplit, WORKBOOK §4),
+    warnings.ts (isSplitAtSourceRisk, edge 16), index.ts (re-exports), ROUNDING.md (policy).
+  - Rounding: full precision through intermediates, round half-up to centavos at the boundary
+    only; yields to 6dp. Tripwire fixture proves mid-chain rounding is forbidden.
+  - FIXTURES tests/unit/engine/: fixtures.ts (all 21 workbook deals + VAT/non-VAT settings),
+    deal.test.ts (Rules A–J, §9.1, edge cases, N1), payment-split.test.ts (§9.1 incentive
+    split + non-VAT P5), rounding.test.ts (tripwire), warnings.test.ts (edge 16),
+    properties.test.ts (fast-check invariants). 66 engine tests, all green.
+  - Coverage: 100% line/branch/function on deal.ts, payment-split.ts, warnings.ts, index.ts
+    (`pnpm run test:engine:coverage`). New scripts: test:engine, test:engine:coverage.
+  - NEW DEV DEP: fast-check 4.9.0 (Context7-checked, as was decimal.js semantics).
+  - Verified: test:unit 140/140, build:check clean, lint clean, playwright 33/33 (clean
+    reseed — seed:dev is create-only, so `seed:dev --delete` then `seed:dev` before the run).
+    No app runtime code touched (engine imported by nothing yet); zero M0 regressions.
+
+## Completed Tasks (M0.4)
+- M0.4 Account polish & data ownership (2026-07-17):
 editable (display name, email with re-verification, password with global session
 invalidation), the whole workspace exports as one zip of CSV+XLSX for every table, account
 deletion is a service-role flow behind a typed confirmation preceded by the export offer,
