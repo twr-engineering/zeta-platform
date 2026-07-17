@@ -55,6 +55,249 @@ export type Database = {
           },
         ]
       }
+      deal: {
+        Row: {
+          archived_at: string | null
+          billed_commission: number
+          booked_date: string
+          booked_year: number
+          client_name: string
+          comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
+          commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          created_at: string
+          created_by: string | null
+          deal_code: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          developer_id: string | null
+          display_label: string
+          ewt_memo: number
+          fixed_amount: number | null
+          force_vat: boolean
+          gci_net_of_vat: number
+          id: string
+          incentive_billed: number
+          incentive_net: number
+          incentive_taxable:
+            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | null
+          lead_source_id: string
+          list_price: number
+          mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          net_gci: number
+          net_list_price: number
+          property_details: string
+          property_type_id: string
+          property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          rate_pct: string | null
+          receipt_issued: boolean
+          referral_out: number
+          referral_out_fixed: number
+          referral_out_pct: number
+          referral_paid: boolean
+          representation: Database["public"]["Enums"]["deal_representation"]
+          taxable: boolean
+          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          updated_at: string
+          updated_by: string | null
+          vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_memo: number
+          version: number
+          workspace_id: string
+          yield_on_list: number
+        }
+        Insert: {
+          archived_at?: string | null
+          billed_commission: number
+          booked_date: string
+          booked_year: number
+          client_name: string
+          comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
+          commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          created_at?: string
+          created_by?: string | null
+          deal_code: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          developer_id?: string | null
+          display_label: string
+          ewt_memo: number
+          fixed_amount?: number | null
+          force_vat?: boolean
+          gci_net_of_vat: number
+          id?: string
+          incentive_billed?: number
+          incentive_net: number
+          incentive_taxable?:
+            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | null
+          lead_source_id: string
+          list_price: number
+          mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          net_gci: number
+          net_list_price: number
+          property_details: string
+          property_type_id: string
+          property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          rate_pct?: string | null
+          receipt_issued?: boolean
+          referral_out: number
+          referral_out_fixed?: number
+          referral_out_pct?: number
+          referral_paid?: boolean
+          representation: Database["public"]["Enums"]["deal_representation"]
+          taxable: boolean
+          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          updated_at?: string
+          updated_by?: string | null
+          vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_memo: number
+          version?: number
+          workspace_id: string
+          yield_on_list: number
+        }
+        Update: {
+          archived_at?: string | null
+          billed_commission?: number
+          booked_date?: string
+          booked_year?: number
+          client_name?: string
+          comm_base?: Database["public"]["Enums"]["deal_comm_base_display"]
+          commission_basis?: Database["public"]["Enums"]["deal_commission_basis"]
+          created_at?: string
+          created_by?: string | null
+          deal_code?: string
+          deal_type?: Database["public"]["Enums"]["deal_type"]
+          developer_id?: string | null
+          display_label?: string
+          ewt_memo?: number
+          fixed_amount?: number | null
+          force_vat?: boolean
+          gci_net_of_vat?: number
+          id?: string
+          incentive_billed?: number
+          incentive_net?: number
+          incentive_taxable?:
+            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | null
+          lead_source_id?: string
+          list_price?: number
+          mode_of_payment?: Database["public"]["Enums"]["deal_mode_of_payment"]
+          net_gci?: number
+          net_list_price?: number
+          property_details?: string
+          property_type_id?: string
+          property_vat?: Database["public"]["Enums"]["deal_property_vat"]
+          rate_pct?: string | null
+          receipt_issued?: boolean
+          referral_out?: number
+          referral_out_fixed?: number
+          referral_out_pct?: number
+          referral_paid?: boolean
+          representation?: Database["public"]["Enums"]["deal_representation"]
+          taxable?: boolean
+          transaction_type?: Database["public"]["Enums"]["deal_transaction_type"]
+          updated_at?: string
+          updated_by?: string | null
+          vat_basis?: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_memo?: number
+          version?: number
+          workspace_id?: string
+          yield_on_list?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_lead_source_id_fkey"
+            columns: ["lead_source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_source"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_property_type_id_fkey"
+            columns: ["property_type_id"]
+            isOneToOne: false
+            referencedRelation: "property_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_event: {
+        Row: {
+          actor_user_id: string
+          audit_entry_id: string
+          deal_code: string
+          deal_id: string
+          event_type: Database["public"]["Enums"]["deal_event_type"]
+          field_changes: Json
+          id: string
+          new_values: Json | null
+          occurred_at: string
+          old_values: Json | null
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          audit_entry_id: string
+          deal_code: string
+          deal_id: string
+          event_type: Database["public"]["Enums"]["deal_event_type"]
+          field_changes?: Json
+          id?: string
+          new_values?: Json | null
+          occurred_at?: string
+          old_values?: Json | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          audit_entry_id?: string
+          deal_code?: string
+          deal_id?: string
+          event_type?: Database["public"]["Enums"]["deal_event_type"]
+          field_changes?: Json
+          id?: string
+          new_values?: Json | null
+          occurred_at?: string
+          old_values?: Json | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_event_audit_entry_id_fkey"
+            columns: ["audit_entry_id"]
+            isOneToOne: false
+            referencedRelation: "audit_log_entry"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_event_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_event_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer: {
         Row: {
           archived_at: string | null
@@ -391,6 +634,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_deal: {
+        Args: {
+          p_billed_commission: number
+          p_booked_date: string
+          p_client_name: string
+          p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
+          p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_developer_id: string
+          p_ewt_memo: number
+          p_fixed_amount: number
+          p_force_vat: boolean
+          p_gci_net_of_vat: number
+          p_incentive_billed: number
+          p_incentive_net: number
+          p_incentive_taxable: Database["public"]["Enums"]["deal_incentive_taxable"]
+          p_lead_source_id: string
+          p_list_price: number
+          p_mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          p_net_gci: number
+          p_net_list_price: number
+          p_property_details: string
+          p_property_type_id: string
+          p_property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          p_rate_pct: string
+          p_receipt_issued: boolean
+          p_referral_out: number
+          p_referral_out_fixed: number
+          p_referral_out_pct: number
+          p_referral_paid: boolean
+          p_representation: Database["public"]["Enums"]["deal_representation"]
+          p_taxable: boolean
+          p_transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          p_vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_memo: number
+          p_yield_on_list: number
+        }
+        Returns: Json
+      }
       create_developer: {
         Args: {
           p_comm_base?: Database["public"]["Enums"]["developer_comm_base"]
@@ -406,6 +688,7 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_deal: { Args: { p_id: string }; Returns: Json }
       delete_developer: { Args: { p_id: string }; Returns: Json }
       delete_lead_source: { Args: { p_id: string }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
@@ -442,6 +725,10 @@ export type Database = {
       seed_developers: { Args: { p_items: Json }; Returns: Json }
       seed_lead_sources: { Args: { p_items: Json }; Returns: Json }
       seed_property_types: { Args: { p_items: Json }; Returns: Json }
+      set_deal_archived: {
+        Args: { p_archived: boolean; p_id: string }
+        Returns: Json
+      }
       set_developer_archived: {
         Args: { p_archived: boolean; p_id: string }
         Returns: Json
@@ -452,6 +739,47 @@ export type Database = {
       }
       set_property_type_archived: {
         Args: { p_archived: boolean; p_id: string }
+        Returns: Json
+      }
+      update_deal: {
+        Args: {
+          p_billed_commission: number
+          p_booked_date: string
+          p_client_name: string
+          p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
+          p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_developer_id: string
+          p_ewt_memo: number
+          p_expected_version: number
+          p_fixed_amount: number
+          p_force_vat: boolean
+          p_gci_net_of_vat: number
+          p_id: string
+          p_incentive_billed: number
+          p_incentive_net: number
+          p_incentive_taxable: Database["public"]["Enums"]["deal_incentive_taxable"]
+          p_lead_source_id: string
+          p_list_price: number
+          p_mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          p_net_gci: number
+          p_net_list_price: number
+          p_property_details: string
+          p_property_type_id: string
+          p_property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          p_rate_pct: string
+          p_receipt_issued: boolean
+          p_referral_out: number
+          p_referral_out_fixed: number
+          p_referral_out_pct: number
+          p_referral_paid: boolean
+          p_representation: Database["public"]["Enums"]["deal_representation"]
+          p_taxable: boolean
+          p_transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          p_vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_memo: number
+          p_yield_on_list: number
+        }
         Returns: Json
       }
       update_developer: {
@@ -497,6 +825,22 @@ export type Database = {
         | "restore"
         | "delete_blocked"
         | "delete"
+      deal_comm_base_display: "gross" | "net" | "n_a"
+      deal_commission_basis: "percent" | "fixed"
+      deal_event_type: "created" | "updated" | "archived" | "restored"
+      deal_incentive_taxable: "yes" | "no"
+      deal_mode_of_payment: "cash" | "bank" | "pagibig" | "deferred_cash"
+      deal_property_vat: "vat_able" | "exempt" | "n_a"
+      deal_representation:
+        | "double_ended"
+        | "seller"
+        | "buyer"
+        | "lessor"
+        | "lessee"
+        | "referrer"
+      deal_transaction_type: "sale" | "rental"
+      deal_type: "developer" | "resale" | "n_a"
+      deal_vat_basis: "inclusive" | "n_a"
       developer_comm_base: "gross" | "net"
       membership_role: "owner" | "admin" | "agent" | "readonly"
       property_vat_rule: "threshold" | "always_vat" | "always_exempt"
@@ -635,6 +979,23 @@ export const Constants = {
         "delete_blocked",
         "delete",
       ],
+      deal_comm_base_display: ["gross", "net", "n_a"],
+      deal_commission_basis: ["percent", "fixed"],
+      deal_event_type: ["created", "updated", "archived", "restored"],
+      deal_incentive_taxable: ["yes", "no"],
+      deal_mode_of_payment: ["cash", "bank", "pagibig", "deferred_cash"],
+      deal_property_vat: ["vat_able", "exempt", "n_a"],
+      deal_representation: [
+        "double_ended",
+        "seller",
+        "buyer",
+        "lessor",
+        "lessee",
+        "referrer",
+      ],
+      deal_transaction_type: ["sale", "rental"],
+      deal_type: ["developer", "resale", "n_a"],
+      deal_vat_basis: ["inclusive", "n_a"],
       developer_comm_base: ["gross", "net"],
       membership_role: ["owner", "admin", "agent", "readonly"],
       property_vat_rule: ["threshold", "always_vat", "always_exempt"],

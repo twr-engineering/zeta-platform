@@ -17,9 +17,11 @@ import {
   listLeadSources,
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
+import { listDeals } from "@/lib/deals/queries";
 import type { ExportColumn, ExportDataset } from "./format";
 import type {
   AuditLogEntry,
+  Deal,
   Developer,
   LeadSource,
   Membership,
@@ -106,8 +108,50 @@ const LEAD_SOURCE_COLUMNS: readonly ExportColumn<WithReferenceCount<LeadSource>>
   { header: "Archived at", type: "date", value: (r) => r.archived_at, width: 20 },
 ];
 
+// --- deals (M1 §3.1) --------------------------------------------------------
+
+/** Human labels for the deal enums; the archive is for the agent, not the DB. */
+const DEAL_TRANSACTION_LABELS: Record<Deal["transaction_type"], string> = {
+  sale: "Sale",
+  rental: "Rental",
+};
+const DEAL_TYPE_LABELS: Record<Deal["deal_type"], string> = {
+  developer: "Developer",
+  resale: "Resale",
+  n_a: "N/A",
+};
+
+/**
+ * The deal log. Money and rates come through DEAL_SELECT's `::text` casts (via
+ * listDeals), so the archive reproduces every centavo. The rate column shows the
+ * exact stored form — "1/12" stays "1/12", a decimal stays a decimal — because
+ * that is what the engine used.
+ */
+const DEAL_COLUMNS: readonly ExportColumn<Deal>[] = [
+  { header: "Deal Code", type: "text", value: (r) => r.deal_code, width: 12 },
+  { header: "Booked Date", type: "date", value: (r) => r.booked_date, width: 14 },
+  { header: "Transaction", type: "text", value: (r) => DEAL_TRANSACTION_LABELS[r.transaction_type], width: 12 },
+  { header: "Deal Type", type: "text", value: (r) => DEAL_TYPE_LABELS[r.deal_type], width: 12 },
+  { header: "Client", type: "text", value: (r) => r.client_name, width: 26 },
+  { header: "Property", type: "text", value: (r) => r.property_details, width: 30 },
+  { header: "List Price", type: "money", value: (r) => r.list_price, width: 16 },
+  { header: "Net List Price", type: "money", value: (r) => r.net_list_price, width: 16 },
+  { header: "Basis", type: "text", value: (r) => r.commission_basis, width: 10 },
+  { header: "Rate / Fixed", type: "text", value: (r) => r.rate_pct ?? r.fixed_amount ?? "", width: 14 },
+  { header: "GCI (Net of VAT)", type: "money", value: (r) => r.gci_net_of_vat, width: 16 },
+  { header: "Incentive (Net)", type: "money", value: (r) => r.incentive_net, width: 16 },
+  { header: "Referral Out", type: "money", value: (r) => r.referral_out, width: 16 },
+  { header: "NET GCI", type: "money", value: (r) => r.net_gci, width: 16 },
+  { header: "VAT (memo)", type: "money", value: (r) => r.vat_memo, width: 14 },
+  { header: "EWT (memo)", type: "money", value: (r) => r.ewt_memo, width: 14 },
+  { header: "Yield on List", type: "number", value: (r) => r.yield_on_list, width: 14 },
+  { header: "Year", type: "number", value: (r) => r.booked_year, width: 8 },
+  { header: "Status", type: "text", value: archivedState, width: 12 },
+];
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
+  "deals",
   "property-types",
   "developers",
   "lead-sources",
@@ -123,6 +167,15 @@ export async function loadExportDataset(
   name: ExportDatasetName
 ): Promise<ExportDataset<unknown>> {
   switch (name) {
+    case "deals":
+      return dataset({
+        name: "deals",
+        sheet: "Deals",
+        columns: DEAL_COLUMNS,
+        // Active + archived: the download must match the on-screen rows, and the
+        // deal list can show either (FR-M1-02); the archive shows everything.
+        rows: await listDeals({ includeArchived: true }),
+      });
     case "property-types":
       return dataset({
         name: "property-types",
@@ -251,6 +304,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     profile,
     membership,
     taxSettings,
+    deals,
     propertyTypes,
     developers,
     leadSources,
@@ -261,6 +315,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     supabase.from("profiles").select(PROFILES_SELECT).returns<Profile[]>(),
     supabase.from("membership").select("*").returns<Membership[]>(),
     supabase.from("tax_settings").select(TAX_SETTINGS_SELECT).returns<TaxSettings[]>(),
+    listDeals({ includeArchived: true }),
     listPropertyTypes(),
     listDevelopers(),
     listLeadSources(),
@@ -292,6 +347,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     dataset({ name: "account", sheet: "Account", columns: PROFILE_COLUMNS, rows: profile.data ?? [] }),
     dataset({ name: "membership", sheet: "Membership", columns: MEMBERSHIP_COLUMNS, rows: membership.data ?? [] }),
     dataset({ name: "tax-settings", sheet: "Tax Settings", columns: TAX_SETTINGS_COLUMNS, rows: taxSettings.data ?? [] }),
+    dataset({ name: "deals", sheet: "Deals", columns: DEAL_COLUMNS, rows: deals }),
     dataset({ name: "property-types", sheet: "Property Types", columns: PROPERTY_TYPE_COLUMNS, rows: propertyTypes }),
     dataset({ name: "developers", sheet: "Developers", columns: DEVELOPER_COLUMNS, rows: developers }),
     dataset({ name: "lead-sources", sheet: "Lead Sources", columns: LEAD_SOURCE_COLUMNS, rows: leadSources }),

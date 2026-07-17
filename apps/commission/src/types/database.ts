@@ -94,9 +94,99 @@ type SettingsEventOverride = Omit<SettingsEventTable, "Row" | "Update"> & {
   Update: { consumed_at: string; consumed_by: string };
 };
 
+// --- deal (M1 §3.1) ---------------------------------------------------------
+
+type DealTable = GeneratedTables["deal"];
+
+/**
+ * Every peso figure and rate is `numeric`, so PostgREST hands it back as a JSON
+ * float unless the query casts `::text` (see @/lib/supabase/selects DEAL_SELECT).
+ * `fixed_amount` is the one nullable money column; the rest are NOT NULL. Rates
+ * (referral_out_pct, yield_on_list) are money-adjacent numerics, cast the same
+ * way. `rate_pct` is already `text` (it holds the exact fraction "1/12"), so it
+ * needs no override here.
+ */
+type DealNonNullMoneyColumns =
+  | "list_price"
+  | "net_list_price"
+  | "billed_commission"
+  | "gci_net_of_vat"
+  | "incentive_billed"
+  | "incentive_net"
+  | "referral_out_pct"
+  | "referral_out_fixed"
+  | "referral_out"
+  | "net_gci"
+  | "vat_memo"
+  | "ewt_memo"
+  | "yield_on_list";
+
+type DealRowMoney = WithMoneyStrings<DealTable["Row"], DealNonNullMoneyColumns>;
+
+type DealOverride = Omit<DealTable, "Row" | "Insert" | "Update"> & {
+  // fixed_amount stays nullable; every other money column is a plain string.
+  Row: Omit<DealRowMoney, "fixed_amount"> & { fixed_amount: string | null };
+  Insert: Omit<
+    WithOptionalMoneyStrings<DealTable["Insert"], DealNonNullMoneyColumns>,
+    "fixed_amount"
+  > & { fixed_amount?: string | null };
+  Update: Omit<
+    WithOptionalMoneyStrings<DealTable["Update"], DealNonNullMoneyColumns>,
+    "fixed_amount"
+  > & { fixed_amount?: string | null };
+};
+
 // --- Functions --------------------------------------------------------------
 
 type GeneratedFunctions = PublicSchema["Functions"];
+
+type DealIncentiveTaxable = Generated["public"]["Enums"]["deal_incentive_taxable"];
+
+/**
+ * create_deal / update_deal — the same float trap from the argument side. The
+ * generator types every `numeric` param `number`; PostgREST casts a JSON string
+ * straight to numeric, so the money/rate args are strings ("0.05", "318877.55").
+ * The nullable args (developer_id, fixed_amount, rate_pct, incentive_taxable)
+ * are relaxed to accept null — the generator marks them required.
+ */
+type DealRpcMoneyArgs =
+  | "p_list_price"
+  | "p_net_list_price"
+  | "p_billed_commission"
+  | "p_gci_net_of_vat"
+  | "p_incentive_billed"
+  | "p_incentive_net"
+  | "p_referral_out_pct"
+  | "p_referral_out_fixed"
+  | "p_referral_out"
+  | "p_net_gci"
+  | "p_vat_memo"
+  | "p_ewt_memo"
+  | "p_yield_on_list";
+
+type DealRpcNullableArgs = {
+  p_developer_id: string | null;
+  p_fixed_amount: string | null;
+  p_rate_pct: string | null;
+  p_incentive_taxable: DealIncentiveTaxable | null;
+};
+
+type WithDealRpcArgs<Args> = Omit<
+  Args,
+  DealRpcMoneyArgs | keyof DealRpcNullableArgs
+> &
+  Record<DealRpcMoneyArgs, string> &
+  DealRpcNullableArgs;
+
+type CreateDealFn = GeneratedFunctions["create_deal"];
+type CreateDealOverride = Omit<CreateDealFn, "Args"> & {
+  Args: WithDealRpcArgs<CreateDealFn["Args"]>;
+};
+
+type UpdateDealFn = GeneratedFunctions["update_deal"];
+type UpdateDealOverride = Omit<UpdateDealFn, "Args"> & {
+  Args: WithDealRpcArgs<UpdateDealFn["Args"]>;
+};
 
 type UpdateTaxSettingsFn = GeneratedFunctions["update_tax_settings"];
 
@@ -124,14 +214,20 @@ export type Database = Omit<Generated, "public"> & {
   public: Omit<PublicSchema, "Tables" | "Functions"> & {
     Tables: Omit<
       GeneratedTables,
-      "tax_settings" | "audit_log_entry" | "settings_change_event"
+      "tax_settings" | "audit_log_entry" | "settings_change_event" | "deal"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
       settings_change_event: SettingsEventOverride;
+      deal: DealOverride;
     };
-    Functions: Omit<GeneratedFunctions, "update_tax_settings"> & {
+    Functions: Omit<
+      GeneratedFunctions,
+      "update_tax_settings" | "create_deal" | "update_deal"
+    > & {
       update_tax_settings: UpdateTaxSettingsOverride;
+      create_deal: CreateDealOverride;
+      update_deal: UpdateDealOverride;
     };
   };
 };

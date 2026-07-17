@@ -65,3 +65,67 @@ export const SETTINGS_CHANGE_EVENT_SELECT = "*";
 export const PROPERTY_TYPE_SELECT = "*";
 export const DEVELOPER_SELECT = "*";
 export const LEAD_SOURCE_SELECT = "*";
+
+/**
+ * deal (M1 §3.1) — the money-dense table. Every peso figure and rate is
+ * `numeric`, so every one is selected `::text` (the override in
+ * @/types/database types them `string`). NEVER `select("*")` here: it would hand
+ * back `net_gci: 354591.84` as a float and quietly break the ₱-to-the-centavo
+ * guarantee the whole engine exists to keep. `rate_pct` is already `text` (it
+ * carries the exact fraction "1/12"), so it is listed without a cast.
+ */
+export const DEAL_SELECT = [
+  "id",
+  "workspace_id",
+  "deal_code",
+  "booked_date",
+  "transaction_type",
+  "deal_type",
+  "developer_id",
+  "client_name",
+  "representation",
+  "property_type_id",
+  "lead_source_id",
+  "property_details",
+  "mode_of_payment",
+  "list_price::text",
+  "force_vat",
+  "commission_basis",
+  "rate_pct",
+  "fixed_amount::text",
+  "receipt_issued",
+  "incentive_billed::text",
+  "incentive_taxable",
+  "referral_out_pct::text",
+  "referral_out_fixed::text",
+  "referral_paid",
+  "property_vat",
+  "net_list_price::text",
+  "comm_base",
+  "vat_basis",
+  "billed_commission::text",
+  "gci_net_of_vat::text",
+  "incentive_net::text",
+  "referral_out::text",
+  "net_gci::text",
+  "vat_memo::text",
+  "ewt_memo::text",
+  "yield_on_list::text",
+  "taxable",
+  "booked_year",
+  "display_label",
+  "archived_at",
+  "version",
+  "created_by",
+  "updated_by",
+  "created_at",
+  "updated_at",
+].join(",");
+
+/**
+ * deal_event (FR-M1-08) — the append-only event log. No `numeric` column: the
+ * money lives inside old_values/new_values (jsonb the write path filled with
+ * ::text strings via app.deal_snapshot), so `*` is safe for the same reason it
+ * is on audit_log_entry — the exact decimal never becomes a JSON number.
+ */
+export const DEAL_EVENT_SELECT = "*";

@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-17T23:55:00+08:00
+# Last Updated: 2026-07-18T02:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -14,7 +14,7 @@
 - [x] M0.3: Configuration lists
 - [x] M0.4: Account polish & data ownership  ← M0 COMPLETE
 - [x] M1.1: Calculation engine library
-- [ ] M1.2: Deal CRUD with permanent IDs
+- [x] M1.2: Deal CRUD with permanent IDs
 - [ ] M1.3: Deal entry UI & list
 - [ ] M1.4: v30.x workbook importer
 - [ ] M1.5: Recompute service & hardening
@@ -58,6 +58,88 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M1.2 COMPLETE — Deal CRUD with permanent, immutable IDs; engine wired server-side; events emitted.**
+Two additive migrations, applied live via the Management API and registered in
+supabase_migrations.schema_migrations:
+  - 20260718000000_m12_deal_schema.sql — deal enums, the 45-column `deal` table (M1 §3.1),
+    the append-only `deal_event` log, RLS (4 deal + 2 event policies), the deal-code
+    immutability guard trigger, and the read helpers app.deal_snapshot (the LOCKED event
+    payload shape) + app.deal_payment_count (0 until M5).
+  - 20260718000100_m12_deal_write_path.sql — create_deal / update_deal / set_deal_archived /
+    delete_deal (SECURITY INVOKER, one transaction each), and the reference_count activation.
+
+PERMANENT CODES (§4.1): create_deal does `update workspace set deal_id_sequence =
+deal_id_sequence + 1 … returning` INSIDE the transaction, which row-locks the workspace and
+serialises concurrent creates — proven live with 8 parallel creates yielding D003–D010,
+unique and gapless. The code is immutable (guard trigger rejects any change to
+code/workspace/created_*), retired on delete, never reused (D011 deleted → next is D012).
+
+ENGINE IN THE APP, DB AS SINGLE WRITER (FR-M1-05): src/lib/deals — parseDeal validates §4
+rule-12 coupling / basis pairing / rate range at the boundary (all mirrored as table CHECKs);
+deriveDeal calls computeDeal; the write function persists DealDerived AND re-checks the pure
+composition invariants (Rule G referral_out, Rule H NET GCI) so a forged payload can't land
+inconsistent figures — tax math trusted from the engine, the tying arithmetic enforced in SQL.
+booked_year/display_label are derived in-body (display_label needs the freshly-allocated code).
+Money stays exact end-to-end: numeric columns, ::text selects (DEAL_SELECT), string RPC args
+(database.ts create_deal/update_deal overrides); rate_pct is TEXT so the rental 1/12 is exact.
+
+Every mutation = the change + a field-level audit entry + a deal_event, atomic. Optimistic
+locking (§8): update_deal refuses a stale p_expected_version with {ok:false,
+reason:'stale_version', current_version} — a value M1.3 turns into a reload prompt. Delete
+protection (§4 rule 2): delete_deal AND the RLS delete policy block a deal with payments
+(app.deal_payment_count, 0 until M5); archive is the always-available soft delete. M0.3's
+three reference_count bodies are now real counts over deal FKs — the list "used by N deals"
+column and delete-protection turn on product-wide with NO TS change (proven: a developer with
+10 deals → delete BLOCKED, archive still allowed).
+
+VERIFIED LIVE with real JWTs (38/38 checks): D001 assigned on a fresh workspace; D021's inputs
+→ NET GCI ₱354,591.84, every derived column read back ::text-exact (net_list 7,142,857.14 /
+GCI 318,877.55 / incentive 35,714.29 / VAT memo 42,551.02 / EWT memo 35,459.18 / yield
+0.044324 / booked_year 2026 / label "D001 — Daria & John Salon"); concurrent creates
+unique+sequential; update recomputes + audits every field old→new + emits a deal_event with
+old AND new snapshots + bumps version 1→2; stale-version refused; archive→restore emit events;
+cross-tenant AC9 read and write are 0-row no-ops (RLS invisible, not an error); zero residue
+after cleanup. test:unit 155/155 (140 + 15 new deal), build:check + lint clean, Playwright
+33/33 single-worker on a clean reseed. Real account (juliusbaliling25@gmail.com) untouched;
+project restored to baseline (1 workspace, 0 deals).
+
+EVENT-SHAPE HANDOFF (M2/M4/M5) — the deal_event contract is LOCKED (app.deal_snapshot):
+  - Append-only LOG, not a single-consumer queue: several modules consume it (M4 receivables,
+    M2 segment aggregates, M5 join data), so there is NO shared consumed stamp — each consumer
+    tracks its own cursor over (workspace_id, occurred_at). Read via DEAL_EVENT_SELECT.
+  - event_type ∈ {created, updated, archived, restored}. created → old_values NULL, new_values
+    = snapshot. updated → old + new snapshots + field_changes (the audit diff). archived/
+    restored → old + new (archived_at moved). M2/M4 RESTATE against old_values — that is why
+    the OLD snapshot is part of the contract; do not drop it.
+  - Snapshot keys (money as ::text exact strings): id, deal_code, booked_date, booked_year,
+    transaction_type, deal_type, representation, developer_id, property_type_id, lead_source_id,
+    client_name, property_details, mode_of_payment, display_label, list_price, net_list_price,
+    property_vat, comm_base, vat_basis, billed_commission, gci_net_of_vat, incentive_billed,
+    incentive_taxable, incentive_net, referral_out, referral_paid, net_gci, vat_memo, ewt_memo,
+    yield_on_list, taxable, archived_at, version. ADD keys, never rename/drop one.
+  - M4: on created, upsert a receivable with booked_net_gci = new_values.net_gci; on updated,
+    restate booked figures; on archived/restored, archive/restore the receivable. Hard delete
+    emits NO event (only reachable with zero financial children; the deal's events cascade away).
+  - M5: app.deal_payment_count and src/lib/deals/queries.dealPaymentCount both return 0 — M5
+    replaces the SQL body (count over payment.deal_id) to turn on delete protection, the
+    edit-after-payments friction gate, and the archive-cascade confirmation (all already wired
+    in the actions, gated on that count). The DB token bridge (n/a ↔ n_a) lives in
+    src/lib/deals/map.ts; vat_basis reserves 'exclusive' but it is unrepresentable (OQ1).
+
+HOUSEKEEPING (flagged by M1.1, confirmed here): a repeatable local Playwright run needs
+`pnpm run seed:dev --delete` BEFORE `pnpm run seed:dev` every time — the M0.3 seed-offer e2e
+needs an empty list, and other config-lists tests populate it, so a second run without a fresh
+reseed fails the seed-offer test. Run the suite with `--workers=1` locally (CI does): parallel
+`next dev` recompiles race server-action POSTs (documented in playwright.config.ts). Baseline
+was restored (seed users removed) after this milestone's run.
+
+NOTE for M1.5 (recompute) / settings confirmation copy: countAffectedDeals() in
+src/lib/settings/recompute-queries.ts still returns 0 — deliberately left for M1.5, which owns
+knowing WHICH deals a given settings change restates (a vat_rate change touches all taxable
+deals; a developer comm_base change touches only that developer's). Until then the tax/list
+settings confirmation shows "you have no deals yet" even when deals exist. reference_count (the
+list delete-protection count) IS real now — that is a different, per-item count and is done.
+
 **M1.1 COMPLETE — the calculation engine, the single source of money truth.** A pure,
 deterministic, side-effect-free TypeScript library at `src/lib/engine/` (no I/O, no DB, no
 clock): `computeDeal(input, settings)` implements Rules A–J; `computePaymentSplit(input,
@@ -80,10 +162,9 @@ fast-check (new dev dep). 100% line/branch/function coverage on every engine fil
 test:unit 140/140 (74 M0 + 66 engine), `test:engine:coverage` 100%, build:check + lint clean,
 Playwright 33/33 on a clean reseed. NO migrations, NO schema, NO UI this milestone — pure lib.
 
-Next: M1.2 (Deal CRUD with permanent IDs) — import `{ computeDeal, computePaymentSplit }`
-from `@/lib/engine`, call it in-transaction and persist `DealDerived`; then wire the M0.3
-reference_count SQL bodies and add the deals dataset to `loadWorkspaceExport` (M0.4). See the
-M1.1 handoff in pipeline-state.json for the full input/output contract.
+(M1.2 built on this — see the M1.2 status above. Next after M1.2 is M1.3, the Deal entry UI &
+list over src/lib/deals/actions.ts + queries.ts, with a live computed panel reusing the same
+`@/lib/engine`.)
 
 ## Completed Tasks (M1.1)
 - M1.1 Calculation engine library (2026-07-18):
