@@ -61,3 +61,6 @@ Thumbs.db
 .worktree-state.json
 worktrees/
 ZETA_GCI_SaaS_Handoff_Package_v4_solo/
+
+# Real secrets live here — untracked (template's tracked-env convention overridden 2026-07-17)
+.env.local
