@@ -16,7 +16,7 @@
 - [x] M1.1: Calculation engine library
 - [x] M1.2: Deal CRUD with permanent IDs
 - [x] M1.3: Deal entry UI & list
-- [ ] M1.4: v30.x workbook importer
+- [x] M1.4: v30.x workbook importer  ← M1 COMPLETE
 - [x] M1.5: Recompute service & hardening
 - [x] M4.1: Receivable entity + auto-create/restate from deal events
 - [x] M5.1: Payment schema, split snapshot & events
@@ -58,6 +58,112 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M1.4 COMPLETE — v30.x workbook importer (M1 COMPLETE). One-time migration of an
+existing ZETA workbook into a fresh workspace, in ONE database transaction. THE
+ACCEPTANCE ANCHOR (Master PRD §9) REPRODUCES LIVE, to the centavo: importing the
+real `discovery/source/ZETA GCI Calculator  Collections v30.20 (1).xlsx` yields 21
+deals (D001–D021, codes preserved), 8 payments, and receivable overlays such that
+Σ Total Collectible = ₱6,763,497.25, Σ Collected (net of VAT, at the payment level)
+= ₱1,908,192.86, Σ Outstanding = ₱4,855,304.39 (= 6,763,497.25 − 1,908,192.86);
+D021 NET GCI ₱354,591.84; 7 Closed statuses (D001/D004/D006/D017–D020); next NEW
+deal is D022. 0 reconciliation mismatches.
+
+ONE additive migration applied live via the Management API + registered in
+schema_migrations:
+  - 20260718050000_m14_workbook_import.sql — import_batch (idempotency ledger) +
+    import_receivable_overlay + run_workbook_import.
+    · public.import_batch — one row per successful import, keyed by the file's
+      SHA-256 (UNIQUE per workspace) so a re-upload of the same file is refused.
+      summary jsonb (per-leg counts + reconciled anchors, money ::text). RLS
+      member select/insert/update; no delete (history).
+    · public.import_receivable_overlay(deal_id, status, confirmed, note,
+      legacy_note_missing) — the m4_1 handoff contract: un-gated bulk overlay of
+      the workbook's collectible state onto the auto-created receivable. Bypasses
+      set_confirmed_collectible's edge-case-17 note gate (a note-less legacy
+      override is FLAGGED, not rejected); only sets confirmed_collectible (total is
+      generated). Audited old→new. In v30.20 there are NO confirmed overrides
+      (Collectibles col R all blank — D004's 875,000 is the engine's Rule-K.2
+      DEFAULT, not an override), so the overlay leg sets STATUS only.
+    · public.run_workbook_import(p_payload jsonb) — the SINGLE-TRANSACTION
+      orchestrator. (1) idempotency + empty-workspace guards, claim the hash;
+      (2) tax settings (workbook globals — identical to the signup defaults on a
+      fresh ws); (3) lists resolve-or-create (case-insensitive), building the
+      name→id map; (4) deals — mirrors create_deal's write but PRESERVES the
+      workbook code (no sequence allocation) and advances workspace.deal_id_sequence
+      to the max imported suffix (Q26: gaps preserved, no reuse, next = D022);
+      re-checks Rule G/H; audits; emits deal.created; (5) consume_deal_events →
+      receivables auto-create; (6) overlays via import_receivable_overlay;
+      (7) payments via create_payment (the M5.1 un-gated bulk path — re-checks the
+      split ties, emits payment.created for M4.2); (8) stamp the batch summary. Any
+      hard failure rolls the WHOLE import back.
+
+THE ENGINE IS THE SINGLE SOURCE OF MONEY TRUTH (FR-M1-05). The app parses the xlsx,
+runs src/lib/engine (computeDeal / computePaymentSplit — the same library the deal
+form and payment write path use), reconciles each recomputed figure against the
+workbook's cached cell within ₱0.01/row, and passes the fully-derived rows in as one
+jsonb payload. run_workbook_import re-checks only the pure ties, never re-derives tax
+math. Reconciliation runs in the app BEFORE the real run; a mismatch is REPORTED and
+the import REFUSED (never imported silently — FR-M1-10). D001's ARRAYFORMULA-anchor
+row lost its computed cache in the export (Deal Log AND Collectibles), so it is
+recomputed without reconciliation error (GCI = NET GCI = 436,050) and its
+Collectibles status (Closed) is recovered by ROW ALIGNMENT (the Collectibles sheet
+mirrors the Deal Log row order).
+
+PARSE (exceljs 4.4.0, chosen via Context7 — actively maintained, reads by cell
+address with .formula/.result). The workbook is a GSheets export: strings are
+INLINE, dates are Excel SERIALS, and the rentals' Rate % is the FORMULA `=1/12` with
+NO cached result (a data-only read returns nothing → fall back to the formula so the
+exact fraction survives, 270,000 × 1/12 = 22,500.00). GSheets stores cell notes with
+an ABSOLUTE rel target that exceljs mishandles → the comment/vml relationships are
+stripped (fflate) before load. Column mapping by WORKBOOK §3 positions WITH
+header-text validation (v30.13+); a drifted header is flagged in the mapping report.
+
+APP: src/lib/import/{types,mapping,xlsx,parse,reconcile,build,hash,constants,
+actions,queries}.ts + src/components/import/{import-wizard,import-summary}.tsx +
+/deals/import (replaces the M1.3 stub). Dry-run is first-class (parse+compute+
+reconcile, WRITE NOTHING, render the summary); the real run re-parses+reconciles
+SERVER-SIDE (never trusts the preview), is gated on a TYPED confirmation ("IMPORT",
+checkConfirmation), and refuses on any mismatch / already-imported / non-empty
+workspace. The wizard holds the file in React state and dispatches both submits
+manually (a form action would reset the file input between preview and import); the
+"already imported / already has deals" and post-import success panels live in the
+client wizard so the success survives the route refresh a server action triggers.
+next.config serverActions.bodySizeLimit raised to 8mb (the v30.20 file is ~0.7 MB).
+
+PENDING-M4.2 ASSERTION. collected_net / balance are payment-derived receivable
+fields M4.2 computes from the payment-event log (which this import populates via
+create_payment). The importer asserts the Σ Outstanding ₱4,855,304.39 at the SUMMARY
+level (total_collectible − payment_net_collected) but does NOT write it to the
+receivable's balance column — that column stays at its M4.1 zero default until M4.2's
+consumer runs. M4.2 must activate the per-receivable Outstanding assertion:
+resetting no cursor is needed — the 8 payment.created events are already in
+public.payment_event for M4.2's cursor to drain. Expected after M4.2: Σ balance =
+₱4,855,304.39, D021 collected = ₱44,642.86 / balance ₱309,948.98.
+
+ONBOARDING (M10). The M10 first-run wizard embeds this same flow: /deals/import is a
+self-contained client wizard (ImportWizard) driven by getImportStatus — M10 can
+render it inline as an onboarding step; the "empty workspace" precondition it already
+enforces is exactly the wizard's onboarding context.
+
+VERIFIED (live, throwaway workspaces, all deleted after — baseline restored to 1 ws /
+0 deals / 0 import_batches, real account untouched):
+  · headless DB run (real v30.20 → run_workbook_import as a throwaway user): 21
+    deals D001–D021 preserved, 21 receivables (7 Closed), 8 payments, Σ
+    total_collectible 6,763,497.25 EXACT, Σ payment net 1,908,192.86 EXACT, D021 NET
+    GCI 354,591.84, sequence advanced to 21 (next D022), Megaworld GERI = Gross;
+    re-import refused (already_imported); a tampered D021 GCI cell REPORTED as a
+    mismatch.
+  · browser run (real UI, Playwright test-runner — the MCP browser profile was
+    locked by a prior session): the real v30.20 workbook uploaded → dry-run summary
+    shows ₱6,763,497.25 / ₱1,908,192.86 / D022 → typed IMPORT → committed (21 deals);
+    synthetic fixture drives upload→dry-run→confirm→import→idempotent refusal.
+test:unit 227/227 (+18 import: parse/mapping/reconcile/hash + code-gap + serial
+date); build:check + lint clean; Playwright 44/44 single-worker on a clean reseed
+(+2 import specs; tests/fixtures/synthetic-workbook.xlsx committed — the real
+workbook is referenced from discovery/source at runtime, never committed to tests).
+tests/alias-hooks.mjs gained a node_modules guard so exceljs's CJS internals load
+under `node --test`.
+
 **M5.1 COMPLETE — Payment schema, save-time split snapshot & events (NO UI). Each
 release logs one payment row; the split (Net-of-VAT/VAT/EWT/Net Cash/Retained) is
 CAPTURED AT SAVE TIME from the deal's then-current vat_basis + workspace rates and

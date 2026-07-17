@@ -71,6 +71,16 @@ registerHooks({
 
     if (specifier.startsWith(".")) {
       const parentDir = parentDirOf(context.parentURL);
+
+      // A relative import from inside node_modules is a dependency's own business
+      // — leave it entirely to Node. Rewriting it (e.g. exceljs's CJS internals,
+      // which use extensionless relative requires that happen to resolve to a
+      // real .js file) hands the CJS loader a file:// URL it cannot require, and
+      // the dependency fails to load (M1.4: the xlsx importer pulls in exceljs).
+      if (parentDir && parentDir.includes(`${path.sep}node_modules${path.sep}`)) {
+        return nextResolve(specifier, context);
+      }
+
       const target =
         parentDir && resolveToFile(path.resolve(parentDir, specifier));
 

@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
 
   /**
+   * The M1.4 workbook importer uploads an .xlsx through a Server Action, and
+   * Server Actions cap the request body at 1 MB by default. A v30.x ZETA workbook
+   * is ~0.7 MB today but a 1,000-deal book is larger, so the limit is raised to
+   * 8 MB (the importer's own guard also rejects anything past 8 MB before parsing).
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
+
+  /**
    * Security response headers (M0.4 hardening pass; M0 §8 "auth hardening
    * appropriate for financial data", SECURITY.md #6/#7).
    *

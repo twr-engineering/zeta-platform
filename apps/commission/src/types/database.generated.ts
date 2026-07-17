@@ -352,6 +352,44 @@ export type Database = {
           },
         ]
       }
+      import_batch: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_hash: string
+          file_name: string | null
+          id: string
+          summary: Json
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_hash: string
+          file_name?: string | null
+          id?: string
+          summary?: Json
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_hash?: string
+          file_name?: string | null
+          id?: string
+          summary?: Json
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batch_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_source: {
         Row: {
           archived_at: string | null
@@ -1133,6 +1171,16 @@ export type Database = {
         Args: { p_error: string; p_job_id: string }
         Returns: Json
       }
+      import_receivable_overlay: {
+        Args: {
+          p_confirmed: number
+          p_deal_id: string
+          p_legacy_note_missing?: boolean
+          p_note: string
+          p_status: Database["public"]["Enums"]["receivable_status"]
+        }
+        Returns: Json
+      }
       log_deal_warning_override: {
         Args: { p_deal_id: string; p_warnings: string[] }
         Returns: Json
@@ -1171,6 +1219,7 @@ export type Database = {
         Args: { p_id: string; p_position: number }
         Returns: Json
       }
+      run_workbook_import: { Args: { p_payload: Json }; Returns: Json }
       seed_developers: { Args: { p_items: Json }; Returns: Json }
       seed_lead_sources: { Args: { p_items: Json }; Returns: Json }
       seed_property_types: { Args: { p_items: Json }; Returns: Json }

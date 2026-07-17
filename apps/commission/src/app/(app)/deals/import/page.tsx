@@ -1,30 +1,45 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Upload } from "lucide-react";
 
-import { EmptyState } from "@/components/common/empty-state";
-import { Button } from "@/components/ui/button";
-import { ROUTES } from "@/lib/routes";
+import { ImportWizard } from "@/components/import/import-wizard";
+import { getImportStatus } from "@/lib/import/queries";
 
-export const metadata: Metadata = { title: "Import deals" };
+export const metadata: Metadata = { title: "Import workbook" };
 
 /**
- * The workbook importer (FR-M1-10) is M1.4. This is its entry point — reachable
- * from the deals empty state — held as a clearly-labelled placeholder so the
- * link exists and the flow is discoverable before the importer itself lands.
+ * The v30.x workbook importer (FR-M1-10, M1.4) — the acquisition wedge: a solo
+ * agent migrates their existing ZETA workbook in one pass. It PRESERVES the
+ * workbook's deal codes, so it only runs on a fresh workspace.
+ *
+ * The whole flow — upload, dry run, confirm, the post-import success, and the
+ * "already imported / this workspace already has deals" state — lives in the
+ * client wizard. That is deliberate: a server action refreshes this route when it
+ * commits, and if the page hid the wizard once deals existed, that refresh would
+ * unmount the success panel the agent just earned. So the server only reads the
+ * entry state and hands it to the wizard, which decides what to show (a local
+ * just-finished import always wins).
  */
-export default function ImportDealsPage() {
+export default async function ImportDealsPage() {
+  const status = await getImportStatus();
+  const blocked = status.dealCount > 0 || status.lastImport !== null;
+
   return (
-    <div className="mx-auto max-w-2xl">
-      <EmptyState
-        icon={<Upload />}
-        title="Workbook importer is coming soon"
-        description="The one-time importer migrates an existing v30.x ZETA workbook — every deal with its original codes, payments and collectible statuses. It arrives in the next milestone (M1.4). For now, log deals directly."
-        action={
-          <Button nativeButton={false} render={<Link href={ROUTES.dealNew} />}>
-            Log a deal instead
-          </Button>
-        }
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          Import your ZETA workbook
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          A one-time migration of an existing v30.x ZETA GCI + Collections workbook — its settings,
+          all deals (with original codes), payments and collectible statuses — recomputed server-side
+          and reconciled to the centavo before anything is written.
+        </p>
+      </div>
+
+      <ImportWizard
+        blocked={blocked}
+        blockedReason={status.lastImport !== null ? "imported" : "has_deals"}
+        dealCount={status.dealCount}
+        lastImportName={status.lastImport?.file_name ?? null}
       />
     </div>
   );
