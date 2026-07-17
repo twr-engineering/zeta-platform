@@ -71,6 +71,7 @@ export type Database = {
           created_by: string | null
           deal_code: string
           deal_type: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible: number
           developer_id: string | null
           display_label: string
           ewt_memo: number
@@ -120,6 +121,7 @@ export type Database = {
           created_by?: string | null
           deal_code: string
           deal_type: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible: number
           developer_id?: string | null
           display_label: string
           ewt_memo: number
@@ -169,6 +171,7 @@ export type Database = {
           created_by?: string | null
           deal_code?: string
           deal_type?: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible?: number
           developer_id?: string | null
           display_label?: string
           ewt_memo?: number
@@ -501,6 +504,175 @@ export type Database = {
           },
         ]
       }
+      receivable: {
+        Row: {
+          age_months: number | null
+          archived_at: string | null
+          balance: number | null
+          booked_net_gci: number
+          booked_year: number
+          booking_date: string
+          chase_priority: number | null
+          client_name: string
+          collected_net: number
+          confirmed_collectible: number | null
+          created_at: string
+          created_by: string | null
+          days_to_first_release: number | null
+          deal_code: string
+          deal_id: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible: number
+          developer_id: string | null
+          first_payment_date: string | null
+          id: string
+          last_payment_date: string | null
+          lead_source_id: string
+          months_idle: number | null
+          next_action_note: string | null
+          pct_collected: number | null
+          property_details: string
+          status: Database["public"]["Enums"]["receivable_status"]
+          total_collectible: number | null
+          updated_at: string
+          updated_by: string | null
+          variance: number | null
+          version: number
+          workspace_id: string
+          written_off: number | null
+        }
+        Insert: {
+          age_months?: number | null
+          archived_at?: string | null
+          balance?: number | null
+          booked_net_gci: number
+          booked_year: number
+          booking_date: string
+          chase_priority?: number | null
+          client_name: string
+          collected_net?: number
+          confirmed_collectible?: number | null
+          created_at?: string
+          created_by?: string | null
+          days_to_first_release?: number | null
+          deal_code: string
+          deal_id: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible: number
+          developer_id?: string | null
+          first_payment_date?: string | null
+          id?: string
+          last_payment_date?: string | null
+          lead_source_id: string
+          months_idle?: number | null
+          next_action_note?: string | null
+          pct_collected?: number | null
+          property_details: string
+          status?: Database["public"]["Enums"]["receivable_status"]
+          total_collectible?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          variance?: number | null
+          version?: number
+          workspace_id: string
+          written_off?: number | null
+        }
+        Update: {
+          age_months?: number | null
+          archived_at?: string | null
+          balance?: number | null
+          booked_net_gci?: number
+          booked_year?: number
+          booking_date?: string
+          chase_priority?: number | null
+          client_name?: string
+          collected_net?: number
+          confirmed_collectible?: number | null
+          created_at?: string
+          created_by?: string | null
+          days_to_first_release?: number | null
+          deal_code?: string
+          deal_id?: string
+          deal_type?: Database["public"]["Enums"]["deal_type"]
+          default_total_collectible?: number
+          developer_id?: string | null
+          first_payment_date?: string | null
+          id?: string
+          last_payment_date?: string | null
+          lead_source_id?: string
+          months_idle?: number | null
+          next_action_note?: string | null
+          pct_collected?: number | null
+          property_details?: string
+          status?: Database["public"]["Enums"]["receivable_status"]
+          total_collectible?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          variance?: number | null
+          version?: number
+          workspace_id?: string
+          written_off?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivable_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivable_lead_source_id_fkey"
+            columns: ["lead_source_id"]
+            isOneToOne: false
+            referencedRelation: "lead_source"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivable_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receivable_event_cursor: {
+        Row: {
+          last_event_id: string | null
+          last_occurred_at: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_event_cursor_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recompute_job: {
         Row: {
           created_at: string
@@ -714,6 +886,7 @@ export type Database = {
         Returns: Json
       }
       complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
+      consume_deal_events: { Args: { p_limit?: number }; Returns: Json }
       count_affected_deals: {
         Args: { p_entity_id: string; p_entity_type: string; p_fields: string[] }
         Returns: number
@@ -726,6 +899,7 @@ export type Database = {
           p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
           p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
           p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_default_total_collectible: number
           p_developer_id: string
           p_ewt_memo: number
           p_fixed_amount: number
@@ -821,6 +995,10 @@ export type Database = {
       seed_developers: { Args: { p_items: Json }; Returns: Json }
       seed_lead_sources: { Args: { p_items: Json }; Returns: Json }
       seed_property_types: { Args: { p_items: Json }; Returns: Json }
+      set_confirmed_collectible: {
+        Args: { p_note: string; p_receivable_id: string; p_value: number }
+        Returns: Json
+      }
       set_deal_archived: {
         Args: { p_archived: boolean; p_id: string }
         Returns: Json
@@ -831,6 +1009,10 @@ export type Database = {
       }
       set_lead_source_archived: {
         Args: { p_archived: boolean; p_id: string }
+        Returns: Json
+      }
+      set_next_action_note: {
+        Args: { p_note: string; p_receivable_id: string }
         Returns: Json
       }
       set_property_type_archived: {
@@ -846,6 +1028,7 @@ export type Database = {
           p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
           p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
           p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_default_total_collectible: number
           p_developer_id: string
           p_ewt_memo: number
           p_expected_version: number
@@ -941,6 +1124,7 @@ export type Database = {
       developer_comm_base: "gross" | "net"
       membership_role: "owner" | "admin" | "agent" | "readonly"
       property_vat_rule: "threshold" | "always_vat" | "always_exempt"
+      receivable_status: "open" | "closed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1096,6 +1280,8 @@ export const Constants = {
       developer_comm_base: ["gross", "net"],
       membership_role: ["owner", "admin", "agent", "readonly"],
       property_vat_rule: ["threshold", "always_vat", "always_exempt"],
+      receivable_status: ["open", "closed", "cancelled"],
     },
   },
 } as const
+

@@ -108,6 +108,7 @@ export const DEAL_SELECT = [
   "incentive_net::text",
   "referral_out::text",
   "net_gci::text",
+  "default_total_collectible::text",
   "vat_memo::text",
   "ewt_memo::text",
   "yield_on_list::text",
@@ -129,3 +130,49 @@ export const DEAL_SELECT = [
  * is on audit_log_entry — the exact decimal never becomes a JSON number.
  */
 export const DEAL_EVENT_SELECT = "*";
+
+/**
+ * receivable (M4 §3.1) — money-dense, so every peso figure is selected `::text`
+ * (the override in @/types/database types them `string`). Mirrors and Rule K
+ * anchors (booked_net_gci, default/total collectible, confirmed) plus the reserved
+ * payment-derived columns M4.2/M4.3 fill in. NEVER `select("*")` here. Integers
+ * (booked_year, months_idle, age_months, days_to_first_release, version) and dates
+ * round-trip exactly, so they need no cast; total_collectible is a generated
+ * numeric and casts the same as any money column.
+ */
+export const RECEIVABLE_SELECT = [
+  "id",
+  "workspace_id",
+  "deal_id",
+  "deal_code",
+  "booked_year",
+  "developer_id",
+  "client_name",
+  "property_details",
+  "deal_type",
+  "lead_source_id",
+  "booking_date",
+  "booked_net_gci::text",
+  "default_total_collectible::text",
+  "confirmed_collectible::text",
+  "total_collectible::text",
+  "status",
+  "next_action_note",
+  "collected_net::text",
+  "balance::text",
+  "pct_collected::text",
+  "variance::text",
+  "written_off::text",
+  "last_payment_date",
+  "first_payment_date",
+  "months_idle",
+  "age_months",
+  "days_to_first_release",
+  "chase_priority::text",
+  "archived_at",
+  "version",
+  "created_by",
+  "updated_by",
+  "created_at",
+  "updated_at",
+].join(",");

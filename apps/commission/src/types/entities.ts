@@ -31,6 +31,11 @@ export type DealEvent = Tables<"deal_event">;
 // M1.5 (FR-M1-07). A bulk recompute in flight — progress + resume cursor.
 export type RecomputeJob = Tables<"recompute_job">;
 
+// M4 §3.1. One receivable per deal. The money-safe Row (numeric columns re-typed
+// string) comes from the override layer in ./database — see RECEIVABLE_SELECT.
+export type Receivable = Tables<"receivable">;
+export type ReceivableStatus = Enums<"receivable_status">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;

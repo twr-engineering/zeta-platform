@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TAX_SETTINGS_SELECT } from "@/lib/supabase/selects";
 import { ROUTES } from "@/lib/routes";
 import { dealTypeToEngine, dealDerivedDbFields } from "@/lib/deals/map";
+import { consumeReceivableEvents } from "@/lib/receivables/consume";
 import type { RecomputeProgress, RecomputeStatus } from "./recompute";
 
 /**
@@ -179,9 +180,20 @@ async function readProgress(supabase: DealClient, jobId: string): Promise<Recomp
   };
 }
 
-/** Refresh the read models a restatement moved (deal figures + their audit trail). */
-function revalidateRestated(): void {
+/**
+ * Refresh the read models a restatement moved (deal figures + their audit trail),
+ * AND project the bulk deal.updated events onto their receivables (M4.1 FR-M4-02:
+ * booked moves when NET GCI moves, including recompute-driven updates). Best-effort
+ * on the sync — the events persist, so the cursor heals any miss on the next call.
+ */
+async function revalidateRestated(): Promise<void> {
+  try {
+    await consumeReceivableEvents();
+  } catch (error) {
+    console.error("receivable sync after recompute failed:", error);
+  }
   revalidatePath(ROUTES.deals);
+  revalidatePath(ROUTES.collectibles);
   revalidatePath(ROUTES.settingsAuditLog);
 }
 
@@ -210,7 +222,7 @@ async function drain(
       if (empty) {
         const { data } = await supabase.rpc("complete_recompute_job", { p_job_id: jobId });
         const done = data as unknown as { restated: number; total: number; processed: number };
-        revalidateRestated();
+        await revalidateRestated();
         return {
           jobId,
           status: "completed",
@@ -222,12 +234,12 @@ async function drain(
       }
     }
     // Hit the safety ceiling without draining — leave it resumable.
-    revalidateRestated();
+    await revalidateRestated();
     return await readProgress(supabase, jobId);
   } catch (error) {
     const message = error instanceof Error ? error.message : "recompute failed";
     await supabase.rpc("fail_recompute_job", { p_job_id: jobId, p_error: message });
-    revalidateRestated();
+    await revalidateRestated();
     return { ...(await readProgress(supabase, jobId)), status: "failed" };
   }
 }
@@ -287,7 +299,7 @@ export async function stepRecompute(jobId: string): Promise<RecomputeProgress> {
 
   const { data } = await supabase.rpc("complete_recompute_job", { p_job_id: jobId });
   const done = data as unknown as { restated: number; total: number; processed: number };
-  revalidateRestated();
+  await revalidateRestated();
   return {
     jobId,
     status: "completed",

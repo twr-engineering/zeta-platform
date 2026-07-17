@@ -144,6 +144,16 @@ export type DealDerived = {
   referral_out: string;
   /** Field 29 (col AD) — Rule H. */
   net_gci: string;
+  /**
+   * M4 Rule K.2 — the receivable's *default* Total Collectible (cash expected in):
+   * `gci_net_of_vat + incentive_net`, computed at FULL precision and rounded once
+   * (equivalently `net_gci + referral_out`). NOT a workbook Deal-Log column; it is
+   * the deal-level anchor M4 mirrors onto the receivable so the cash-in figure ties
+   * to the centavo (D013: 906,752.23, not 906,752.24 from summed 2-dp displays).
+   * Computed here — the only place full-precision gci/incentive exist — so the
+   * engine stays the single source of money truth (FR-M1-05).
+   */
+  default_total_collectible: string;
   /** Field 31 (col AF) — Rule I. */
   vat_memo: string;
   /** Field 32 (col AG) — Rule I. */

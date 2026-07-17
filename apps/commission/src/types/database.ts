@@ -117,6 +117,7 @@ type DealNonNullMoneyColumns =
   | "referral_out_fixed"
   | "referral_out"
   | "net_gci"
+  | "default_total_collectible"
   | "vat_memo"
   | "ewt_memo"
   | "yield_on_list";
@@ -134,6 +135,41 @@ type DealOverride = Omit<DealTable, "Row" | "Insert" | "Update"> & {
     WithOptionalMoneyStrings<DealTable["Update"], DealNonNullMoneyColumns>,
     "fixed_amount"
   > & { fixed_amount?: string | null };
+};
+
+// --- receivable (M4 §3.1) ---------------------------------------------------
+
+type ReceivableTable = GeneratedTables["receivable"];
+
+/**
+ * Every peso figure is `numeric`, so it arrives as a JSON float unless the query
+ * casts `::text` (see @/lib/supabase/selects RECEIVABLE_SELECT). Only the Row is
+ * re-typed: receivables are written exclusively by SECURITY INVOKER DB functions
+ * (the consumer + the two mutations), never inserted through the client, so the
+ * Insert/Update shapes are unused. The Rule K anchors and collected total are NOT
+ * NULL; the override and the payment-derived figures are nullable.
+ */
+type ReceivableNonNullMoney =
+  | "booked_net_gci"
+  | "default_total_collectible"
+  | "total_collectible"
+  | "collected_net";
+
+type ReceivableNullableMoney =
+  | "confirmed_collectible"
+  | "balance"
+  | "pct_collected"
+  | "variance"
+  | "written_off"
+  | "chase_priority";
+
+type ReceivableOverride = Omit<ReceivableTable, "Row"> & {
+  Row: Omit<
+    ReceivableTable["Row"],
+    ReceivableNonNullMoney | ReceivableNullableMoney
+  > &
+    Record<ReceivableNonNullMoney, string> &
+    Record<ReceivableNullableMoney, string | null>;
 };
 
 // --- Functions --------------------------------------------------------------
@@ -160,6 +196,7 @@ type DealRpcMoneyArgs =
   | "p_referral_out_fixed"
   | "p_referral_out"
   | "p_net_gci"
+  | "p_default_total_collectible"
   | "p_vat_memo"
   | "p_ewt_memo"
   | "p_yield_on_list";
@@ -221,27 +258,50 @@ type CountAffectedDealsOverride = Omit<CountAffectedDealsFn, "Args"> & {
   };
 };
 
+/**
+ * set_confirmed_collectible (M4.1). `p_value` is the numeric override amount — the
+ * float trap from the argument side again: PostgREST casts a JSON *string* straight
+ * to numeric, and null clears the override, so it is `string | null`, never a
+ * float. `p_note` (text) and `p_receivable_id` (uuid) are already `string`.
+ */
+type SetConfirmedCollectibleFn = GeneratedFunctions["set_confirmed_collectible"];
+type SetConfirmedCollectibleOverride = Omit<SetConfirmedCollectibleFn, "Args"> & {
+  Args: Omit<SetConfirmedCollectibleFn["Args"], "p_value"> & {
+    p_value: string | null;
+  };
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
   public: Omit<PublicSchema, "Tables" | "Functions"> & {
     Tables: Omit<
       GeneratedTables,
-      "tax_settings" | "audit_log_entry" | "settings_change_event" | "deal"
+      | "tax_settings"
+      | "audit_log_entry"
+      | "settings_change_event"
+      | "deal"
+      | "receivable"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
       settings_change_event: SettingsEventOverride;
       deal: DealOverride;
+      receivable: ReceivableOverride;
     };
     Functions: Omit<
       GeneratedFunctions,
-      "update_tax_settings" | "create_deal" | "update_deal" | "count_affected_deals"
+      | "update_tax_settings"
+      | "create_deal"
+      | "update_deal"
+      | "count_affected_deals"
+      | "set_confirmed_collectible"
     > & {
       update_tax_settings: UpdateTaxSettingsOverride;
       create_deal: CreateDealOverride;
       update_deal: UpdateDealOverride;
       count_affected_deals: CountAffectedDealsOverride;
+      set_confirmed_collectible: SetConfirmedCollectibleOverride;
     };
   };
 };

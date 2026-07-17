@@ -18,6 +18,11 @@ import {
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
 import { listDeals } from "@/lib/deals/queries";
+import {
+  listReceivables,
+  receivablePayor,
+  type ReceivableRow,
+} from "@/lib/receivables/queries";
 import type { ExportColumn, ExportDataset } from "./format";
 import type {
   AuditLogEntry,
@@ -149,9 +154,52 @@ const DEAL_COLUMNS: readonly ExportColumn<Deal>[] = [
   { header: "Status", type: "text", value: archivedState, width: 12 },
 ];
 
+// --- receivables (M4 §3.1) --------------------------------------------------
+
+const RECEIVABLE_STATUS_LABELS: Record<ReceivableRow["status"], string> = {
+  open: "Open",
+  closed: "Closed",
+  cancelled: "Cancelled",
+};
+
+/**
+ * The receivables ledger (FR-M4-12). Money comes through RECEIVABLE_SELECT's
+ * `::text` casts, so the archive ties to the centavo. The override marker is the
+ * Confirmed Collectible column: a value there means Total Collectible was
+ * user-confirmed (the sheet's blue cell). Payment-derived columns (Collected,
+ * Balance) are still at their M4.1 defaults and fill in with M4.2.
+ */
+const RECEIVABLE_COLUMNS: readonly ExportColumn<ReceivableRow>[] = [
+  { header: "Deal Code", type: "text", value: (r) => r.deal_code, width: 12 },
+  { header: "Year", type: "number", value: (r) => r.booked_year, width: 8 },
+  { header: "Developer", type: "text", value: (r) => r.developer?.name ?? "", width: 22 },
+  { header: "Client", type: "text", value: (r) => r.client_name, width: 24 },
+  { header: "Property", type: "text", value: (r) => r.property_details, width: 28 },
+  { header: "Deal Type", type: "text", value: (r) => DEAL_TYPE_LABELS[r.deal_type], width: 12 },
+  { header: "Payor", type: "text", value: (r) => receivablePayor(r), width: 22 },
+  { header: "Booked NET GCI", type: "money", value: (r) => r.booked_net_gci, width: 16 },
+  { header: "Total Collectible", type: "money", value: (r) => r.total_collectible, width: 16 },
+  {
+    header: "Confirmed (override)",
+    type: "money",
+    value: (r) => r.confirmed_collectible ?? "",
+    width: 18,
+  },
+  { header: "Collected (Net of VAT)", type: "money", value: (r) => r.collected_net, width: 18 },
+  { header: "Status", type: "text", value: (r) => RECEIVABLE_STATUS_LABELS[r.status], width: 12 },
+  { header: "Next Action", type: "text", value: (r) => r.next_action_note ?? "", width: 32 },
+  {
+    header: "Deal status",
+    type: "text",
+    value: (r) => (r.archived_at ? "Archived" : "Active"),
+    width: 12,
+  },
+];
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
   "deals",
+  "receivables",
   "property-types",
   "developers",
   "lead-sources",
@@ -182,6 +230,18 @@ export async function loadExportDataset(
         name: "deals",
         sheet: "Deals",
         columns: DEAL_COLUMNS,
+        rows,
+      });
+    }
+    case "receivables": {
+      // The ledger's active/archived view is exclusive, mirroring the deals export.
+      const rows = (await listReceivables({ includeArchived: true })).filter((r) =>
+        filters.archived ? r.archived_at !== null : r.archived_at === null
+      );
+      return dataset({
+        name: "receivables",
+        sheet: "Receivables",
+        columns: RECEIVABLE_COLUMNS,
         rows,
       });
     }
@@ -314,6 +374,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     membership,
     taxSettings,
     deals,
+    receivables,
     propertyTypes,
     developers,
     leadSources,
@@ -325,6 +386,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     supabase.from("membership").select("*").returns<Membership[]>(),
     supabase.from("tax_settings").select(TAX_SETTINGS_SELECT).returns<TaxSettings[]>(),
     listDeals({ includeArchived: true }),
+    listReceivables({ includeArchived: true }),
     listPropertyTypes(),
     listDevelopers(),
     listLeadSources(),
@@ -357,6 +419,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     dataset({ name: "membership", sheet: "Membership", columns: MEMBERSHIP_COLUMNS, rows: membership.data ?? [] }),
     dataset({ name: "tax-settings", sheet: "Tax Settings", columns: TAX_SETTINGS_COLUMNS, rows: taxSettings.data ?? [] }),
     dataset({ name: "deals", sheet: "Deals", columns: DEAL_COLUMNS, rows: deals }),
+    dataset({ name: "receivables", sheet: "Receivables", columns: RECEIVABLE_COLUMNS, rows: receivables }),
     dataset({ name: "property-types", sheet: "Property Types", columns: PROPERTY_TYPE_COLUMNS, rows: propertyTypes }),
     dataset({ name: "developers", sheet: "Developers", columns: DEVELOPER_COLUMNS, rows: developers }),
     dataset({ name: "lead-sources", sheet: "Lead Sources", columns: LEAD_SOURCE_COLUMNS, rows: leadSources }),

@@ -327,3 +327,36 @@ test("edge case 5 — a Referrer deal computes with the ordinary rate × base ma
   assert.equal(d.gci_net_of_vat, "436050.00");
   assert.equal(d.net_gci, "436050.00");
 });
+
+// --- M4 Rule K.2 — default_total_collectible (the receivable's cash-in anchor) --
+
+const derivedFor = (id: string) =>
+  computeDeal(WORKBOOK_DEALS.find((f) => f.id === id)!.input, S);
+
+test("Rule K.2 — default collectible = GCI + incentive net, NOT net_gci (D004)", () => {
+  // D004 has a ₱75,000 referral out: the payor still sends the full ₱875,000 in;
+  // booked NET GCI is ₱800,000. The two anchors diverge exactly by the referral.
+  const d = derivedFor("D004");
+  assert.equal(d.net_gci, "800000.00"); // K.1 booked
+  assert.equal(d.default_total_collectible, "875000.00"); // K.2 default (§9 AC2)
+});
+
+test("Rule K.2 — no referral out: default collectible equals net_gci (D021)", () => {
+  const d = derivedFor("D021");
+  assert.equal(d.net_gci, "354591.84");
+  assert.equal(d.default_total_collectible, "354591.84");
+});
+
+test("Rule K.2 — full-precision default, not summed 2-dp displays (D013)", () => {
+  // gci 777,287.9464… + incentive 129,464.2857… = 906,752.2321… → 906,752.23.
+  // Summing the rounded displays (777,287.95 + 129,464.29) would give 906,752.24
+  // — forbidden per the rounding policy; the value is booked full-precision.
+  const d = derivedFor("D013");
+  assert.equal(d.default_total_collectible, "906752.23");
+  assert.notEqual(d.default_total_collectible, "906752.24");
+});
+
+test("Rule K.2 — taxable incentive folds into the default (D008, D010)", () => {
+  assert.equal(derivedFor("D008").default_total_collectible, "317414.70");
+  assert.equal(derivedFor("D010").default_total_collectible, "426953.13");
+});

@@ -334,4 +334,7 @@ const FIELD_LABELS: Record<string, string> = {
   password: "Password",
   // M1.3 deal events — the full field set lives in the deals label module.
   ...DEAL_FIELD_LABELS,
+  // M4.1 receivable events (the two editable fields M4.1 owns).
+  confirmed_collectible: "Confirmed Collectible",
+  next_action_note: "Next Action",
 };

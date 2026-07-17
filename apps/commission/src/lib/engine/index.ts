@@ -13,6 +13,11 @@
 export { computeDeal } from "./deal";
 export { computePaymentSplit } from "./payment-split";
 export { isSplitAtSourceRisk } from "./warnings";
+export {
+  bookedNetGci,
+  defaultTotalCollectible,
+  totalCollectible,
+} from "./receivable";
 export type {
   CommBase,
   CommBaseDisplay,

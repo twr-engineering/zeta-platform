@@ -141,6 +141,14 @@ export function computeDeal(
   // through the sum; a single centavo round at the boundary (ROUNDING.md).
   const netGci = gci.plus(incentiveNet).minus(referralOut);
 
+  // M4 Rule K.2 — default Total Collectible (cash the payor sends IN): GCI plus
+  // the net incentive, with NO deduction for referral-out (the agent disburses
+  // referrers separately — M4 PRD header doctrine). Summed at FULL precision and
+  // rounded ONCE here: adding the already-rounded gci_net_of_vat + incentive_net
+  // would drift a centavo (D013 → 906,752.24 instead of 906,752.23). This is the
+  // one place both components exist un-rounded, so Rule K's default is booked here.
+  const defaultTotalCollectible = gci.plus(incentiveNet);
+
   // Rule I — Tax memos (cols AF/AG). taxable_income = GCI + taxable incentive.
   // OQ2 (M1 PRD §11.2 / WORKBOOK DISCREPANCY 7): when a taxable deal carries a
   // referral-out the memo base could instead net it out (NET GCI). No live
@@ -167,6 +175,7 @@ export function computeDeal(
     incentive_net: toCentavoString(incentiveNet),
     referral_out: toCentavoString(referralOut),
     net_gci: toCentavoString(netGci),
+    default_total_collectible: toCentavoString(defaultTotalCollectible),
     vat_memo: toCentavoString(vatMemo),
     ewt_memo: toCentavoString(ewtMemo),
     yield_on_list: yieldOnList.toFixed(YIELD_RATE_DP),

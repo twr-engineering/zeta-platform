@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T05:20:00+08:00
+# Last Updated: 2026-07-18T06:40:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -18,7 +18,7 @@
 - [x] M1.3: Deal entry UI & list
 - [ ] M1.4: v30.x workbook importer
 - [x] M1.5: Recompute service & hardening
-- [ ] M4.1: Receivable entity + auto-create/restate from deal events
+- [x] M4.1: Receivable entity + auto-create/restate from deal events
 - [ ] M5.1: Payment schema, split snapshot & events
 - [ ] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
 - [ ] M5.2: Fast-entry form & split preview
@@ -58,6 +58,193 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M4.1 COMPLETE — Receivable entity + auto-create/restate from deal events. Exactly
+one receivable per deal, SYSTEM-managed: created / restated / archived by a cursor-
+based consumer over the deal event log, never user-created or user-deleted (§4 rule
+1). Rule K anchors (booked NET GCI + default/total collectible) are centavo-exact via
+the engine; the two user-editable fields M4.1 owns (Confirmed Collectible override,
+Next Action note) are audited DB-function mutations. Payments math (collected/balance/
+idle/aging) is M4.2; status lifecycle + variance/write-off + restated-override flag is
+M4.3; ledger UI + projections is M4.4.**
+
+(Built right after M1.5, before M1.4's full importer run — M1.4's collectibles leg
+writes status/override/note through M4's schema; the importer-leg contract is below.)
+
+RULE K IN THE ENGINE (one source of money truth, FR-M1-05). The receivable's default
+Total Collectible is `gci_net_of_vat + incentive_net` (Rule K.2) — the full cash the
+payor sends in, before the agent disburses referrers themselves. Summing the STORED
+2-dp figures drifts a centavo (D013 → 906,752.24 vs the correct 906,752.23), so the
+sum is taken at FULL precision, which only exists inside computeDeal. Therefore:
+  - src/lib/engine/deal.ts now emits `default_total_collectible` in DealDerived
+    (toCentavoString(gci.plus(incentiveNet))); types.ts declares it.
+  - src/lib/engine/receivable.ts holds the thin remainder of Rule K: bookedNetGci
+    (K.1 mirror = net_gci), defaultTotalCollectible (pass-through), totalCollectible
+    (K.2 override precedence — the reference for the DB's generated column). No new
+    arithmetic; already-exact strings only.
+This is a PURE ADDITIVE extension of M1's engine (engine fixtures use Pick<> so the
+new field breaks nothing) — 187/187 unit incl. 14 new Rule K tests (D004 800k/875k,
+D021 354,591.84, D013 906,752.23-not-.24, D008/D010, override precedence).
+
+TWO additive migrations, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718030000_m41_deal_collectible_anchor.sql — carries Rule K.2 through the
+    deal so events carry it (M4 mirrors, no arithmetic of its own). Adds
+    deal.default_total_collectible numeric(14,2) NOT NULL (backfilled gci+incentive
+    for legacy; 0 rows at baseline). Adds the key to app.deal_snapshot (append-only
+    contract: add, never drop). DROP+CREATE create_deal / update_deal with a new
+    p_default_total_collectible arg (CREATE OR REPLACE can't change a signature;
+    leaving an overload would make the PostgREST call ambiguous — bodies are M1.2's
+    verbatim + the one column; args bind by NAME so callers are position-independent)
+    and re-grant. apply_recompute_batch (jsonb, no signature change) reads + persists
+    the extra key so a BULK recompute moves the collectible anchor in lock-step and
+    the deal.updated event carries it.
+  - 20260718030100_m41_receivable.sql — the entity + consumer + the two M4.1 mutations.
+    · public.receivable_status enum (open/closed/cancelled, default open).
+    · public.receivable — §3.1's 27 fields. Identity mirrors (deal_code, booked_year,
+      developer_id, client_name, property_details, deal_type, lead_source_id,
+      booking_date) restated on every deal event. FKs are mirrored, NOT denormalised
+      names, so a developer rename never drifts (§4 rule 2, the SaaS improvement over
+      the sheet's ARRAYFORMULA copy) — `payor` (col S) is likewise derived in the read
+      layer (receivablePayor). booked_net_gci = deal.net_gci; default_total_collectible
+      mirrors the deal's Rule K.2; confirmed_collectible is the nullable override
+      (>0 CHECK); total_collectible is a GENERATED STORED column
+      coalesce(confirmed, default) — override precedence that can never drift and is
+      indexable. status/next_action_note are the inputs. The payment-derived columns
+      (collected_net default 0, balance, pct_collected, variance, written_off, payment
+      dates, months_idle, age_months, days_to_first_release, chase_priority) are
+      present at their empty/zero defaults, POPULATED BY M4.2/M4.3. unique(deal_id)
+      makes a second receivable structurally impossible (FR-M4-01). Archive follows
+      the deal (ON DELETE CASCADE on deal_id; archived_at mirrored). RLS member-scoped,
+      NO delete policy for authenticated (never user-deleted).
+    · public.receivable_event_cursor — M4's OWN cursor over deal_event (per m1_2
+      handoff: several consumers, each its own cursor, no shared consumed stamp).
+      (last_occurred_at '-infinity', last_event_id) high-water mark; reset to replay.
+    · public.consume_deal_events(p_limit) — reads events after the cursor in
+      (occurred_at, id) order and UPSERTs each deal's receivable from the event's
+      new_values snapshot (mirrors + Rule K anchors + archived_at); ON CONFLICT
+      overwrites ONLY mirror/anchor/archive columns, so user inputs (status,
+      confirmed_collectible, next_action_note) survive every restate. Idempotent
+      (unique deal_id) + resumable (cursor) — replay from '-infinity' re-projects to
+      the identical state with no dupes.
+    · public.set_next_action_note(id, note) — plain audited edit (not money-restating,
+      no friction gate; blank clears). FR-M4-07.
+    · public.set_confirmed_collectible(id, value, note) — FR-M4-06 / edge case 17:
+      setting REQUIRES a positive value AND a non-empty note (the note is the
+      override's audit trail — the v1 friction gate); clearing (null) reverts
+      total_collectible to the Rule K.2 default. Audited old→new with the note
+      snapshot. (Restated-override review flag + explicit confirmation dialog = M4.3.)
+
+CONSUMER RUNS SYNCHRONOUSLY IN THE APP (monolith-first, Master PRD §6). No queue infra
+— the deal actions (create/update/archive/restore) and the recompute runner call
+consumeReceivableEvents() (src/lib/receivables/consume.ts — a loop over the DB
+function) right after they write, before revalidation, so a deal is never visible
+without its receivable. Best-effort on the sync (the deal is already committed; the
+cursor heals any miss on the next call), so a transient sync error can't turn a
+successful save into a failure. Wired: src/lib/deals/actions.ts (syncReceivables()
+after each mutation) + src/lib/settings/recompute-runner.ts (revalidateRestated() now
+consumes first, so receivables follow a BULK restatement exactly as a single edit).
+
+APP LAYER. src/lib/receivables/{consume,queries,actions}.ts. queries: listReceivables
+(developer name joined; default order total_collectible desc + code, a stand-in for
+Rule Q until M4.2 computes balance), countActiveReceivables, getReceivableByDealId,
+receivablePayor (Rule S). actions: setConfirmedCollectible / setNextActionNote server
+actions (ActionState; mirror the DB friction gate with specific copy). /collectibles
+renders the REAL, RLS-scoped, money-exact list (empty state = "Receivables appear here
+automatically — one per deal", NO create button by design §6) — the full ledger
+(filters, chase sort, % bars, Adjust/Close/Cancel) is M4.4. Export: `receivables`
+dataset registered in the cross-cutting exporter (loadExportDataset + loadWorkspaceExport)
+with the override marker column (FR-M4-12). Audit viewer: 'receivable' entity type +
+Confirmed Collectible / Next Action field labels.
+
+TYPES / MONEY DISCIPLINE. database.generated.ts regenerated (Management API types
+endpoint). database.ts: deal.default_total_collectible + create/update_deal
+p_default_total_collectible added to the money-string overrides; ReceivableOverride
+re-types the Row's 10 money columns string/string|null (receivables are written only
+by DB functions, never inserted via the client, so only the Row is overridden);
+set_confirmed_collectible.p_value → string|null. selects.ts: RECEIVABLE_SELECT (every
+numeric ::text) + deal default_total_collectible::text. NEVER select("*") on receivable.
+
+VERIFIED (live, real JWTs, throwaway workspace deleted after — 31/31):
+  · create 21 workbook deals → 21 receivables in the same RLS visibility; D004 booked
+    800,000 / default 875,000 / total 875,000 / status open / mirrors exact (Rule K.2 =
+    gci+incentive, NOT net_gci); D021 booked=default=354,591.84; D013 default 906,752.23
+    (full-precision, not .24); ALL 21 mirror the engine to the centavo (booked==net_gci,
+    default==engine default).
+  · override (D004 pattern): empty-note set REJECTED (note_required); set 875,000 +
+    note → total 875,000; change to 850,000 → total 850,000; clear → back to default
+    875,000; Next Action note set; 3 receivable audit entries written.
+  · deal edit (referral→0) restates booked 800,000→875,000 in the same request; the
+    user's Next Action note is preserved across the mirror-only restate.
+  · archive deal → receivable archived_at set; restore → cleared.
+  · bulk recompute (developer Net→Gross via update_developer → settings_change_event →
+    recompute job) → D021 booked CHANGED and the receivable followed deal.net_gci AND
+    default_total_collectible exactly.
+  · replay from cursor 0 → all events reprocessed, NO duplicate receivables (count
+    stable at 21), user note preserved (mirror-only upsert).
+  · AC9: a second tenant sees 0 of this workspace's receivables; a forged cross-tenant
+    mutation finds no row (RLS).
+  · invariant: receivable count == deal count (21).
+test:unit 187/187 (178 + 9 engine Rule K); build:check + lint clean; Playwright 42/42
+green single-worker on a clean reseed (seed:dev --delete then seed:dev; 41 passed + 1
+known auth-workspace flake auto-retried green — no new specs, existing suite unchanged,
+proving the create_deal/update_deal DROP+CREATE did not regress M1). Real account
+(juliusbaliling25@gmail.com) untouched; baseline restored (1 workspace, 0 deals /
+receivables / cursors).
+
+IMPORTER LEG CONTRACT for M1.4 (FR-M4-14 — documented here; implementation lands with
+M1.4's collectibles leg). The importer creates deals through create_deal, so each
+deal's receivable is AUTO-CREATED by consume_deal_events with status=open,
+confirmed_collectible=null, and the Rule K anchors already correct — the importer does
+NOT create receivables. It then OVERLAYS the workbook's three user inputs per row:
+  1. Ensure receivables exist: after importing a batch of deals, call
+     consume_deal_events (the same drain the actions use) so every imported deal has
+     its receivable before overlaying.
+  2. status (Collectibles col J): Open×14 / Closed×7 / Cancelled×0 in v30.20. M4.1 does
+     NOT expose a status-set mutation (status transitions with variance/write-off are
+     M4.3). M1.4 needs a bulk, UN-gated import path — recommended: a dedicated
+     SECURITY INVOKER function public.import_receivable_overlay(deal_id, status,
+     confirmed_collectible, note, legacy_note_missing boolean) that sets all three in
+     one audited transaction, bypassing the friction gate (import is trusted bulk, not
+     an interactive edit). Build it in M1.4 (or fold into M4.3's transition work if
+     M4.3 lands first) — it belongs with the importer, not M4.1's interactive mutations.
+  3. confirmed_collectible + its note (cols R/T): set via the same overlay. LEGACY
+     EXCEPTION (FR-M4-14): the sheet allows an override with NO note; import it but
+     flag "note missing (legacy)" (a boolean/marker) rather than blocking — do NOT
+     route it through set_confirmed_collectible, which REJECTS a note-less override.
+  4. next_action_note (col T): set via the overlay.
+  5. RECONCILE, don't trust: after overlay, recompute-derived K/L/I (booked_net_gci,
+     collected_net once M4.2 exists, total_collectible) and reconcile against the
+     sheet's cached values within ₱0.01 per row (D021: 44,642.86 / 309,948.98 once
+     payments land), reporting mismatches instead of importing silently. Σ open balance
+     ties to the sheet's Balance Outstanding within ₱0.50. (collected_net/balance are
+     M4.2 — the importer's payment reconciliation interleaves with M4.2/M5.)
+  6. The receivable table's total_collectible is GENERATED — the importer sets
+     confirmed_collectible and total_collectible follows automatically; never write
+     total_collectible directly.
+
+HANDOFF NOTES for M4.2 / M4.3 / M4.4 / M5 / M6 / M7 / M8:
+  - M4.2 (payments math): fills collected_net + balance + pct_collected + payment dates
+    + months_idle + age_months + days_to_first_release + chase_priority. balance/pct
+    are plain columns now (NOT generated — total_collectible is itself generated and PG
+    forbids a generated column referencing another). Recompute them in the M5 payment
+    event consumer, transactionally with the payment write. Consider a receivable-side
+    consumer of payment events mirroring consume_deal_events' cursor design.
+  - M4.3 (lifecycle): add the status-transition function(s) (Open↔Closed/Cancelled,
+    reopen) — friction-gated (checkConfirmation server-side, like the deal edit gate),
+    freezing variance (Rule N) at Closed and written_off (Rule O) at Cancelled, nulling
+    months_idle/age_months, and excluding closed/cancelled from open-balance/aging/chase
+    projections. Add the restated-override review flag (§4 rule 7): flag a receivable
+    whose confirmed_collectible predates its deal's last restatement. The version column
+    + the audited mutation pattern are already here.
+  - M4.4 (ledger/projections): listReceivables is the ledger's read; add the filters,
+    chase-priority sort (Rule Q), totals row, and the M6/M7/M8/M9 projection endpoints
+    over the receivable + its generated total_collectible. receivablePayor is Rule S.
+  - THE ENGINE'S default_total_collectible is now a first-class deal figure on every
+    deal snapshot — M6/M7/M8 can read booked_net_gci + total_collectible straight off
+    the receivable (no recomputation) for position totals / per-source / booking-year.
+  - The receivable consumer is idempotent + resumable; if a future flow needs to force
+    a re-project, reset receivable_event_cursor to defaults and call consume_deal_events.
+
 **M1.5 COMPLETE — Recompute service & hardening: the consumer M0.2's queue was
 built for. A confirmed settings/developer/property-type change now recomputes
 exactly the affected deals through the SAME engine + single-writer path, with

@@ -15,8 +15,25 @@ import { buildComputeInput, dealRpcArgs, type DealComputeRefs } from "./map";
 import { parseDeal, type DealInput, type RawDeal } from "./schema";
 import { computeDealWarnings } from "./deal-warnings";
 import { dealPaymentCount, findPossibleDuplicates, resolveDealRefs } from "./queries";
+import { consumeReceivableEvents } from "@/lib/receivables/consume";
 
 type DealClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Project the deal event(s) this mutation just emitted onto their receivables
+ * (M4.1, FR-M4-01/02/03) — synchronously, so a deal is never visible without its
+ * receivable (monolith-first). Best-effort: the deal is already committed, and the
+ * cursor-based consumer heals any miss on the next call, so a transient sync error
+ * must not turn a successful save into a failure. Runs before revalidation so the
+ * refreshed views see the receivable.
+ */
+async function syncReceivables(): Promise<void> {
+  try {
+    await consumeReceivableEvents();
+  } catch (error) {
+    console.error("receivable sync after deal mutation failed:", error);
+  }
+}
 
 /**
  * The audited-override half of FR-M1-11. Soft warnings never block a save; when
@@ -184,6 +201,10 @@ export async function createDeal(
     await logWarningOverride(supabase, result.id, parsed.value, refs.refs, result.id);
   }
 
+  // FR-M4-01: the receivable is auto-created from the deal.created event before the
+  // deal becomes visible.
+  await syncReceivables();
+
   revalidateDeals();
   return {
     error: null,
@@ -251,6 +272,9 @@ export async function updateDeal(
     await logWarningOverride(supabase, id, parsed.value, refs.refs, id);
   }
 
+  // FR-M4-02: restate the receivable's mirrors + Rule K anchors from deal.updated.
+  await syncReceivables();
+
   revalidateDeals();
 
   if (!result.changed) {
@@ -293,6 +317,9 @@ async function setArchived(
 
   const result = data as unknown as DealResult;
   if (!result?.ok) return { error: "Could not update that deal." };
+
+  // FR-M4-03: archive/restore the receivable in step with the deal.
+  await syncReceivables();
 
   revalidateDeals();
 
