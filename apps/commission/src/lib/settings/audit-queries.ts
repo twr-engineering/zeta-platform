@@ -26,6 +26,7 @@ export const AUDIT_ENTITY_TYPES = [
   "property_type",
   "developer",
   "lead_source",
+  "deal",
   "workspace",
   "profile",
   "account",
@@ -38,6 +39,7 @@ export const AUDIT_ENTITY_LABELS: Record<AuditEntityType, string> = {
   property_type: "Property Types",
   developer: "Developers",
   lead_source: "Lead Sources",
+  deal: "Deals",
   workspace: "Workspace",
   // M0.4: the display name lives on the profile; email and password are
   // auth-level events grouped under "Account".

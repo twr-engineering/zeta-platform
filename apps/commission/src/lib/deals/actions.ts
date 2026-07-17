@@ -11,9 +11,40 @@ import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
 import type { TaxSettings } from "@/types/entities";
 import { deriveDeal } from "./compute";
-import { dealRpcArgs } from "./map";
-import { parseDeal, type RawDeal } from "./schema";
-import { dealPaymentCount, resolveDealRefs } from "./queries";
+import { buildComputeInput, dealRpcArgs, type DealComputeRefs } from "./map";
+import { parseDeal, type DealInput, type RawDeal } from "./schema";
+import { computeDealWarnings } from "./deal-warnings";
+import { dealPaymentCount, findPossibleDuplicates, resolveDealRefs } from "./queries";
+
+type DealClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The audited-override half of FR-M1-11. Soft warnings never block a save; when
+ * a deal is saved with warnings active, that decision is recorded on the deal's
+ * audit trail ("Continue anyway (audit-logged)", §6). Recomputed SERVER-SIDE
+ * from the same predicates the preview used, so the record is the truth, not
+ * whatever the client claimed. Best-effort: a failed override note must never
+ * fail the save that already succeeded.
+ */
+async function logWarningOverride(
+  supabase: DealClient,
+  dealId: string,
+  input: DealInput,
+  refs: DealComputeRefs,
+  excludeId?: string
+): Promise<void> {
+  try {
+    const duplicates = await findPossibleDuplicates(input, excludeId);
+    const warnings = computeDealWarnings(buildComputeInput(input, refs), duplicates);
+    if (warnings.length === 0) return;
+    await supabase.rpc("log_deal_warning_override", {
+      p_deal_id: dealId,
+      p_warnings: warnings.map((w) => w.key),
+    });
+  } catch {
+    // The deal is saved; the override note is a courtesy. Never surface this.
+  }
+}
 
 /** FormData → the flat raw record parseDeal reads. File values become null. */
 function rawFromForm(formData: FormData): RawDeal {
@@ -147,6 +178,12 @@ export async function createDeal(
   const result = data as unknown as DealResult;
   if (!result?.ok) return { error: "Could not save the deal. Reload and try again." };
 
+  if (result.id) {
+    // Exclude the row we just inserted, or the duplicate guard matches it
+    // against itself and logs a phantom override.
+    await logWarningOverride(supabase, result.id, parsed.value, refs.refs, result.id);
+  }
+
   revalidateDeals();
   return {
     error: null,
@@ -208,6 +245,10 @@ export async function updateDeal(
       };
     }
     return { error: "Could not save the deal. Reload and try again." };
+  }
+
+  if (result.changed) {
+    await logWarningOverride(supabase, id, parsed.value, refs.refs, id);
   }
 
   revalidateDeals();

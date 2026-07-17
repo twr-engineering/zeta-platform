@@ -163,19 +163,28 @@ export function isExportDataset(value: string): value is ExportDatasetName {
   return (EXPORT_DATASETS as readonly string[]).includes(value);
 }
 
+/** The deal list's view filters (FR-M1-02), threaded so the download matches
+ * what is on screen (AC8): a booking year, and active-only vs archived-only. */
+export type DealExportFilters = { year?: number; archived?: boolean };
+
 export async function loadExportDataset(
-  name: ExportDatasetName
+  name: ExportDatasetName,
+  filters: DealExportFilters = {}
 ): Promise<ExportDataset<unknown>> {
   switch (name) {
-    case "deals":
+    case "deals": {
+      // The list toggle is exclusive — active OR archived — so mirror that here
+      // rather than always dumping both, and honour the year filter.
+      const rows = (await listDeals({ includeArchived: true, year: filters.year })).filter(
+        (deal) => (filters.archived ? deal.archived_at !== null : deal.archived_at === null)
+      );
       return dataset({
         name: "deals",
         sheet: "Deals",
         columns: DEAL_COLUMNS,
-        // Active + archived: the download must match the on-screen rows, and the
-        // deal list can show either (FR-M1-02); the archive shows everything.
-        rows: await listDeals({ includeArchived: true }),
+        rows,
       });
+    }
     case "property-types":
       return dataset({
         name: "property-types",

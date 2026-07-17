@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T02:30:00+08:00
+# Last Updated: 2026-07-18T03:40:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -15,7 +15,7 @@
 - [x] M0.4: Account polish & data ownership  ← M0 COMPLETE
 - [x] M1.1: Calculation engine library
 - [x] M1.2: Deal CRUD with permanent IDs
-- [ ] M1.3: Deal entry UI & list
+- [x] M1.3: Deal entry UI & list
 - [ ] M1.4: v30.x workbook importer
 - [ ] M1.5: Recompute service & hardening
 - [ ] M4.1: Receivable entity + auto-create/restate from deal events
@@ -58,6 +58,94 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M1.3 COMPLETE — Deal entry UI & list: the daily-use form with a live computed
+panel, soft warnings with audited overrides, the deal list, and the detail view.**
+
+ONE additive migration, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718010000_m13_warning_override.sql — public.log_deal_warning_override(
+    p_deal_id, p_warnings text[]) (SECURITY INVOKER; resolves the workspace from
+    the deal row under the caller's RLS, writes ONE audit entry via
+    app.write_audit_entry with a synthetic 'warning_override' field). This is the
+    audited half of FR-M1-11 ("Continue anyway (audit-logged)"). It is its own
+    function, not a change to create_deal/update_deal — the deal write path stays
+    the single writer of the row; the override note is written right after a
+    successful save (best-effort, never fails the save). Types regenerated via
+    /v1/projects/{ref}/types/typescript (additive: the one new RPC, text args, no
+    money override needed).
+
+THE FORM (FR-M1-01/03/06, §6). src/components/deals/deal-form.tsx — one client
+component for create AND edit, three groups (What closed → The money → the
+computed panel). Blue InputField/SelectField for inputs, LockedValue for the
+computed figures with formula tooltips. Conditional visibility per §4 rule 12:
+rental ⇒ deal_type N/A (picker hidden, hidden input carries n_a); developer ⇒
+developer dropdown + Force VAT toggle; receipt toggle only for resale/rental
+(developer shows "Taxable — developer deal" static); % vs Fixed switch; the
+rental "1 month (1/12)" preset writes the EXACT fraction "1/12". Visible controls
+are state-driven and NAMELESS; a hidden payload block (identical to the preview
+raw) is what submits — the tax-settings-form pattern, so submit === preview.
+
+LIVE PANEL = REAL ENGINE (FR-M1-06). previewDeal (src/lib/deals/preview.ts,
+"use server") is a debounced (250ms), latest-wins server round-trip: it parses,
+resolves refs, runs the SAME computeDeal, and returns DealDerived + the warnings.
+The panel NEVER computes money. D021's inputs show NET GCI ₱354,591.84 / VAT
+₱42,551.02 / EWT ₱35,459.18 / yield 4.4324% live BEFORE any save, to the centavo.
+
+SOFT WARNINGS (FR-M1-11). src/lib/deals/deal-warnings.ts (PURE, unit-tested):
+computeDealWarnings(input, duplicates) assembles split-at-source (engine's
+isSplitAtSourceRisk), representation mismatch (Lessor/Lessee-on-Sale,
+Seller/Buyer-on-Rental), and the duplicate guard (findPossibleDuplicates —
+client+property+list-price within 30 days, ±self). Amber banners, submit becomes
+"Save anyway"; the save is server-recomputed and audited via
+log_deal_warning_override. NOT client-trusted: the action recomputes the
+applicable warnings and logs those. Create excludes the just-inserted row from
+the duplicate check (else it self-matches — bug found in browser + fixed).
+
+THE LIST (FR-M1-02/09/12). src/components/deals/deal-list.tsx — sticky-header
+table on desktop, reflowing cards (code, client, NET GCI, date) at 360px. Client-
+side search (code/client/property), year filter, sortable columns, a column
+chooser, an archived toggle (active OR archived, exclusive), pagination (50/page)
+— all over the RLS-scoped rows the server already returned (1,000 rows well under
+the §8 budget, no second round-trip). Export CSV/XLSX reuses the registered deals
+dataset; the route now honours the on-screen ?year=/&archived= filter (AC8).
+
+THE DETAIL (FR-M1-02/04). /deals/[code] — inputs vs computed with formula
+tooltips, cross-links (Log a payment → /payments, View receivable → /collectibles
+stubs), the deal's own audit history (dealAuditHistory), and archive/restore/
+delete via the friction gate. Delete is gated `checked` and blocked server-side
+for a deal with payments (0 until M5). Edit carries expectedVersion; a stale save
+is refused with a reload prompt (proven with two tabs). Routes keyed on the
+permanent code (getDealByCode). 'deal' registered in the audit viewer
+(AUDIT_ENTITY_TYPES + DEAL_FIELD_LABELS) so deal changes are filterable there too.
+
+VERIFIED LIVE (Playwright MCP, dev server localhost:3000, throwaway agent3
+"Dealer"): empty state → importer entry; D021 panel exact live before save →
+saved (D001) → list row ₱354,591.84 → detail exact (1 audit entry, clean) →
+edit list_price 8M→9M recompute to ₱394,451.53 + audit old→new → stale-version
+refused (two tabs) + reload prompt → split-at-source warning + "Save anyway" →
+override audited (Warning override: split_at_source) → rental 1/12 preset GCI
+₱22,500.00 yield 8.3333% → referrer deal → list search/sort(NET GCI asc)/year/
+column-chooser/archived-toggle/CSV export → 360px cards, no horizontal overflow;
+console clean (0 errors). test:unit 170/170 (155 + 15 new: deal-warnings 8 +
+deal-form-values 7); build:check + lint clean; Playwright 41/41 single-worker on
+a clean reseed (33 + 8 new tests/e2e/deals.spec.ts). Real account
+(juliusbaliling25@gmail.com / "julius's Book") untouched; delta-residue back to
+baseline (1 workspace, 0 deals/developers/events).
+
+HANDOFF NOTES for later milestones:
+  - EDIT-AFTER-PAYMENTS + ARCHIVE-CASCADE gates are wired in the actions but
+    dormant (dealPaymentCount = 0 until M5). When M5 makes the count real, the
+    form/detail need the ConfirmGate branch for edits/archives on a deal WITH
+    payments (currently the plain submit path; the server would return "requires
+    confirmation" if it ever fired >0 without the gate — wire the gate then).
+  - PREVIEW hydration: the form flips data-hydrated="true" in a mount effect;
+    tests wait for it before touching controlled <select>s (a change fired pre-
+    hydration reverts). New form-driving specs must do the same.
+  - seed:dev now creates a THIRD fixture agent3@solo.test "Dealer" — the deal
+    specs' isolated workspace (JD races configuration-lists over the empty-list
+    seed offer; Maria's tax rates move the figures). Reseed --delete then seed
+    before an e2e run as always.
+
 **M1.2 COMPLETE — Deal CRUD with permanent, immutable IDs; engine wired server-side; events emitted.**
 Two additive migrations, applied live via the Management API and registered in
 supabase_migrations.schema_migrations:

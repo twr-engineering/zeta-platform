@@ -1,15 +1,72 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { FileText, Plus, Upload } from "lucide-react";
 
-import { ModuleStub } from "@/components/common/module-stub";
+import { DealList } from "@/components/deals/deal-list";
+import { EmptyState } from "@/components/common/empty-state";
+import { Button } from "@/components/ui/button";
+import { listDeals } from "@/lib/deals/queries";
+import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Deals" };
 
-export default function DealsPage() {
+/**
+ * The deal log (FR-M1-02) — the agent's system of record for closed deals. The
+ * rows are real, RLS-scoped and read with money as exact strings; the archived
+ * ones ride along so the list's "Show archived" toggle needs no second query.
+ * An empty workspace gets the first-deal empty state with the importer entry
+ * point (§6).
+ */
+export default async function DealsPage() {
+  const deals = await listDeals({ includeArchived: true });
+
+  if (deals.length === 0) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <EmptyState
+          icon={<FileText />}
+          title="No deals yet — log your first closed deal"
+          description="Every closed deal booked here runs through the commission and VAT engine: GCI, NET GCI, tax memos and yield. Log one by hand, or import an existing ZETA workbook."
+          action={
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button nativeButton={false} render={<Link href={ROUTES.dealNew} />}>
+                <Plus className="size-4" /> Log a deal
+              </Button>
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href={ROUTES.dealImport} />}
+                data-testid="empty-import"
+              >
+                <Upload className="size-4" /> Import a workbook
+              </Button>
+            </div>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <ModuleStub
-      title="Deals"
-      module="M1"
-      description="Every closed deal booked through the commission and VAT engine: GCI, NET GCI, tax memos, and yield."
-    />
+    <div className="space-y-6">
+      <header className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Deals</h1>
+          <p className="text-sm text-muted-foreground">
+            Your closed deals and what each one earns.
+          </p>
+        </div>
+        <Button
+          className="hidden md:inline-flex"
+          nativeButton={false}
+          render={<Link href={ROUTES.dealNew} />}
+          data-testid="log-deal"
+        >
+          <Plus className="size-4" /> Log a deal
+        </Button>
+      </header>
+
+      <DealList deals={deals} />
+    </div>
   );
 }

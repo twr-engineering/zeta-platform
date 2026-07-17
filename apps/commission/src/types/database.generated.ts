@@ -692,6 +692,10 @@ export type Database = {
       delete_developer: { Args: { p_id: string }; Returns: Json }
       delete_lead_source: { Args: { p_id: string }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
+      log_deal_warning_override: {
+        Args: { p_deal_id: string; p_warnings: string[] }
+        Returns: Json
+      }
       log_email_change: {
         Args: { p_new: string; p_old: string }
         Returns: string

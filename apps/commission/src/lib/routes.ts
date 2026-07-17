@@ -12,6 +12,8 @@ export const ROUTES = {
   setupRequired: "/setup-required",
   dashboard: "/dashboard",
   deals: "/deals",
+  dealNew: "/deals/new",
+  dealImport: "/deals/import",
   payments: "/payments",
   collectibles: "/collectibles",
   yieldSummary: "/yield-summary",
@@ -35,6 +37,14 @@ export const ROUTES = {
  */
 export function exportPath(dataset: string, format: "csv" | "xlsx"): string {
   return `/api/export/${dataset}?format=${format}`;
+}
+
+/** A deal's detail / edit routes, keyed on its permanent code (D021). */
+export function dealDetailPath(code: string): string {
+  return `/deals/${encodeURIComponent(code)}`;
+}
+export function dealEditPath(code: string): string {
+  return `/deals/${encodeURIComponent(code)}/edit`;
 }
 
 /**

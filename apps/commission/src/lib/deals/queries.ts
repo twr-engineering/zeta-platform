@@ -1,9 +1,11 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { DEAL_SELECT } from "@/lib/supabase/selects";
+import { AUDIT_LOG_SELECT, DEAL_SELECT } from "@/lib/supabase/selects";
+import { equalsToCentavo } from "@/lib/money";
 import type { PropertyVatRule, CommBase } from "@/lib/engine";
-import type { Deal } from "@/types/entities";
+import type { AuditLogEntry, Deal } from "@/types/entities";
+import type { DuplicateMatch } from "./deal-warnings";
 import type { DealComputeRefs } from "./map";
 import type { DealInput } from "./schema";
 
@@ -48,6 +50,95 @@ export async function getDeal(id: string): Promise<Deal | null> {
 
   if (error) throw new Error(`Could not read that deal: ${error.message}`);
   return data ?? null;
+}
+
+/**
+ * A single deal by its permanent code (D021), or null. The detail and edit
+ * routes are keyed on the code, not the UUID: it is the stable, human name the
+ * agent knows (§4 rule 1), it survives across sessions, and it makes a shareable
+ * URL. RLS still scopes the row to the caller.
+ */
+export async function getDealByCode(code: string): Promise<Deal | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("deal")
+    .select(DEAL_SELECT)
+    .eq("deal_code", code)
+    .maybeSingle<Deal>();
+
+  if (error) throw new Error(`Could not read that deal: ${error.message}`);
+  return data ?? null;
+}
+
+/**
+ * The soft duplicate guard (§4 rule 18, FR-M1-11): same client + property
+ * details + list price within a 30-day window is a *possible* duplicate, never a
+ * blocked one (D013/D014/D015 prove same-buyer, same-day deals are legitimate).
+ *
+ * The client-name and property match case-insensitively; the list price is
+ * compared to the centavo through the Money lib rather than by string, so
+ * "8000000" and "8000000.00" are the same price. A deal being edited excludes
+ * itself via `excludeId`.
+ */
+export async function findPossibleDuplicates(
+  input: DealInput,
+  excludeId?: string
+): Promise<DuplicateMatch[]> {
+  const booked = new Date(`${input.booked_date}T00:00:00Z`);
+  if (Number.isNaN(booked.getTime())) return [];
+  const windowDays = 30;
+  const from = new Date(booked);
+  from.setUTCDate(from.getUTCDate() - windowDays);
+  const to = new Date(booked);
+  to.setUTCDate(to.getUTCDate() + windowDays);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("deal")
+    .select("id,deal_code,booked_date,client_name,property_details,list_price::text")
+    .is("archived_at", null)
+    .gte("booked_date", iso(from))
+    .lte("booked_date", iso(to))
+    .ilike("client_name", input.client_name)
+    .returns<
+      Pick<Deal, "id" | "deal_code" | "booked_date" | "client_name" | "property_details" | "list_price">[]
+    >();
+
+  if (error) throw new Error(`Could not check for duplicates: ${error.message}`);
+
+  const details = input.property_details.trim().toLowerCase();
+  return (data ?? [])
+    .filter((row) => row.id !== excludeId)
+    .filter(
+      (row) =>
+        row.property_details.trim().toLowerCase() === details &&
+        equalsToCentavo(row.list_price, input.list_price)
+    )
+    .map((row) => ({ deal_code: row.deal_code, booked_date: row.booked_date }));
+}
+
+/**
+ * The deal's own audit trail (rule 12, edge case 13) for the detail view — every
+ * field-level change, newest first. Reads the same append-only `audit_log_entry`
+ * the global viewer reads, filtered to this deal; RLS scopes it to the caller.
+ */
+export async function dealAuditHistory(
+  dealId: string,
+  limit = 50
+): Promise<AuditLogEntry[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("audit_log_entry")
+    .select(AUDIT_LOG_SELECT)
+    .eq("entity_type", "deal")
+    .eq("entity_id", dealId)
+    .order("occurred_at", { ascending: false })
+    .limit(limit)
+    .returns<AuditLogEntry[]>();
+
+  if (error) throw new Error(`Could not read the deal's history: ${error.message}`);
+  return data ?? [];
 }
 
 /**

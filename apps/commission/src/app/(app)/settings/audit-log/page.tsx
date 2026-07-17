@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/lib/routes";
 import { formatManilaDateTime } from "@/lib/date/manila";
 import { renderFieldChange } from "@/lib/settings/audit-format";
+import { DEAL_FIELD_LABELS } from "@/lib/deals/labels";
 import { TAX_FIELD_LABELS } from "@/lib/settings/tax";
 import {
   AUDIT_ENTITY_LABELS,
@@ -331,4 +332,6 @@ const FIELD_LABELS: Record<string, string> = {
   display_name: "Display name",
   email: "Email",
   password: "Password",
+  // M1.3 deal events — the full field set lives in the deals label module.
+  ...DEAL_FIELD_LABELS,
 };

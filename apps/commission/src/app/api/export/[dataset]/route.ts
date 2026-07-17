@@ -53,7 +53,8 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ error: `Unknown export: ${dataset}` }, { status: 404 });
   }
 
-  const format = new URL(request.url).searchParams.get("format") ?? "csv";
+  const params = new URL(request.url).searchParams;
+  const format = params.get("format") ?? "csv";
   if (!isExportFormat(format)) {
     return NextResponse.json(
       { error: `Unknown format: ${format}. Use csv or xlsx.` },
@@ -61,7 +62,13 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  const data = await loadExportDataset(dataset);
+  // The deal list's view filters ride along so the download matches the screen
+  // (AC8). Ignored for the other datasets.
+  const yearParam = params.get("year");
+  const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : undefined;
+  const archived = params.get("archived") === "true";
+
+  const data = await loadExportDataset(dataset, { year, archived });
   const filename = exportFilename(data.name, format, manilaToday());
 
   const body: Buffer | string =

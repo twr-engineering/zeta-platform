@@ -33,6 +33,16 @@ const FIXTURES = [
     password: "zeta-dev-password",
     displayName: "Maria",
   },
+  // M1.3: a third workspace dedicated to the deal specs. Playwright runs files
+  // in parallel, and both configuration-lists (JD) and the deal specs need to
+  // accept the workbook seed offer on an EMPTY list — sharing a workspace would
+  // race them over that one empty-list moment. Its own agent keeps the deal
+  // form/list specs isolated (and its tax settings stable, unlike Maria's).
+  {
+    email: "agent3@solo.test",
+    password: "zeta-dev-password",
+    displayName: "Dealer",
+  },
 ];
 
 function loadEnvLocal() {
