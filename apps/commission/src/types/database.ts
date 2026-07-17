@@ -1,224 +1,112 @@
 /**
- * Database types for the M0 foundation schema.
+ * The money-safe view of the generated schema types. Import from here, never
+ * from `./database.generated`.
  *
- * HAND-WRITTEN, and therefore provisional: it mirrors
- * `supabase/migrations/*.sql` by inspection because no hosted project exists
- * yet. Once credentials land, regenerate and replace this file wholesale:
+ * WHY THIS LAYER EXISTS
  *
- *   npx supabase gen types typescript --linked > src/types/database.ts
+ * `supabase gen types` types every Postgres `numeric` as `number`, because that
+ * is what PostgREST returns by default — a JSON number, which `JSON.parse`
+ * makes an IEEE-754 float. Master PRD §4.3 forbids binary floats in money
+ * paths, so the generator's output is *wrong for this product*. Verified live
+ * against the project on 2026-07-17:
  *
- * Money and rate columns are `numeric` in Postgres and arrive over PostgREST as
- * STRINGS. They are typed as `string` here on purpose — widening them to
- * `number` would put a binary float in a money path, which the PRD forbids
- * (Master PRD §4.3). Parse them with `toMoney()` from `@/lib/money`.
+ *   select("*")               -> ewt_rate: 0.1,      threshold: 3600000
+ *                                (float, and the 4dp/2dp scale is gone)
+ *   select("ewt_rate::text")  -> ewt_rate: "0.1000", threshold: "3600000.00"
+ *
+ * Queries therefore cast money columns with `::text` (see
+ * `@/lib/supabase/selects`), and this module re-types those columns as `string`
+ * to match what actually arrives. Hand-editing the generated file instead would
+ * work exactly until the next `gen types`, which would silently reintroduce the
+ * float — the failure mode being a product that quietly stops tying to the
+ * centavo. Keeping the override here means regeneration is safe.
+ *
+ * Adding a table with money columns (M1 deals, M4 receivables, M5 payments)?
+ * Add its `::text` select to `@/lib/supabase/selects` AND its override below.
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+import type { Database as Generated, Json } from "./database.generated";
 
-export type MembershipRole = "owner" | "admin" | "agent" | "readonly";
+export type { Json };
 
-export type AuditAction =
-  | "create"
-  | "update"
-  | "archive"
-  | "restore"
-  | "delete_blocked";
+type PublicSchema = Generated["public"];
+type GeneratedTables = PublicSchema["Tables"];
 
-/** A single field's old→new pair. Decimals are strings — see the note above. */
+/** Re-type `K` as the exact-decimal string it is fetched as. */
+type WithMoneyStrings<Row, K extends keyof Row> = Omit<Row, K> &
+  Record<K, string>;
+
+/** Same, for Insert/Update shapes where the columns are optional. */
+type WithOptionalMoneyStrings<Row, K extends keyof Row> = Omit<Row, K> &
+  Partial<Record<K, string>>;
+
+// --- tax_settings (M0 §3.3) -------------------------------------------------
+
+type TaxSettingsTable = GeneratedTables["tax_settings"];
+
+/** numeric(6,4), numeric(6,4), numeric(14,2) */
+type TaxSettingsMoneyColumns =
+  | "vat_rate"
+  | "ewt_rate"
+  | "property_vat_threshold";
+
+type TaxSettingsOverride = Omit<TaxSettingsTable, "Row" | "Insert" | "Update"> & {
+  Row: WithMoneyStrings<TaxSettingsTable["Row"], TaxSettingsMoneyColumns>;
+  Insert: WithOptionalMoneyStrings<
+    TaxSettingsTable["Insert"],
+    TaxSettingsMoneyColumns
+  >;
+  Update: WithOptionalMoneyStrings<
+    TaxSettingsTable["Update"],
+    TaxSettingsMoneyColumns
+  >;
+};
+
+// --- audit_log_entry (M0 §3.7) ----------------------------------------------
+
+type AuditTable = GeneratedTables["audit_log_entry"];
+
+type AuditOverride = Omit<AuditTable, "Update" | "Row"> & {
+  Row: Omit<AuditTable["Row"], "field_changes"> & {
+    field_changes: FieldChanges;
+  };
+  /**
+   * Append-only: a database trigger rejects every UPDATE (M0 §8). The generator
+   * cannot know that, so the type says it here — a compile error is a kinder
+   * teacher than a runtime `restrict_violation`.
+   */
+  Update: never;
+};
+
+// --- the money-safe Database ------------------------------------------------
+
+export type Database = Omit<Generated, "public"> & {
+  public: Omit<PublicSchema, "Tables"> & {
+    Tables: Omit<GeneratedTables, "tax_settings" | "audit_log_entry"> & {
+      tax_settings: TaxSettingsOverride;
+      audit_log_entry: AuditOverride;
+    };
+  };
+};
+
+// --- helpers, bound to the overridden Database ------------------------------
+
+export type Tables<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Row"];
+
+export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Insert"];
+
+export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
+  Database["public"]["Tables"][T]["Update"];
+
+export type Enums<T extends keyof Database["public"]["Enums"]> =
+  Database["public"]["Enums"][T];
+
+/** A single field's old→new pair. Decimals are strings, to stay exact. */
 export type FieldChange = {
   old: Json;
   new: Json;
 };
 
 export type FieldChanges = Record<string, FieldChange>;
-
-export type Database = {
-  public: {
-    Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          email: string;
-          display_name: string | null;
-          avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          email: string;
-          display_name?: string | null;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          email?: string;
-          display_name?: string | null;
-          avatar_url?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      workspace: {
-        Row: {
-          id: string;
-          name: string;
-          currency: "PHP";
-          timezone: string;
-          deal_id_sequence: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          currency?: "PHP";
-          timezone?: string;
-          deal_id_sequence?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          name?: string;
-          timezone?: string;
-          deal_id_sequence?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      membership: {
-        Row: {
-          id: string;
-          workspace_id: string;
-          user_id: string;
-          role: MembershipRole;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          workspace_id: string;
-          user_id: string;
-          role?: MembershipRole;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          role?: MembershipRole;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "membership_workspace_id_fkey";
-            columns: ["workspace_id"];
-            referencedRelation: "workspace";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      tax_settings: {
-        Row: {
-          id: string;
-          workspace_id: string;
-          /** numeric(6,4) — e.g. "0.1200" */
-          vat_rate: string;
-          vat_registered: boolean;
-          /** NULL until M10's wizard asks. Never read the default as an answer. */
-          vat_registered_confirmed_at: string | null;
-          /** numeric(6,4) — e.g. "0.1000" */
-          ewt_rate: string;
-          /** numeric(14,2) — e.g. "3600000.00" */
-          property_vat_threshold: string;
-          chase_idle_months: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          workspace_id: string;
-          vat_rate?: string;
-          vat_registered?: boolean;
-          vat_registered_confirmed_at?: string | null;
-          ewt_rate?: string;
-          property_vat_threshold?: string;
-          chase_idle_months?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          vat_rate?: string;
-          vat_registered?: boolean;
-          vat_registered_confirmed_at?: string | null;
-          ewt_rate?: string;
-          property_vat_threshold?: string;
-          chase_idle_months?: number;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "tax_settings_workspace_id_fkey";
-            columns: ["workspace_id"];
-            referencedRelation: "workspace";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      audit_log_entry: {
-        Row: {
-          id: string;
-          workspace_id: string;
-          /** Bare uuid, not an FK — the trail outlives the account. */
-          actor_user_id: string;
-          entity_type: string;
-          entity_id: string;
-          action: AuditAction;
-          field_changes: FieldChanges;
-          occurred_at: string;
-        };
-        Insert: {
-          id?: string;
-          workspace_id: string;
-          actor_user_id: string;
-          entity_type: string;
-          entity_id: string;
-          action: AuditAction;
-          field_changes?: FieldChanges;
-          occurred_at?: string;
-        };
-        /** Append-only: a DB trigger rejects every UPDATE (M0 §8). */
-        Update: never;
-        Relationships: [
-          {
-            foreignKeyName: "audit_log_entry_workspace_id_fkey";
-            columns: ["workspace_id"];
-            referencedRelation: "workspace";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-    };
-    Views: Record<never, never>;
-    Functions: Record<never, never>;
-    Enums: {
-      membership_role: MembershipRole;
-      audit_action: AuditAction;
-    };
-    CompositeTypes: Record<never, never>;
-  };
-};
-
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-
-export type Workspace = Tables<"workspace">;
-export type Profile = Tables<"profiles">;
-export type Membership = Tables<"membership">;
-export type TaxSettings = Tables<"tax_settings">;
-export type AuditLogEntry = Tables<"audit_log_entry">;

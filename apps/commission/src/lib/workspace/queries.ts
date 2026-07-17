@@ -1,7 +1,8 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, TaxSettings, Workspace } from "@/types/database";
+import { TAX_SETTINGS_SELECT } from "@/lib/supabase/selects";
+import type { Profile, TaxSettings, Workspace } from "@/types/entities";
 
 /**
  * Reads for the signed-in agent's workspace.
@@ -48,11 +49,13 @@ export const getWorkspaceContext = cache(
     // trigger did not run, and silently rendering an empty shell would hide that.
     if (!workspace) return null;
 
+    // TAX_SETTINGS_SELECT, not "*": PostgREST would hand back the rates as JSON
+    // numbers (i.e. floats). See src/lib/supabase/selects.ts.
     const { data: taxSettings } = await supabase
       .from("tax_settings")
-      .select("*")
+      .select(TAX_SETTINGS_SELECT)
       .eq("workspace_id", workspace.id)
-      .maybeSingle();
+      .maybeSingle<TaxSettings>();
 
     return {
       userId: user.id,

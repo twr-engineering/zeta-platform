@@ -52,6 +52,11 @@ next-env.d.ts
 # Vercel
 .vercel
 
+# Supabase CLI scratch — local link state and cached version info, never shared.
+# Migrations under supabase/migrations/ ARE tracked.
+supabase/.temp/
+supabase/.branches/
+
 # Misc
 *.pem
 *.log

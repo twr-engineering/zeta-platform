@@ -58,7 +58,9 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-Foundation built — awaiting Supabase credentials + live verification
+Foundation built and VERIFIED LIVE against hosted Supabase (sgerctvrcvlmortmhenh).
+Migrations applied; signup bootstrap and tenant isolation proven on the real project.
+Ready for M0.1 feature work.
 
 ## Completed Tasks
 - Foundation (2026-07-17): Next.js 15.5.20 App Router + TypeScript + Tailwind v4 + Shadcn UI
@@ -108,11 +110,48 @@ Foundation built — awaiting Supabase credentials + live verification
   workspace → auth.users), leaving unreachable financial data and breaking M0.4's
   data-ownership guarantee. Added app.reap_orphaned_workspace() on last-member-out.
 
+## Live verification against hosted Supabase (2026-07-17, project sgerctvrcvlmortmhenh, PG 17.6)
+Credentials + a personal access token arrived mid-task; migrations were applied via the
+Management API (`supabase db push` needs a DB password we still don't have).
+- All 6 migrations applied additively to an empty public schema. The local-Postgres
+  ordering fix held — they applied first try.
+- Tables + RLS: all 5 tables have rowsecurity=true; 9 policies present (pg_policies).
+- Signup bootstrap: one admin-API user -> profile + workspace "JD's Book" + single owner
+  membership + tax_settings at AC1 defaults (0.1200 / 0.1000 / 3600000.00 / 3),
+  vat_registered unconfirmed. Workspace PHP / Asia/Manila / deal_id_sequence 0.
+- AC9 tenant isolation, through PostgREST with REAL JWTs: JD sees only "JD's Book",
+  Maria only "Maria's Book", anonymous sees []. JD's tax_settings/profiles return only
+  their own row.
+- Orphan reaper verified live: deleting both test users left users/workspaces/tax_settings/
+  profiles/memberships/audit all at 0 — no stranded tenant data.
+- Test users deleted; the project is back to an empty schema.
+
+## CRITICAL finding from live verification — PostgREST returns numeric as FLOAT
+`select("*")` on tax_settings returned `ewt_rate: 0.1` (a JSON number -> IEEE-754 double)
+and even dropped scale (`3600000`, not `3600000.00`). That is a binary float in a money
+path, which Master PRD §4.3 forbids outright, and `supabase gen types` types these columns
+`number`, baking the mistake into the types.
+Fix (in place, verified live):
+- Money/rate columns are selected with a `::text` cast -> "0.1000" / "3600000.00", exact
+  and scale-preserved. Selects live in src/lib/supabase/selects.ts. NEVER `select("*")` on
+  a table carrying money.
+- Types are layered so regeneration cannot silently reintroduce the float:
+    src/types/database.generated.ts  machine-generated, do not edit
+    src/types/database.ts           money-safe override (numeric -> string), audit Update: never
+    src/types/entities.ts           named row aliases
+  A tsc assertion confirmed a float rate fails to typecheck.
+- End-to-end: rates fetched from the LIVE db reproduce the PRD's ₱50,000 Inclusive split
+  (GCI 44,642.86 / EWT 4,464.29) exactly.
+M1/M4/M5 MUST add their `::text` selects + overrides when they add money tables.
+
 ## Blockers
-- Supabase hosted-project credentials pending from user (URL, anon key, service role key;
-  no Docker/local stack per user instruction). Until they land: migrations are UNAPPLIED
-  against a real project, no live signup/login has run, and src/types/database.ts is
-  hand-written and must be regenerated via `npx supabase gen types typescript --linked`.
+- None for M0.1. Remaining live steps are non-blocking:
+  - `supabase db push` unusable (no DB password); use the Management API path, or add
+    SUPABASE_DB_PASSWORD if push is wanted.
+  - No end-to-end browser signup/login yet (no dev server per brief) — QA should drive
+    register -> confirm -> login -> refresh -> sign out.
+  - Supabase dashboard Site URL / redirect allowlist must include NEXT_PUBLIC_APP_URL or
+    confirmation + reset links will bounce.
 
 ## Notes
 - PRD: discovery/prd.md (Master PRD, verbatim). Module specs: discovery/source/M{0..10}_PRD.md + _Milestones.md
