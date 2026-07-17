@@ -1,0 +1,75 @@
+# Project: ZETA GCI + Collections
+# Started: 2026-07-17
+# Last Updated: 2026-07-17T18:35:00+08:00
+
+## Completion Criteria
+# Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
+# Read the module PRD + Milestones doc IN FULL before implementing a milestone.
+# Build order (Master PRD §5): M0 → M1 → M4+M5 (interleaved) → M6 → M2 → M3 → M7 → M8 → M9 → M10.
+# MVP cut (Master PRD §8): M0 + M1 + M4 + M5 + M6-core (sections 1,3,4,8 + data health; 2/6 with manual target) + M9-minimal.
+
+- [ ] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
+- [ ] M0.1: Auth & personal workspace
+- [ ] M0.2: Tax settings & audit trail
+- [ ] M0.3: Configuration lists
+- [ ] M0.4: Account polish & data ownership
+- [ ] M1.1: Calculation engine library
+- [ ] M1.2: Deal CRUD with permanent IDs
+- [ ] M1.3: Deal entry UI & list
+- [ ] M1.4: v30.x workbook importer
+- [ ] M1.5: Recompute service & hardening
+- [ ] M4.1: Receivable entity + auto-create/restate from deal events
+- [ ] M5.1: Payment schema, split snapshot & events
+- [ ] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
+- [ ] M5.2: Fast-entry form & split preview
+- [ ] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
+- [ ] M5.3: Payments list, per-deal panel & exports
+- [ ] M4.4: Ledger UI, detail view, downstream projections & hardening
+- [ ] M5.4: Hardening, access control & performance
+- [ ] M6.1: Aggregation read models + reconciliation suite
+- [ ] M6.2: Dashboard UI: sections 1, 2, 3, 6
+- [ ] M6.3: Aging, receivables by developer, Data Health
+- [ ] M6.4: Chase list + inline Next Action + performance hardening
+- [ ] M2.1: Segment classifier & aggregation functions
+- [ ] M2.2: Materialized aggregates & event-driven restatement
+- [ ] M2.3: PlanningBasis API for M3
+- [ ] M2.4: Yield Summary screen & polish
+- [ ] M3.1: Planning engine library
+- [ ] M3.2: Targets & rates persistence + M6 feed
+- [ ] M3.3: Planning screen
+- [ ] M3.4: Pace vs actual + hardening
+- [ ] M7.1: Aggregation service + fixture parity
+- [ ] M7.2: Report UI, year filter & export
+- [ ] M7.3: Source-lifecycle & edge hardening, cross-links, perf
+- [ ] M8.1: Aggregation service: payment-period reports 1, 3, 4
+- [ ] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
+- [ ] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
+- [ ] M8.4: Exports, print layout, performance & cache hardening
+- [ ] M9.1: Search read layer & query API
+- [ ] M9.2: Search Console UI
+- [ ] M9.3: Export & performance hardening
+- [ ] M9.4: Unified "All" tab (OPTIONAL — pending M9 Open Question 2)
+- [ ] M10.1: Help-content system, legend spec & glossary
+- [ ] M10.2: First-run wizard core, steps 1–4
+- [ ] M10.3: First-deal walkthrough, sample lifecycle & checklist
+- [ ] M10.4: Contextual help placements & empty states across modules
+- [ ] M10.5: Mobile, end-to-end scripts & hardening
+- [ ] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
+- [ ] `pnpm run build` clean
+
+## Current Status
+Scaffolded — awaiting Foundation
+
+## Completed Tasks
+(none yet)
+
+## Blockers
+- CONTEXT7_API_KEY not set — integrations will be written without current docs lookup unless provided
+- Supabase project credentials not yet in .env.local
+
+## Notes
+- PRD: discovery/prd.md (Master PRD, verbatim). Module specs: discovery/source/M{0..10}_PRD.md + _Milestones.md
+- Workbook extraction (fixtures D001–D021, split rules, dashboard ties): discovery/source/WORKBOOK_REFERENCE.md
+- Original workbook: discovery/source/ZETA GCI Calculator  Collections v30.20 (1).xlsx (importer test fixture)
+- Milestone IDs (M0.1…M10.5) are the story handles for commits and this tracker — the source's own IDs, kept verbatim
+- Open Questions register: discovery/prd.md §7 — Q1/Q2 resolved 2026-07-17; defaults stated for the rest; answer-first shortlist Q4, Q5, Q6, Q15

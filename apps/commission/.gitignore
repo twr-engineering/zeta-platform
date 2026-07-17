@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Environment variables (keep .env.local — needed for disaster recovery in private repos)
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+
+# Service account keys - NEVER COMMIT
+*-service-account.json
+service-account*.json
+*-firebase-adminsdk-*.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# Misc
+*.pem
+*.log
+Thumbs.db
+
+# Worktree state (managed by ARIA)
+.worktree-state.json
+worktrees/
+ZETA_GCI_SaaS_Handoff_Package_v4_solo/

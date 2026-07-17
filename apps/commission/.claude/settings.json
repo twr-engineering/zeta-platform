@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install*)",
+      "Bash(pnpm run build*)",
+      "Bash(pnpm run lint*)",
+      "Bash(npm install*)",
+      "Bash(npm run build*)",
+      "Bash(npm run lint*)",
+      "Bash(npx shadcn*)",
+      "Bash(npx supabase*)",
+      "Bash(vercel*)",
+      "Bash(firebase emulators:*)",
+      "Bash(firebase deploy*)",
+      "Bash(curl*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(pnpm run dev*)",
+      "Bash(pnpm run start*)",
+      "Bash(pnpm start*)",
+      "Bash(npm run dev*)",
+      "Bash(npm run start*)",
+      "Bash(npm start*)",
+      "Bash(rm -rf /)*",
+      "Bash(*--force*)"
+    ]
+  }
+}
