@@ -17,6 +17,7 @@ import {
   listLeadSources,
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
+import { toMoney } from "@/lib/money";
 import { listDeals } from "@/lib/deals/queries";
 import {
   listReceivables,
@@ -245,8 +246,19 @@ export function isExportDataset(value: string): value is ExportDatasetName {
 }
 
 /** The deal list's view filters (FR-M1-02), threaded so the download matches
- * what is on screen (AC8): a booking year, and active-only vs archived-only. */
-export type DealExportFilters = { year?: number; archived?: boolean };
+ * what is on screen (AC8): a booking year, and active-only vs archived-only.
+ * The receivables ledger (FR-M4-12, AC8) adds its own filters — status,
+ * developer, has-balance, overridden-only and free text — so its export ties to
+ * the on-screen filtered set. Unused fields are ignored per dataset. */
+export type DealExportFilters = {
+  year?: number;
+  archived?: boolean;
+  status?: ReceivableRow["status"];
+  developerId?: string;
+  hasBalance?: boolean;
+  overridden?: boolean;
+  text?: string;
+};
 
 export async function loadExportDataset(
   name: ExportDatasetName,
@@ -267,10 +279,30 @@ export async function loadExportDataset(
       });
     }
     case "receivables": {
-      // The ledger's active/archived view is exclusive, mirroring the deals export.
-      const rows = (await listReceivables({ includeArchived: true })).filter((r) =>
-        filters.archived ? r.archived_at !== null : r.archived_at === null
-      );
+      // The ledger's active/archived view is exclusive, mirroring the deals
+      // export; the ledger's on-screen filters ride along so the download ties
+      // to exactly what is shown (AC8).
+      const needle = filters.text?.trim().toLowerCase() ?? "";
+      const rows = (await listReceivables({ includeArchived: true })).filter((r) => {
+        if (filters.archived ? r.archived_at === null : r.archived_at !== null) return false;
+        if (filters.status && r.status !== filters.status) return false;
+        if (filters.developerId !== undefined) {
+          if (
+            filters.developerId === "none"
+              ? r.developer_id !== null
+              : r.developer_id !== filters.developerId
+          )
+            return false;
+        }
+        if (filters.hasBalance && !(r.balance !== null && toMoney(r.balance).greaterThan(0)))
+          return false;
+        if (filters.overridden && r.confirmed_collectible === null) return false;
+        if (needle) {
+          const hay = `${r.deal_code} ${r.client_name} ${r.property_details}`.toLowerCase();
+          if (!hay.includes(needle)) return false;
+        }
+        return true;
+      });
       return dataset({
         name: "receivables",
         sheet: "Receivables",

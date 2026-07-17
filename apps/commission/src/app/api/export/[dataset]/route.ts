@@ -62,13 +62,30 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  // The deal list's view filters ride along so the download matches the screen
-  // (AC8). Ignored for the other datasets.
+  // The deal / receivables list view filters ride along so the download matches
+  // the screen (AC8). Each dataset reads only the filters it understands.
   const yearParam = params.get("year");
   const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : undefined;
   const archived = params.get("archived") === "true";
+  const statusParam = params.get("status");
+  const status =
+    statusParam === "open" || statusParam === "closed" || statusParam === "cancelled"
+      ? statusParam
+      : undefined;
+  const developerId = params.get("developer") ?? undefined;
+  const hasBalance = params.get("hasBalance") === "true";
+  const overridden = params.get("overridden") === "true";
+  const text = params.get("q") ?? undefined;
 
-  const data = await loadExportDataset(dataset, { year, archived });
+  const data = await loadExportDataset(dataset, {
+    year,
+    archived,
+    status,
+    developerId,
+    hasBalance,
+    overridden,
+    text,
+  });
   const filename = exportFilename(data.name, format, manilaToday());
 
   const body: Buffer | string =

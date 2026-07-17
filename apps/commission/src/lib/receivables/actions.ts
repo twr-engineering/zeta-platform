@@ -71,6 +71,9 @@ async function guard(): Promise<ActionState | null> {
 
 function revalidateReceivables(): void {
   revalidatePath(ROUTES.collectibles);
+  // The dynamic detail page shares the receivable's data — revalidate the whole
+  // /collectibles/[dealCode] segment so a transition/override shows on it too.
+  revalidatePath("/collectibles/[dealCode]", "page");
   revalidatePath(ROUTES.settingsAuditLog);
 }
 

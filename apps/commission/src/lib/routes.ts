@@ -49,6 +49,10 @@ export function paymentNewPath(dealId?: string): string {
 export function dealDetailPath(code: string): string {
   return `/deals/${encodeURIComponent(code)}`;
 }
+/** A receivable's detail route, keyed on its deal's permanent code (M4.4). */
+export function collectibleDetailPath(code: string): string {
+  return `/collectibles/${encodeURIComponent(code)}`;
+}
 export function dealEditPath(code: string): string {
   return `/deals/${encodeURIComponent(code)}/edit`;
 }

@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T15:30:00+08:00
+# Last Updated: 2026-07-18T18:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -24,7 +24,7 @@
 - [x] M5.2: Fast-entry form & split preview
 - [x] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
 - [ ] M5.3: Payments list, per-deal panel & exports
-- [ ] M4.4: Ledger UI, detail view, downstream projections & hardening
+- [x] M4.4: Ledger UI, detail view, downstream projections & hardening  ← M4 COMPLETE
 - [ ] M5.4: Hardening, access control & performance
 - [ ] M6.1: Aggregation read models + reconciliation suite
 - [ ] M6.2: Dashboard UI: sections 1, 2, 3, 6
@@ -58,6 +58,67 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M4.4 COMPLETE — Ledger UI, detail view, downstream projections & hardening.
+M4 IS COMPLETE. No migration this milestone — the whole surface is UI + pure
+read models over the RPCs/columns M4.1–M4.3 already built.
+
+LEDGER at /collectibles (replaces the M4.1 stub). Desktop table / 360px cards,
+DEFAULT sort = the server's Rule Q chase order (D013 → D005 → D016 → D010 …);
+filters status/developer/year/only-with-balance/overridden/search run client-side
+over the RLS-scoped rows (§8 budget); a PINNED totals row sums the FILTERED set at
+FULL precision (toMoney over the stored ::text strings, never the rounded cells) —
+ties to 6,763,497.25 / 1,908,192.86 / 4,855,304.39. Status chips (Open neutral /
+Closed green / Cancelled grey), a % progress bar, months-idle showing "no payment
+yet" and a ⚠-chase flag (idle ≥ chase_idle_months from tax settings), negative
+balance in the destructive color, the overridden Total Collectible in blue with a
+default→confirmed tooltip, and the restated-override "review" chip linking to the
+detail. CSV/XLSX export links carry the active filters (AC8). Pagination at 50/page.
+
+DETAIL at /collectibles/[dealCode]. The booked-vs-collectible explainer prints the
+header doctrine VERBATIM and the Rule K.2 arithmetic ("GCI 318,877.55 + incentive
+35,714.29 = 354,591.84", from the deal's gci_net_of_vat + incentive_net). Inputs
+(status transitions, the override, the Next Action note, the "Adjust…" flow) sit
+beside the locked computed money (LockedValue + formula tooltips). Read-only payment
+history shows the M5 tax splits (the 07-09 incentive release, net 44,642.86).
+The status timeline reads the receivable audit entries — transitions log
+action='update' with a status field-change, so the headline is derived from that,
+not the action. Close/Cancel/Reopen go through ConfirmGate (gate mode 'checked' to
+match the action-layer checkConfirmation; Close warns on a non-zero balance and
+previews the variance; Cancel's reason is NOT html5-required — the server is the
+safeguard). The "Adjust…" panel routes the three Corrections-doctrine cases: edit
+the deal (→ M1 edit), confirm a different collectible (→ reveals the override form),
+close short and record the variance (→ a Close-short dialog). The restated-override
+banner clears via reviewOverrideFlag.
+
+DOWNSTREAM PROJECTIONS (the M6/M7/M8/M9 contract). src/lib/receivables/projections.ts
+is PURE functions over a set of receivable rows (idle/age arrive already overlaid by
+the read layer): positionTotals, agingRows (buckets [0,1)/[1,3)/[3,6)/[6,∞) of live
+age_months over open bal>0), perDeveloperRollups (incl. the "Resale / Rental (no
+developer)" row + avg days-to-1st-release), chaseProjection (Rule Q order + follow-up
+state), perSourceRollups (booked/collected/outstanding + deal-type split, year filter),
+bookingYearSummary, and searchProjection (M9). src/lib/receivables/projection-queries.ts
+are the server wrappers that load the rows once via listReceivables and hand them over.
+Every money figure is summed at full precision (toMoney → toFixed(2)); NO tax math.
+The unit tests assert the reconciliations to the centavo — aging Σ == outstanding;
+per-developer and per-source TOTAL == the position totals; the booking-year 2026 row
+== the whole-workbook aggregate.
+
+PERF (measured live, scripts/perf-receivables.ts, 1,000 throwaway receivables):
+ledger read P95 437.3 ms (< 500), every projection < 3.5 ms (< 300). The CI-runnable
+projection budget is proven with no database in tests/unit/receivables/projections.test.ts.
+
+NOTE (correction to the M4.4 brief): only-with-balance over the imported workbook is
+14 rows, not 13 — all 14 open receivables carry a positive balance, including D021's
+partial 309,948.98. Verified against the DB in the e2e.
+
+VERIFIED: browser e2e tests/e2e/collectibles.spec.ts 11/11 (import → chase order
+D013→D005→D016→D010, totals exact, only-with-balance 14, ⚠-chase, D021 explainer +
+payment history + balance 309,948.98, Close warns→variance −309,948.98→Reopen, Cancel
+reason-gated → written-off 675,000, Adjust routes all 3 cases, override set/clear,
+export links carry filters, 360px cards, console clean). test:unit 267/267 (+20
+projections). build:check + lint clean. Real account untouched; throwaway users
+deleted (delta-residue zero).**
+
 **M4.3 COMPLETE — Status lifecycle, Confirmed Collectible override, variance &
 write-off. The full business layer on M4.1's entity + M4.2's collections math:
 Open→Closed / Open→Cancelled / reopen both ways, each FRICTION-GATED (explicit

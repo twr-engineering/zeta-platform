@@ -1,10 +1,10 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { RECEIVABLE_SELECT } from "@/lib/supabase/selects";
+import { RECEIVABLE_SELECT, AUDIT_LOG_SELECT } from "@/lib/supabase/selects";
 import { manilaToday, type CivilDate } from "@/lib/date/manila";
 import { computeAgeMonths, computeMonthsIdle, compareChasePriority } from "./idle";
-import type { Receivable } from "@/types/entities";
+import type { AuditLogEntry, Receivable } from "@/types/entities";
 
 /**
  * Receivable reads (M4). No `workspace_id` filter anywhere: RLS scopes every row to
@@ -116,4 +116,45 @@ export async function getReceivableByDealId(
 
   if (error) throw new Error(`Could not read that receivable: ${error.message}`);
   return data ? withLiveIdle(data, manilaToday()) : null;
+}
+
+/**
+ * A single receivable by its deal's permanent code (D021) — the detail view's read
+ * (M4.4). idle/age are overlaid live; RLS makes another tenant's invisible → null.
+ */
+export async function getReceivableByDealCode(
+  dealCode: string
+): Promise<ReceivableRow | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("receivable")
+    .select(RECEIVABLE_LIST_SELECT)
+    .eq("deal_code", dealCode)
+    .maybeSingle<ReceivableRow>();
+
+  if (error) throw new Error(`Could not read that receivable: ${error.message}`);
+  return data ? withLiveIdle(data, manilaToday()) : null;
+}
+
+/**
+ * A receivable's own audit trail (§6 status timeline) — every status transition,
+ * override set/change/clear, note edit and cancel reason, newest first, read from
+ * the same append-only log the global viewer reads. RLS scopes it to the caller.
+ */
+export async function receivableAuditHistory(
+  receivableId: string,
+  limit = 50
+): Promise<AuditLogEntry[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("audit_log_entry")
+    .select(AUDIT_LOG_SELECT)
+    .eq("entity_type", "receivable")
+    .eq("entity_id", receivableId)
+    .order("occurred_at", { ascending: false })
+    .limit(limit)
+    .returns<AuditLogEntry[]>();
+
+  if (error) throw new Error(`Could not read the receivable's history: ${error.message}`);
+  return data ?? [];
 }
