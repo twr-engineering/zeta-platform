@@ -6,7 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { checkConfirmation } from "@/lib/friction/gate";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
-import { consumeReceivableEvents } from "@/lib/receivables/consume";
+import {
+  consumeReceivableEvents,
+  consumeReceivablePaymentEvents,
+} from "@/lib/receivables/consume";
 import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
 import type { Json } from "@/types/database";
@@ -185,6 +188,11 @@ export async function runImport(
   // The deal→receivable projection ran inside the import transaction; this is a
   // belt-and-braces drain in case any event is still pending.
   await consumeReceivableEvents().catch(() => {});
+  // M4.2 — drain the payment events the import emitted (the 8 workbook releases) so
+  // each receivable's collected/balance/dates reflect the imported cash. The deal
+  // consumer set balance = total_collectible − 0 for every row; this restates the
+  // paid ones. The cursor started at zero, so this is the first drain of these events.
+  await consumeReceivablePaymentEvents().catch(() => {});
 
   revalidatePath(ROUTES.deals);
   revalidatePath(ROUTES.collectibles);

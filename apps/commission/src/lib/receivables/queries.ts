@@ -2,6 +2,8 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { RECEIVABLE_SELECT } from "@/lib/supabase/selects";
+import { manilaToday, type CivilDate } from "@/lib/date/manila";
+import { computeAgeMonths, computeMonthsIdle, compareChasePriority } from "./idle";
 import type { Receivable } from "@/types/entities";
 
 /**
@@ -25,6 +27,20 @@ export type ReceivableRow = Receivable & {
 const RECEIVABLE_LIST_SELECT = `${RECEIVABLE_SELECT},developer:developer_id(name)`;
 
 /**
+ * Overlay the today-dependent Rule P fields (months_idle, age_months) with values
+ * computed live against `today` (M4.2 — they are not stored, because no event fires
+ * as the clock advances). Every read that surfaces idle/age goes through here, so
+ * the ledger and chase list can never show a stale month count.
+ */
+function withLiveIdle(row: ReceivableRow, today: CivilDate): ReceivableRow {
+  return {
+    ...row,
+    months_idle: computeMonthsIdle(row, today),
+    age_months: computeAgeMonths(row, today),
+  };
+}
+
+/**
  * Rule S — the payor (chase-list helper): the developer for a Developer deal, else
  * the client. Derived in the read layer rather than stored, so it can never drift
  * from a developer rename (§4 rule 2).
@@ -39,28 +55,37 @@ export function receivablePayor(row: ReceivableRow): string {
 export type ListReceivablesOptions = {
   /** Include receivables whose deal is archived (§4 rule 16). Default false. */
   includeArchived?: boolean;
+  /** The Manila civil date idle/age resolve against. Injectable for tests. */
+  today?: CivilDate;
 };
 
 /**
- * The receivables ledger. Default order is a stand-in for Rule Q chase priority —
- * largest Total Collectible first, then the permanent code — until M4.2 computes
- * balance and the real chase key. RLS scopes it to the caller.
+ * The receivables ledger, default-sorted by Rule Q chase priority (balance DESC,
+ * months_idle DESC NULLS LAST, deal_code). Balance and the payment dates come off
+ * the row (M4.2 projected them); months_idle/age_months are overlaid live against
+ * `today`. The DB returns the coarse chase order (chase_priority = balance); the
+ * full three-key sort — including the live months_idle tiebreaker the stored key
+ * cannot carry — is applied here. RLS scopes it to the caller.
  */
 export async function listReceivables(
   options: ListReceivablesOptions = {}
 ): Promise<ReceivableRow[]> {
   const supabase = await createClient();
-  let query = supabase.from("receivable").select(RECEIVABLE_LIST_SELECT);
+  const today = options.today ?? manilaToday();
 
+  let query = supabase.from("receivable").select(RECEIVABLE_LIST_SELECT);
   if (!options.includeArchived) query = query.is("archived_at", null);
 
   const { data, error } = await query
-    .order("total_collectible", { ascending: false })
+    .order("chase_priority", { ascending: false, nullsFirst: false })
     .order("deal_code", { ascending: true })
     .returns<ReceivableRow[]>();
 
   if (error) throw new Error(`Could not read your receivables: ${error.message}`);
-  return data ?? [];
+
+  return (data ?? [])
+    .map((row) => withLiveIdle(row, today))
+    .sort(compareChasePriority);
 }
 
 /** How many active receivables exist — the /collectibles empty-state signal. */
@@ -90,5 +115,5 @@ export async function getReceivableByDealId(
     .maybeSingle<ReceivableRow>();
 
   if (error) throw new Error(`Could not read that receivable: ${error.message}`);
-  return data ?? null;
+  return data ? withLiveIdle(data, manilaToday()) : null;
 }

@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { checkConfirmation } from "@/lib/friction/gate";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { getReceivableByDealId } from "@/lib/receivables/queries";
+import { consumeReceivablePaymentEvents } from "@/lib/receivables/consume";
 import { manilaToday } from "@/lib/date/manila";
 import { formatPHP } from "@/lib/money";
 import { ROUTES } from "@/lib/routes";
@@ -72,6 +73,23 @@ function revalidatePayments(): void {
   revalidatePath(ROUTES.collectibles);
   revalidatePath(ROUTES.deals);
   revalidatePath(ROUTES.settingsAuditLog);
+}
+
+/**
+ * Project the payment event this mutation just emitted onto its receivable (M4.2,
+ * FR-M4-04) — synchronously, so a payment is never visible without its restated
+ * collected/balance (monolith-first, § non-functional 8: < 200 ms added, same
+ * request). Best-effort: the payment is already committed and the cursor-based
+ * consumer heals any miss on the next call, so a transient sync error must not turn
+ * a successful save into a failure. Runs before revalidation so the refreshed
+ * collectibles view sees the new balance.
+ */
+async function syncReceivablesFromPayments(): Promise<void> {
+  try {
+    await consumeReceivablePaymentEvents();
+  } catch (error) {
+    console.error("receivable sync after payment mutation failed:", error);
+  }
 }
 
 type Ready = { ok: true; taxSettings: TaxSettings };
@@ -181,6 +199,7 @@ export async function createPayment(
 
   const warnings = await collectWarnings(parsed.value, deal.deal.booked_date);
 
+  await syncReceivablesFromPayments();
   revalidatePayments();
   return {
     error: null,
@@ -240,6 +259,7 @@ export async function updatePayment(
     return { error: "Could not save the payment. Reload and try again." };
   }
 
+  await syncReceivablesFromPayments();
   revalidatePayments();
 
   if (!result.changed) {
@@ -296,6 +316,7 @@ export async function deletePayment(
     return { error: "Could not delete the payment. Reload and try again." };
   }
 
+  await syncReceivablesFromPayments();
   revalidatePayments();
 
   if (!result.changed) {

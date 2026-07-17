@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T09:10:00+08:00
+# Last Updated: 2026-07-18T11:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -20,7 +20,7 @@
 - [x] M1.5: Recompute service & hardening
 - [x] M4.1: Receivable entity + auto-create/restate from deal events
 - [x] M5.1: Payment schema, split snapshot & events
-- [ ] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
+- [x] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
 - [ ] M5.2: Fast-entry form & split preview
 - [ ] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
 - [ ] M5.3: Payments list, per-deal panel & exports
@@ -58,6 +58,105 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M4.2 COMPLETE — Collections math: payments aggregation, balance, dates,
+idle/aging. The receivable now REACTS to M5 payment events, centavo-exact and
+synchronous. Rule L (collected = Σ payment net_of_vat, commission AND incentive
+both count), Rule M (balance = total_collectible − collected, SIGNED/no clamp;
+pct = collected ÷ total, null at zero-collectible), payment dates (first/last),
+days_to_first_release (first − booking, negative allowed — D021 = −1), and Rule P
+idle/age are live. THE M1.4 PENDING ANCHOR IS RESOLVED (live throwaway import →
+drain): Σ receivable.balance = ₱4,855,304.39 EXACT; D021 collected ₱44,642.86 /
+balance ₱309,948.98 / pct 0.125899 (12.59%); D004 collected ₱875,000 / balance
+₱0.00; days_to_first D021 −1 / D001 12 / D004 115; chase order D013 → D005 → D016
+→ D010; idempotent re-drain, replay-from-cursor-0 identical, negative balance on
+overpay, AC9 tenant B sees 0.**
+
+ONE additive migration, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718060000_m42_collections_math.sql — the payments-math projection.
+    · app.recompute_receivable_payment_fields(p_deal_id) — the SHARED
+      re-aggregation. Sums the deal's NON-ARCHIVED payments (Rule L collected =
+      Σ net_of_vat; Commission AND Incentive alike — D021's incentive release
+      counts) and writes the today-INDEPENDENT payment-derived columns:
+      collected_net, last/first_payment_date, balance (Rule M, signed, no clamp),
+      pct_collected (null when total_collectible = 0), days_to_first_release
+      (first − booking; negative when a release predates booking, D021 = −1),
+      chase_priority (= balance). ABSOLUTE re-aggregation, NOT deltas — the m5_1
+      handoff sketched +K/−old+new/−old, but re-aggregation is idempotent +
+      replay-safe BY CONSTRUCTION (deleting the max-dated payment re-MAXes the new
+      last_payment_date; a replay from cursor 0 re-projects identical state, never
+      doubled). Collected = Σ of stored 2-dp payment values (exact, no drift). Does
+      NOT bump version (system projection, not a user edit) and does NOT touch
+      variance/written_off (M4.3) or months_idle/age (read-time).
+    · public.consume_payment_events(p_limit) + public.receivable_payment_cursor —
+      M4's OWN cursor over public.payment_event (mirrors receivable_event_cursor
+      over deal_event; m1_2/m5_1 handoff: each consumer its own cursor). Drains
+      created/updated/deleted in (occurred_at, id) order, re-aggregating each
+      referenced deal (payment_event carries deal_id directly — no join through a
+      soft-deleted payment). Idempotent + resumable.
+    · consume_deal_events EXTENDED (CREATE OR REPLACE, SAME signature — additive,
+      every caller picks it up). M4.1's consumer mirrored identity + Rule K but
+      left balance at its default; it now calls the recompute after each upsert, so
+      EVERY receivable — including the 13 open no-payment workbook rows the payment
+      consumer never touches — gets balance = total_collectible − 0, and a deal
+      edit / bulk recompute that moves total_collectible restates balance/pct/chase
+      in the same drain (§4 rule 7). Still idempotent + resumable.
+
+TODAY-DEPENDENT MATH LIVES IN THE APP, NEVER IN SQL (the injectable-clock rule).
+months_idle and age_months are the ONLY payment-derived fields that depend on
+"today", and NO event fires as the clock advances — storing them would guarantee
+staleness the moment a day passes (there is no scheduler; monolith-first). They are
+therefore computed AT READ TIME in src/lib/receivables/idle.ts (PURE, unit-tested,
+clock-injectable, Asia/Manila via monthsBetween = DATEDIF "m"): computeMonthsIdle
+(null when Closed/Cancelled or no payment; clamps a future-dated payment to 0),
+computeAgeMonths (booking-date fallback so a never-paid receivable still ages — D008
+= 3 at 2026-07-17). Every field the SQL consumer stores is today-INDEPENDENT, so no
+now()/current_date appears anywhere in the math. Rule Q chase ordering is
+compareChasePriority (balance DESC, months_idle DESC NULLS LAST, deal_code ASC) — a
+deterministic ORDER BY contract; the DB chase_priority = balance + partial index
+receivable_chase_idx back the coarse sort, the read layer applies the live
+months_idle tiebreaker the stored key cannot carry.
+
+WIRING (synchronous, monolith-first — < 200 ms added, same request). consume.ts
+gains consumeReceivablePaymentEvents() (loop over the drain). payments/actions.ts:
+syncReceivablesFromPayments() runs after every create/update/delete (best-effort,
+before revalidation — a payment is never visible without its restated balance).
+import/actions.ts: drains the payment cursor post-import (the 8 workbook releases).
+recompute-runner needs no change — a settings recompute moves total_collectible via
+deal.updated, and the extended consume_deal_events restates balance. listReceivables
+now DEFAULT-sorts by Rule Q and overlays live months_idle/age_months; /collectibles
+renders real Collected / Balance / % / months-idle columns (negative balance in a
+warning color per §4 rule 9; "no payment yet" when idle is null-with-Open). No new
+receivable columns, so no type churn beyond regenerating database.generated.ts for
+the new function + cursor table.
+
+VERIFIED (live, real JWTs, 2 throwaway workspaces deleted after — 33/33,
+scripts/live-m42-check.mts): the M1.4 anchor above; incremental on D002 (untaxed
+resale, collectible 126,500) — create 100,000 → collected 100,000 / balance 26,500;
+edit gross 100,000 → 50,000 → collected 50,000 / balance 76,500 (−old +new); delete
+→ collected 0 / balance 126,500 / last_payment_date null (reversed); overpay 200,000
+→ balance −73,500 displayed (no clamp); re-drain no-op (idempotent); reset cursor to
+'-infinity' + re-drain → Σ balance unchanged, 21 receivables (no dupes); AC9 tenant B
+sees 0 receivables + drains 0 events. test:unit 237/237 (227 + 10 new: idle/age +
+chase ordering incl. the 14-open workbook order and a constructed tie); build:check +
+lint clean. Real account (juliusbaliling25@gmail.com) untouched; baseline restored
+(1 workspace, 0 deals/receivables/payments/events/cursors — delta-residue zero).
+
+HANDOFF NOTES for M4.3 / M4.4 / M6:
+  - M4.3 (lifecycle): status transitions already null-out months_idle/age via
+    idle.ts' status guard (Closed/Cancelled → null, computed at read). Add variance
+    (Rule N) frozen at Closed and written_off (Rule O) at Cancelled — the recompute
+    helper deliberately does NOT touch those columns. Exclude Closed/Cancelled from
+    the open-balance/aging/chase projections (filter status='open').
+  - M4.4 (ledger/projections): chase projection = ORDER BY chase_priority desc
+    (receivable_chase_idx) then compareChasePriority for the live idle tiebreaker;
+    balance/pct/collected are plain columns off the receivable (recomputed by the
+    two consumers), NOT generated. listReceivables already default-sorts Rule Q and
+    overlays live idle — extend it with filters/totals.
+  - M6 (aging/chase): consume computeAgeMonths(row, today) / computeMonthsIdle live
+    (they are today-dependent — never read the DB months_idle/age columns, which the
+    consumer leaves untouched by design). balance/pct off the receivable directly.
+
 **M1.4 COMPLETE — v30.x workbook importer (M1 COMPLETE). One-time migration of an
 existing ZETA workbook into a fresh workspace, in ONE database transaction. THE
 ACCEPTANCE ANCHOR (Master PRD §9) REPRODUCES LIVE, to the centavo: importing the

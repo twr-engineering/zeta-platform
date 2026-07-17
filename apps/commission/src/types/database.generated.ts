@@ -868,6 +868,35 @@ export type Database = {
           },
         ]
       }
+      receivable_payment_cursor: {
+        Row: {
+          last_event_id: string | null
+          last_occurred_at: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivable_payment_cursor_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recompute_job: {
         Row: {
           created_at: string
@@ -1082,6 +1111,7 @@ export type Database = {
       }
       complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
       consume_deal_events: { Args: { p_limit?: number }; Returns: Json }
+      consume_payment_events: { Args: { p_limit?: number }; Returns: Json }
       count_affected_deals: {
         Args: { p_entity_id: string; p_entity_type: string; p_fields: string[] }
         Returns: number

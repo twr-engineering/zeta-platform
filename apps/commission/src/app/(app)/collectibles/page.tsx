@@ -6,8 +6,9 @@ import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listReceivables, receivablePayor } from "@/lib/receivables/queries";
-import { formatPHP } from "@/lib/money";
+import { formatPHP, formatRateAsPercent, toMoney } from "@/lib/money";
 import { ROUTES, dealDetailPath } from "@/lib/routes";
+import { cn } from "@/lib/utils";
 import type { ReceivableStatus } from "@/types/entities";
 
 export const metadata: Metadata = { title: "Collectibles" };
@@ -58,48 +59,83 @@ export default async function CollectiblesPage() {
       </header>
 
       <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <th className="px-3 py-2 font-medium">Deal</th>
               <th className="px-3 py-2 font-medium">Payor</th>
-              <th className="px-3 py-2 text-right font-medium">Booked NET GCI</th>
               <th className="px-3 py-2 text-right font-medium">Total Collectible</th>
+              <th className="px-3 py-2 text-right font-medium">Collected</th>
+              <th className="px-3 py-2 text-right font-medium">Balance</th>
+              <th className="px-3 py-2 text-right font-medium">%</th>
+              <th className="px-3 py-2 font-medium">Months idle</th>
               <th className="px-3 py-2 font-medium">Status</th>
             </tr>
           </thead>
           <tbody>
-            {receivables.map((r) => (
-              <tr key={r.id} className="border-b last:border-0">
-                <td className="px-3 py-2">
-                  <Link
-                    href={dealDetailPath(r.deal_code)}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {r.deal_code}
-                  </Link>
-                  <span className="block text-xs text-muted-foreground">{r.client_name}</span>
-                </td>
-                <td className="px-3 py-2">{receivablePayor(r)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatPHP(r.booked_net_gci)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  {formatPHP(r.total_collectible)}
-                  {r.confirmed_collectible !== null && (
-                    <span
-                      className="ml-1 text-xs text-primary"
-                      title={`Default ${formatPHP(r.default_total_collectible)} → confirmed ${formatPHP(
-                        r.confirmed_collectible
-                      )}`}
+            {receivables.map((r) => {
+              // §4 rule 9 — a negative balance (over-collection) is shown as-is, in a
+              // warning color; the money is never clamped to zero.
+              const negativeBalance = r.balance !== null && toMoney(r.balance).isNegative();
+              return (
+                <tr key={r.id} className="border-b last:border-0">
+                  <td className="px-3 py-2">
+                    <Link
+                      href={dealDetailPath(r.deal_code)}
+                      className="font-medium text-primary hover:underline"
                     >
-                      ●
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  <Badge variant="outline">{STATUS_LABEL[r.status]}</Badge>
-                </td>
-              </tr>
-            ))}
+                      {r.deal_code}
+                    </Link>
+                    <span className="block text-xs text-muted-foreground">{r.client_name}</span>
+                  </td>
+                  <td className="px-3 py-2">{receivablePayor(r)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {formatPHP(r.total_collectible)}
+                    {r.confirmed_collectible !== null && (
+                      <span
+                        className="ml-1 text-xs text-primary"
+                        title={`Default ${formatPHP(r.default_total_collectible)} → confirmed ${formatPHP(
+                          r.confirmed_collectible
+                        )}`}
+                      >
+                        ●
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {formatPHP(r.collected_net)}
+                  </td>
+                  <td
+                    className={cn(
+                      "px-3 py-2 text-right tabular-nums",
+                      negativeBalance && "font-medium text-destructive"
+                    )}
+                    title={
+                      negativeBalance
+                        ? "Over-collected — close it or confirm the collectible."
+                        : undefined
+                    }
+                  >
+                    {r.balance === null ? "—" : formatPHP(r.balance)}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                    {r.pct_collected === null ? "—" : formatRateAsPercent(r.pct_collected)}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {r.months_idle === null ? (
+                      <span className="text-xs">
+                        {r.status === "open" ? "no payment yet" : "—"}
+                      </span>
+                    ) : (
+                      r.months_idle
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Badge variant="outline">{STATUS_LABEL[r.status]}</Badge>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

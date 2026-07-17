@@ -29,12 +29,18 @@ const MAX_BATCHES = 500;
 
 type DealClient = Awaited<ReturnType<typeof createClient>>;
 
-async function drain(supabase: DealClient): Promise<number> {
+/**
+ * Drain a cursor-based consumer to completion by looping its DB drain function
+ * until a batch comes back empty. Shared by the deal-event and payment-event
+ * consumers — both return `{ processed }` and advance their own cursor.
+ */
+async function drain(
+  supabase: DealClient,
+  fn: "consume_deal_events" | "consume_payment_events"
+): Promise<number> {
   let total = 0;
   for (let i = 0; i < MAX_BATCHES; i += 1) {
-    const { data, error } = await supabase.rpc("consume_deal_events", {
-      p_limit: BATCH_SIZE,
-    });
+    const { data, error } = await supabase.rpc(fn, { p_limit: BATCH_SIZE });
     if (error) {
       throw new Error(`Could not sync receivables: ${error.message}`);
     }
@@ -46,10 +52,24 @@ async function drain(supabase: DealClient): Promise<number> {
 }
 
 /**
- * Drain M4's cursor for the caller's workspace to completion. Returns the number of
- * events projected. Call after every deal mutation and after each bulk recompute.
+ * Drain M4's DEAL-event cursor for the caller's workspace to completion. Returns the
+ * number of events projected. Call after every deal mutation and after each bulk
+ * recompute (the deal consumer restates mirrors + Rule K anchors + balance).
  */
 export async function consumeReceivableEvents(): Promise<number> {
   const supabase = await createClient();
-  return drain(supabase);
+  return drain(supabase, "consume_deal_events");
+}
+
+/**
+ * Drain M4's PAYMENT-event cursor for the caller's workspace to completion (M4.2,
+ * FR-M4-04). Returns the number of events projected. Call after every payment
+ * mutation (create/update/delete) and after the workbook import, so the receivable's
+ * collected/balance/dates move in the same request the payment moved. The consumer
+ * re-aggregates each affected deal from its current payment rows, so it is idempotent
+ * (a re-drain is a no-op) and resumable (the cursor heals any miss).
+ */
+export async function consumeReceivablePaymentEvents(): Promise<number> {
+  const supabase = await createClient();
+  return drain(supabase, "consume_payment_events");
 }
