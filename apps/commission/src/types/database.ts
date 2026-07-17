@@ -172,6 +172,32 @@ type ReceivableOverride = Omit<ReceivableTable, "Row"> & {
     Record<ReceivableNullableMoney, string | null>;
 };
 
+// --- payment (M5 §3.1) ------------------------------------------------------
+
+type PaymentTable = GeneratedTables["payment"];
+
+/**
+ * Every peso figure and rate is `numeric`, so it arrives as a JSON float unless
+ * the query casts `::text` (see @/lib/supabase/selects PAYMENT_SELECT). Only the
+ * Row is re-typed: payments are written exclusively by the SECURITY INVOKER DB
+ * functions (create/update/delete_payment), never inserted through the client, so
+ * the Insert/Update shapes are unused. The five split ₱ fields, the gross, and the
+ * two `*_used` rate anchors are all NOT NULL.
+ */
+type PaymentMoneyColumns =
+  | "gross_amount"
+  | "net_of_vat"
+  | "vat_amount"
+  | "ewt_amount"
+  | "net_cash"
+  | "retained_cash"
+  | "ewt_rate_used"
+  | "vat_rate_used";
+
+type PaymentOverride = Omit<PaymentTable, "Row"> & {
+  Row: WithMoneyStrings<PaymentTable["Row"], PaymentMoneyColumns>;
+};
+
 // --- Functions --------------------------------------------------------------
 
 type GeneratedFunctions = PublicSchema["Functions"];
@@ -271,6 +297,39 @@ type SetConfirmedCollectibleOverride = Omit<SetConfirmedCollectibleFn, "Args"> &
   };
 };
 
+/**
+ * create_payment / update_payment (M5.1) — the float trap from the argument side.
+ * The generator types every `numeric` param `number`; PostgREST casts a JSON
+ * string straight to numeric, so the split ₱ fields, the gross and the two rate
+ * anchors are strings ("50000.00", "0.1000"). `p_reference_note` is a nullable
+ * text arg (blank clears it), relaxed to accept null.
+ */
+type PaymentRpcMoneyArgs =
+  | "p_gross_amount"
+  | "p_net_of_vat"
+  | "p_vat_amount"
+  | "p_ewt_amount"
+  | "p_net_cash"
+  | "p_retained_cash"
+  | "p_ewt_rate_used"
+  | "p_vat_rate_used";
+
+type WithPaymentRpcArgs<Args> = Omit<
+  Args,
+  PaymentRpcMoneyArgs | "p_reference_note"
+> &
+  Record<PaymentRpcMoneyArgs, string> & { p_reference_note: string | null };
+
+type CreatePaymentFn = GeneratedFunctions["create_payment"];
+type CreatePaymentOverride = Omit<CreatePaymentFn, "Args"> & {
+  Args: WithPaymentRpcArgs<CreatePaymentFn["Args"]>;
+};
+
+type UpdatePaymentFn = GeneratedFunctions["update_payment"];
+type UpdatePaymentOverride = Omit<UpdatePaymentFn, "Args"> & {
+  Args: WithPaymentRpcArgs<UpdatePaymentFn["Args"]>;
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
@@ -282,12 +341,14 @@ export type Database = Omit<Generated, "public"> & {
       | "settings_change_event"
       | "deal"
       | "receivable"
+      | "payment"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
       settings_change_event: SettingsEventOverride;
       deal: DealOverride;
       receivable: ReceivableOverride;
+      payment: PaymentOverride;
     };
     Functions: Omit<
       GeneratedFunctions,
@@ -296,12 +357,16 @@ export type Database = Omit<Generated, "public"> & {
       | "update_deal"
       | "count_affected_deals"
       | "set_confirmed_collectible"
+      | "create_payment"
+      | "update_payment"
     > & {
       update_tax_settings: UpdateTaxSettingsOverride;
       create_deal: CreateDealOverride;
       update_deal: UpdateDealOverride;
       count_affected_deals: CountAffectedDealsOverride;
       set_confirmed_collectible: SetConfirmedCollectibleOverride;
+      create_payment: CreatePaymentOverride;
+      update_payment: UpdatePaymentOverride;
     };
   };
 };

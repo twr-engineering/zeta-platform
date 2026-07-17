@@ -189,15 +189,20 @@ export async function resolveDealRefs(
  * How many payments are logged against a deal — the delete-protection / edit-
  * friction / archive-cascade signal (§4 rule 2).
  *
- * ZERO, ALWAYS, IN M1.2 — mirrors app.deal_payment_count in SQL and
- * countAffectedDeals() in M0.2: there is no payment table until M5. When M5
- * lands this becomes a real count (a select over payment.deal_id, or a public
- * wrapper RPC), and the edit-after-payments friction gate and archive-cascade
- * copy start firing with no change to the actions that already consult it.
+ * REAL SINCE M5.1 — a count over payment.deal_id (mirroring app.deal_payment_count
+ * in SQL), which turns on the edit-after-payments friction gate and the archive-
+ * cascade copy in the deal actions that already consult it, with no change there.
+ * Counts ALL payment rows (archived included): a soft-deleted payment still has an
+ * event + a receivable restatement in history, so the deal stays un-hard-deletable
+ * (archive it instead). RLS scopes the read to the caller's workspace.
  */
 export async function dealPaymentCount(dealId: string): Promise<number> {
-  // Referenced so the stub carries the exact shape M5 fills in (a count over
-  // payment.deal_id); there is no payment table to query yet.
-  void dealId;
-  return 0;
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("payment")
+    .select("id", { count: "exact", head: true })
+    .eq("deal_id", dealId);
+
+  if (error) throw new Error(`Could not count the deal's payments: ${error.message}`);
+  return count ?? 0;
 }

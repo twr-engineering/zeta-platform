@@ -36,6 +36,14 @@ export type RecomputeJob = Tables<"recompute_job">;
 export type Receivable = Tables<"receivable">;
 export type ReceivableStatus = Enums<"receivable_status">;
 
+// M5 §3.1. One row per commission/incentive release; the split is a stored
+// snapshot. The money-safe Row (numeric columns re-typed string) comes from the
+// override layer in ./database — see PAYMENT_SELECT.
+export type Payment = Tables<"payment">;
+export type PaymentEvent = Tables<"payment_event">;
+export type PaymentTypeEnum = Enums<"payment_type">;
+export type PaymentEventType = Enums<"payment_event_type">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;

@@ -124,6 +124,48 @@ export const DEAL_SELECT = [
 ].join(",");
 
 /**
+ * payment (M5 §3.1) — money-dense, so every peso figure and rate is selected
+ * `::text` (the override in @/types/database types them `string`). The five split
+ * ₱ fields (net_of_vat/vat/ewt/net_cash/retained), the gross, and the two `*_used`
+ * rate anchors all cast. NEVER `select("*")` here. Integers (year_paid, month_paid,
+ * version), dates and the two enums (payment_type, vat_basis_used) round-trip
+ * exactly, so they need no cast.
+ */
+export const PAYMENT_SELECT = [
+  "id",
+  "workspace_id",
+  "deal_id",
+  "payment_date",
+  "gross_amount::text",
+  "payment_type",
+  "reference_note",
+  "net_of_vat::text",
+  "vat_amount::text",
+  "ewt_amount::text",
+  "net_cash::text",
+  "retained_cash::text",
+  "vat_basis_used",
+  "ewt_rate_used::text",
+  "vat_rate_used::text",
+  "year_paid",
+  "month_paid",
+  "archived_at",
+  "version",
+  "created_by",
+  "updated_by",
+  "created_at",
+  "updated_at",
+].join(",");
+
+/**
+ * payment_event (§3.4) — the append-only event log. No `numeric` column: the money
+ * lives inside old_values/new_values (jsonb the write path filled with ::text
+ * strings via app.payment_snapshot), so `*` is safe — the exact decimal never
+ * becomes a JSON number.
+ */
+export const PAYMENT_EVENT_SELECT = "*";
+
+/**
  * deal_event (FR-M1-08) — the append-only event log. No `numeric` column: the
  * money lives inside old_values/new_values (jsonb the write path filled with
  * ::text strings via app.deal_snapshot), so `*` is safe for the same reason it

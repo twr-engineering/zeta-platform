@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T06:40:00+08:00
+# Last Updated: 2026-07-18T09:10:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -19,7 +19,7 @@
 - [ ] M1.4: v30.x workbook importer
 - [x] M1.5: Recompute service & hardening
 - [x] M4.1: Receivable entity + auto-create/restate from deal events
-- [ ] M5.1: Payment schema, split snapshot & events
+- [x] M5.1: Payment schema, split snapshot & events
 - [ ] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
 - [ ] M5.2: Fast-entry form & split preview
 - [ ] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
@@ -58,6 +58,144 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M5.1 COMPLETE — Payment schema, save-time split snapshot & events (NO UI). Each
+release logs one payment row; the split (Net-of-VAT/VAT/EWT/Net Cash/Retained) is
+CAPTURED AT SAVE TIME from the deal's then-current vat_basis + workspace rates and
+STORED on the row — a historical fact, not a live formula (§3.3). The split math is
+M1's engine (computePaymentSplit, the single source of money truth); M5 wires it,
+never re-implements it. Payment mutations EMIT payment.created/updated/deleted with
+old+new snapshots into an append-only payment_event log — M4.2 consumes them with
+its own cursor to restate the receivable (that consumer is M4.2, not M5.1).**
+
+ONE additive migration, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718040000_m51_payment.sql — the entity + event log + three mutations, and
+    the moment M1.2's dormant deal-payment guards turn real.
+    · public.payment_type enum {commission, incentive}; public.payment_event_type
+      enum {created, updated, deleted}.
+    · public.payment — §3.1's 15 fields. HARD FK deal_id→deal(id) RESTRICT (no
+      cascade): un-orphanable from this side — a deal with ANY payment row can't be
+      hard-deleted, only archived (edge case 10 / rule 15). gross_amount CHECK > 0
+      (rule 4; refunds are OQ2). Five split snapshot ₱ fields + vat_basis_used
+      (REUSES public.deal_vat_basis {inclusive, n_a} — 'exclusive' UNREPRESENTABLE by
+      construction, Q1/rule 5) + ewt_rate_used/vat_rate_used numeric(6,4). year_paid/
+      month_paid GENERATED ALWAYS STORED from payment_date (calendar-exact, no TZ
+      shift — rule 20). Soft-delete archived_at, version, created_by/updated_by. RLS
+      member-scoped; NO delete policy (soft-delete only — a payment is never
+      user-hard-deleted).
+    · public.payment_event — append-only log mirroring deal_event: created (old
+      null), updated (old+new+field_changes), deleted (old+new, archived_at set —
+      the full final field set for M4.2's reversal math). app.payment_snapshot is the
+      LOCKED payload shape (money ::text; add keys, never drop). Append-only trigger
+      reuses app.reject_deal_event_mutation. Several consumers, each its own cursor
+      (m1_2 handoff) — M4.2 (receivable restatement), M6/M8 (aggregates), M9 (index).
+    · app.assert_payment_split — the DB re-checks ONLY the pure ties the engine's
+      split must satisfy for EVERY rule (K+L=H, N=H−M, retained=H−L−M, ±0.01); the
+      tax decision is trusted from the engine (the same "single writer verifies
+      composition" contract as create_deal's Rule G/H).
+    · app.resolve_payment_deal — the shared hard-FK / same-workspace / non-archived
+      gate (edge case 10); RLS makes a cross-tenant deal invisible → refused.
+    · public.create_payment (FR-M5-01) — validates the deal ref, verifies the ties,
+      persists the engine snapshot, audits ('create'), emits payment.created. NOT
+      friction-gated (logging is an ordinary create). ALSO the importer's un-gated
+      trusted bulk path (FR-M5-13) — no separate overlay function is needed because
+      create has no gate to bypass; the importer calls it per row with the
+      engine-computed split and ignores the warnings (silent, OQ5).
+    · public.update_payment (FR-M5-07) — RE-SNAPSHOTS at the deal/settings as they
+      are NOW (§3.3.2; the app recomputes and passes the fresh split); re-resolves
+      the (possibly re-pointed) deal; optimistic-lock p_expected_version; field-level
+      audit; emits payment.updated with old+new.
+    · public.delete_payment (FR-M5-08) — soft-delete (archived_at), emits
+      payment.deleted with the full final field set; optimistic-lock guarded.
+    · app.deal_payment_count body REPLACED with a real count over public.payment
+      (ALL rows, archived incl.) — the ONE edit that turns on M1.2's dormant guards:
+      the deal DELETE policy + delete_deal (hard delete BLOCKED on a deal with
+      payments), the edit-after-payments friction gate and the archive-cascade
+      branches in src/lib/deals/actions.ts all go live automatically (they already
+      read dealPaymentCount, now real in src/lib/deals/queries.ts).
+
+SPLIT COMPUTED IN THE APP, DB AS SINGLE WRITER (FR-M5-05, §3.2). src/lib/payments/
+compute.derivePaymentSnapshot runs M1's computePaymentSplit against the referenced
+deal's current vat_basis + incentive_taxable and the workspace's current vat_rate/
+ewt_rate, producing the five ₱ fields + the three *_used anchors; the DB function
+re-checks only the pure ties. NO math is re-implemented in M5 (not in the API, and —
+when it lands — not in M5.2's preview/UI). App layer: schema (parsePayment: gross>0,
+blank≡Commission rule 14, note≤240), map (dbVatBasisToEngine, buildPaymentSplitInput,
+create/updatePaymentRpcArgs), compute, warnings (PURE), queries (listPayments+deal
+join, getPayment, resolvePaymentDeal, findDuplicatePayments), actions (create/update/
+deletePayment — edit+delete friction-gated via checkConfirmation 'checked'; warnings
+collected + returned in PaymentActionState), labels (PAYMENT_TYPE/FIELD_LABELS).
+
+WARNING CONTRACT (§4, FR-M5-04 — non-blocking, RETURNED to the caller, not the DB's
+job). computePaymentWarnings (pure, unit-tested): future_date, pre_booking_date
+(D021's 07-09 < booking 07-10 accepted + stored — the importer accepts silently),
+possible_duplicate (same deal+gross+date), receivable_closed/cancelled (reopen
+prompt). M5.2 renders amber banners + "Continue anyway" (audit-logged).
+
+IMPORTER BULK CONTRACT for M1.4 (FR-M5-13 — documented; implementation lands with
+M1.4's payments leg). create_payment IS the un-gated bulk path (mirrors the M4.1
+overlay pattern's intent): per row, treat blank type ≡ Commission, compute the split
+via computePaymentSplit (do NOT trust the workbook's cached K/L/M/N — RECOMPUTE and
+reconcile to within ₱0.01 per row, reporting mismatches), pass the snapshot to
+create_payment. The 8 live payments in WORKBOOK §4 are the acceptance fixtures (all 8
+reproduce centavo-exact through create_payment — verified below). D001's basis cache
+was lost on the anchor row but the deal is an unreceipted resale → N/A / all-net is
+the correct recomputation. Warnings are ignored on import (historical fact, OQ5).
+
+TYPES / MONEY DISCIPLINE. database.generated.ts regenerated (Management API types
+endpoint). database.ts: payment Row money columns → string; create_payment/
+update_payment RPC money args → string (+ p_reference_note string|null). selects.ts:
+PAYMENT_SELECT (every numeric ::text) + PAYMENT_EVENT_SELECT ('*', money lives in
+jsonb). NEVER select("*") on payment. entities: Payment/PaymentEvent/PaymentTypeEnum/
+PaymentEventType. Exporter: 'payments' dataset registered (loadExportDataset +
+loadWorkspaceExport) — joined CURRENT deal identity (renames propagate) + the stored
+snapshot split columns. Audit viewer: 'payment' entity type + PAYMENT_FIELD_LABELS.
+
+EVENTS ARE MY JOB; THE CONSUMER IS M4.2 (m4_1 handoff). M5.1 EMITS well-shaped
+payment.created/updated/deleted with old+new snapshots; M4.2 CONSUMES them with its
+own cursor to restate collected_net/balance/last+first payment/months_idle/aging.
+Recommended M4.2 design: a receivable-side payment-event consumer mirroring
+consume_deal_events (payment_event ordered by (occurred_at, id); created → Collected
++= net_of_vat, updated → delta old→new re-aggregating old AND new year/month periods,
+deleted → subtract). payment_event carries deal_id directly, so no join through a
+soft-deleted payment is needed. NO payment→receivable consumer is built in M5.1.
+
+VERIFIED (live, real JWTs, 3 throwaway workspaces deleted after — 26/26):
+  · D021 incentive ₱50,000 Inclusive → net 44,642.86 / VAT 5,357.14 / EWT 4,464.29 /
+    net cash 45,535.71 / retained 40,178.57, centavo-exact; vat_basis_used=inclusive,
+    ewt_rate_used=0.1000, vat_rate_used=0.1200; year_paid/month_paid derived (2026,7).
+  · the 7 untaxed workbook rows (436,050 / 875,000 / 22,500 / 130,000 / 10,000 /
+    37,500 / 352,500) all K=H, L=M=0, N=H.
+  · snapshot policy: workspace EWT 10→5 leaves the stored split UNCHANGED (still
+    4,464.29 @ 0.1000); a payment EDIT re-snapshots at 5% → EWT 2,232.14. (No code
+    path recomputes payment rows — only a payment edit re-snapshots; a deal recompute
+    never touches them.)
+  · hard FK: nonexistent / archived / cross-workspace deal refs all refused; gross ≤ 0
+    refused; a pre-booking-dated payment (07-09 < 07-10) accepted + stored.
+  · deal_payment_count real: a deal with a payment → hard delete BLOCKED (m1_2's
+    dormant path fires); the count is 1, arming the edit/archive friction gates.
+  · events: payment.created (old null, new snapshot) / updated (old+new+field_changes)
+    / deleted (old+new, archived_at set); append-only trigger rejects a service-role
+    UPDATE; AC9 tenant B sees 0 payments AND 0 payment events.
+  · Non-VAT workspace (Rule P5): fixture N1 gross ₱357,142.86 → Net=gross / VAT 0 /
+    EWT 17,857.14 @ 5% / net cash 339,285.72 (decimal-exact — see note).
+test:unit 209/209 (187 + 22 new: payment-snapshot 6, payment-validation 10,
+payment-warnings 7); build:check + lint clean; Playwright single-worker on a clean
+reseed (existing suite unchanged — M5.1 adds no specs; proves the app-layer +
+deal_payment_count activation did not regress M1/M4). Real account
+(juliusbaliling25@gmail.com) untouched; baseline restored (1 workspace, 0 payments /
+payment_events / deals).
+
+NOTE (flagged to team lead) — PRD §3.2/AC2b P5 worked example shows net_cash
+₱339,285.71 for gross ₱357,142.86; the ENGINE (single source of money truth) yields
+₱339,285.72: 357,142.86 − full-precision EWT 17,857.143 = 339,285.717 → half-up .72.
+The PRD example subtracts the already-rounded 17,857.14 — a display-rounding slip.
+EWT (the tax fact that appears on the 2307) ties exactly at 17,857.14. The engine is
+correct; the PRD example is off by a centavo on the derived net-cash display only.
+
+(Built right after M4.1, interleaved per the M4+M5 workstream — M5.1 must land before
+M1.4's full importer run, which writes payments through create_payment.)
+
 **M4.1 COMPLETE — Receivable entity + auto-create/restate from deal events. Exactly
 one receivable per deal, SYSTEM-managed: created / restated / archived by a cursor-
 based consumer over the deal event log, never user-created or user-deleted (§4 rule

@@ -23,6 +23,7 @@ import {
   receivablePayor,
   type ReceivableRow,
 } from "@/lib/receivables/queries";
+import { listPayments, type PaymentRow } from "@/lib/payments/queries";
 import type { ExportColumn, ExportDataset } from "./format";
 import type {
   AuditLogEntry,
@@ -196,10 +197,42 @@ const RECEIVABLE_COLUMNS: readonly ExportColumn<ReceivableRow>[] = [
   },
 ];
 
+// --- payments (M5 §3.1) -----------------------------------------------------
+
+const PAYMENT_TYPE_LABELS: Record<PaymentRow["payment_type"], string> = {
+  commission: "Commission",
+  incentive: "Incentive",
+};
+
+/**
+ * The payments log (FR-M5-11). Money comes through PAYMENT_SELECT's `::text` casts
+ * (via listPayments), so the archive reproduces every centavo of the stored split.
+ * The deal identity columns (code, year, developer, client, property) are the
+ * JOINED current values (renames propagate) — only the tax split is the snapshot.
+ */
+const PAYMENT_COLUMNS: readonly ExportColumn<PaymentRow>[] = [
+  { header: "Date", type: "date", value: (r) => r.payment_date, width: 14 },
+  { header: "Deal Code", type: "text", value: (r) => r.deal?.deal_code ?? "", width: 12 },
+  { header: "Deal Year", type: "number", value: (r) => r.deal?.booked_year ?? "", width: 10 },
+  { header: "Developer", type: "text", value: (r) => r.deal?.developer?.name ?? "", width: 22 },
+  { header: "Client", type: "text", value: (r) => r.deal?.client_name ?? "", width: 24 },
+  { header: "Property", type: "text", value: (r) => r.deal?.property_details ?? "", width: 28 },
+  { header: "Type", type: "text", value: (r) => PAYMENT_TYPE_LABELS[r.payment_type], width: 12 },
+  { header: "Gross", type: "money", value: (r) => r.gross_amount, width: 16 },
+  { header: "Net of VAT", type: "money", value: (r) => r.net_of_vat, width: 16 },
+  { header: "VAT", type: "money", value: (r) => r.vat_amount, width: 14 },
+  { header: "EWT", type: "money", value: (r) => r.ewt_amount, width: 14 },
+  { header: "Net Cash", type: "money", value: (r) => r.net_cash, width: 16 },
+  { header: "Retained", type: "money", value: (r) => r.retained_cash, width: 16 },
+  { header: "Note", type: "text", value: (r) => r.reference_note ?? "", width: 24 },
+  { header: "Status", type: "text", value: archivedState, width: 12 },
+];
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
   "deals",
   "receivables",
+  "payments",
   "property-types",
   "developers",
   "lead-sources",
@@ -242,6 +275,18 @@ export async function loadExportDataset(
         name: "receivables",
         sheet: "Receivables",
         columns: RECEIVABLE_COLUMNS,
+        rows,
+      });
+    }
+    case "payments": {
+      // Mirror the deals/receivables active-vs-archived exclusive view.
+      const rows = (await listPayments({ includeArchived: true })).filter((p) =>
+        filters.archived ? p.archived_at !== null : p.archived_at === null
+      );
+      return dataset({
+        name: "payments",
+        sheet: "Payments",
+        columns: PAYMENT_COLUMNS,
         rows,
       });
     }
@@ -375,6 +420,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     taxSettings,
     deals,
     receivables,
+    payments,
     propertyTypes,
     developers,
     leadSources,
@@ -387,6 +433,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     supabase.from("tax_settings").select(TAX_SETTINGS_SELECT).returns<TaxSettings[]>(),
     listDeals({ includeArchived: true }),
     listReceivables({ includeArchived: true }),
+    listPayments({ includeArchived: true }),
     listPropertyTypes(),
     listDevelopers(),
     listLeadSources(),
@@ -420,6 +467,7 @@ export async function loadWorkspaceExport(): Promise<ExportDataset<unknown>[]> {
     dataset({ name: "tax-settings", sheet: "Tax Settings", columns: TAX_SETTINGS_COLUMNS, rows: taxSettings.data ?? [] }),
     dataset({ name: "deals", sheet: "Deals", columns: DEAL_COLUMNS, rows: deals }),
     dataset({ name: "receivables", sheet: "Receivables", columns: RECEIVABLE_COLUMNS, rows: receivables }),
+    dataset({ name: "payments", sheet: "Payments", columns: PAYMENT_COLUMNS, rows: payments }),
     dataset({ name: "property-types", sheet: "Property Types", columns: PROPERTY_TYPE_COLUMNS, rows: propertyTypes }),
     dataset({ name: "developers", sheet: "Developers", columns: DEVELOPER_COLUMNS, rows: developers }),
     dataset({ name: "lead-sources", sheet: "Lead Sources", columns: LEAD_SOURCE_COLUMNS, rows: leadSources }),

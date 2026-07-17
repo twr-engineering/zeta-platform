@@ -16,6 +16,7 @@ import { ROUTES } from "@/lib/routes";
 import { formatManilaDateTime } from "@/lib/date/manila";
 import { renderFieldChange } from "@/lib/settings/audit-format";
 import { DEAL_FIELD_LABELS } from "@/lib/deals/labels";
+import { PAYMENT_FIELD_LABELS } from "@/lib/payments/labels";
 import { TAX_FIELD_LABELS } from "@/lib/settings/tax";
 import {
   AUDIT_ENTITY_LABELS,
@@ -337,4 +338,6 @@ const FIELD_LABELS: Record<string, string> = {
   // M4.1 receivable events (the two editable fields M4.1 owns).
   confirmed_collectible: "Confirmed Collectible",
   next_action_note: "Next Action",
+  // M5.1 payment events — the full field set lives in the payments label module.
+  ...PAYMENT_FIELD_LABELS,
 };

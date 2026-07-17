@@ -432,6 +432,163 @@ export type Database = {
           },
         ]
       }
+      payment: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          ewt_amount: number
+          ewt_rate_used: number
+          gross_amount: number
+          id: string
+          month_paid: number | null
+          net_cash: number
+          net_of_vat: number
+          payment_date: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          reference_note: string | null
+          retained_cash: number
+          updated_at: string
+          updated_by: string | null
+          vat_amount: number
+          vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_rate_used: number
+          version: number
+          workspace_id: string
+          year_paid: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          ewt_amount: number
+          ewt_rate_used: number
+          gross_amount: number
+          id?: string
+          month_paid?: number | null
+          net_cash: number
+          net_of_vat: number
+          payment_date: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          reference_note?: string | null
+          retained_cash: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_amount: number
+          vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_rate_used: number
+          version?: number
+          workspace_id: string
+          year_paid?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          ewt_amount?: number
+          ewt_rate_used?: number
+          gross_amount?: number
+          id?: string
+          month_paid?: number | null
+          net_cash?: number
+          net_of_vat?: number
+          payment_date?: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          reference_note?: string | null
+          retained_cash?: number
+          updated_at?: string
+          updated_by?: string | null
+          vat_amount?: number
+          vat_basis_used?: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_rate_used?: number
+          version?: number
+          workspace_id?: string
+          year_paid?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_event: {
+        Row: {
+          actor_user_id: string
+          audit_entry_id: string
+          deal_id: string
+          event_type: Database["public"]["Enums"]["payment_event_type"]
+          field_changes: Json
+          id: string
+          new_values: Json
+          occurred_at: string
+          old_values: Json | null
+          payment_id: string
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          audit_entry_id: string
+          deal_id: string
+          event_type: Database["public"]["Enums"]["payment_event_type"]
+          field_changes?: Json
+          id?: string
+          new_values: Json
+          occurred_at?: string
+          old_values?: Json | null
+          payment_id: string
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          audit_entry_id?: string
+          deal_id?: string
+          event_type?: Database["public"]["Enums"]["payment_event_type"]
+          field_changes?: Json
+          id?: string
+          new_values?: Json
+          occurred_at?: string
+          old_values?: Json | null
+          payment_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_event_audit_entry_id_fkey"
+            columns: ["audit_entry_id"]
+            isOneToOne: false
+            referencedRelation: "audit_log_entry"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_event_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_event_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -939,6 +1096,24 @@ export type Database = {
         Returns: Json
       }
       create_lead_source: { Args: { p_name: string }; Returns: Json }
+      create_payment: {
+        Args: {
+          p_deal_id: string
+          p_ewt_amount: number
+          p_ewt_rate_used: number
+          p_gross_amount: number
+          p_net_cash: number
+          p_net_of_vat: number
+          p_payment_date: string
+          p_payment_type: Database["public"]["Enums"]["payment_type"]
+          p_reference_note: string
+          p_retained_cash: number
+          p_vat_amount: number
+          p_vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_rate_used: number
+        }
+        Returns: Json
+      }
       create_property_type: {
         Args: {
           p_name: string
@@ -949,6 +1124,10 @@ export type Database = {
       delete_deal: { Args: { p_id: string }; Returns: Json }
       delete_developer: { Args: { p_id: string }; Returns: Json }
       delete_lead_source: { Args: { p_id: string }; Returns: Json }
+      delete_payment: {
+        Args: { p_expected_version: number; p_id: string }
+        Returns: Json
+      }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
       fail_recompute_job: {
         Args: { p_error: string; p_job_id: string }
@@ -1075,6 +1254,26 @@ export type Database = {
         Args: { p_id: string; p_name: string }
         Returns: Json
       }
+      update_payment: {
+        Args: {
+          p_deal_id: string
+          p_ewt_amount: number
+          p_ewt_rate_used: number
+          p_expected_version: number
+          p_gross_amount: number
+          p_id: string
+          p_net_cash: number
+          p_net_of_vat: number
+          p_payment_date: string
+          p_payment_type: Database["public"]["Enums"]["payment_type"]
+          p_reference_note: string
+          p_retained_cash: number
+          p_vat_amount: number
+          p_vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_rate_used: number
+        }
+        Returns: Json
+      }
       update_property_type: {
         Args: {
           p_affected_deal_count?: number
@@ -1123,6 +1322,8 @@ export type Database = {
       deal_vat_basis: "inclusive" | "n_a"
       developer_comm_base: "gross" | "net"
       membership_role: "owner" | "admin" | "agent" | "readonly"
+      payment_event_type: "created" | "updated" | "deleted"
+      payment_type: "commission" | "incentive"
       property_vat_rule: "threshold" | "always_vat" | "always_exempt"
       receivable_status: "open" | "closed" | "cancelled"
     }
@@ -1279,9 +1480,10 @@ export const Constants = {
       deal_vat_basis: ["inclusive", "n_a"],
       developer_comm_base: ["gross", "net"],
       membership_role: ["owner", "admin", "agent", "readonly"],
+      payment_event_type: ["created", "updated", "deleted"],
+      payment_type: ["commission", "incentive"],
       property_vat_rule: ["threshold", "always_vat", "always_exempt"],
       receivable_status: ["open", "closed", "cancelled"],
     },
   },
 } as const
-
