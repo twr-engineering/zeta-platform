@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { TriangleAlert } from "lucide-react";
 
 import { EmptyState } from "@/components/common/empty-state";
-import { LockedValue } from "@/components/affordance/locked-value";
+import { TaxSettingsForm } from "@/components/settings/tax-settings-form";
 import {
   Card,
   CardContent,
@@ -11,20 +11,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
-import { formatPHP, formatRateAsPercent } from "@/lib/money";
-import { formatManilaDateTime } from "@/lib/date/manila";
+import { countAffectedDeals } from "@/lib/settings/recompute-queries";
 
 export const metadata: Metadata = { title: "Tax Settings" };
 
 /**
- * Read-only view of the real tax_settings row (M0 §3.3).
+ * Tax Settings (M0 §3.3, §6; FR-M0-03).
  *
- * Editing, validation, the recompute confirmation, and the audit viewer land in
- * M0.2 — so every value here renders locked. That is not a placeholder choice:
- * until the confirmed-recompute flow exists, an editable rate could silently
- * restate booked deals, which M0 rule 3 forbids. The friction-gate primitive
- * M0.2 needs for that confirmation is already in place
- * (@/components/friction/confirm-gate).
+ * The row is real — created by the signup bootstrap, read through the settings
+ * cache, and rendered with rates as the exact decimal strings they are stored
+ * as. Nothing here is a default typed into a placeholder.
+ *
+ * The affected-deal count is computed on the server and passed down: the
+ * confirmation states a consequence, and a consequence the client made up is
+ * worse than none.
  */
 export default async function TaxSettingsPage() {
   const context = await getWorkspaceContext();
@@ -40,84 +40,32 @@ export default async function TaxSettingsPage() {
     );
   }
 
+  const affectedDeals = await countAffectedDeals();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Tax Settings</CardTitle>
         <CardDescription>
-          These four values drive every computation in the product — the
-          commission engine, payment splits, and the chase flag.
+          These values drive every computation in the product — the commission
+          engine, payment splits, and the chase flag. Changing a rate restates
+          money you have already booked, so those changes ask before they land
+          and are recorded in your audit log.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-5 sm:grid-cols-2">
-        <Field
-          label="Output VAT on commission"
-          caption="BIR standard 12%."
-          value={formatRateAsPercent(taxSettings.vat_rate)}
-          formula="Commission VAT rate. GCI = billed ÷ (1 + VAT rate) on receipted deals."
+      <CardContent>
+        <TaxSettingsForm
+          settings={{
+            vat_rate: taxSettings.vat_rate,
+            vat_registered: taxSettings.vat_registered,
+            vat_registered_confirmed_at: taxSettings.vat_registered_confirmed_at,
+            ewt_rate: taxSettings.ewt_rate,
+            property_vat_threshold: taxSettings.property_vat_threshold,
+            chase_idle_months: taxSettings.chase_idle_months,
+          }}
+          affectedDeals={affectedDeals}
         />
-
-        <Field
-          label="Expanded withholding tax (EWT)"
-          caption="10% individual broker; 5% if ≤₱3M gross with a sworn declaration."
-          value={formatRateAsPercent(taxSettings.ewt_rate)}
-          formula="EWT = Net × EWT rate. Creditable against your annual income tax via Form 2307."
-        />
-
-        <Field
-          label="Property VAT threshold"
-          caption="BIR RR 1-2024 dwelling threshold."
-          value={formatPHP(taxSettings.property_vat_threshold)}
-          formula="Threshold-rule property types are exempt at or below this list price, VAT-able strictly above it."
-        />
-
-        <Field
-          label="Chase idle threshold"
-          caption="Flags a receivable for chasing once it has been idle this long."
-          value={`${taxSettings.chase_idle_months} month${
-            taxSettings.chase_idle_months === 1 ? "" : "s"
-          }`}
-          formula="⚠ chase when months idle ≥ this value."
-        />
-
-        <div className="sm:col-span-2">
-          <Field
-            label="VAT registration"
-            caption={
-              taxSettings.vat_registered_confirmed_at
-                ? `Confirmed ${formatManilaDateTime(
-                    taxSettings.vat_registered_confirmed_at
-                  )}.`
-                : "Not yet confirmed — the onboarding wizard still needs to ask. Until then this is a default, not your answer."
-            }
-            value={
-              taxSettings.vat_registered ? "VAT-registered" : "Not VAT-registered"
-            }
-            variant={taxSettings.vat_registered_confirmed_at ? "locked" : "linked"}
-            formula="Drives engine mode: VAT-registered applies ÷1.12 and VAT memos; non-VAT turns commission VAT off entirely (EWT still applies)."
-          />
-        </div>
       </CardContent>
     </Card>
-  );
-}
-
-type FieldProps = {
-  label: string;
-  caption: string;
-  value: string;
-  formula: string;
-  variant?: "locked" | "linked";
-};
-
-function Field({ label, caption, value, formula, variant }: FieldProps) {
-  return (
-    <div className="space-y-1.5">
-      <div className="text-sm font-medium">{label}</div>
-      <LockedValue variant={variant} formula={formula} className="w-full">
-        {value}
-      </LockedValue>
-      <p className="text-xs text-pretty text-muted-foreground">{caption}</p>
-    </div>
   );
 }

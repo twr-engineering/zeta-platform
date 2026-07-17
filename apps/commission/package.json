@@ -8,7 +8,7 @@
     "build:check": "NEXT_DIST_DIR=.next-build next build",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "node --test \"tests/unit/**/*.test.ts\"",
+    "test:unit": "node --import ./tests/alias-hooks.mjs --test \"tests/unit/**/*.test.ts\"",
     "seed:dev": "node scripts/seed-dev.mjs"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "next": "15.5.20",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

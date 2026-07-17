@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
-import { TAX_SETTINGS_SELECT } from "@/lib/supabase/selects";
+import { getCachedTaxSettings } from "@/lib/settings/cache";
 import type { Profile, TaxSettings, Workspace } from "@/types/entities";
 
 /**
@@ -49,20 +49,18 @@ export const getWorkspaceContext = cache(
     // trigger did not run, and silently rendering an empty shell would hide that.
     if (!workspace) return null;
 
-    // TAX_SETTINGS_SELECT, not "*": PostgREST would hand back the rates as JSON
-    // numbers (i.e. floats). See src/lib/supabase/selects.ts.
-    const { data: taxSettings } = await supabase
-      .from("tax_settings")
-      .select(TAX_SETTINGS_SELECT)
-      .eq("workspace_id", workspace.id)
-      .maybeSingle<TaxSettings>();
+    // Through the cache (M0 §8: settings are a hot path for M1's engine). The
+    // workspace id handed over came from the RLS-scoped read above, which is
+    // the precondition getCachedTaxSettings depends on for tenant isolation —
+    // never pass one that came from a request parameter.
+    const taxSettings = await getCachedTaxSettings(workspace.id);
 
     return {
       userId: user.id,
       email: user.email ?? "",
       profile: profileResult.data,
       workspace,
-      taxSettings: taxSettings ?? null,
+      taxSettings,
     };
   }
 );

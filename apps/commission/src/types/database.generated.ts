@@ -1,14 +1,3 @@
-/**
- * GENERATED FILE — DO NOT EDIT.
- *
- *   npx supabase gen types typescript --linked > src/types/database.generated.ts
- *
- * Import from `@/types/database` instead, never from here. That module layers
- * the money contract over this output: the generator types `numeric` columns as
- * `number`, which is wrong for this product (Master PRD §4.3) and would be
- * silently reintroduced every time someone regenerates.
- */
-
 export type Json =
   | string
   | number
@@ -128,6 +117,63 @@ export type Database = {
         }
         Relationships: []
       }
+      settings_change_event: {
+        Row: {
+          actor_user_id: string
+          affected_deal_count: number
+          audit_entry_id: string
+          consumed_at: string | null
+          consumed_by: string | null
+          entity_id: string
+          entity_type: string
+          field_changes: Json
+          id: string
+          occurred_at: string
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          affected_deal_count?: number
+          audit_entry_id: string
+          consumed_at?: string | null
+          consumed_by?: string | null
+          entity_id: string
+          entity_type: string
+          field_changes?: Json
+          id?: string
+          occurred_at?: string
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          affected_deal_count?: number
+          audit_entry_id?: string
+          consumed_at?: string | null
+          consumed_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          field_changes?: Json
+          id?: string
+          occurred_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_change_event_audit_entry_id_fkey"
+            columns: ["audit_entry_id"]
+            isOneToOne: false
+            referencedRelation: "audit_log_entry"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settings_change_event_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_settings: {
         Row: {
           chase_idle_months: number
@@ -210,7 +256,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rename_workspace: { Args: { p_name: string }; Returns: Json }
+      update_tax_settings: {
+        Args: {
+          p_affected_deal_count?: number
+          p_chase_idle_months?: number
+          p_confirm_vat_registration?: boolean
+          p_ewt_rate?: number
+          p_property_vat_threshold?: number
+          p_vat_rate?: number
+          p_vat_registered?: boolean
+        }
+        Returns: Json
+      }
     }
     Enums: {
       audit_action:

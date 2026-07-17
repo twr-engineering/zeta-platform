@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { diffFields, writeAuditEntry } from "@/lib/audit/write";
+import { ROUTES } from "@/lib/routes";
 import { getWorkspaceContext } from "./queries";
 import type { ActionState } from "@/lib/forms/action-state";
 
@@ -17,6 +17,13 @@ import type { ActionState } from "@/lib/forms/action-state";
  * reserves gates for destructive and money-restating actions, and a name change
  * is neither. Gating it would spend the agent's attention on the one action that
  * cannot hurt them.
+ *
+ * M0.1 shipped this as update-then-audit and flagged the hole: two PostgREST
+ * calls are two transactions, so a failed entry insert left an unaudited change
+ * (rule 12). M0.2 owns the durable write path, so the rename now goes through
+ * `rename_workspace`, which does both in one transaction. There are no callers
+ * left on the old pattern — and @/lib/audit/write is gone rather than left
+ * lying around to be imported by the next module.
  */
 
 // Mirrors the DB constraints exactly (workspace_name_not_blank,
@@ -49,57 +56,43 @@ export async function renameWorkspace(
     return { error: parsed.error.issues[0]?.message ?? "Check the name." };
   }
 
-  const previousName = context.workspace.name;
   const nextName = parsed.data.name;
-
-  // No write, no audit entry — an entry recording "name: X → X" would be noise
-  // in a trail whose whole job is to show what actually changed.
-  if (previousName === nextName) {
-    return { error: null, message: "That is already the workspace name." };
-  }
-
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("workspace")
-    .update({ name: nextName })
-    .eq("id", context.workspace.id)
-    .select("id")
-    .maybeSingle();
+  // Rename + audit entry, one transaction. The function diffs against the row
+  // it locks, so a no-op rename writes nothing — an entry recording
+  // "name: X → X" would be noise in a trail whose whole job is showing what
+  // actually changed.
+  const { data, error } = await supabase.rpc("rename_workspace", {
+    p_name: nextName,
+  });
 
-  if (error) return { error: `Could not rename the workspace: ${error.message}` };
+  if (error) {
+    if (error.message.includes("workspace_name_not_blank")) {
+      return { error: "Workspace name cannot be empty." };
+    }
+    if (error.message.includes("workspace_name_max_len")) {
+      return { error: "Workspace names cannot exceed 120 characters." };
+    }
+    return { error: `Could not rename the workspace: ${error.message}` };
+  }
 
-  // RLS refuses a non-member's UPDATE by matching zero rows rather than by
-  // erroring (verified live against the hosted project) — so "no error" is not
-  // the same as "it happened", and only `data` proves the write landed.
-  if (!data) {
+  const result = data as { changed: boolean; name: string } | null;
+
+  // RLS refuses a non-member by matching zero rows rather than erroring
+  // (verified live against the hosted project), and the function turns that
+  // into "not found" — so "no error" is still not the same as "it happened".
+  if (!result) {
     return { error: "Workspace could not be updated. Sign in again and retry." };
   }
 
-  try {
-    await writeAuditEntry({
-      workspaceId: context.workspace.id,
-      actorUserId: context.userId,
-      entityType: "workspace",
-      entityId: context.workspace.id,
-      action: "update",
-      fieldChanges: diffFields(
-        { name: previousName },
-        { name: nextName }
-      ),
-    });
-  } catch {
-    // The rename landed but the trail did not, which rule 12 forbids. Say so
-    // rather than report success — a silently unaudited change is the failure
-    // this log exists to prevent.
-    return {
-      error:
-        "Renamed, but the audit entry could not be written. Please report this before making further changes.",
-    };
+  if (!result.changed) {
+    return { error: null, message: "That is already the workspace name." };
   }
 
   // The workspace name is in the header, which lives in the layout.
   revalidatePath("/", "layout");
+  revalidatePath(ROUTES.settingsAuditLog);
 
-  return { error: null, message: `Workspace renamed to "${nextName}".` };
+  return { error: null, message: `Workspace renamed to "${result.name}".` };
 }

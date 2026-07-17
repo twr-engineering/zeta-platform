@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-17T20:05:00+08:00
+# Last Updated: 2026-07-17T20:45:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -10,7 +10,7 @@
 
 - [x] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
 - [x] M0.1: Auth & personal workspace
-- [ ] M0.2: Tax settings & audit trail
+- [x] M0.2: Tax settings & audit trail
 - [ ] M0.3: Configuration lists
 - [ ] M0.4: Account polish & data ownership
 - [ ] M1.1: Calculation engine library
@@ -58,13 +58,140 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-M0.1 complete. Settings area (6 sections), friction-gate primitive, audit hook, audited
-workspace rename, dev seed script and CI are in. Rename + audit + AC9 isolation verified
-live against hosted Supabase with real JWTs (16/16). Next: M0.2 (tax settings editable +
-audit viewer), whose first job is to make the audit write atomic — see the caveat in
-src/lib/audit/write.ts.
+M0.2 complete. Tax settings are editable behind the friction gate, every settings write is
+atomic with its audit entry (the M0.1 caveat is CLOSED — see below), the audit log viewer
+is filterable over real data, and the rule-3 recompute contract is a durable queue M1 will
+drain. Verified live (57/57) and in the browser end to end. Next: M0.3 (configuration
+lists), which extends the same write path — see "For M0.3" below.
 
 ## Completed Tasks
+- M0.2 Tax settings & audit trail (2026-07-17) — the gap between M0.1's read-only tax view
+  and M0.2's deliverables:
+  - THE AUDIT WRITE IS NOW ATOMIC (M0.1's flagged hole, rule 12). PostgREST gives no
+    transaction across two calls, so M0.1's rename updated then audited, and a failed entry
+    insert left an unaudited change. Every settings mutation is now ONE database function —
+    PostgREST wraps a request in a transaction, so the update, the audit entry and the
+    recompute event all land or none do. Proven live: an out-of-range rate leaves zero
+    audit rows behind. supabase/migrations/20260717200000_m02_settings_write_path.sql:
+      app.write_audit_entry()    actor pinned to auth.uid() — a forged actor is
+                                 unrepresentable, not merely rejected
+      public.update_tax_settings()  diff → update → audit → event, FOR UPDATE on the row
+      public.rename_workspace()     M0.1's rename, migrated off the two-call pattern
+    All SECURITY INVOKER: RLS still governs, so a function cannot become a hole around
+    tenant isolation. src/lib/audit/write.ts is DELETED — no callers remain, and leaving
+    the old helper lying around invites the next module to reintroduce the bug.
+  - Tax Settings EDIT screen (FR-M0-03, §6): four fields + VAT registration, workbook
+    captions incl. the solo-agent 5%-EWT explainer, percent entry → exact decimal storage,
+    Save disabled until valid, validation mirroring every CHECK constraint.
+    src/components/settings/tax-settings-form.tsx + src/lib/settings/tax.ts (pure, tested).
+  - THE FRICTION GATE HAS ITS FIRST PRODUCTION CONSUMER (M0.1 shipped it unused). The gate
+    fires on money-restating fields only and the SERVER decides from its own diff — the
+    modal is a courtesy. Proven in the browser: stripping the button's `disabled` and
+    submitting without ticking is refused, and the rate does not move (test plan #7).
+  - Recompute-confirmation contract (rule 3): `settings_change_event`, a durable queue
+    emitted in the same transaction as the change, carrying the restating fields old→new as
+    exact strings + a link to its audit entry. Consumption is one-way and trigger-enforced,
+    so M1 cannot double-restate. See src/lib/settings/recompute.ts for what M1 inherits.
+  - Audit Log viewer (FR-M0-08): filterable by entity + date, a plain GET form so filters
+    live in the URL and work before hydration. Renders the STORED string ("0.1000 →
+    0.0500") with the human reading alongside ("10.00% → 5.00%") — the log has to be
+    verifiable against the database, not merely readable.
+  - Settings read cache + invalidation (§8): unstable_cache tagged per workspace, on the
+    real read path (getWorkspaceContext). READ THE HEADER of src/lib/settings/cache.ts
+    before adding another: a cache HIT does not consult RLS, so the workspace id is the
+    tenant boundary and must come from an authenticated context — never from a request
+    parameter. It needs no service-role key; a miss still reads through RLS.
+  - Unit tests: tests/unit/tax-settings.test.ts (25) — boundaries, scale, gate
+    classification. tests/e2e/tax-settings.spec.ts (11) drives the demo script.
+
+## Verification performed for M0.2 (2026-07-17)
+- `pnpm run build:check` clean; `pnpm run lint` clean; `pnpm run test:unit` 34/34.
+- LIVE against hosted Supabase with REAL user JWTs — 57/57, delta-residue back to baseline:
+  AC1 defaults exact as text; EWT 0.1000→0.0500 through the RPC with the audit entry and a
+  queued event carrying strings; ATOMICITY (a rejected value writes no audit row and moves
+  nothing); every CHECK boundary refused server-side incl. ewt_rate=0 ACCEPTED (its range
+  is >= 0, unlike vat's > 0); threshold keeps 2dp; chase_idle_months audited but emits NO
+  event; a no-op writes nothing; vat_registered stamping is once-only and does NOT silently
+  move the EWT rate; audit entries unrewritable; events consumable exactly once; AC9 —
+  B sees none of A's entries/events and B's RPC cannot touch A's rates; anonymous sees [].
+- REAL BROWSER FLOW (localhost:3000, seeded agent@solo.test): AC1 defaults render and Save
+  is idle → EWT 10→5 opens the gate stating its consequence → CANCEL writes nothing (AC10,
+  confirmed against the DB) → confirm saves, 0.0500 persists → 12.50% stores as exactly
+  0.1250 → threshold 3,500,000.00 keeps its centavos → chase months saves with NO modal →
+  invalid values disable Save with a field error → the forced-button bypass is refused
+  server-side → audit viewer shows every entry with old→new + working entity/date filters →
+  360px clean on tax, audit log and general.
+- The float trap re-confirmed live: `select=vat_rate` (no ::text) still returns 0.1 as a
+  JSON float. The ::text discipline is doing real work; do not relax it.
+
+## Bugs found and fixed during M0.2 verification (all caught by the browser, none by the build)
+- P1 — A GATED SAVE REPORTED SUCCESS TO NOBODY. ConfirmGate owns its action state and closes
+  on success; the tax form's gate is conditional, so a successful save empties the diff and
+  UNMOUNTS the gate in the same beat. Both destroy the result — the agent confirmed a rate
+  change and was told nothing. Fixed by wrapping the action so the outcome is captured in
+  the parent's state before the gate goes. NOTE: an onCompleted callback fired from an
+  effect inside ConfirmGate does NOT work (the component is already gone) — that was the
+  first attempt. The pattern every future gate consumer needs is documented in
+  confirm-gate.tsx; M0.3/M0.4/M1/M4/M5 all hit this.
+- P2 — `pnpm run lint` FAILED FOR ANYONE WHO RAN build:check FIRST: `.next-build` (the dir
+  M0.1's own build:check script creates) was never in eslint's ignore list, so lint reported
+  ~10,000 problems in Next's generated bundles. It only stayed hidden because lint ran
+  before build:check. eslint.config.mjs now ignores it, plus the Playwright artifact dirs.
+- P2 — Base UI console error on the audit log: the "Clear" buttons render an <a> through a
+  component expecting a native <button>, which silently drops button semantics. They are
+  links, so they now say so (nativeButton={false}) rather than being silenced.
+- P3 — Base UI warning on Settings → General: renaming changed `currentName` under an
+  uncontrolled input. The form is uncontrolled deliberately (a rejected submit must keep
+  what the agent typed), so it is now keyed on the SAVED name — remounts on success, holds
+  its text on failure.
+- `node --test` could not resolve `@/` or extensionless relative imports, so the moment a
+  unit test touched real application code it failed. M0.1's only test imported a module with
+  no imports of its own, which is why this never surfaced. tests/alias-hooks.mjs registers
+  the resolution a bundler does for free; test:unit loads it via --import.
+
+## Known gaps / decisions taken in M0.2
+- CHASE_IDLE_MONTHS IS NOT FRICTION-GATED — a deliberate deviation from a blanket reading of
+  "gate every settings mutation", flagged here for review. It IS audited (rule 12). The
+  reasoning: rule 9 gates "destructive or money-restating" acts, and this field drives M6's
+  ⚠ chase flag — when a receivable is nagged about, not what it is worth. No booked peso
+  figure moves, so it queues no recompute either. gate.ts's own warning is the argument: a
+  gate on an ordinary edit trains the agent to click through without reading, which breaks
+  the gate on the day it matters. The classification lives in one place
+  (MONEY_RESTATING_FIELDS, src/lib/settings/tax.ts) and the SQL mirrors it — flipping this
+  decision is a one-line change in each, plus a unit test that asserts the current
+  behaviour on purpose.
+- vat_registered is editable on this screen and answering it stamps
+  vat_registered_confirmed_at (§3.3 makes it owner-editable). M10 still owns ASKING the
+  question in the wizard; until it does, this screen is the only place to answer, and it
+  says plainly that an unconfirmed value is a default rather than the agent's answer.
+  Flipping the flag is a rule-3 event and re-saving does not re-stamp the date.
+- Flipping vat_registered does NOT auto-move the EWT rate, though §3.3 says the flag drives
+  its DEFAULT (10% registered / 5% not). The rate stays the agent's — a non-VAT agent
+  without a sworn declaration is still withheld 10% — and silently rewriting a second money
+  field while someone answers a yes/no question is exactly the silent restatement rule 3
+  exists to stop. The screen explains the two rates; it does not type them for you.
+- The 5%-EWT explainer is on the field itself rather than in onboarding; M10 owns the
+  onboarding copy and should not have to re-derive it.
+- Audit viewer paging: the most recent 100 per filter, and it says so when truncated. Real
+  search and pagination are M9's; this stays a viewer.
+- The settings cache is per-workspace and correct today, but note its trust boundary (a HIT
+  skips RLS — the key IS the boundary). If M1 ever needs settings keyed by anything a
+  request supplies, that is a redesign, not a parameter change.
+
+## For M0.3 (read before starting)
+- Extend the write path, do not go around it: add a mutation function per entity in SQL that
+  calls app.write_audit_entry, mirroring update_tax_settings. Do NOT reintroduce
+  update-then-audit — that hole is closed and there are no callers left on it.
+- Developer.comm_base changes are a rule-8 confirmed-recompute: emit a settings_change_event
+  with entity_type 'developer'. The table and M1's contract already accommodate it.
+- Add 'property_type', 'developer', 'lead_source' to AUDIT_ENTITY_TYPES + AUDIT_ENTITY_LABELS
+  (src/lib/settings/audit-queries.ts) and their field labels to the viewer's FIELD_LABELS,
+  or their entries render with raw column names and are unfilterable.
+- countAffectedDeals() (src/lib/settings/recompute-queries.ts) returns 0 until M1 has deals.
+  It is the ONE function to implement for real counts — the copy, the event and the trail
+  all start carrying them with no other change.
+
+## Completed Tasks (M0.1)
 - M0.1 Auth & personal workspace (2026-07-17) — the gap between Foundation's output and
   M0.1's full deliverables checklist. Foundation already had auth, the signup bootstrap,
   tenant scoping and the app shell; this pass added:
@@ -172,10 +299,9 @@ src/lib/audit/write.ts.
   It needs a Google Cloud OAuth client plus provider config in the Supabase dashboard —
   neither doable from here, and neither verifiable. Email+password with verification (the
   FR-M0-01 requirement) is done. Revisit when someone has console access.
-- Audit atomicity: PostgREST gives no transaction across two calls, so rename updates then
-  writes the entry. A failed entry insert leaves an unaudited change (rule 12). It fails
-  LOUDLY rather than silently, and M0.2 — which owns the durable write path — should make
-  the pair atomic. Do not add more callers on the two-call pattern first.
+- Audit atomicity: ✅ CLOSED BY M0.2. Every settings mutation is now a single database
+  function (one PostgREST request = one transaction), the rename moved onto it, and
+  src/lib/audit/write.ts is deleted. See the M0.2 section above.
 - BLOCKER FOR REAL SIGNUPS (found in the browser, not theoretical): the project is on
   Supabase's BUILT-IN email sender, which is rate-limited to a handful per hour and is
   explicitly not for production. A browser signup returned "email rate limit exceeded"
@@ -297,11 +423,12 @@ Fix (in place, verified live):
 M1/M4/M5 MUST add their `::text` selects + overrides when they add money tables.
 
 ## Blockers
-- None for M0.1. Remaining live steps are non-blocking:
+- None for M0.2. Everything in its scope is built and verified. Standing, non-blocking:
   - `supabase db push` unusable (no DB password); use the Management API path, or add
-    SUPABASE_DB_PASSWORD if push is wanted.
-  - No end-to-end browser signup/login yet (no dev server per brief) — QA should drive
-    register -> confirm -> login -> refresh -> sign out.
+    SUPABASE_DB_PASSWORD if push is wanted. M0.2's migration was applied that way and
+    registered in supabase_migrations.schema_migrations, so a future push sees it as done.
+  - SMTP still unconfigured (M0.1's finding) — the built-in mailer is rate-limited and no
+    real agent can confirm an account until a transactional provider is set up.
   - Supabase dashboard Site URL / redirect allowlist must include NEXT_PUBLIC_APP_URL or
     confirmation + reset links will bounce.
 

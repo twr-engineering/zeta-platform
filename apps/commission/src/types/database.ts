@@ -78,13 +78,60 @@ type AuditOverride = Omit<AuditTable, "Update" | "Row"> & {
   Update: never;
 };
 
+// --- settings_change_event (M0 rule 3; M0.2's recompute contract) ------------
+
+type SettingsEventTable = GeneratedTables["settings_change_event"];
+
+type SettingsEventOverride = Omit<SettingsEventTable, "Row" | "Update"> & {
+  Row: Omit<SettingsEventTable["Row"], "field_changes"> & {
+    field_changes: FieldChanges;
+  };
+  /**
+   * Consumption is the only permitted update (a trigger rejects the rest), so
+   * the type offers only the consumption stamp. M1 marks an event done; nothing
+   * edits what the event says happened.
+   */
+  Update: { consumed_at: string; consumed_by: string };
+};
+
+// --- Functions --------------------------------------------------------------
+
+type GeneratedFunctions = PublicSchema["Functions"];
+
+type UpdateTaxSettingsFn = GeneratedFunctions["update_tax_settings"];
+
+/**
+ * The generator types the rate arguments `number`, which is the float bug from
+ * the other direction: `rpc("update_tax_settings", { p_ewt_rate: 0.05 })` would
+ * serialize a double into a money column. PostgREST casts a JSON *string*
+ * straight to `numeric`, so these are strings — "0.0500", not 0.05.
+ *
+ * Counts stay `number`: an integer round-trips through JSON exactly.
+ */
+type UpdateTaxSettingsMoneyArgs =
+  | "p_vat_rate"
+  | "p_ewt_rate"
+  | "p_property_vat_threshold";
+
+type UpdateTaxSettingsOverride = Omit<UpdateTaxSettingsFn, "Args"> & {
+  Args: Omit<UpdateTaxSettingsFn["Args"], UpdateTaxSettingsMoneyArgs> &
+    Partial<Record<UpdateTaxSettingsMoneyArgs, string>>;
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
-  public: Omit<PublicSchema, "Tables"> & {
-    Tables: Omit<GeneratedTables, "tax_settings" | "audit_log_entry"> & {
+  public: Omit<PublicSchema, "Tables" | "Functions"> & {
+    Tables: Omit<
+      GeneratedTables,
+      "tax_settings" | "audit_log_entry" | "settings_change_event"
+    > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
+      settings_change_event: SettingsEventOverride;
+    };
+    Functions: Omit<GeneratedFunctions, "update_tax_settings"> & {
+      update_tax_settings: UpdateTaxSettingsOverride;
     };
   };
 };

@@ -56,6 +56,26 @@ export function formatManilaDateTime(value: Date | string): string {
   return DISPLAY_DATE_TIME.format(toDate(value));
 }
 
+/**
+ * The instant a Manila civil day begins / ends, as an offset-qualified ISO
+ * string Postgres accepts directly in a `timestamptz` comparison.
+ *
+ * These are what turn "show me what I changed on 17 July" into a correct query.
+ * Filtering a timestamptz by a bare `2026-07-17` would compare against UTC
+ * midnight — 8am Manila — and silently drop the first third of the agent's day
+ * into the previous one. The literal +08:00 is safe because Manila has no DST
+ * and has not moved since 1978; a zone that changed offset would need a real
+ * time-zone conversion here instead.
+ */
+export function manilaDayStart(date: CivilDate): string {
+  return `${date}T00:00:00.000+08:00`;
+}
+
+/** Inclusive: the last representable instant of the Manila civil day. */
+export function manilaDayEnd(date: CivilDate): string {
+  return `${date}T23:59:59.999+08:00`;
+}
+
 /** Calendar year in Manila — the year selector on M7/M8 reports. */
 export function manilaYear(value: Date | string = new Date()): number {
   return Number(manilaDate(toDate(value)).slice(0, 4));

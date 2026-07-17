@@ -70,6 +70,9 @@ test("settings sections are all reachable", async ({ page }) => {
   }
 });
 
+// Updated: M0.2 made tax settings editable, so the AC1 defaults now render in
+// form inputs rather than as locked text ("12.00%" / "₱ 3,600,000.00" no longer
+// exist as text nodes). Same assertion, new surface — 2026-07-17.
 test("tax settings show the AC1 defaults from the real database", async ({
   page,
 }) => {
@@ -79,10 +82,15 @@ test("tax settings show the AC1 defaults from the real database", async ({
   // M0 AC1: VAT 12%, EWT 10%, threshold ₱3,600,000.00, chase idle 3 months.
   // Exact strings — these are read `::text` off numeric columns, and a float
   // round trip is exactly what would break them (Master PRD §4.3).
-  await expect(page.getByText("12.00%")).toBeVisible();
-  await expect(page.getByText("10.00%")).toBeVisible();
-  await expect(page.getByText("₱ 3,600,000.00")).toBeVisible();
-  await expect(page.getByText("3 months")).toBeVisible();
+  await expect(page.getByTestId("vat-rate-input")).toHaveValue("12.00");
+  await expect(page.getByTestId("ewt-rate-input")).toHaveValue("10.00");
+  await expect(page.getByTestId("property-vat-threshold-input")).toHaveValue(
+    "3600000.00"
+  );
+  await expect(page.getByTestId("chase-idle-months-input")).toHaveValue("3");
+
+  // Nothing is queued to save until the agent changes something.
+  await expect(page.getByTestId("save-tax-settings-button")).toBeDisabled();
 });
 
 test("the workspace name can be renamed and persists", async ({ page }) => {

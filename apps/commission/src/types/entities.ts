@@ -14,6 +14,7 @@ export type Profile = Tables<"profiles">;
 export type Membership = Tables<"membership">;
 export type TaxSettings = Tables<"tax_settings">;
 export type AuditLogEntry = Tables<"audit_log_entry">;
+export type SettingsChangeEvent = Tables<"settings_change_event">;
 
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;

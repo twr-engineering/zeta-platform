@@ -39,3 +39,14 @@ export const WORKSPACE_SELECT = "*";
 
 /** profiles holds no money. */
 export const PROFILES_SELECT = "*";
+
+/**
+ * audit_log_entry has no `numeric` column — the money it records lives inside
+ * `field_changes`, a jsonb the write path already fills with strings. So `*` is
+ * safe here, and safe for the same reason the rest of this file exists: the
+ * exact decimal never becomes a JSON number.
+ */
+export const AUDIT_LOG_SELECT = "*";
+
+/** settings_change_event: same shape, same reasoning. affected_deal_count is an integer. */
+export const SETTINGS_CHANGE_EVENT_SELECT = "*";

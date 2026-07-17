@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { InputField } from "@/components/affordance/input-field";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,20 @@ import { IDLE } from "@/lib/forms/action-state";
 export function RenameWorkspaceForm({ currentName }: { currentName: string }) {
   const [state, formAction] = useActionState(renameWorkspace, IDLE);
 
+  // Controlled, seeded once from the saved name.
+  //
+  // It was uncontrolled with a defaultValue, for a good reason: a rejected
+  // rename must leave what the agent typed on screen rather than snapping back
+  // to the saved name and hiding what they were trying to do. Local state keeps
+  // that property and drops the cost — a successful rename revalidates the
+  // layout, which changes `currentName` under an uncontrolled input, and Base
+  // UI rightly warns that its "initial" value is now a lie.
+  //
+  // NOT fixed by keying this component on the saved name: that remounts it on
+  // success, which resets useActionState and destroys the success message the
+  // agent needs. (Tried; the e2e suite caught it.)
+  const [name, setName] = useState(currentName);
+
   return (
     <form action={formAction} className="space-y-4">
       <FormStatus state={state} />
@@ -32,10 +46,8 @@ export function RenameWorkspaceForm({ currentName }: { currentName: string }) {
           type="text"
           required
           maxLength={120}
-          // defaultValue, not value: this is uncontrolled, so a rejected submit
-          // leaves what the agent typed on screen instead of snapping back to
-          // the saved name and hiding what they were trying to do.
-          defaultValue={currentName}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
           data-testid="workspace-name-input"
         />
         <p className="text-xs text-muted-foreground">

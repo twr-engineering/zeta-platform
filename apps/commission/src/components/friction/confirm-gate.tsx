@@ -82,6 +82,23 @@ export function ConfirmGate({
 
   // A completed action closes the dialog. Actions that navigate (redirect) never
   // get here, which is fine — the page is gone.
+  //
+  // WHERE THE SUCCESS MESSAGE GOES — read this before wiring up a new gate.
+  // This dialog owns the action's state, and on success it closes and takes that
+  // state with it. Worse, a consumer whose gate is conditional (rendered only
+  // while there is something to confirm) unmounts this component the moment the
+  // action lands, so a callback fired from an effect here would never run at
+  // all. If the agent must be TOLD it worked — and for a money-restating action
+  // they must — the consumer wraps `action` and keeps the result in its own
+  // state:
+  //
+  //   const gated = async (prev, formData) => {
+  //     const result = await saveThing(prev, formData);
+  //     setOutcome(result);   // survives this dialog unmounting
+  //     return result;
+  //   };
+  //
+  // A failure needs no such handoff: the dialog stays open and renders it below.
   useEffect(() => {
     if (state.message) setOpen(false);
   }, [state.message]);
