@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
-import { countAffectedDeals } from "@/lib/settings/recompute-queries";
+import { taxAffectedCounts } from "@/lib/settings/recompute-queries";
 
 export const metadata: Metadata = { title: "Tax Settings" };
 
@@ -40,7 +40,7 @@ export default async function TaxSettingsPage() {
     );
   }
 
-  const affectedDeals = await countAffectedDeals();
+  const affectedDeals = await taxAffectedCounts();
 
   return (
     <Card>

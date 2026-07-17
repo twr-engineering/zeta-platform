@@ -97,7 +97,6 @@ export type ListScreenProps = {
   warning?: string | null;
   /** Enables drag ordering (Lead Sources). */
   sortable?: boolean;
-  affectedDeals: number;
 };
 
 export function ListScreen({
@@ -110,7 +109,6 @@ export function ListScreen({
   emptyDescription,
   warning,
   sortable = false,
-  affectedDeals,
 }: ListScreenProps) {
   const active = items.filter((item) => item.archivedAt === null);
   const archived = items.filter((item) => item.archivedAt !== null);
@@ -209,7 +207,6 @@ export function ListScreen({
               attribute={attribute}
               actions={actions}
               onCompleted={setOutcome}
-              affectedDeals={affectedDeals}
               sortable={sortable && Boolean(actions.reorder)}
               busy={reordering}
               first={index === 0}
@@ -257,7 +254,6 @@ export function ListScreen({
                     attribute={attribute}
                     actions={actions}
                     onCompleted={setOutcome}
-                    affectedDeals={affectedDeals}
                     sortable={false}
                     busy={false}
                     first
@@ -519,7 +515,6 @@ function ListRow({
   attribute,
   actions,
   onCompleted,
-  affectedDeals,
   sortable,
   busy,
   first,
@@ -534,7 +529,6 @@ function ListRow({
   attribute?: ListAttribute;
   actions: ListActions;
   onCompleted: (state: ActionState) => void;
-  affectedDeals: number;
   sortable: boolean;
   busy: boolean;
   first: boolean;
@@ -640,7 +634,12 @@ function ListRow({
                 }
                 title="This changes how your money is calculated"
                 description={`You are changing the ${attribute?.label.toLowerCase()} for ${item.name}.`}
-                consequence={listRecomputeConsequence(entity, item.name, affectedDeals)}
+                // The honest, per-item count: how many deals reference this row
+                // (M1.2 turned this real). That IS the set a comm_base/vat_rule
+                // change restates — count_affected_deals(developer|property_type)
+                // is the same predicate — so the modal states the true number
+                // with no extra query.
+                consequence={listRecomputeConsequence(entity, item.name, item.referenceCount)}
                 gate={{ mode: "checked" }}
                 confirmLabel="Save change"
                 // Wrapped so the outcome lands in the PARENT's state: this gate

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { ListScreen } from "@/components/settings/list-screen";
 import { listDevelopers } from "@/lib/settings/list-queries";
-import { countAffectedDeals } from "@/lib/settings/recompute-queries";
 import {
   DEVELOPER_COMM_BASES,
   DEVELOPER_COMM_BASE_CAPTIONS,
@@ -36,10 +35,7 @@ export const metadata: Metadata = { title: "Developers" };
  * this live and silently on a VLOOKUP; here it asks, records, and queues.
  */
 export default async function DevelopersSettingsPage() {
-  const [items, affectedDeals] = await Promise.all([
-    listDevelopers(),
-    countAffectedDeals(),
-  ]);
+  const items = await listDevelopers();
 
   return (
     <Card>
@@ -86,7 +82,6 @@ export default async function DevelopersSettingsPage() {
             detail: DEVELOPER_COMM_BASE_LABELS[seed.comm_base],
           }))}
           emptyDescription="Developers feed the Developer dropdown on every deal and group your receivables on the Collectibles ledger. Each one carries a commission base — Gross applies your rate to the full contract price, Net applies it to the price net of VAT — which changes what every deal with that developer is worth."
-          affectedDeals={affectedDeals}
         />
       </CardContent>
     </Card>

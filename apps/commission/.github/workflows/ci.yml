@@ -44,6 +44,16 @@ jobs:
       - name: Unit tests
         run: pnpm run test:unit
 
+      # M1.5 perf budget (FR-M1-07). The DB-bound targets (deal-list P95,
+      # full bulk recompute) run live via `pnpm run perf:recompute` against a
+      # real project; here — with no database — test:unit already proved the
+      # engine budget over 1,000 synthetic deals (tests/unit/perf.test.ts:
+      # single compute < 10 ms, 1,000-deal engine recompute a fraction of 30 s).
+      # This step calls the live harness too, which self-skips on the placeholder
+      # credentials CI runs with, so it is green here and real when creds exist.
+      - name: Recompute perf harness (self-skips without live credentials)
+        run: pnpm run perf:recompute
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { ListScreen } from "@/components/settings/list-screen";
 import { listLeadSources } from "@/lib/settings/list-queries";
-import { countAffectedDeals } from "@/lib/settings/recompute-queries";
 import { leadSourceCapWarning } from "@/lib/settings/lists";
 import { LEAD_SOURCE_SEEDS } from "@/lib/settings/seed-lists";
 import {
@@ -38,10 +37,7 @@ export const metadata: Metadata = { title: "Lead Sources" };
  * exists (AC6).
  */
 export default async function LeadSourcesSettingsPage() {
-  const [items, affectedDeals] = await Promise.all([
-    listLeadSources(),
-    countAffectedDeals(),
-  ]);
+  const items = await listLeadSources();
 
   return (
     <Card>
@@ -78,7 +74,6 @@ export default async function LeadSourcesSettingsPage() {
           // (§3.6; PRD open question 4 — answered "warning only").
           warning={leadSourceCapWarning(items.length)}
           sortable
-          affectedDeals={affectedDeals}
         />
       </CardContent>
     </Card>

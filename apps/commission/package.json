@@ -11,7 +11,9 @@
     "test:unit": "node --import ./tests/alias-hooks.mjs --test \"tests/unit/**/*.test.ts\"",
     "test:engine": "node --import ./tests/alias-hooks.mjs --test \"tests/unit/engine/**/*.test.ts\"",
     "test:engine:coverage": "node --import ./tests/alias-hooks.mjs --experimental-test-coverage --test-coverage-include='src/lib/engine/**' --test \"tests/unit/engine/**/*.test.ts\"",
-    "seed:dev": "node scripts/seed-dev.mjs"
+    "test:perf": "node --import ./tests/alias-hooks.mjs --test \"tests/unit/perf.test.ts\"",
+    "seed:dev": "node scripts/seed-dev.mjs",
+    "perf:recompute": "node --import ./tests/alias-hooks.mjs scripts/perf-recompute.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

@@ -28,6 +28,9 @@ export type LeadSource = Tables<"lead_source">;
 export type Deal = Tables<"deal">;
 export type DealEvent = Tables<"deal_event">;
 
+// M1.5 (FR-M1-07). A bulk recompute in flight — progress + resume cursor.
+export type RecomputeJob = Tables<"recompute_job">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;

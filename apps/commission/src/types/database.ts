@@ -208,6 +208,19 @@ type UpdateTaxSettingsOverride = Omit<UpdateTaxSettingsFn, "Args"> & {
     Partial<Record<UpdateTaxSettingsMoneyArgs, string>>;
 };
 
+/**
+ * count_affected_deals (M1.5). `p_entity_id` is a nullable uuid — null for a
+ * tax_settings change (the fields drive it, not an entity id), a real id for a
+ * developer / property_type change. The generator types every uuid arg required
+ * `string`; relax it so the tax call can pass null.
+ */
+type CountAffectedDealsFn = GeneratedFunctions["count_affected_deals"];
+type CountAffectedDealsOverride = Omit<CountAffectedDealsFn, "Args"> & {
+  Args: Omit<CountAffectedDealsFn["Args"], "p_entity_id"> & {
+    p_entity_id: string | null;
+  };
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
@@ -223,11 +236,12 @@ export type Database = Omit<Generated, "public"> & {
     };
     Functions: Omit<
       GeneratedFunctions,
-      "update_tax_settings" | "create_deal" | "update_deal"
+      "update_tax_settings" | "create_deal" | "update_deal" | "count_affected_deals"
     > & {
       update_tax_settings: UpdateTaxSettingsOverride;
       create_deal: CreateDealOverride;
       update_deal: UpdateDealOverride;
+      count_affected_deals: CountAffectedDealsOverride;
     };
   };
 };

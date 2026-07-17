@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T03:40:00+08:00
+# Last Updated: 2026-07-18T05:20:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -17,7 +17,7 @@
 - [x] M1.2: Deal CRUD with permanent IDs
 - [x] M1.3: Deal entry UI & list
 - [ ] M1.4: v30.x workbook importer
-- [ ] M1.5: Recompute service & hardening
+- [x] M1.5: Recompute service & hardening
 - [ ] M4.1: Receivable entity + auto-create/restate from deal events
 - [ ] M5.1: Payment schema, split snapshot & events
 - [ ] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
@@ -58,6 +58,121 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M1.5 COMPLETE — Recompute service & hardening: the consumer M0.2's queue was
+built for. A confirmed settings/developer/property-type change now recomputes
+exactly the affected deals through the SAME engine + single-writer path, with
+per-deal audit + deal.updated events, progress-tracked, resumable, and consumed
+exactly once. countAffectedDeals() is real; perf targets met on 1,000 deals.**
+
+(Built BEFORE M1.4 deliberately — the importer needs M4.1/M5.1 schemas; M1.5 has
+no such dependency.)
+
+ONE additive migration, applied live via the Management API + registered in
+supabase_migrations.schema_migrations:
+  - 20260718020000_m15_recompute_service.sql. Additive columns
+    deal_event.settings_change_event_id + audit_log_entry.settings_change_event_id
+    (bare uuid, FK-free — same append-only-history reasoning as actor_user_id; an
+    FK CASCADE would let deleting the settings change erase the deal history it
+    caused, SET NULL is an UPDATE the append-only triggers reject). New objects:
+      · app.write_sourced_audit_entry(...) — sibling of write_audit_entry that
+        records the source link (actor still pinned to auth.uid()). write_audit_entry
+        itself is UNTOUCHED (avoided the drop/overload hazard of adding a param).
+      · app.affected_deals(entity_type, entity_id, fields) → setof deal — the
+        restatement matrix in ONE place (rule 3): tax vat_rate/ewt_rate/vat_registered
+        → taxable deals; tax property_vat_threshold → threshold-rule developer,
+        non-force-VAT deals; developer → that developer's deals; property_type →
+        that type's deals. RLS-scoped (SECURITY INVOKER). Archived deals INCLUDED
+        so the shown count == the recomputed set == the list "used by N deals".
+      · public.count_affected_deals(...) — the honest confirmation count (M0.2's
+        stub, now real). Feeds the copy AND the event's affected_deal_count.
+      · public.recompute_job — progress counters + resume cursor (last_deal_id),
+        one per settings_change_event (unique), RLS'd; touch trigger for updated_at.
+      · public.start_recompute_job / next_recompute_deals (jsonb, money ::text) /
+        apply_recompute_batch (the single writer: per deal re-check Rule G/H, diff,
+        and ONLY on change bump version + persist derived + sourced audit entry +
+        deal.updated event; SKIP a version-moved deal; NO-OP an unchanged one) /
+        complete_recompute_job (stamp event consumed ONCE, guarded) /
+        fail_recompute_job (resumable). Types regenerated (additive; the one money
+        override needed was count_affected_deals.p_entity_id → string|null, since
+        tax changes pass null).
+
+THE ENGINE STILL RUNS IN THE APP (FR-M1-05). src/lib/settings/recompute-runner.ts
+("use server") drives batches: next_recompute_deals → computeDeal per deal →
+apply_recompute_batch, looping until a batch comes back empty, then complete. It
+reads FRESH tax settings (not the cache) so a rate change's own recompute uses the
+new rates. kickoffRecompute(eventId) starts + drains synchronously right after a
+confirmed restating change (monolith-first, no queue infra); the settings/list
+actions call it and fold the restated count into the success message. stepRecompute
++ pendingRecomputeJobs + resumePendingRecomputes power the resume path.
+map.ts exports the token converters + dealDerivedDbFields (engine output → DB
+tokens/strings) so the runner and dealRpcArgs map identically.
+
+RESUMABLE + RETRY-SAFE by construction. A batch commits (cursor advances) or rolls
+back (it doesn't); re-running drains from the last committed cursor; a deal already
+at its correct figures diffs to nothing → skipped. The event is consumed exactly
+once (M0.2's append-only trigger enforces it) so a double-drain cannot double-
+restate — proven live (re-start on a consumed event returns already_consumed, 0 new
+events).
+
+HONEST CONFIRMATION EVERYWHERE (the one function M0.2 specified). The tax page now
+computes taxAffectedCounts() {rate, threshold} and the form picks the honest count
+per restating field via the pure taxRestatingCount() (unit-tested: a combined
+rate+threshold change is the rate count, NOT the sum — threshold deals ⊆ taxable
+deals). The developer/property-type list gates now use item.referenceCount (already
+real since M1.2, and identical to count_affected_deals for those entities) — no
+extra query. The tax + list actions pass the real count into the emitted event.
+The page-level countAffectedDeals()==0 calls were removed from the three list pages.
+A recompute progress/resume banner (src/components/settings/recompute-banner*) sits
+in the settings layout; absent in the common case (the action drains synchronously),
+it appears only to finish interrupted/failed work and drives the remaining batches.
+
+Q4 DEFAULT (documented, nothing to build): historical PAYMENT rows keep their stored
+splits (M5 snapshot policy) — recompute touches only booked DEAL figures, behind the
+already-built confirmation. deal_event.old_values is the OLD snapshot M4/M2 restate
+against; the recompute events carry it.
+
+PERF (measured live, scripts/perf-recompute.ts, 1,000 synthetic deals in a throwaway
+workspace, deleted after):
+  · deal-list query P95:      240.7 ms   (target < 500 ms)   PASS
+  · single-deal compute P95:  0.023 ms   (target < 10 ms)    PASS
+  · bulk recompute of 1,000:  3.9 s      (target < 30 s)     PASS   [800 taxable
+    restated, 200 untaxed untouched — the predicate + recompute correctness proven
+    end to end]
+No new indexes needed at 1,000 (existing deal_list_idx / pk-ordered cursor cover it).
+CI WIRING: tests/unit/perf.test.ts (in test:unit, no DB) proves the engine budget
+over 1,000 deals (single < 10 ms; 1,000-deal engine recompute ~7 ms — the 30 s bulk
+budget is DB-bound, not arithmetic). The .github workflow also calls
+`pnpm run perf:recompute`, which self-skips on CI's placeholder creds and runs for
+real when creds exist.
+
+VERIFIED. Live focused script (throwaway workspace, spread = taxable developer /
+untaxed resale / rental / referrer), 17/17: count_affected_deals(ewt)==2 taxable;
+update_tax_settings emits an event with affected_deal_count==2; job total==2,
+restated==2; the two taxable deals restated (version bumped, ewt_memo moved, exact
+figures match the engine at the new rate), the two untaxed UNTOUCHED (version + all
+figures unchanged); 2 per-deal audit entries + 2 deal.updated events (old+new) linked
+to the settings change; event consumed once, 0 pending; retry on the consumed event
+is a no-op. Browser (Playwright MCP, throwaway user with D001 taxable dev + D002
+untaxed): EWT 10→5 → modal states the HONEST count "This will recompute 1 deal" →
+confirm → D001 EWT ₱35,714.29→₱17,857.14 (version 2), D002 untouched (version 1), the
+deal detail History shows an "Updated · EWT (memo): 35714.29 → 17857.14" entry (only
+the field that moved), console clean. test:unit 178/178 (170 + 8 new: recompute 6 +
+perf 2); build:check + lint clean; Playwright 42/42 single-worker on a clean reseed
+(41 + 1 new deals.spec.ts M1.5 test). Real account (juliusbaliling25@gmail.com /
+"julius's Book") untouched; baseline restored (1 workspace, 0 deals/events/jobs).
+
+HANDOFF NOTES for later milestones:
+  - M4/M2 CONSUME deal.updated events from the recompute the same way as an edit:
+    old_values → restate against, new_values → apply. A recompute event additionally
+    carries settings_change_event_id (why it moved) — new, nullable, safe to ignore.
+  - THE RESTATEMENT MATRIX lives in app.affected_deals — if a future field restates
+    money (e.g. a new tax field), extend that ONE predicate + count_affected_deals
+    and the confirmation + job both pick it up.
+  - app.write_sourced_audit_entry is the general "audit entry linked to a cause"
+    writer; M4/M5 can reuse it when a downstream restatement wants the same link.
+  - The recompute banner auto-drives on mount; a future long-running recompute UX
+    (a dedicated progress page) would build on stepRecompute + pendingRecomputeJobs.
+
 **M1.3 COMPLETE — Deal entry UI & list: the daily-use form with a live computed
 panel, soft warnings with audited overrides, the deal list, and the detail view.**
 

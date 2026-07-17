@@ -9,6 +9,7 @@ import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
 import { countAffectedDeals } from "./recompute-queries";
+import { kickoffRecompute } from "./recompute-runner";
 import {
   LIST_ENTITY_LABELS,
   deleteBlockedMessage,
@@ -270,7 +271,12 @@ export async function updatePropertyType(
     if (!confirmation.ok) return { error: confirmation.error };
   }
 
-  const affectedDeals = await countAffectedDeals();
+  // The honest count — the deals that reference this type (same predicate the
+  // recompute drains). Only when the rule actually changed.
+  const affectedDeals =
+    current.vat_rule !== rule
+      ? await countAffectedDeals({ entity: "property_type", propertyTypeId: id })
+      : 0;
 
   const { data, error } = await supabase.rpc("update_property_type", {
     p_id: id,
@@ -290,12 +296,7 @@ export async function updatePropertyType(
     return { error: null, message: "Nothing changed — it is as it was." };
   }
 
-  return {
-    error: null,
-    message: result.recompute_event_id
-      ? `${endSentence(`Saved ${result.name}`)} The change is queued for recompute and recorded in your audit log.`
-      : `${endSentence(`Saved ${result.name}`)} Recorded in your audit log.`,
-  };
+  return listSavedMessage(result);
 }
 
 export async function updateDeveloper(
@@ -332,7 +333,10 @@ export async function updateDeveloper(
     if (!confirmation.ok) return { error: confirmation.error };
   }
 
-  const affectedDeals = await countAffectedDeals();
+  const affectedDeals =
+    current.comm_base !== base
+      ? await countAffectedDeals({ entity: "developer", developerId: id })
+      : 0;
 
   const { data, error } = await supabase.rpc("update_developer", {
     p_id: id,
@@ -352,11 +356,27 @@ export async function updateDeveloper(
     return { error: null, message: "Nothing changed — it is as it was." };
   }
 
+  return listSavedMessage(result);
+}
+
+/**
+ * The saved-message tail shared by the two restating list updates: if the change
+ * queued a recompute, drain it now (FR-M1-07) and report the restated count. The
+ * change already committed with its durable event, so a drain failure only means
+ * the recompute banner will resume it — the save still succeeded.
+ */
+async function listSavedMessage(result: ListResult): Promise<ActionState> {
+  if (!result.recompute_event_id) {
+    return { error: null, message: `${endSentence(`Saved ${result.name}`)} Recorded in your audit log.` };
+  }
+
+  const recompute = await kickoffRecompute(result.recompute_event_id);
   return {
     error: null,
-    message: result.recompute_event_id
-      ? `${endSentence(`Saved ${result.name}`)} The change is queued for recompute and recorded in your audit log.`
-      : `${endSentence(`Saved ${result.name}`)} Recorded in your audit log.`,
+    message:
+      recompute.status === "completed"
+        ? `${endSentence(`Saved ${result.name}`)} ${recompute.restated} ${recompute.restated === 1 ? "deal" : "deals"} restated and recorded in your audit log.`
+        : `${endSentence(`Saved ${result.name}`)} Restating your deals is in progress — see the recompute banner. Recorded in your audit log.`,
   };
 }
 

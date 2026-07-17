@@ -10,7 +10,7 @@ import { FormStatus, SubmitButton } from "@/components/forms/form-status";
 import { ConfirmGate } from "@/components/friction/confirm-gate";
 import { IDLE, type ActionState } from "@/lib/forms/action-state";
 import { saveTaxSettings } from "@/lib/settings/actions";
-import { recomputeConsequence } from "@/lib/settings/recompute";
+import { recomputeConsequence, taxRestatingCount } from "@/lib/settings/recompute";
 import {
   TAX_FIELD_LABELS,
   diffTaxSettings,
@@ -46,8 +46,13 @@ export type TaxSettingsFormProps = {
   settings: TaxSettingsValues & {
     vat_registered_confirmed_at: string | null;
   };
-  /** From the server: how many deals a restatement would touch (M0.2: always 0). */
-  affectedDeals: number;
+  /**
+   * From the server: how many deals each kind of restatement would touch.
+   * `rate` for a vat_rate / ewt_rate / vat_registered change (every taxable
+   * deal); `threshold` for a property-VAT-threshold change (threshold-rule
+   * developer deals). The form picks the honest one for the fields in play.
+   */
+  affectedDeals: { rate: number; threshold: number };
 };
 
 export function TaxSettingsForm({ settings, affectedDeals }: TaxSettingsFormProps) {
@@ -92,6 +97,9 @@ export function TaxSettingsForm({ settings, affectedDeals }: TaxSettingsFormProp
   const changed = parsed.ok ? diffTaxSettings(before, parsed.values) : [];
   const restating = restatingFields(changed);
   const needsGate = requiresConfirmation(changed);
+
+  // The honest count for the fields actually being changed (pure + unit-tested).
+  const restatingCount = taxRestatingCount(restating, affectedDeals);
 
   // Answering the VAT question is a save even when the answer matches the
   // current default — that is the whole point of confirming it.
@@ -203,7 +211,7 @@ export function TaxSettingsForm({ settings, affectedDeals }: TaxSettingsFormProp
           description={`You are changing ${restating
             .map((field: TaxField) => TAX_FIELD_LABELS[field])
             .join(", ")}.`}
-          consequence={recomputeConsequence(restating, affectedDeals)}
+          consequence={recomputeConsequence(restating, restatingCount)}
           gate={{ mode: "checked" }}
           confirmLabel="Save changes"
           action={saveWithConfirmation}

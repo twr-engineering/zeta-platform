@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { ListScreen } from "@/components/settings/list-screen";
 import { listPropertyTypes } from "@/lib/settings/list-queries";
-import { countAffectedDeals } from "@/lib/settings/recompute-queries";
 import {
   PROPERTY_VAT_RULES,
   PROPERTY_VAT_RULE_CAPTIONS,
@@ -40,10 +39,7 @@ export const metadata: Metadata = { title: "Property Types" };
  * worse than none.
  */
 export default async function PropertyTypesSettingsPage() {
-  const [items, affectedDeals] = await Promise.all([
-    listPropertyTypes(),
-    countAffectedDeals(),
-  ]);
+  const items = await listPropertyTypes();
 
   return (
     <Card>
@@ -91,7 +87,6 @@ export default async function PropertyTypesSettingsPage() {
             detail: PROPERTY_VAT_RULE_LABELS[seed.vat_rule],
           }))}
           emptyDescription="Property Types feed the Type dropdown on every deal, and their VAT rule drives the BIR RR 1-2024 computation: Threshold is exempt at or below your VAT threshold and VAT-able strictly above it, while Always VAT and Always Exempt ignore price entirely."
-          affectedDeals={affectedDeals}
         />
       </CardContent>
     </Card>

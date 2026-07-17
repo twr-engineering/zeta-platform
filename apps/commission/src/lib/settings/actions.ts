@@ -10,11 +10,13 @@ import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
 import { invalidateTaxSettings } from "./cache";
 import { countAffectedDeals } from "./recompute-queries";
+import { kickoffRecompute } from "./recompute-runner";
 import {
   TAX_FIELD_LABELS,
   diffTaxSettings,
   parseTaxSettingsForm,
   requiresConfirmation,
+  restatingFields,
   type TaxField,
   type TaxSettingsValues,
 } from "./tax";
@@ -149,7 +151,13 @@ export async function saveTaxSettings(
     if (!confirmation.ok) return { error: confirmation.error };
   }
 
-  const affectedDeals = await countAffectedDeals();
+  // The honest count for the SPECIFIC restating fields being saved — recorded on
+  // the emitted event as "what the agent was told". Zero when nothing restates.
+  const restating = restatingFields(changed);
+  const affectedDeals =
+    restating.length > 0
+      ? await countAffectedDeals({ entity: "tax_settings", fields: restating })
+      : 0;
   const supabase = await createClient();
 
   const { data, error } = await supabase.rpc(
@@ -195,10 +203,20 @@ export async function saveTaxSettings(
   const summary =
     savedFields.length > 0 ? `Saved: ${savedFields.join(", ")}.` : "Saved.";
 
+  if (!result.recompute_event_id) {
+    return { error: null, message: `${summary} Recorded in your audit log.` };
+  }
+
+  // Drain the recompute now (FR-M1-07). The settings change already committed
+  // with its durable event, so a drain failure never loses the work — it stays
+  // pending and the recompute banner resumes it. The result folds the restated
+  // count into the message.
+  const recompute = await kickoffRecompute(result.recompute_event_id);
   return {
     error: null,
-    message: result.recompute_event_id
-      ? `${summary} The change is queued for recompute and recorded in your audit log.`
-      : `${summary} Recorded in your audit log.`,
+    message:
+      recompute.status === "completed"
+        ? `${summary} ${recompute.restated} ${recompute.restated === 1 ? "deal" : "deals"} restated and recorded in your audit log.`
+        : `${summary} Restating your deals is in progress — see the recompute banner. Recorded in your audit log.`,
   };
 }

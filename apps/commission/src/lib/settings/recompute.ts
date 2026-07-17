@@ -1,6 +1,48 @@
 import { TAX_FIELD_LABELS, type TaxField } from "./tax";
 
 /**
+ * A bulk recompute's progress (FR-M1-07), the shape the runner returns and the
+ * banner renders. Pure so both a server action and a client component can share
+ * it without dragging server-only code into the browser bundle.
+ */
+export type RecomputeStatus = "pending" | "running" | "completed" | "failed";
+
+export type RecomputeProgress = {
+  jobId: string;
+  status: RecomputeStatus;
+  total: number;
+  processed: number;
+  restated: number;
+  done: boolean;
+};
+
+/**
+ * The honest affected-deal count for a set of tax fields being changed, given
+ * the two server-computed counts.
+ *
+ *   - a vat_rate / ewt_rate / vat_registered change restates every taxable deal
+ *     (`rate`);
+ *   - a property_vat_threshold change restates threshold-rule developer deals
+ *     (`threshold`), which are a SUBSET of the taxable deals — a developer deal
+ *     is always taxable — so when both change the rate count already covers the
+ *     union, and there is no double-count to add.
+ */
+export function taxRestatingCount(
+  restating: readonly TaxField[],
+  counts: { rate: number; threshold: number }
+): number {
+  if (
+    restating.some(
+      (field) => field === "vat_rate" || field === "ewt_rate" || field === "vat_registered"
+    )
+  ) {
+    return counts.rate;
+  }
+  if (restating.includes("property_vat_threshold")) return counts.threshold;
+  return 0;
+}
+
+/**
  * The recompute-confirmation contract (M0 rule 3) — M0.2's half.
  *
  * Pure: this module states the contract and writes the copy. The reads live in

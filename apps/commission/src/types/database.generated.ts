@@ -23,6 +23,7 @@ export type Database = {
           field_changes: Json
           id: string
           occurred_at: string
+          settings_change_event_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           field_changes?: Json
           id?: string
           occurred_at?: string
+          settings_change_event_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           field_changes?: Json
           id?: string
           occurred_at?: string
+          settings_change_event_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -246,6 +249,7 @@ export type Database = {
           new_values: Json | null
           occurred_at: string
           old_values: Json | null
+          settings_change_event_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -259,6 +263,7 @@ export type Database = {
           new_values?: Json | null
           occurred_at?: string
           old_values?: Json | null
+          settings_change_event_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -272,6 +277,7 @@ export type Database = {
           new_values?: Json | null
           occurred_at?: string
           old_values?: Json | null
+          settings_change_event_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -495,6 +501,75 @@ export type Database = {
           },
         ]
       }
+      recompute_job: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          error: string | null
+          fields: string[]
+          id: string
+          last_deal_id: string | null
+          processed_deals: number
+          restated_deals: number
+          settings_change_event_id: string
+          started_by: string | null
+          status: string
+          total_deals: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          error?: string | null
+          fields?: string[]
+          id?: string
+          last_deal_id?: string | null
+          processed_deals?: number
+          restated_deals?: number
+          settings_change_event_id: string
+          started_by?: string | null
+          status?: string
+          total_deals?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          error?: string | null
+          fields?: string[]
+          id?: string
+          last_deal_id?: string | null
+          processed_deals?: number
+          restated_deals?: number
+          settings_change_event_id?: string
+          started_by?: string | null
+          status?: string
+          total_deals?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recompute_job_settings_change_event_id_fkey"
+            columns: ["settings_change_event_id"]
+            isOneToOne: true
+            referencedRelation: "settings_change_event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recompute_job_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings_change_event: {
         Row: {
           actor_user_id: string
@@ -634,6 +709,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_recompute_batch: {
+        Args: { p_job_id: string; p_results: Json }
+        Returns: Json
+      }
+      complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
+      count_affected_deals: {
+        Args: { p_entity_id: string; p_entity_type: string; p_fields: string[] }
+        Returns: number
+      }
       create_deal: {
         Args: {
           p_billed_commission: number
@@ -692,6 +776,10 @@ export type Database = {
       delete_developer: { Args: { p_id: string }; Returns: Json }
       delete_lead_source: { Args: { p_id: string }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
+      fail_recompute_job: {
+        Args: { p_error: string; p_job_id: string }
+        Returns: Json
+      }
       log_deal_warning_override: {
         Args: { p_deal_id: string; p_warnings: string[] }
         Returns: Json
@@ -701,6 +789,10 @@ export type Database = {
         Returns: string
       }
       log_password_change: { Args: never; Returns: string }
+      next_recompute_deals: {
+        Args: { p_job_id: string; p_limit: number }
+        Returns: Json
+      }
       reference_count:
         | {
             Args: { "": Database["public"]["Tables"]["developer"]["Row"] }
@@ -745,6 +837,7 @@ export type Database = {
         Args: { p_archived: boolean; p_id: string }
         Returns: Json
       }
+      start_recompute_job: { Args: { p_event_id: string }; Returns: Json }
       update_deal: {
         Args: {
           p_billed_commission: number

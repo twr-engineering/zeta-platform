@@ -26,23 +26,47 @@ import type { DealInput } from "./schema";
  */
 
 /** DB deal_type → engine DealType (only 'n_a' differs). */
-function dealTypeToEngine(t: DealInput["deal_type"]): EngineDealType {
+export function dealTypeToEngine(t: DealInput["deal_type"]): EngineDealType {
   return t === "n_a" ? "n/a" : t;
 }
 
 /** engine PropertyVat → DB deal_property_vat. */
-function propertyVatToDb(v: EnginePropertyVat): DealPropertyVat {
+export function propertyVatToDb(v: EnginePropertyVat): DealPropertyVat {
   return v === "n/a" ? "n_a" : v;
 }
 
 /** engine CommBaseDisplay → DB deal_comm_base_display. */
-function commBaseToDb(v: DealDerived["comm_base"]): DealCommBaseDisplay {
+export function commBaseToDb(v: DealDerived["comm_base"]): DealCommBaseDisplay {
   return v === "n/a" ? "n_a" : v;
 }
 
 /** engine VatBasis → DB deal_vat_basis. */
-function vatBasisToDb(v: EngineVatBasis): DealVatBasis {
+export function vatBasisToDb(v: EngineVatBasis): DealVatBasis {
   return v === "n/a" ? "n_a" : v;
+}
+
+/**
+ * The engine's derived figures as the DB tokens/strings a write function takes,
+ * WITHOUT the p_ prefix. Shared by dealRpcArgs (which prefixes them) and the
+ * bulk recompute (which sends them inside a jsonb batch). Money stays exact
+ * strings; the four enum outputs go through the n/a↔n_a bridge above.
+ */
+export function dealDerivedDbFields(derived: DealDerived) {
+  return {
+    property_vat: propertyVatToDb(derived.property_vat),
+    net_list_price: derived.net_list_price,
+    comm_base: commBaseToDb(derived.comm_base),
+    vat_basis: vatBasisToDb(derived.vat_basis),
+    billed_commission: derived.billed_commission,
+    gci_net_of_vat: derived.gci_net_of_vat,
+    incentive_net: derived.incentive_net,
+    referral_out: derived.referral_out,
+    net_gci: derived.net_gci,
+    vat_memo: derived.vat_memo,
+    ewt_memo: derived.ewt_memo,
+    yield_on_list: derived.yield_on_list,
+    taxable: derived.taxable,
+  };
 }
 
 /**

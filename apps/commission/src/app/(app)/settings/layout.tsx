@@ -1,4 +1,5 @@
 import { SettingsNav } from "@/components/layout/settings-nav";
+import { RecomputeBannerSlot } from "@/components/settings/recompute-banner-slot";
 import { Badge } from "@/components/ui/badge";
 
 // No `metadata` export here on purpose: a plain `title` on this layout displaces
@@ -25,6 +26,10 @@ export default function SettingsLayout({
         <h1 className="text-xl font-semibold">Settings</h1>
         <Badge variant="secondary">M0</Badge>
       </div>
+
+      {/* Surfaces (and finishes) any recompute left pending by an interrupted
+          settings change — FR-M1-07 resumability, workspace-wide. */}
+      <RecomputeBannerSlot />
 
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <div className="lg:w-52 lg:shrink-0">

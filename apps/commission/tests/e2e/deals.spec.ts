@@ -231,3 +231,38 @@ test("the list collapses to cards at 360px (AC — mobile)", async ({ page }) =>
   );
   expect(overflow).toBe(true);
 });
+
+/**
+ * M1.5 — the recompute service, end to end. By now Dealer's workspace holds
+ * taxable deals (D001 is a developer deal), so changing EWT must state an HONEST
+ * count in the confirmation (the M0.2 stub, now real), then restate those deals
+ * behind it — a per-deal audit entry and a moved EWT memo on D001. Runs LAST in
+ * the serial chain so the rate change disturbs no earlier assertion.
+ */
+test("changing EWT restates the taxable deals behind an honest confirmation (M1.5)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/settings/tax");
+
+  await page.getByTestId("ewt-rate-input").fill("5");
+  await page.getByTestId("save-tax-settings-button").click();
+
+  const gate = page.getByTestId("tax-confirm-gate");
+  await expect(gate).toBeVisible();
+  // The honest count: a real number of deals, NOT the zero-deal copy.
+  await expect(page.getByTestId("tax-confirm-gate-consequence")).toContainText(
+    /recompute \d+ deals?/
+  );
+
+  await page.getByTestId("tax-confirm-gate-checkbox").click();
+  await page.getByTestId("tax-confirm-gate-confirm").click();
+  await expect(gate).not.toBeVisible();
+
+  // The restatement landed on D001 (a taxable developer deal): its own history
+  // now carries an "Updated" entry showing the EWT memo moved.
+  await page.goto("/deals/D001");
+  const history = page.getByTestId("deal-audit-history");
+  await expect(history).toContainText("Updated");
+  await expect(history).toContainText("EWT (memo)");
+});
