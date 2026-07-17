@@ -29,6 +29,15 @@ export const ROUTES = {
 } as const;
 
 /**
+ * The export download URL (FR-M0-09). `/api/export/*` is authenticated by the
+ * route handler itself — it is not in PUBLIC_PREFIXES below, so the middleware
+ * gates it too, and an unauthenticated fetch never reaches the query.
+ */
+export function exportPath(dataset: string, format: "csv" | "xlsx"): string {
+  return `/api/export/${dataset}?format=${format}`;
+}
+
+/**
  * Paths reachable without a session. `/auth/*` carries Supabase's email
  * confirmation and OAuth callbacks, which must run signed-out.
  */

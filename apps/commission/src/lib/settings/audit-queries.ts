@@ -21,12 +21,21 @@ import type { AuditLogEntry } from "@/types/entities";
  * them. M0.3 adds property_type, developer and lead_source here as it starts
  * writing them.
  */
-export const AUDIT_ENTITY_TYPES = ["tax_settings", "workspace"] as const;
+export const AUDIT_ENTITY_TYPES = [
+  "tax_settings",
+  "property_type",
+  "developer",
+  "lead_source",
+  "workspace",
+] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
 
 export const AUDIT_ENTITY_LABELS: Record<AuditEntityType, string> = {
   tax_settings: "Tax Settings",
+  property_type: "Property Types",
+  developer: "Developers",
+  lead_source: "Lead Sources",
   workspace: "Workspace",
 };
 

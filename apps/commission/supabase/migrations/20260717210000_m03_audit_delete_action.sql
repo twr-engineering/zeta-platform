@@ -1,0 +1,23 @@
+-- M0.3 — 'delete' joins the audit_action enum.
+--
+-- Module: M0 §3.7, rule 12
+--
+-- A DELIBERATE DEVIATION FROM THE PRD, flagged rather than smuggled: §3.7
+-- enumerates the action as (create|update|archive|restore|delete_blocked) — it
+-- has a value for a delete that was *refused* and none for one that succeeded.
+-- That cannot be right alongside rule 12 ("all settings edits are audit-logged")
+-- and FR-M0-04/05/06, which permit a hard delete once the reference count is
+-- zero. A hard delete is the single most consequential thing an agent can do to
+-- a configuration list; if anything in the trail must be recordable, it is that.
+--
+-- Reading it as an omission rather than an instruction, the value is added here.
+-- The trail keeps entries for entities that no longer exist, which is exactly
+-- why audit_log_entry.entity_id is a bare uuid and not a foreign key: the record
+-- of a deletion has to outlive the row it describes.
+--
+-- WHY THIS IS ITS OWN MIGRATION: Postgres permits ALTER TYPE ... ADD VALUE
+-- inside a transaction block (PG 12+), but the new label cannot be *used* until
+-- that transaction commits. The next migration's functions reference
+-- 'delete'::public.audit_action, so the label has to land in a transaction of
+-- its own first.
+alter type public.audit_action add value if not exists 'delete';

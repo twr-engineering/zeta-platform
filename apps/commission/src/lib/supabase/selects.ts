@@ -50,3 +50,18 @@ export const AUDIT_LOG_SELECT = "*";
 
 /** settings_change_event: same shape, same reasoning. affected_deal_count is an integer. */
 export const SETTINGS_CHANGE_EVENT_SELECT = "*";
+
+/**
+ * The three configuration lists (M0 §3.4–3.6) carry NO `numeric` column — names
+ * are text, vat_rule/comm_base are enums, sort_order is an integer. So `*` is
+ * safe, and stated here rather than left as an absence: the next reader should
+ * be able to tell "there is no money in this table" from "someone forgot the
+ * ::text cast".
+ *
+ * The money these lists *govern* is real (vat_rule decides whether a list price
+ * is VAT-able; comm_base decides which price the rate applies to) — but it is
+ * computed in M1 from tax_settings' rates, which do carry the cast above.
+ */
+export const PROPERTY_TYPE_SELECT = "*";
+export const DEVELOPER_SELECT = "*";
+export const LEAD_SOURCE_SELECT = "*";

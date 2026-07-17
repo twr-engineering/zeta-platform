@@ -1,5 +1,12 @@
 import { formatPHP, formatRateAsPercent } from "@/lib/money";
 import { formatManilaDateTime } from "@/lib/date/manila";
+import {
+  DEVELOPER_COMM_BASE_LABELS,
+  PROPERTY_VAT_RULE_LABELS,
+  isDeveloperCommBase,
+  isPropertyVatRule,
+  referenceCountLabel,
+} from "./lists";
 import type { FieldChange, Json } from "@/types/database";
 
 /**
@@ -20,8 +27,8 @@ const RATE_FIELDS = new Set(["vat_rate", "ewt_rate"]);
 /** Fields stored as a peso amount. */
 const AMOUNT_FIELDS = new Set(["property_vat_threshold"]);
 
-/** Fields stored as a timestamp. */
-const TIMESTAMP_FIELDS = new Set(["vat_registered_confirmed_at"]);
+/** Fields stored as a timestamp. `archived_at` doubles as M0.3's archive flag. */
+const TIMESTAMP_FIELDS = new Set(["vat_registered_confirmed_at", "archived_at"]);
 
 /** The exact stored value, as text. This is what the database holds. */
 export function formatStoredValue(value: Json): string {
@@ -49,7 +56,25 @@ export function describeStoredValue(field: string, value: Json): string | null {
     return `${value} month${value === 1 ? "" : "s"}`;
   }
 
+  // M0.3's lists. The stored value is the enum's own token ("always_vat"), which
+  // is the truth and is what renders; this is the word the agent chose in the UI.
+  if (typeof value === "number" && field === "sort_order") {
+    return `position ${value}`;
+  }
+
+  if (typeof value === "number" && field === "reference_count") {
+    return referenceCountLabel(value).toLowerCase();
+  }
+
   if (typeof value !== "string") return null;
+
+  if (field === "vat_rule" && isPropertyVatRule(value)) {
+    return PROPERTY_VAT_RULE_LABELS[value];
+  }
+
+  if (field === "comm_base" && isDeveloperCommBase(value)) {
+    return DEVELOPER_COMM_BASE_LABELS[value];
+  }
 
   // Guarded: a malformed stored value must not throw inside the audit viewer —
   // the log is where you go when something already went wrong.
@@ -71,16 +96,30 @@ export type RenderedFieldChange = {
   /** The friendly reading, when one adds anything. */
   oldLabel: string | null;
   newLabel: string | null;
+  /**
+   * old === new: this pair is CONTEXT, not a change.
+   *
+   * A `delete_blocked` entry records an attempt and the state that refused it —
+   * the name of the item and its reference count, neither of which moved. The
+   * viewer renders those as a single value, because "Condo → Condo" is not a
+   * sentence about anything, and an arrow between two identical values reads as
+   * a bug in the log rather than as a fact about the world.
+   */
+  unchanged: boolean;
 };
 
 export function renderFieldChange(
   field: string,
   change: FieldChange
 ): RenderedFieldChange {
+  const oldValue = formatStoredValue(change.old);
+  const newValue = formatStoredValue(change.new);
+
   return {
-    oldValue: formatStoredValue(change.old),
-    newValue: formatStoredValue(change.new),
+    oldValue,
+    newValue,
     oldLabel: describeStoredValue(field, change.old),
     newLabel: describeStoredValue(field, change.new),
+    unchanged: oldValue === newValue,
   };
 }

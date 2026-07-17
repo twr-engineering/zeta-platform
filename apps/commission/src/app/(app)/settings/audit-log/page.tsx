@@ -193,8 +193,17 @@ const ACTION_LABELS: Record<string, string> = {
   update: "Changed",
   archive: "Archived",
   restore: "Restored",
+  delete: "Deleted",
   delete_blocked: "Delete blocked",
 };
+
+/**
+ * The two actions that are not ordinary edits get the eye drawn to them: a hard
+ * delete is the only irreversible thing on these screens, and a blocked delete
+ * is an attempt against referenced financial data. Everything else is a change,
+ * and shouting about all of them would be the same as shouting about none.
+ */
+const LOUD_ACTIONS = new Set(["delete", "delete_blocked"]);
 
 /**
  * A card per entry rather than a table row: the whole product is used from a
@@ -212,7 +221,14 @@ function AuditEntryCard({ entry }: { entry: AuditLogEntry }) {
       <CardContent className="space-y-3 py-4">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <Badge variant="secondary">{entityLabel}</Badge>
-          <span className="text-sm font-medium">
+          <span
+            className={
+              LOUD_ACTIONS.has(entry.action)
+                ? "text-sm font-medium text-destructive"
+                : "text-sm font-medium"
+            }
+            data-testid="audit-action"
+          >
             {ACTION_LABELS[entry.action] ?? entry.action}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -239,23 +255,53 @@ function AuditEntryCard({ entry }: { entry: AuditLogEntry }) {
                     {label}
                   </dt>
                   <dd className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-                    {/* The stored strings — what the database actually holds. */}
-                    <span className="font-mono tabular-nums" data-testid="audit-old">
-                      {rendered.oldValue}
-                    </span>
-                    <span aria-hidden="true" className="text-muted-foreground">
-                      →
-                    </span>
-                    <span
-                      className="font-mono font-medium tabular-nums"
-                      data-testid="audit-new"
-                    >
-                      {rendered.newValue}
-                    </span>
-                    {(rendered.oldLabel || rendered.newLabel) && (
-                      <span className="text-xs text-muted-foreground">
-                        ({rendered.oldLabel ?? "—"} → {rendered.newLabel ?? "—"})
-                      </span>
+                    {rendered.unchanged ? (
+                      // Context, not a change — see RenderedFieldChange.unchanged.
+                      // A blocked delete's "Condo → Condo" is noise; the value
+                      // alone is the fact.
+                      <>
+                        <span
+                          className="font-mono font-medium tabular-nums"
+                          data-testid="audit-context"
+                        >
+                          {rendered.newValue}
+                        </span>
+                        {rendered.newLabel && (
+                          <span className="text-xs text-muted-foreground">
+                            ({rendered.newLabel})
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* The stored strings — what the database actually holds. */}
+                        <span
+                          className="font-mono tabular-nums"
+                          data-testid="audit-old"
+                        >
+                          {rendered.oldValue}
+                        </span>
+                        <span aria-hidden="true" className="text-muted-foreground">
+                          →
+                        </span>
+                        <span
+                          className="font-mono font-medium tabular-nums"
+                          data-testid="audit-new"
+                        >
+                          {rendered.newValue}
+                        </span>
+                        {/* BOTH sides, or neither. A gloss is a second reading
+                            of the same change, and half a reading is worse than
+                            none: a delete stores name "Lamudi" → null, and only
+                            the null side has a plain-language form, so this used
+                            to render the jarring "(— → not set)" next to a line
+                            that already said "Lamudi → —". */}
+                        {rendered.oldLabel && rendered.newLabel && (
+                          <span className="text-xs text-muted-foreground">
+                            ({rendered.oldLabel} → {rendered.newLabel})
+                          </span>
+                        )}
+                      </>
                     )}
                   </dd>
                 </div>
@@ -268,7 +314,17 @@ function AuditEntryCard({ entry }: { entry: AuditLogEntry }) {
   );
 }
 
-/** Labels for fields outside tax settings. M0.3's lists extend this. */
+/**
+ * Labels for fields outside tax settings — the workspace name, and M0.3's three
+ * lists. Without an entry here a field renders as its raw column name, which is
+ * how an audit log stops being readable one migration at a time. M1/M4/M5 extend
+ * this as they start writing their own entries.
+ */
 const FIELD_LABELS: Record<string, string> = {
   name: "Name",
+  vat_rule: "VAT rule",
+  comm_base: "Commission base",
+  sort_order: "Order",
+  archived_at: "Archived",
+  reference_count: "Used by",
 };

@@ -11,7 +11,7 @@
 - [x] Foundation: Next.js app, Supabase (Postgres + auth), tenant-scoped workspace schema, app shell, ₱/decimal helpers
 - [x] M0.1: Auth & personal workspace
 - [x] M0.2: Tax settings & audit trail
-- [ ] M0.3: Configuration lists
+- [x] M0.3: Configuration lists
 - [ ] M0.4: Account polish & data ownership
 - [ ] M1.1: Calculation engine library
 - [ ] M1.2: Deal CRUD with permanent IDs
@@ -58,13 +58,89 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-M0.2 complete. Tax settings are editable behind the friction gate, every settings write is
-atomic with its audit entry (the M0.1 caveat is CLOSED — see below), the audit log viewer
-is filterable over real data, and the rule-3 recompute contract is a durable queue M1 will
-drain. Verified live (57/57) and in the browser end to end. Next: M0.3 (configuration
-lists), which extends the same write path — see "For M0.3" below.
+M0.3 complete. Property Types, Developers and Lead Sources are fully manageable: inline
+add/rename, archive/restore, drag-sort (Lead Sources), reference-count column, empty-state
+seed offer of the workbook's example lists (accept/edit/skip, rule 11), and per-list
+CSV/XLSX export. Every mutation is one database function (change + audit entry + any
+recompute event in one transaction), delete of a referenced item is blocked by the RLS
+policy itself, and the money-restating changes (Developer.comm_base rule 8, PropertyType.
+vat_rule as a flagged extension) go through the friction gate and queue a recompute event.
+Verified live (81/81 with real JWTs), in the browser end to end (Chrome DevTools MCP), and
+by the Playwright suite (29/29 single-worker). Next: M0.4 (account polish & data ownership),
+which reuses the cross-cutting exporter built here. Then M1 turns on real reference counts —
+see "For M0.4 / M1" below.
 
 ## Completed Tasks
+- M0.3 Configuration lists (2026-07-17) — Property Types, Developers, Lead Sources, plus the
+  product's first exporter, built as the cross-cutting one:
+  - THREE ENTITIES + ONE DATABASE FUNCTION PER MUTATION, extending M0.2's write path exactly
+    (supabase/migrations/20260717210100_m03_configuration_lists.sql): create/update/archive/
+    restore/delete/reorder/seed each call app.write_audit_entry in the same transaction, so
+    the change and its audit entry (rule 12) and any recompute event (rule 3) all land or
+    none do. All SECURITY INVOKER, actor pinned to auth.uid(), tenant read from
+    app.current_workspace_id() — nothing forgeable. Names are case-insensitively unique via a
+    unique index on lower(name) AND trimmed by a CHECK constraint (a value that only looks
+    unique because of a space it is not allowed to store cannot exist).
+  - DELETE-OF-A-REFERENCED-ITEM IS BLOCKED BY THE RLS POLICY, not merely by the function.
+    The delete policy's USING clause is `... AND app.<entity>_reference_count(id) = 0`, so a
+    forged direct DELETE /property_type?id=eq.… (which never enters the function) matches
+    zero rows and changes nothing. Proven live. This is the milestone DoD ("a referenced type
+    cannot be hard-deleted via API even with a forged request"). The blocked path through the
+    function writes a delete_blocked audit entry and RETURNS the refusal as a value — raising
+    would roll that entry back with the record of the attempt.
+  - REFERENCE COUNTS ARE THE ONE THING M1 TURNS ON. app.property_type_reference_count(id) and
+    its two siblings return 0 today (no deals table until M1) and are exposed as a PostgREST
+    computed column public.reference_count(<row>) so the count rides along on an ordinary
+    RLS-scoped select (20260717210200_m03_reference_count_columns.sql). Replace the three SQL
+    bodies with a count over deal.<fk>_id and the whole contract goes live with no other edit:
+    the UI column, the delete policy, the delete_blocked trail. Verified by forcing a body to
+    return 3 mid-test — the browser delete was blocked "Used by 12 deals" and the forged
+    direct DELETE removed nothing.
+  - MONEY-RESTATING LIST CHANGES GO THROUGH THE GATE + QUEUE. Developer.comm_base is rule 8
+    verbatim. PropertyType.vat_rule is NOT named by any rule but decides whether a list price
+    is VAT-able, moving Net List Price → GCI — the same restatement by another route; treated
+    as restating on purpose and FLAGGED here (LIST_MONEY_RESTATING_FIELDS in
+    src/lib/settings/lists.ts, mirrored in the SQL). A RENAME is rule 6: deals hold the FK id,
+    so it propagates with no number moving and is deliberately NOT gated. The gate decision is
+    the SERVER's from its own diff — a forged request that skips the modal is refused (proven
+    in the browser: stripping the confirmation field yields "This action requires
+    confirmation" and moves nothing).
+  - SEED OFFER = rule 11. The workbook's example lists (WORKBOOK_REFERENCE §2, verbatim in
+    src/lib/settings/seed-lists.ts) are OFFERED on an empty list, never seeded silently. The
+    UI lets rows be unticked (the "edit" of accept/edit/skip); the add form below is "skip".
+    The seed_* functions refuse a non-empty list, so accepting is idempotent (a double-click,
+    a retry, M10 re-running its wizard). Content is matched against the TS list server-side,
+    not trusted from the payload — the provenance the UI claims stays true.
+  - THE CROSS-CUTTING EXPORTER (FR-M0-09), built as the one every later module reuses:
+    src/lib/export/format.ts (a dataset declares columns + rows; this decides cell rendering)
+    + src/lib/export/datasets.ts (the registry; a loader IS the screen's own query, so the
+    download matches the on-screen rows — AC8) + src/app/api/export/[dataset]/route.ts (auth
+    first, RLS-scoped, no workspace id in the URL). CSV carries money as the EXACT stored
+    string (archival, ties to the centavo) and neutralises formula injection; XLSX carries it
+    as a formatted Number via decimal.js (the ONE float this product creates, at the last
+    step, never read back) so Excel can sum a column. Library chosen via Context7:
+    write-excel-file/node (schema columns + toBuffer, far lighter than ExcelJS). M5/M7/M8/M0.4
+    add a dataset entry, not a new endpoint.
+  - LIST UI = one component, three instances (src/components/settings/list-screen.tsx). The
+    three differ only in a single enum attribute (vat_rule / comm_base) or a manual order, so
+    those are parameters, not forks. Cards that reflow, not a <table> (360px, phone-first).
+    Drag-sort is native HTML5 drag PLUS up/down buttons, because HTML5 drag does not fire for
+    touch and the buttons are also the keyboard path (§3.6). Reorder writes ONE audit entry on
+    the row that moved (old→new position), not one per shifted row.
+  - Audit viewer extended: property_type/developer/lead_source added to AUDIT_ENTITY_TYPES +
+    LABELS and the viewer's FIELD_LABELS (else entries render with raw column names and are
+    unfilterable). 'delete' joined the audit_action enum in its own migration
+    (20260717210000) because a new enum label cannot be used in the same transaction that adds
+    it. delete + delete_blocked render in the destructive treatment; an unchanged old==new
+    pair (a blocked delete's context) renders as a single value, not a "Condo → Condo" arrow.
+  - Unit tests: tests/unit/lists.test.ts (uniqueness/trim/length, gate classification, the
+    50-source soft cap, seed lists == WORKBOOK_REFERENCE §2) + tests/unit/export-format.test.ts
+    (CSV escaping/injection/exact-money, XLSX number+format, empty datasets). 35 new, 69 total.
+  - e2e: tests/e2e/configuration-lists.spec.ts (9) drives the demo script end to end — seed
+    offer → uniqueness rejection → the two demo developers with correct comm base → rule-8
+    gate → lead-source rename + drag persistence → archive/restore → CSV+XLSX download asserted
+    on the actual bytes → 360px. Signs in as JD (agent@solo.test); serial, self-contained.
+
 - M0.2 Tax settings & audit trail (2026-07-17) — the gap between M0.1's read-only tax view
   and M0.2's deliverables:
   - THE AUDIT WRITE IS NOW ATOMIC (M0.1's flagged hole, rule 12). PostgREST gives no
@@ -103,6 +179,87 @@ lists), which extends the same write path — see "For M0.3" below.
     parameter. It needs no service-role key; a miss still reads through RLS.
   - Unit tests: tests/unit/tax-settings.test.ts (25) — boundaries, scale, gate
     classification. tests/e2e/tax-settings.spec.ts (11) drives the demo script.
+
+## Verification performed for M0.3 (2026-07-17)
+- `pnpm run build:check` clean; `pnpm run lint` clean; `pnpm run test:unit` 69/69.
+- LIVE against hosted Supabase with REAL user JWTs — 81/81, delta-residue back to baseline:
+  create + one-audit-entry atomicity; rule 7 uniqueness refuses "condo", "  CONDO  " and the
+  PRD's own "megaworld geri " vs "Megaworld GERI" (a refused create writes NO audit row and
+  NO table row); trim stored, not just compared; vat_rule change emits a recompute event
+  carrying old→new and linked to its audit entry; a RENAME emits NO event (rule 6); no-op
+  writes nothing; archive/restore + active-vs-reporting reads; archived-name collision is a
+  distinct "restore it" answer; unreferenced delete succeeds and is audited (diff → null);
+  lead-source dense 1..N ordering, drag reorder as ONE audit entry, out-of-range position
+  clamps to last, delete renumbers densely; seed offer seeds an empty list and refuses a
+  non-empty one (idempotent); comm_base change is rule 8; CHECK/unique/RLS refuse forged
+  direct writes (blank, untrimmed, duplicate, forged created_by=42501, over-length); AC9 — B
+  sees none of A's lists/events/audit, B's RPC cannot touch A's row, B's forged direct DELETE
+  removes nothing, anonymous sees [] and its RPC is refused; reference-count contract proven
+  by forcing the count to 3 (delete blocked with count, forged direct DELETE of a referenced
+  row removes nothing, delete_blocked entry records the refusing state); audit entries
+  unrewritable.
+- REAL BROWSER FLOW (localhost:3000, Chrome DevTools MCP, seeded JD + Maria): seed offer
+  renders 7 property types exactly per WORKBOOK_REFERENCE §2 (Parking=Always VAT) → accept
+  populates the list, offer disappears → "  CONDO  " rejected case/space-insensitively with
+  the typed text preserved → trimmed add stored "Warehouse" → vat_rule change opens the gate
+  stating the zero-deal consequence, Cancel writes nothing (confirmed against the DB), confirm
+  saves + queues an event + audit entry (cross-linked) → 13 lead sources seeded in workbook
+  order, drag YouTube→top persists as one audit entry, move-down button works, rename ungated
+  and propagates → archive removes from active + collapses under the toggle offering Restore,
+  delete behind the gate → forged request (confirmation field stripped) refused server-side,
+  moved nothing → CSV + XLSX download with correct headers/rows/filenames, XLSX is a valid
+  OOXML zip (9 rows, sheet "Property Types", "House & Lot" escaped) → AC9 confirmed as Maria
+  (empty workspace, none of JD's data) → 360px clean on all three list screens (body reflows
+  to 360, zero overflow offenders), console clean.
+- `npx playwright test` 29/29 GREEN single-worker (the CI configuration: workers 1, retries
+  2). Under local PARALLEL workers the archive test is a `next dev` flake — a server-action
+  POST racing a route recompile ("an unexpected response was received from the server"), not a
+  product bug (the same action passes in isolation, live, and in the browser). Local runs now
+  carry 1 retry to absorb that class; CI is unaffected. `pnpm run seed:dev` before, --delete
+  after; project left at baseline (only juliusbaliling25@gmail.com's real account remains).
+
+## Bugs found and fixed during M0.3 browser verification (all caught by the browser, none by build)
+- P1 — SEED CHECKBOXES HAD NO ACCESSIBLE NAME for any option whose name contained whitespace
+  ("House & Lot", "Sphere / Personal Network" — i.e. most of them). The <label htmlFor> was
+  built from the seed name, and Base UI's Checkbox puts that id on a visually-hidden <input>
+  while giving the visible control its own — so the label pointed at the hidden input, and an
+  id containing spaces is invalid HTML anyway. Chrome still fired the label's click, which is
+  why it looked fine; the a11y name computation dropped it. Now keyed on the row index. Found
+  in the a11y tree via evaluate_script, invisible to a click-only test and to the build.
+- P2 — A REFUSED ADD WIPED WHAT THE AGENT TYPED. React 19 resets an uncontrolled form once its
+  action resolves, success or not, so "  CONDO  " → "you already have a Condo" cleared the
+  field and fixing one character meant retyping the lot. The add input is now controlled and
+  cleared only on success. The comment claiming the text survived a refusal now matches
+  reality.
+- P3 — the audit viewer rendered a half-gloss on a delete: "Name Lamudi → — (— → not set)".
+  A gloss is a second reading of the SAME change; when only one side has a plain-language form
+  it reads as noise beside a line that already said everything. Now shown only when BOTH sides
+  gloss.
+- P3 — "Added Abrown Inc.." — a double period, because the workbook's own developer name ends
+  in one. endSentence() (src/lib/settings/lists.ts) ends a name-echoing sentence without
+  doubling terminal punctuation; applied to every add/save/archive/rename/delete message.
+
+## Known gaps / decisions taken in M0.3
+- vat_rule is treated as money-restating though NO rule names it (only Developer.comm_base,
+  rule 8, is named). Reasoning: vat_rule decides whether a deal's list price is VAT-able,
+  which moves Net List Price and therefore GCI — the identical restatement rule 8 describes.
+  Treating it as cosmetic because rule 8 happened to name only the developer field would
+  silently restate booked money, which rule 3 exists to prevent. Flipping this decision is a
+  one-line change in LIST_MONEY_RESTATING_FIELDS + the SQL mirror + a unit test that asserts
+  the current behaviour on purpose.
+- 'delete' was added to the audit_action enum (§3.7 lists create|update|archive|restore|
+  delete_blocked — a value for a REFUSED delete but none for a successful one, which cannot be
+  right alongside rule 12 and FR-M0-04/05/06 permitting a hard delete at reference count 0).
+  Read as an omission, not an instruction; flagged here.
+- The 50-lead-source cap is a WARNING only (PRD open question 4, answered "warning only"):
+  the list is never blocked past 50, the screen carries a standing advisory about M7's
+  legibility. leadSourceCapWarning() in src/lib/settings/lists.ts.
+- Delete is gated `checked`, not `typed`: a hard delete here is only ever permitted at
+  reference count 0 (nothing depends on the row, re-adding is retyping a name). gate.ts draws
+  the typed/checked line at reversibility; a typed ritual for removing an unused list item
+  would train click-through. Account deletion (M0.4) is where `typed` belongs.
+- Archive/restore/reorder are NOT gated (reversible, no money moves) — same rule-9 reasoning
+  as chase_idle_months in M0.2.
 
 ## Verification performed for M0.2 (2026-07-17)
 - `pnpm run build:check` clean; `pnpm run lint` clean; `pnpm run test:unit` 34/34.
@@ -178,18 +335,45 @@ lists), which extends the same write path — see "For M0.3" below.
   skips RLS — the key IS the boundary). If M1 ever needs settings keyed by anything a
   request supplies, that is a redesign, not a parameter change.
 
-## For M0.3 (read before starting)
-- Extend the write path, do not go around it: add a mutation function per entity in SQL that
-  calls app.write_audit_entry, mirroring update_tax_settings. Do NOT reintroduce
-  update-then-audit — that hole is closed and there are no callers left on it.
-- Developer.comm_base changes are a rule-8 confirmed-recompute: emit a settings_change_event
-  with entity_type 'developer'. The table and M1's contract already accommodate it.
-- Add 'property_type', 'developer', 'lead_source' to AUDIT_ENTITY_TYPES + AUDIT_ENTITY_LABELS
-  (src/lib/settings/audit-queries.ts) and their field labels to the viewer's FIELD_LABELS,
-  or their entries render with raw column names and are unfilterable.
-- countAffectedDeals() (src/lib/settings/recompute-queries.ts) returns 0 until M1 has deals.
-  It is the ONE function to implement for real counts — the copy, the event and the trail
-  all start carrying them with no other change.
+## For M0.3 (DONE — kept for the record; all four points landed)
+- Extend the write path, do not go around it. ✅ One function per mutation, all calling
+  app.write_audit_entry; no update-then-audit anywhere.
+- Developer.comm_base is a rule-8 event. ✅ Emitted with entity_type 'developer'; vat_rule
+  emits one too (flagged extension).
+- AUDIT_ENTITY_TYPES/LABELS + FIELD_LABELS extended. ✅ All three entities filterable and
+  human-readable.
+- countAffectedDeals() still returns 0. ✅ Untouched — it and the three reference-count
+  functions are M1's to implement.
+
+## For M0.4 / M1 (read before starting)
+- REUSE THE EXPORTER, do not write a second one. M0.4's whole-workspace export and M5/M7/M8's
+  report exports are new ENTRIES in src/lib/export/datasets.ts (a name, columns, a loader that
+  IS the screen's query), not new endpoints or new CSV/XLSX code. The money rules are already
+  decided and unit-tested in src/lib/export/format.ts: CSV = exact stored string (add the
+  ::text column to the loader's select), XLSX = decimal.js → Number with #,##0.00. The route
+  authenticates and RLS-scopes; a dataset never takes a workspace id.
+- M1 TURNS ON REFERENCE COUNTS by editing THREE SQL function bodies only —
+  app.{property_type,developer,lead_source}_reference_count(id), currently `select 0::bigint`.
+  Replace each with `select count(*) from public.deal where <fk>_id = p_id`. That single change
+  makes the delete policy refuse referenced rows, the UI show real counts, and delete_blocked
+  fire — no TypeScript edit. Mark them `stable`, not `immutable` (the count changes as deals
+  are written). The computed column public.reference_count(<row>) already surfaces them.
+- M1 CONSUMES THE RECOMPUTE QUEUE it did for M0.2, now also carrying property_type/developer
+  events. pendingRecomputeEvents() returns them oldest-first; each field_changes carries the
+  restating field old→new as exact strings; consumption is one-way (trigger-enforced). A
+  developer event means "restate every deal for developer entity_id"; a property_type event
+  means "restate every deal of that type". countAffectedDeals() (recompute-queries.ts) is the
+  ONE function that turns the confirmation copy, the event's affected_deal_count, and the trail
+  onto real numbers.
+- M1's DEAL FORM DROPDOWNS read activePropertyTypes()/activeDevelopers()/activeLeadSources()
+  (src/lib/settings/list-queries.ts) — active-only, no reference count. M7 reads the all*()
+  variants (active + archived, for the "(inactive)" bucket). Do NOT reuse the settings-screen
+  list*() reads on the deal form: they carry the per-row reference-count computed column, which
+  after M1 is a count per option on every render.
+- FOREIGN KEYS: M1's deal table references property_type/developer/lead_source by id (rename
+  propagation, rule 6, depends on it). Use ON DELETE RESTRICT or NO ACTION, never CASCADE — the
+  whole archive-not-delete contract (rule 5) assumes a referenced row cannot vanish. The delete
+  functions already refuse at count>0; the FK is the backstop if a count body is ever wrong.
 
 ## Completed Tasks (M0.1)
 - M0.1 Auth & personal workspace (2026-07-17) — the gap between Foundation's output and

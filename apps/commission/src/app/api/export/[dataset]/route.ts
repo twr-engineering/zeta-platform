@@ -1,0 +1,85 @@
+import { NextResponse } from "next/server";
+import writeXlsxFile from "write-excel-file/node";
+
+import { getWorkspaceContext } from "@/lib/workspace/queries";
+import { manilaToday } from "@/lib/date/manila";
+import { isExportDataset, loadExportDataset } from "@/lib/export/datasets";
+import {
+  EXPORT_CONTENT_TYPES,
+  exportFilename,
+  isExportFormat,
+  toCsv,
+  toXlsxRows,
+  xlsxColumnWidths,
+} from "@/lib/export/format";
+
+/**
+ * The download endpoint behind every Export button (FR-M0-09, AC8).
+ *
+ * A ROUTE HANDLER, NOT A SERVER ACTION, and that is forced rather than chosen: a
+ * download is a navigation the browser has to perform — it needs a real response
+ * carrying Content-Disposition. A server action can only hand bytes back to
+ * JavaScript, which would then have to build a Blob and fake a click, and that
+ * whole contraption stops working the moment JS does not.
+ *
+ * AUTH IS THE FIRST THING THAT HAPPENS. FR-M0-01: "server enforces auth on every
+ * API route". The middleware already gates this path (it is not public, so a
+ * signed-out request is redirected to /login before arriving) — the check below
+ * is the one that does not depend on a matcher pattern staying correct, and it
+ * is the reason this route is safe on its own terms. getWorkspaceContext() calls
+ * auth.getUser(), which revalidates the JWT with Supabase rather than trusting a
+ * cookie; the queries then run through RLS with the caller's own token, so an
+ * authenticated agent cannot export another agent's list either (AC9).
+ *
+ * Note what is NOT here: no workspace id in the URL, no id in a query parameter.
+ * There is nothing to tamper with.
+ */
+
+export const dynamic = "force-dynamic";
+
+type RouteContext = { params: Promise<{ dataset: string }> };
+
+export async function GET(request: Request, context: RouteContext) {
+  const { dataset } = await context.params;
+
+  const workspace = await getWorkspaceContext();
+  if (!workspace) {
+    // 401, not a redirect to /login: this URL is fetched as a download, and a
+    // login page arriving as "lead-sources.csv" would be a baffling file.
+    return NextResponse.json({ error: "Sign in to export." }, { status: 401 });
+  }
+
+  if (!isExportDataset(dataset)) {
+    return NextResponse.json({ error: `Unknown export: ${dataset}` }, { status: 404 });
+  }
+
+  const format = new URL(request.url).searchParams.get("format") ?? "csv";
+  if (!isExportFormat(format)) {
+    return NextResponse.json(
+      { error: `Unknown format: ${format}. Use csv or xlsx.` },
+      { status: 400 }
+    );
+  }
+
+  const data = await loadExportDataset(dataset);
+  const filename = exportFilename(data.name, format, manilaToday());
+
+  const body: Buffer | string =
+    format === "csv"
+      ? toCsv(data)
+      : await writeXlsxFile(toXlsxRows(data), {
+          columns: xlsxColumnWidths(data),
+          sheet: data.sheet,
+        }).toBuffer();
+
+  return new NextResponse(body as BodyInit, {
+    headers: {
+      "Content-Type": EXPORT_CONTENT_TYPES[format],
+      // Quoted: the filename carries no spaces today, but a dataset name that
+      // grows one should not silently truncate the download.
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      // An export is a snapshot of live data. A cached one is a wrong one.
+      "Cache-Control": "no-store",
+    },
+  });
+}
