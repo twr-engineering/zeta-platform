@@ -27,6 +27,8 @@ export const AUDIT_ENTITY_TYPES = [
   "developer",
   "lead_source",
   "workspace",
+  "profile",
+  "account",
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
@@ -37,6 +39,10 @@ export const AUDIT_ENTITY_LABELS: Record<AuditEntityType, string> = {
   developer: "Developers",
   lead_source: "Lead Sources",
   workspace: "Workspace",
+  // M0.4: the display name lives on the profile; email and password are
+  // auth-level events grouped under "Account".
+  profile: "Account",
+  account: "Account",
 };
 
 export type AuditFilters = {

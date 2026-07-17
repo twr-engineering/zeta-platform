@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-17T20:45:00+08:00
+# Last Updated: 2026-07-17T23:55:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -12,7 +12,7 @@
 - [x] M0.1: Auth & personal workspace
 - [x] M0.2: Tax settings & audit trail
 - [x] M0.3: Configuration lists
-- [ ] M0.4: Account polish & data ownership
+- [x] M0.4: Account polish & data ownership  ← M0 COMPLETE
 - [ ] M1.1: Calculation engine library
 - [ ] M1.2: Deal CRUD with permanent IDs
 - [ ] M1.3: Deal entry UI & list
@@ -58,17 +58,155 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-M0.3 complete. Property Types, Developers and Lead Sources are fully manageable: inline
-add/rename, archive/restore, drag-sort (Lead Sources), reference-count column, empty-state
-seed offer of the workbook's example lists (accept/edit/skip, rule 11), and per-list
-CSV/XLSX export. Every mutation is one database function (change + audit entry + any
-recompute event in one transaction), delete of a referenced item is blocked by the RLS
-policy itself, and the money-restating changes (Developer.comm_base rule 8, PropertyType.
-vat_rule as a flagged extension) go through the friction gate and queue a recompute event.
-Verified live (81/81 with real JWTs), in the browser end to end (Chrome DevTools MCP), and
-by the Playwright suite (29/29 single-worker). Next: M0.4 (account polish & data ownership),
-which reuses the cross-cutting exporter built here. Then M1 turns on real reference counts —
-see "For M0.4 / M1" below.
+**M0 COMPLETE.** M0.4 closed the account and data-ownership gap: the account screen is now
+editable (display name, email with re-verification, password with global session
+invalidation), the whole workspace exports as one zip of CSV+XLSX for every table, account
+deletion is a service-role flow behind a typed confirmation preceded by the export offer,
+and the hardening pass added security headers plus current-password re-auth on the sensitive
+changes. Every M0.4 mutation follows M0.2's pattern (one DB function per mutation, audited in
+one transaction); deletion rides the orphan reaper rather than duplicating it. Verified live
+against the hosted project (13/13 API checks with throwaway users — prior refresh token dead
+after a password change, deletion leaves zero residue), in the browser end to end (Playwright
+MCP), and by the Playwright suite (33/33). The real account (juliusbaliling25@gmail.com /
+"julius's Book") was never touched; project is back at baseline (1 workspace).
+
+Next: M1 (calculation engine, deal CRUD, importer). M1 turns on the real reference counts and
+drains the recompute queue — see "For M0.4 / M1" and the M1 handoff below.
+
+## Completed Tasks (M0.4)
+- M0.4 Account polish & data ownership (2026-07-17):
+  - MIGRATION 20260717220000_m04_account.sql (applied live via Management API, registered in
+    schema_migrations). Three SECURITY INVOKER functions, actor pinned to auth.uid():
+      public.rename_profile(display_name)   display-name edit + audit entry, one tx (rule 12)
+      public.log_password_change()          redacted password-change marker in the trail
+      public.log_email_change(old, new)     email-change-request record (email is not secret)
+    NO function for the auth mutations or deletion — those live in auth.users, which GoTrue
+    owns; a Postgres function cannot change a password or delete an auth user under the
+    caller's token. They go through the Supabase auth API (below).
+  - ACCOUNT SCREEN (src/app/(app)/settings/general + src/components/account/*). The Account
+    card is now editable — name (audited, ungated), email, password — each saving
+    independently so one failing never blocks another. src/lib/account/{account.ts (pure:
+    schemas + DELETE phrase, unit-tested), actions.ts (the four server actions)}.
+  - PASSWORD CHANGE = SESSION INVALIDATION (M0 §8). changePassword re-authenticates with the
+    current password (signInWithPassword — a rate-limited GoTrue endpoint, so the re-auth IS
+    part of the hardening), updates the password, logs it, then signOut({scope:'global'})
+    revokes EVERY session for the user, the current one included, and redirects to
+    /login?notice=password-changed. Proven live: a refresh token minted BEFORE the change is
+    dead afterward (refresh grant → HTTP 400); the old password is refused, the new one signs
+    in. Context7-checked the signOut scope semantics before relying on them.
+  - EMAIL CHANGE re-authenticates, then updateUser({email}); GoTrue mails a confirmation to
+    the NEW address and the change is pending until clicked (current email keeps working).
+    SMTP is still the standing blocker (M0.1) — a real mailbox round trip needs a
+    transactional provider; exercised via the admin API in verification.
+  - WHOLE-WORKSPACE EXPORT (FR-M0-10) REUSES THE CROSS-CUTTING EXPORTER, as instructed — no
+    parallel path. src/lib/export/datasets.ts gained loaders + columns for the six tables with
+    no settings screen (workspace, account/profile, membership, tax_settings, audit_log,
+    settings_change_event) and loadWorkspaceExport() combining all nine. New static route
+    /api/export/workspace zips every table as csv/<name>.csv + xlsx/<name>.xlsx + a README,
+    via fflate.zipSync (NEW DEP; Context7-checked). Money stays exact: CSV carries the ::text
+    strings (0.1200 / 3600000.00 verified in the downloaded zip), XLSX the openable number.
+    Auth is getWorkspaceContext() first; RLS scopes every dataset, so the archive can only
+    ever be the caller's own workspace (AC9). Verified: authenticated download is a valid zip
+    (PK magic), 19 entries, exact values present.
+  - ACCOUNT DELETION (FR-M0-10) RIDES THE REAPER, does not duplicate it. deleteAccount checks
+    the TYPED confirmation server-side first (phrase "delete my workspace"), then the
+    service-role admin client (src/lib/supabase/admin.ts, server-only) deletes exactly
+    context.userId — the id auth.getUser() just revalidated, NEVER the payload. auth.users
+    deletion cascades profile+membership; membership's last-member-out trigger
+    (app.reap_orphaned_workspace) takes the workspace, and its cascade carries tax_settings,
+    both trails and all three lists. The export offer is in front of the delete (a link in the
+    dialog) and again as a standing button. Verified live against a throwaway: correct phrase
+    deletes → login refused → residue back to baseline (reaper), wrong phrase leaves the
+    confirm disabled.
+  - HARDENING PASS. See "Rate limiting / hardening — native vs added" below.
+  - AUDIT VIEWER extended: entity types 'profile' and 'account' (both labeled "Account"),
+    field labels display_name/email/password. The password marker renders as a single
+    redacted value via the viewer's unchanged-pair path.
+  - TYPES regenerated via the Management API typegen endpoint (npx supabase gen types raced on
+    an npx cache corruption; the /v1/projects/{ref}/types/typescript endpoint with the access
+    token is the reliable path). Additive: the 3 new functions + M0.3's reference_count
+    computed columns the API now reflects. The new RPCs have text-only args, so no money
+    override was needed in database.ts.
+  - A11Y: password/email forms carry a visually-hidden username field (autocomplete=username)
+    so password managers associate the credential and the browser stops warning; the server
+    ignores it (email comes from the session).
+
+## Rate limiting / hardening — native vs added (M0 §8, FR of M0.4 hardening pass)
+  What Supabase/GoTrue provides NATIVELY (server-side, not something we implement):
+    - Auth endpoints are rate-limited by GoTrue: sign-in / sign-up / token refresh / OTP /
+      password-recovery / verify all have per-IP and per-window limits (configurable in the
+      dashboard). Email sending is separately rate-limited (this is M0.1's SMTP blocker).
+    - Passwords are bcrypt-hashed by GoTrue; sessions are JWT + rotating refresh tokens.
+  What M0.4 ADDED:
+    - Session invalidation on password change (global signOut) — the §8 requirement.
+    - Current-password re-authentication before password AND email change, which also means
+      those actions ride GoTrue's rate-limited signInWithPassword rather than being an
+      unthrottled side door.
+    - Security response headers (next.config.ts headers()): X-Frame-Options DENY,
+      X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin,
+      Permissions-Policy (camera/mic/geo/topics off), HSTS (inert on localhost, live on
+      Vercel), and a CSP of frame-ancestors 'none' / base-uri 'self' / object-src 'none' /
+      form-action 'self'. Deliberately NO default-src or script/style CSP: default-src would
+      fall through to connect-src and block the browser Supabase client + Next HMR socket, and
+      a nonce-based script CSP is a documented follow-up (see gaps).
+    - Deletion is service-role + typed-confirmation + own-id-only; the whole-workspace export
+      and every account read are RLS-scoped with no id in any URL.
+
+## Verification performed for M0.4 (2026-07-17)
+  build:check clean; lint clean; test:unit 74/74 (added tests/unit/account.test.ts — schemas,
+  the delete phrase, bcrypt ceiling); npx playwright test 33/33 (added tests/e2e/account.spec.ts
+  — renders, display-name+audit, export-zip download, deletion gate up-to-but-not-through).
+  API-level live verification against the hosted project (scratch script, throwaway users only,
+  13/13):
+    - password change: prior session refresh token DEAD after global signOut (refresh HTTP
+      400); old password refused; new password signs in; change present in the audit trail.
+    - deletion: admin.deleteUser succeeds; deleted user can no longer sign in; deleting both
+      throwaways returns EVERY table count to baseline (reaper fired) — zero residue.
+  Browser (Playwright MCP), dev server at localhost:3000:
+    - account screen renders real name/email + all three forms + the data card (JD fixture).
+    - display-name change → success → audit entry "Account · Changed · Display name JD→…";
+      reverted, and JD's Book audit scrubbed back to pristine.
+    - full-workspace export: authenticated fetch → HTTP 200, application/zip, valid PK magic,
+      19 files (README + 9 tables × csv/xlsx), exact values (0.1200 / 0.1000 / 3600000.00 /
+      the email / "JD's Book" / the profile audit entry) present in the decompressed CSVs.
+    - password change (throwaway): form → /login?notice=password-changed → new password signs
+      in.
+    - deletion (throwaway): dialog shows the export offer first; wrong phrase leaves confirm
+      disabled; exact phrase "delete my workspace" arms it; confirming → deleted → login
+      refused → zero residue (reaper), real account untouched.
+  Residue: throwaway users all cleaned up; dev fixtures seeded for the run and deleted after
+  (seed:dev --delete); project at baseline (1 workspace = the real account).
+
+## Known gaps / decisions taken in M0.4
+- SMTP still unconfigured (M0.1's standing blocker). The email-CHANGE flow is built and its
+  re-verification is correct, but a real agent cannot receive the confirmation mail until a
+  transactional provider is set in Supabase Auth → SMTP. Verified via the admin API instead.
+- No app-level distributed rate limiter added. On Vercel serverless an in-memory limiter is
+  per-instance and thus theatre; the auth endpoints the sensitive actions route through are
+  rate-limited by GoTrue natively (above). A distributed limiter (e.g. Upstash) on the
+  server actions is the production add when traffic warrants it.
+- CSP is headers-only (frame-ancestors/base-uri/object-src/form-action). A nonce-based
+  script-src/style-src CSP needs per-request nonces threaded through Next's inline bootstrap
+  and is a documented follow-up — not shipped rather than shipped loose ('unsafe-inline').
+- Email/password changes are logged best-effort AFTER the GoTrue call (not one transaction
+  with it — GoTrue is a separate service and its change cannot be rolled back by a failed log
+  insert). The display-name change IS atomic (rename_profile). This is the honest boundary.
+- Pre-existing (not M0.4): the account-menu dropdown logs a Base UI nativeButton warning
+  (src/components/ui/dropdown-menu.tsx via app-header.tsx). Cosmetic console warning, present
+  since M0.1; left for a UI-primitives cleanup pass.
+
+## For M1 (read before starting)
+- REFERENCE COUNTS: still 0 until M1 replaces the three app.<entity>_reference_count() SQL
+  bodies with a count over deal.<fk>_id — that single edit turns on the settings UI column,
+  the delete policy and the delete_blocked trail (M0.3), no TS change. The generated types now
+  carry reference_count on the list Rows (M0.4 regen) — a computed column '*' does not select,
+  so the runtime rows still omit it unless queried WITH_COUNT; keep using the split reads.
+- RECOMPUTE QUEUE: M1 drains settings_change_event via pendingRecomputeEvents() and implements
+  countAffectedDeals() (returns 0 until deals exist). The whole-workspace export already dumps
+  settings_change_event, so an agent's recompute history travels with them.
+- EXPORTER: extend src/lib/export/datasets.ts with M1's deals dataset AND add it to
+  loadWorkspaceExport() so the whole-workspace zip stays complete as new tables land. Money
+  columns need their ::text select + a "money"/"number" column type (see tax_settings there).
 
 ## Completed Tasks
 - M0.3 Configuration lists (2026-07-17) — Property Types, Developers, Lead Sources, plus the

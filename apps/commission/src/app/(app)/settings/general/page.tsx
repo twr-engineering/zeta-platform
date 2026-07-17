@@ -4,6 +4,10 @@ import { TriangleAlert } from "lucide-react";
 import { EmptyState } from "@/components/common/empty-state";
 import { LockedValue } from "@/components/affordance/locked-value";
 import { RenameWorkspaceForm } from "@/components/settings/rename-workspace-form";
+import { DisplayNameForm } from "@/components/account/display-name-form";
+import { ChangeEmailForm } from "@/components/account/change-email-form";
+import { ChangePasswordForm } from "@/components/account/change-password-form";
+import { DataOwnership } from "@/components/account/data-ownership";
 import {
   Card,
   CardContent,
@@ -11,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { formatManilaDateTime } from "@/lib/date/manila";
 
@@ -19,10 +24,11 @@ export const metadata: Metadata = { title: "General" };
 /**
  * Settings → General (M0 §6: "workspace name, account").
  *
- * The account half is read-only here on purpose. M0.4 owns the editable account
- * screen — name, email, password change with session invalidation — plus the
- * full-workspace export and deletion. Showing the identity now is honest;
- * shipping a password field that M0.4 has to redo is not.
+ * M0.4 makes the account half editable — display name, email (re-verified),
+ * password (with global session invalidation) — and adds the data-ownership
+ * card: the whole-workspace export and account deletion (FR-M0-10). The name,
+ * email and password each save independently so one failing never blocks
+ * another.
  */
 export default async function GeneralSettingsPage() {
   const context = await getWorkspaceContext();
@@ -59,24 +65,34 @@ export default async function GeneralSettingsPage() {
         <CardHeader>
           <CardTitle>Account</CardTitle>
           <CardDescription>
-            Changing your email or password, exporting everything, and deleting
-            the account arrive with milestone M0.4.
+            Your identity and sign-in. Each change is recorded in your audit log.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-5 sm:grid-cols-2">
-          <ReadOnlyField
-            label="Name"
-            value={profile?.display_name ?? "—"}
-            caption="The name you signed up with."
-            formula="Stored on your profile; used to name your workspace at signup."
-          />
+        <CardContent className="space-y-6">
+          <DisplayNameForm currentName={profile?.display_name ?? ""} />
+          <Separator />
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-medium">Email</h3>
+            <ChangeEmailForm currentEmail={email} />
+          </div>
+          <Separator />
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-medium">Password</h3>
+            <ChangePasswordForm currentEmail={email} />
+          </div>
+        </CardContent>
+      </Card>
 
-          <ReadOnlyField
-            label="Email"
-            value={email}
-            caption="Your sign-in address."
-            formula="Managed by Supabase Auth. Changing it re-verifies the new address (M0.4)."
-          />
+      <Card>
+        <CardHeader>
+          <CardTitle>Your data</CardTitle>
+          <CardDescription>
+            Solo agents own their book outright. Take all of it with you, or end
+            the account entirely — no one to ask.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataOwnership />
         </CardContent>
       </Card>
 

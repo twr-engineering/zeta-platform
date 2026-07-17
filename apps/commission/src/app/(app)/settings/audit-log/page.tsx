@@ -327,4 +327,8 @@ const FIELD_LABELS: Record<string, string> = {
   sort_order: "Order",
   archived_at: "Archived",
   reference_count: "Used by",
+  // M0.4 account events.
+  display_name: "Display name",
+  email: "Email",
+  password: "Password",
 };

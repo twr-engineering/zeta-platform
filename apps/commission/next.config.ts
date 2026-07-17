@@ -13,6 +13,50 @@ const nextConfig: NextConfig = {
    */
   distDir: process.env.NEXT_DIST_DIR || ".next",
 
+  /**
+   * Security response headers (M0.4 hardening pass; M0 §8 "auth hardening
+   * appropriate for financial data", SECURITY.md #6/#7).
+   *
+   * Applied to every response. Deliberately NOT a script/style CSP: a strict one
+   * needs per-request nonces on Next's inline bootstrap and would break the app,
+   * and a loose one with 'unsafe-inline'/'unsafe-eval' is security theatre. What
+   * is set here are the directives that harden with zero breakage —
+   * clickjacking, MIME sniffing, referrer leakage, base-tag and form-action
+   * hijacking, and HSTS. A full script CSP with nonces is a documented
+   * follow-up.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+          },
+          {
+            // Browsers ignore HSTS over http/localhost, so this is inert in dev
+            // and takes effect only once the app is served over HTTPS on Vercel.
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            // No default-src on purpose: it would fall through to connect-src
+            // and block the browser Supabase client's calls to the project URL
+            // (and Next's dev HMR socket). These four directives harden without
+            // governing fetch/script/style, so nothing breaks.
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
+          },
+        ],
+      },
+    ];
+  },
+
   webpack: (config, { dev }) => {
     if (!dev) return config;
 

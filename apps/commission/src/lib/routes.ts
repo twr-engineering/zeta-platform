@@ -38,6 +38,13 @@ export function exportPath(dataset: string, format: "csv" | "xlsx"): string {
 }
 
 /**
+ * The whole-workspace archive (FR-M0-10) — every table as CSV+XLSX in one zip.
+ * A static route beside `/api/export/[dataset]`, authenticated by its own
+ * handler.
+ */
+export const WORKSPACE_EXPORT_PATH = "/api/export/workspace";
+
+/**
  * Paths reachable without a session. `/auth/*` carries Supabase's email
  * confirmation and OAuth callbacks, which must run signed-out.
  */

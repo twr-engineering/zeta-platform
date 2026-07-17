@@ -66,6 +66,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           workspace_id: string
+          reference_count: number | null
         }
         Insert: {
           archived_at?: string | null
@@ -110,6 +111,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           workspace_id: string
+          reference_count: number | null
         }
         Insert: {
           archived_at?: string | null
@@ -216,6 +218,7 @@ export type Database = {
           updated_by: string | null
           vat_rule: Database["public"]["Enums"]["property_vat_rule"]
           workspace_id: string
+          reference_count: number | null
         }
         Insert: {
           archived_at?: string | null
@@ -406,6 +409,31 @@ export type Database = {
       delete_developer: { Args: { p_id: string }; Returns: Json }
       delete_lead_source: { Args: { p_id: string }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
+      log_email_change: {
+        Args: { p_new: string; p_old: string }
+        Returns: string
+      }
+      log_password_change: { Args: never; Returns: string }
+      reference_count:
+        | {
+            Args: { "": Database["public"]["Tables"]["developer"]["Row"] }
+            Returns: {
+              error: true
+            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+          }
+        | {
+            Args: { "": Database["public"]["Tables"]["lead_source"]["Row"] }
+            Returns: {
+              error: true
+            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+          }
+        | {
+            Args: { "": Database["public"]["Tables"]["property_type"]["Row"] }
+            Returns: {
+              error: true
+            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+          }
+      rename_profile: { Args: { p_display_name: string }; Returns: Json }
       rename_workspace: { Args: { p_name: string }; Returns: Json }
       reorder_lead_source: {
         Args: { p_id: string; p_position: number }
