@@ -97,13 +97,13 @@
     "supabaseProject": "sgerctvrcvlmortmhenh",
     "firebaseProject": null,
     "completedFeatures": [],
-    "foundationHandoff": null
+    "foundationHandoff": "Commits c1e56aa + 239366a. Next.js 15.5.20 App Router + Tailwind v4 + Shadcn (base-nova/@base-ui), @supabase/ssr 0.12.3, decimal.js, zod. 6 migrations applied live via Management API (profiles, workspace w/ deal_id_sequence, membership single-owner, tax_settings exact-numeric, append-only audit_log_entry, signup bootstrap); 5 tables/9 RLS policies verified; signup trigger + AC9 tenant isolation + orphan reaper proven live with real JWTs; test users removed (0 residue). Auth site_url + redirect allowlist set to http://localhost:3000. CRITICAL pattern for all feature passes: PostgREST returns numeric as JSON float — money/rate columns MUST be selected ::text (src/lib/supabase/selects.ts) with typed overrides in src/types/database.ts (never select('*') on money tables); regen types into database.generated.ts only. 10 protected routes + auth pages; no dev-server/browser auth run yet."
   },
   "phases": {
     "discovery": { "status": "completed", "startedAt": "2026-07-17T18:20:00+08:00", "completedAt": "2026-07-17T18:30:00+08:00" },
     "prd": { "status": "completed", "startedAt": "2026-07-17T18:20:00+08:00", "completedAt": "2026-07-17T18:30:00+08:00" },
     "scaffold": { "status": "completed", "startedAt": "2026-07-17T18:25:00+08:00", "completedAt": "2026-07-17T18:35:00+08:00" },
-    "foundation": { "status": "pending", "startedAt": null, "completedAt": null },
+    "foundation": { "status": "completed", "startedAt": "2026-07-17T18:40:00+08:00", "completedAt": "2026-07-17T19:20:00+08:00" },
     "figma": { "status": "skipped", "startedAt": null, "completedAt": null },
     "features": { "status": "pending", "startedAt": null, "completedAt": null },
     "qa": { "status": "pending", "startedAt": null, "completedAt": null },
