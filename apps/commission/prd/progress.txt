@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T11:30:00+08:00
+# Last Updated: 2026-07-18T15:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -21,7 +21,7 @@
 - [x] M4.1: Receivable entity + auto-create/restate from deal events
 - [x] M5.1: Payment schema, split snapshot & events
 - [x] M4.2: Collections math: payments aggregation, balance, dates, idle/aging
-- [ ] M5.2: Fast-entry form & split preview
+- [x] M5.2: Fast-entry form & split preview
 - [ ] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
 - [ ] M5.3: Payments list, per-deal panel & exports
 - [ ] M4.4: Ledger UI, detail view, downstream projections & hardening
@@ -58,6 +58,32 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M5.2 COMPLETE — Fast-entry form & split preview: the daily-heartbeat surface.
+"Log a release in under 30 seconds, one-handed." /payments/new pairs a type-ahead
+deal picker (pure client filter over a preloaded index — 0.97ms/5 keystrokes over
+1,000 deals, ≪150ms §8) with a LIVE split preview that round-trips the REAL engine
+(previewPayment → computePaymentSplit, never re-implemented). Picker rows show
+"D021 — Daria & John Salon" + developer + "Open · bal ₱…". Fields: picker[focus] →
+date[today Asia/Manila] → gross[₱ numeric keypad] → Commission/Incentive toggle →
+OR/Invoice note. Amber warnings (future/pre-booking date, duplicate, Closed/
+Cancelled) render inline, non-blocking; save past them is audit-logged
+(log_payment_warning_override, AC11). Save → toast with the stored 5-way split +
+one-tap UNDO (friction-free soft-delete that restates the receivable), then the
+form resets + refocuses the picker. Mobile-first, one-handed at 360px, thumb-reach
+save. Nav gets a "Log a release" primary CTA; deal detail's "Log a payment"
+cross-links to /payments/new?deal=. ONE additive migration
+(20260718070000_m52_payment_warning_override) applied live + registered; DB types
+regenerated (diff = only the new fn). VERIFIED in-browser on a throwaway workspace
+with the real v30.20 import: 6/6 e2e green — D021 preview 44,642.86/5,357.14/
+4,464.29/45,535.71/40,178.57 live, save moves balance 309,948.98→265,306.12, undo
+restores; D004 untaxed zeros + badge; pre-booking amber warns but saves; D005
+closed-receivable warns with a (deferred) reopen prompt; 360px no overflow; console
+clean. test:unit 243/243, build+lint clean, delta-residue zero.
+DEFERRED: the reopen ACTION itself is M4.3's (PRD §4 rule 7 — "Reopening itself is
+an M4 mutation", not assigned to M5); until M4.3 lands the banner shows the
+warn+prompt with the reopen button disabled, and "Log anyway" logs the payment
+(M4 surfaces the over-collection in Variance, per the PRD).**
+
 **M4.2 COMPLETE — Collections math: payments aggregation, balance, dates,
 idle/aging. The receivable now REACTS to M5 payment events, centavo-exact and
 synchronous. Rule L (collected = Σ payment net_of_vat, commission AND incentive

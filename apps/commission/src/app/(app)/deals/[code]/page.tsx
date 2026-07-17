@@ -23,7 +23,7 @@ import {
 } from "@/lib/settings/list-queries";
 import { formatManilaDate } from "@/lib/date/manila";
 import { formatPHP, formatRateAsPercent, formatYield } from "@/lib/money";
-import { dealEditPath, ROUTES } from "@/lib/routes";
+import { dealEditPath, paymentNewPath, ROUTES } from "@/lib/routes";
 import {
   COMMISSION_BASIS_LABELS,
   COMM_BASE_DISPLAY_LABELS,
@@ -104,7 +104,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href={ROUTES.payments} />}
+              render={<Link href={paymentNewPath(deal.id)} />}
               data-testid="link-log-payment"
             >
               <Banknote className="size-4" /> Log a payment

@@ -12,6 +12,7 @@ import { manilaToday } from "@/lib/date/manila";
 import { formatPHP } from "@/lib/money";
 import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
+import type { PaymentType } from "@/lib/engine";
 import type { TaxSettings } from "@/types/entities";
 import { derivePaymentSnapshot } from "./compute";
 import { createPaymentRpcArgs, updatePaymentRpcArgs } from "./map";
@@ -39,11 +40,35 @@ import { findDuplicatePayments, resolvePaymentDeal } from "./queries";
  * the importer ignores them (historical fact, accepted silently, OQ5).
  */
 
+/**
+ * The stored split + identity of a just-created payment — everything M5.2's save
+ * toast renders (the five-way split summary) and its UNDO affordance needs (the
+ * id + version for the friction-free soft-delete, §6.1). Money as exact strings,
+ * straight off the create_payment result (the DB is the source, not the form).
+ */
+export type SavedPayment = {
+  id: string;
+  version: number;
+  dealLabel: string;
+  paymentDate: string;
+  paymentType: PaymentType;
+  gross: string;
+  split: {
+    net_of_vat: string;
+    vat: string;
+    ewt: string;
+    net_cash: string;
+    retained: string;
+  };
+};
+
 export type PaymentActionState = ActionState & {
   /** Non-blocking warnings for the just-saved payment (§4). */
   warnings?: PaymentWarning[];
   /** The created/updated payment id (M5.2's toast + undo affordance). */
   paymentId?: string;
+  /** The just-created payment's stored split + undo handle (§6.1). */
+  saved?: SavedPayment;
 };
 
 type PaymentResult = {
@@ -52,6 +77,7 @@ type PaymentResult = {
   reason?: "stale_version";
   id?: string;
   deal_id?: string;
+  gross_amount?: string;
   net_of_vat?: string;
   vat_amount?: string;
   ewt_amount?: string;
@@ -89,6 +115,34 @@ async function syncReceivablesFromPayments(): Promise<void> {
     await consumeReceivablePaymentEvents();
   } catch (error) {
     console.error("receivable sync after payment mutation failed:", error);
+  }
+}
+
+type PaymentClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The audited-override half of FR-M5-04 (AC11). Payment warnings never block a
+ * save; when a payment is saved with warnings active, that "Continue anyway"
+ * decision is recorded on the payment's audit trail so it is not silent. The
+ * warnings passed here were already computed SERVER-SIDE (collectWarnings), so
+ * the record is the truth, not whatever the client claimed. Its own RPC, not a
+ * change to create/update (the single-writer contract) — mirrors the deal side's
+ * log_deal_warning_override. Best-effort: the payment is saved; a failed note is
+ * a courtesy, never surfaced.
+ */
+async function logPaymentWarningOverride(
+  supabase: PaymentClient,
+  paymentId: string,
+  warnings: readonly PaymentWarning[]
+): Promise<void> {
+  if (warnings.length === 0) return;
+  try {
+    await supabase.rpc("log_payment_warning_override", {
+      p_payment_id: paymentId,
+      p_warnings: warnings.map((w) => w.key),
+    });
+  } catch {
+    // The payment is saved; the override note is informational. Never surface it.
   }
 }
 
@@ -199,13 +253,36 @@ export async function createPayment(
 
   const warnings = await collectWarnings(parsed.value, deal.deal.booked_date);
 
+  // AC11 — a save made past active warnings is audit-logged (best-effort).
+  if (result.id) await logPaymentWarningOverride(supabase, result.id, warnings);
+
   await syncReceivablesFromPayments();
   revalidatePayments();
+
+  const saved: SavedPayment | undefined = result.id
+    ? {
+        id: result.id,
+        version: result.version ?? 1,
+        dealLabel: deal.deal.display_label,
+        paymentDate: parsed.value.payment_date,
+        paymentType: parsed.value.payment_type,
+        gross: result.gross_amount ?? parsed.value.gross_amount,
+        split: {
+          net_of_vat: result.net_of_vat ?? "0",
+          vat: result.vat_amount ?? "0",
+          ewt: result.ewt_amount ?? "0",
+          net_cash: result.net_cash ?? "0",
+          retained: result.retained_cash ?? "0",
+        },
+      }
+    : undefined;
+
   return {
     error: null,
     message: `Logged ${formatPHP(parsed.value.gross_amount)} against ${deal.deal.display_label} — Net Cash ${formatPHP(result.net_cash ?? "0")}.`,
     warnings,
     paymentId: result.id,
+    saved,
   };
 }
 
@@ -267,6 +344,8 @@ export async function updatePayment(
   }
 
   const warnings = await collectWarnings(parsed.value, deal.deal.booked_date, id);
+  // AC11 — an edit saved past active warnings is audit-logged too (best-effort).
+  if (result.id) await logPaymentWarningOverride(supabase, result.id, warnings);
   return {
     error: null,
     message: `Updated the payment against ${deal.deal.display_label} — Net Cash ${formatPHP(result.net_cash ?? "0")}. Recorded in your audit log.`,

@@ -3,8 +3,9 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { DEAL_SELECT, PAYMENT_SELECT } from "@/lib/supabase/selects";
 import { equalsToCentavo } from "@/lib/money";
-import type { Deal, Payment } from "@/types/entities";
+import type { Deal, Payment, ReceivableStatus } from "@/types/entities";
 import type { DuplicatePaymentMatch } from "./warnings";
+import type { PaymentDealOption } from "./picker";
 
 /**
  * Payment reads (FR-M5-05/06) and the deal resolution the write path needs. No
@@ -58,6 +59,55 @@ export async function listPayments(
 
   if (error) throw new Error(`Could not read your payments: ${error.message}`);
   return data ?? [];
+}
+
+/**
+ * The fast-entry deal picker's source (FR-M5-02, §6.1): every ACTIVE deal in the
+ * workspace with the context the picker row needs — the display label, developer
+ * name, and the receivable's status + open balance for the "Open · bal ₱…" hint.
+ *
+ * Loaded once and filtered client-side (see picker.ts) — every active deal is
+ * payable (rule 5), so there is no gating here. The join reads CURRENT deal
+ * identity (a rename shows immediately). RLS scopes it to the caller. Ordered by
+ * deal_code so the picker's default (empty query) order is stable and human.
+ *
+ * `balance` is `::text` (money; see selects.ts). The embedded receivable is 1:1
+ * with the deal (unique deal_id), so PostgREST returns it as a single object or
+ * null (no receivable yet, e.g. mid-import).
+ */
+type PickerDealRow = {
+  id: string;
+  deal_code: string;
+  display_label: string;
+  client_name: string;
+  booked_year: number;
+  developer: { name: string } | null;
+  receivable: { status: ReceivableStatus; balance: string | null } | null;
+};
+
+export async function listActivePaymentDeals(): Promise<PaymentDealOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("deal")
+    .select(
+      "id,deal_code,display_label,client_name,booked_year,developer:developer_id(name),receivable:receivable!deal_id(status,balance::text)"
+    )
+    .is("archived_at", null)
+    .order("deal_code", { ascending: true })
+    .returns<PickerDealRow[]>();
+
+  if (error) throw new Error(`Could not read your deals: ${error.message}`);
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    deal_code: row.deal_code,
+    display_label: row.display_label,
+    client_name: row.client_name,
+    booked_year: row.booked_year,
+    developer_name: row.developer?.name ?? null,
+    receivable_status: row.receivable?.status ?? null,
+    balance: row.receivable?.balance ?? null,
+  }));
 }
 
 /** A single payment by id, or null (RLS makes another tenant's payment invisible). */

@@ -1220,6 +1220,10 @@ export type Database = {
         Returns: string
       }
       log_password_change: { Args: never; Returns: string }
+      log_payment_warning_override: {
+        Args: { p_payment_id: string; p_warnings: string[] }
+        Returns: Json
+      }
       next_recompute_deals: {
         Args: { p_job_id: string; p_limit: number }
         Returns: Json

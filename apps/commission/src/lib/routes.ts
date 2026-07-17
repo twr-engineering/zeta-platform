@@ -15,6 +15,7 @@ export const ROUTES = {
   dealNew: "/deals/new",
   dealImport: "/deals/import",
   payments: "/payments",
+  paymentNew: "/payments/new",
   collectibles: "/collectibles",
   yieldSummary: "/yield-summary",
   calculator: "/calculator",
@@ -37,6 +38,11 @@ export const ROUTES = {
  */
 export function exportPath(dataset: string, format: "csv" | "xlsx"): string {
   return `/api/export/${dataset}?format=${format}`;
+}
+
+/** The fast-entry form, optionally preselecting a deal (deal detail cross-link). */
+export function paymentNewPath(dealId?: string): string {
+  return dealId ? `${ROUTES.paymentNew}?deal=${encodeURIComponent(dealId)}` : ROUTES.paymentNew;
 }
 
 /** A deal's detail / edit routes, keyed on its permanent code (D021). */
