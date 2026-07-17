@@ -58,9 +58,9 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-Foundation built and VERIFIED LIVE against hosted Supabase (sgerctvrcvlmortmhenh).
-Migrations applied; signup bootstrap and tenant isolation proven on the real project.
-Ready for M0.1 feature work.
+Foundation complete — awaiting user dev-server start.
+Migrations applied to hosted Supabase (sgerctvrcvlmortmhenh); signup -> confirm -> login ->
+session and AC9 tenant isolation all verified live. Ready for M0.1 feature work.
 
 ## Completed Tasks
 - Foundation (2026-07-17): Next.js 15.5.20 App Router + TypeScript + Tailwind v4 + Shadcn UI
@@ -126,6 +126,29 @@ Management API (`supabase db push` needs a DB password we still don't have).
   profiles/memberships/audit all at 0 — no stranded tenant data.
 - Test users deleted; the project is back to an empty schema.
 
+## Live auth flow verified end-to-end (2026-07-17) — 20/20 checks
+Driven against the hosted GoTrue/PostgREST endpoints (no browser: no dev server per brief).
+Auth config confirmed: site_url http://localhost:3000, uri_allow_list http://localhost:3000/**,
+mailer_autoconfirm FALSE (real verification required, per FR-M0-01), signup enabled.
+CLI tracking: supabase_migrations.schema_migrations holds all 6 versions, matching the
+migration filenames — a future `supabase db push` sees them as already applied.
+  1. Sign-up leaves the user UNconfirmed.
+  2. Login before confirming is refused (400 email_not_confirmed).
+  3. verifyOtp with a real token_hash establishes a session — the exact call
+     src/app/auth/confirm/route.ts makes.
+  4. Password login succeeds after confirmation.
+  5. Refresh token returns a new access token (session persists).
+  6. Bootstrap rows correct: "JD's Book", PHP/Asia/Manila/seq 0, AC1 defaults
+     0.1200 / 0.1000 / 3600000.00 / 3, single owner membership, vat_registered unconfirmed.
+  7. AC9 with real JWTs: JD sees only their workspace, Maria only hers, anonymous [];
+     JD's cross-tenant PATCH of Maria's workspace returned [] (RLS no-op, not an error)
+     and her row was unchanged.
+  8. Residue after deleting both test users: users/workspaces/profiles/memberships/
+     tax_settings/audit ALL 0 — the orphan reaper fired; nothing stranded.
+RLS per table (pg_policies): workspace 2 (SELECT,UPDATE) · membership 1 (SELECT) ·
+profiles 2 (SELECT,UPDATE) · tax_settings 2 (SELECT,UPDATE) · audit_log_entry 2
+(INSERT,SELECT — no UPDATE/DELETE by design). Total 9. rowsecurity=true on all 5.
+
 ## CRITICAL finding from live verification — PostgREST returns numeric as FLOAT
 `select("*")` on tax_settings returned `ewt_rate: 0.1` (a JSON number -> IEEE-754 double)
 and even dropped scale (`3600000`, not `3600000.00`). That is a binary float in a money
@@ -159,3 +182,17 @@ M1/M4/M5 MUST add their `::text` selects + overrides when they add money tables.
 - Original workbook: discovery/source/ZETA GCI Calculator  Collections v30.20 (1).xlsx (importer test fixture)
 - Milestone IDs (M0.1…M10.5) are the story handles for commits and this tracker — the source's own IDs, kept verbatim
 - Open Questions register: discovery/prd.md §7 — Q1/Q2 resolved 2026-07-17; defaults stated for the rest; answer-first shortlist Q4, Q5, Q6, Q15
+- FOR M10's WIZARD — `vat_registered` has no silent default. M0 §3.3 says the question must
+  be asked, but M0 AC1 requires the bootstrapped row to carry EWT 10% (i.e. the
+  VAT-registered defaults). Both hold via `tax_settings.vat_registered_confirmed_at`:
+  the row starts on the AC1 defaults but stays UNCONFIRMED (confirmed_at IS NULL) until the
+  agent actually answers. NULL means "not yet asked" — never read it as a silent yes.
+  M10's tax step must ask, then stamp vat_registered_confirmed_at. /settings surfaces the
+  unconfirmed state today. Flipping the flag later is a rule-3 confirmed-recompute event.
+- MONEY + POSTGREST — `numeric` arrives as a JSON float unless cast. Money/rate columns MUST
+  be selected `::text` (src/lib/supabase/selects.ts) and typed via the override layer
+  (src/types/database.ts), never straight off `supabase gen types`. See the CRITICAL
+  finding above. M1/M4/M5 must extend both files when they add money tables.
+- Types are a 3-file chain: database.generated.ts (machine-generated, never edit) ->
+  database.ts (money-safe override) -> entities.ts (named aliases). Regenerate with
+  `npx supabase gen types typescript --linked > src/types/database.generated.ts`.
