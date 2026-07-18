@@ -38,6 +38,7 @@ import type { Receivable } from "@/types/entities";
  */
 export type ProjectionReceivable = Pick<
   Receivable,
+  | "id"
   | "deal_id"
   | "deal_code"
   | "client_name"
@@ -322,6 +323,11 @@ export function perDeveloperRollups(all: readonly ProjectionReceivable[]): {
 export type ChaseFollowUp = "no_payment_yet" | "chase" | "ok";
 
 export type ChaseRow = {
+  /**
+   * The RECEIVABLE's own id (not the deal id) — the write key the inline Next Action
+   * editor passes to set_next_action_note (M6 §8 is the module's only write path).
+   */
+  receivableId: string;
   dealId: string;
   dealCode: string;
   clientName: string;
@@ -362,6 +368,7 @@ export function chaseProjection(
       else followUp = "ok";
 
       return {
+        receivableId: r.id,
         dealId: r.deal_id,
         dealCode: r.deal_code,
         clientName: r.client_name,

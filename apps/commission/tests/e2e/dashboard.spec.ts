@@ -241,6 +241,220 @@ test("Section 4/5 drill-downs land on the filtered views (FR-M6-12)", async ({ p
   await expect(page.getByTestId("rec-developer")).toHaveValue("none");
 });
 
+// --- Section 8 — Chase list (M6.4) ------------------------------------------
+// These read/write the PRISTINE 14-open chase state, so they are declared BEFORE
+// the Data Health test below (serial mode = declaration order), which mutates D001/
+// D002/D004 balances and would drop D002 out of the chase list.
+
+test("Section 8 — chase order D013 → D005 → D016 → D010, chips, >30 banner absent (AC10)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // Ordered by the chase contract (balance DESC, idle DESC, deal_code) — Rule Q / OQ1.
+  const table = page.getByTestId("chase-table");
+  const codes = await table.getByTestId("chase-row").evaluateAll((rows) =>
+    rows.map((r) => r.getAttribute("data-deal"))
+  );
+  expect(codes.slice(0, 4)).toEqual(["D013", "D005", "D016", "D010"]);
+  expect(codes).toHaveLength(14);
+
+  // 13 never-paid rows read "no payment yet"; D013 (top, never paid) is one of them.
+  const d013 = table.locator('[data-testid="chase-row"][data-deal="D013"]');
+  await expect(d013.getByTestId("chase-follow-up")).toHaveAttribute(
+    "data-follow-up",
+    "no_payment_yet"
+  );
+
+  // D021 has a release (2026-07-09): clock-independent balance + last-payment date,
+  // and it is NOT "no payment yet". (The frozen idle-0 / "ok" value is unit-pinned;
+  // the chip transition is proven clock-robustly by the chase_idle_months test below.)
+  const d021 = table.locator('[data-testid="chase-row"][data-deal="D021"]');
+  await expect(d021.getByTestId("chase-balance")).toHaveText("₱ 309,948.98");
+  // Last payment 2026-07-09 → rendered "Jul 9, 2026" (clock-independent stored date).
+  await expect(d021).toContainText("Jul 9, 2026");
+  await expect(d021.getByTestId("chase-follow-up")).not.toHaveAttribute(
+    "data-follow-up",
+    "no_payment_yet"
+  );
+
+  // 14 open balances < 30 → no collections-sprint banner (guards a false-positive).
+  await expect(page.getByTestId("chase-over-thirty")).toHaveCount(0);
+});
+
+test("Section 8 — an idle paid row shows ⚠ chase; never-paid stays 'no payment yet' (AC11, rule 14)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  const ws = await workspaceOf(mainUid);
+  // Age D021's single release far past the default 3-month chase threshold so its chip
+  // is DETERMINISTIC on the live clock (the frozen idle-0 "ok" is unit-pinned; the
+  // three-state precedence is proven deterministically in projections.test.ts). This
+  // exercises the real "⚠ chase" branch (months_idle ≥ chase_idle_months) on a browser
+  // render — months_idle is recomputed live from last_payment_date (no cache). D013
+  // (never paid) keeps "no payment yet" by precedence (rule 14), threshold regardless.
+  // (chase_idle_months itself has a DB minimum of 1 and is cached, so aging the row is
+  // the faithful clock-robust lever.) Restored in `finally` so later tests read pristine.
+  await admin
+    .from("receivable")
+    .update({ last_payment_date: "2026-01-01" })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D021");
+
+  try {
+    await signIn(page, email);
+    await page.goto("/dashboard");
+    const table = page.getByTestId("chase-table");
+
+    await expect(
+      table.locator('[data-testid="chase-row"][data-deal="D021"]').getByTestId("chase-follow-up")
+    ).toHaveAttribute("data-follow-up", "chase");
+    await expect(
+      table.locator('[data-testid="chase-row"][data-deal="D013"]').getByTestId("chase-follow-up")
+    ).toHaveAttribute("data-follow-up", "no_payment_yet");
+  } finally {
+    // Restore D021's real release date (workbook: 2026-07-09).
+    await admin
+      .from("receivable")
+      .update({ last_payment_date: "2026-07-09" })
+      .eq("workspace_id", ws)
+      .eq("deal_code", "D021");
+  }
+});
+
+test("Section 8 — inline Next Action writes through to the M4 receivable + audit (AC10/AC12)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  const ws = await workspaceOf(mainUid);
+  const note = "Called CLI — releasing Aug 15";
+
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // Edit D013's Next Action inline on the chase list (the module's only write path).
+  const table = page.getByTestId("chase-table");
+  await table.getByTestId("chase-note-D013").fill(note);
+  await table.getByTestId("chase-note-save-D013").click();
+  await expect(table.getByTestId("chase-note-status-D013")).toContainText("Saved");
+
+  // Same field on the M4 receivable detail — one source, provably (§DoD).
+  await page.goto("/collectibles/D013");
+  await expect(page.getByTestId("next-action-note")).toHaveValue(note);
+
+  // The write is audited (old→new) on the receivable.
+  const { data: rec } = await admin
+    .from("receivable")
+    .select("id")
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D013")
+    .single();
+  const { data: audits } = await admin
+    .from("audit_log_entry")
+    .select("action, field_changes")
+    .eq("workspace_id", ws)
+    .eq("entity_type", "receivable")
+    .eq("entity_id", (rec as { id: string }).id);
+  const noteAudit = (audits ?? []).find(
+    (a) => (a.field_changes as Record<string, { new: string }>)?.next_action_note?.new === note
+  );
+  expect(noteAudit, "an audit entry recording the new note").toBeTruthy();
+});
+
+test("Section 8 — a concurrent stale edit is handled gracefully (last write wins, audited)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  const ws = await workspaceOf(mainUid);
+  const winning = "Dashboard save wins — chasing CLI Fri";
+
+  await signIn(page, email);
+  await page.goto("/dashboard");
+  const table = page.getByTestId("chase-table");
+
+  // The agent starts typing on the (now stale) chase list… Clear the prior note and
+  // type key-by-key (Playwright's synthetic `fill` can race a controlled textarea's
+  // re-render and concatenate; real key events don't), asserting the pre-save value.
+  const editor = table.getByTestId("chase-note-D013");
+  await editor.click();
+  await editor.clear();
+  await expect(editor).toHaveValue("");
+  await editor.pressSequentially(winning);
+  await expect(editor).toHaveValue(winning);
+  // …while another surface writes a different note to the SAME receivable first.
+  await admin
+    .from("receivable")
+    .update({ next_action_note: "Detail view edited this meanwhile" })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D013");
+
+  // Saving the stale edit still lands — no crash — and converges (last write wins).
+  await table.getByTestId("chase-note-save-D013").click();
+  await expect(table.getByTestId("chase-note-status-D013")).toContainText("Saved");
+
+  // A fresh read of the dynamic dashboard shows the winning note (wait for the
+  // section to render first, so the value check never races a cold route compile).
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("section-chase")).toBeVisible();
+  await expect(page.getByTestId("chase-table").getByTestId("chase-note-D013")).toHaveValue(winning);
+
+  // And the audited trail recorded the converging write.
+  const { data: rec } = await admin
+    .from("receivable")
+    .select("id, next_action_note")
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D013")
+    .single();
+  expect((rec as { next_action_note: string }).next_action_note).toBe(winning);
+});
+
+test("Section 8 — a chase row drills to the receivable detail (FR-M6-12)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  await page.getByTestId("chase-table").getByTestId("chase-deal-link-D016").click();
+  await expect(page).toHaveURL(/\/collectibles\/D016/, { timeout: 30000 });
+  await expect(page.getByTestId("next-action-note")).toBeVisible();
+});
+
+test("Section 8 — 360px chase-first: jump link, card stack, thumb-edit a note, console clean", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+
+  const errors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(e.message));
+
+  await page.setViewportSize({ width: 360, height: 780 });
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // The mobile chase-first jump lands on the chase section; the card stack renders.
+  await expect(page.getByTestId("chase-jump")).toBeVisible();
+  await page.getByTestId("chase-jump").click();
+  await expect(page.getByTestId("chase-cards")).toBeVisible();
+  await expect(page.locator('[data-testid="chase-card"]')).toHaveCount(14);
+
+  // Thumb-edit a Next Action on the mobile surface — the field-use case.
+  const cards = page.getByTestId("chase-cards");
+  await cards.getByTestId("chase-note-D005").fill("Mobile follow-up: SMS the AR desk");
+  await cards.getByTestId("chase-note-save-D005").click();
+  await expect(cards.getByTestId("chase-note-status-D005")).toContainText("Saved");
+
+  // No horizontal overflow of the page body (the 360px requirement).
+  const noOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth <= window.innerWidth + 1
+  );
+  expect(noOverflow).toBe(true);
+  expect(errors, `console errors: ${errors.join("\n")}`).toEqual([]);
+});
+
 test("Section 2 — '—' with no target, then override 15,000,000 lights it up (AC2/AC3)", async ({
   page,
 }) => {
@@ -429,4 +643,7 @@ test("empty workspace renders the empty dashboard with zeros (rule 19)", async (
   // The sections still render (rule 19), including all 12 monthly rows.
   await expect(page.getByTestId("section-cash-tax")).toBeVisible();
   await expect(page.locator('[data-testid="monthly-row"]')).toHaveCount(12);
+  // Section 8's positive empty state — nothing owed, nothing to chase (rule 19).
+  await expect(page.getByTestId("chase-empty")).toBeVisible();
+  await expect(page.getByTestId("chase-empty")).toContainText("Nothing to chase");
 });

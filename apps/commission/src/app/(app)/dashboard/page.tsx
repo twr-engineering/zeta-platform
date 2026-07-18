@@ -14,7 +14,7 @@ import { AgingSection } from "@/components/dashboard/aging-section";
 import { ByDeveloperSection } from "@/components/dashboard/by-developer-section";
 import { MonthlySection } from "@/components/dashboard/monthly-section";
 import { DataHealthSection } from "@/components/dashboard/data-health-section";
-import { SectionPlaceholder } from "@/components/dashboard/section-placeholder";
+import { ChaseSection } from "@/components/dashboard/chase-section";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -23,9 +23,14 @@ export const metadata: Metadata = { title: "Dashboard" };
  * scrollable page in the workbook's fixed section order 1→8, driven entirely by the
  * server read model (getDashboardData; the UI never computes money — Master PRD
  * cross-cutting rule). M6.2 ships Sections 1 (Position), 2 (Collected vs Target),
- * 3 (Cash & Tax) and 6 (Monthly Cash-In); Sections 4/5 (aging, by developer, data
- * health) and 7/8 (chase list) land in M6.3/M6.4 and hold their place here as
- * placeholders so the sheet order never shifts.
+ * 3 (Cash & Tax) and 6 (Monthly Cash-In); M6.3 slots in Sections 4/5/7 (aging, by
+ * developer, data health); M6.4 completes the sheet with Section 8 (the chase list —
+ * the working surface + the module's only write path).
+ *
+ * MOBILE CHASE-FIRST (§6). The DOM keeps the sheet's fixed 1→8 order (the year-scope
+ * snapshot tests and the reading model depend on it), but a mobile-only jump chip in
+ * the sticky header drops the field user straight onto the chase list — its Monday-
+ * morning use case — in one tap.
  *
  * YEAR FILTER (§4 rule 1). `?year=` is per-user view state (default: current
  * Asia/Manila year). It restates Sections 2 and 6 ONLY — the scope is enforced
@@ -67,6 +72,17 @@ export default async function DashboardPage({
           </div>
           <DashboardYearFilter selectedYear={dashboardYear} currentYear={currentYear} />
         </div>
+        {/* Mobile chase-first (§6): one tap to the field-use surface without reordering
+            the sheet. Hidden on desktop, where the whole page is visible at once. */}
+        {!isEmpty && (
+          <a
+            href="#chase"
+            className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline lg:hidden"
+            data-testid="chase-jump"
+          >
+            Jump to chase list ↓
+          </a>
+        )}
       </div>
 
       {isEmpty && (
@@ -111,11 +127,7 @@ export default async function DashboardPage({
 
       <DataHealthSection data={data.dataHealth} />
 
-      <SectionPlaceholder
-        index={8}
-        title="Chase List"
-        note="Every open balance, largest first, with an inline Next Action — arriving in the final dashboard pass (M6.4)."
-      />
+      <ChaseSection data={data.chase} />
     </div>
   );
 }

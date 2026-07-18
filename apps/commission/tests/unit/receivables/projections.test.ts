@@ -38,6 +38,7 @@ const SRC_REF = "src-referral";
 function row(p: Partial<ProjectionReceivable> & { deal_code: string }): ProjectionReceivable {
   const collectible = p.total_collectible ?? "0.00";
   return {
+    id: p.id ?? `rid-${p.deal_code}`,
     deal_id: `id-${p.deal_code}`,
     deal_code: p.deal_code,
     client_name: p.client_name ?? `Client ${p.deal_code}`,
@@ -316,6 +317,29 @@ test("chase — excludes Closed and Cancelled rows", () => {
   const chase = chaseProjection(workbookReceivables(), 3);
   assert.ok(!chase.some((c) => c.dealCode === "D004"));
   assert.equal(chase.length, 14);
+});
+
+test("chase — carries the RECEIVABLE id (the inline Next Action write key)", () => {
+  // The dashboard writes the Next Action note through set_next_action_note keyed on
+  // the receivable's own id, NOT the deal id — so every chase row must expose it.
+  const chase = chaseProjection(workbookReceivables(), 3);
+  const d013 = chase.find((c) => c.dealCode === "D013")!;
+  assert.equal(d013.receivableId, "rid-D013");
+  assert.ok(chase.every((c) => c.receivableId.length > 0));
+});
+
+test("chase — equal balances break by months idle DESC, then deal_code (Rule Q)", () => {
+  // Two rows on the same balance: the longer-idle one leads; a never-paid row
+  // (idle null) sinks below a paid-but-idle one; deal_code is the final stable key.
+  const rows = [
+    open("B", "500.00", { last_payment_date: "2026-01-01", months_idle: 2 }),
+    open("A", "500.00", { last_payment_date: "2026-01-01", months_idle: 5 }),
+    open("C", "500.00"), // never paid → idle null → NULLS LAST
+  ];
+  assert.deepEqual(
+    chaseProjection(rows, 3).map((c) => c.dealCode),
+    ["A", "B", "C"]
+  );
 });
 
 // --- per-source --------------------------------------------------------------

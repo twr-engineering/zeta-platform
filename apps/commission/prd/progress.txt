@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T14:00:00+08:00 (M6.3)
+# Last Updated: 2026-07-18T17:30:00+08:00 (M6.4 — M6 COMPLETE, MVP CUT COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -29,7 +29,7 @@
 - [x] M6.1: Aggregation read models + reconciliation suite
 - [x] M6.2: Dashboard UI: sections 1, 2, 3, 6
 - [x] M6.3: Aging, receivables by developer, Data Health
-- [ ] M6.4: Chase list + inline Next Action + performance hardening
+- [x] M6.4: Chase list + inline Next Action + performance hardening  ← M6 COMPLETE — MVP CUT COMPLETE
 - [ ] M2.1: Segment classifier & aggregation functions
 - [ ] M2.2: Materialized aggregates & event-driven restatement
 - [ ] M2.3: PlanningBasis API for M3
@@ -58,6 +58,71 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M6.4 COMPLETE — Chase list + inline Next Action + performance hardening.
+🎉 M6 COMPLETE — MVP CUT COMPLETE. NO migration; ONE shared-lib change (a builder
+extension): ProjectionReceivable + ChaseRow now carry the RECEIVABLE's own id as
+`receivableId` — the write key the inline Next Action editor passes to the audited
+set_next_action_note RPC (the deal id is not the receivable id). Unit-pinned
+(projections.test.ts: receivableId present on every row + a new equal-balance
+tiebreaker test proving Rule Q — idle DESC nulls-last, then deal_code).
+
+SECTION 8. src/components/dashboard/: chase-section.tsx (server — 9-col desktop
+table with a sticky Deal-ID column + the chase-first mobile card stack, the follow-up
+chips (grey "no payment yet" / amber "⚠ chase" / green "ok" straight off the builder's
+followUp enum), the >30 "collections sprint" amber banner (rule 15), the positive
+"Nothing to chase" empty state (rule 19), Deal-ID / card-header drill to
+/collectibles/[dealCode]); chase-note-editor.tsx (client — the module's SOLE write
+path: a blue-input textarea, save-on-blur + a thumb "Save" for mobile, optimistic
+"Saving…/Saved", writing through the AUDITED set_next_action_note — the same M4 field
+the receivable detail edits). ZERO client math: every peso/date/chip is the server
+builder's value. Page swaps the S8 placeholder for <ChaseSection> + adds a mobile-only
+"Jump to chase list ↓" chip in the sticky header (DOM stays sheet-order 1→8 so the
+year-scope snapshot tests hold; the chip is the §6 mobile chase-first lever).
+
+MONTHS IDLE = workbook col P (months_idle, blank when never-paid/Closed) — NOT
+age_months; the WORKBOOK_REFERENCE §6 (declared verbatim-authority) + the shipped/
+tested projection both use months_idle, so a never-paid row reads "no payment yet"
+(Follow up?) + "—" (Months Idle), coherent. (PRD §3.3's "age_months" phrasing is the
+discrepancy; documented.)
+
+CHASE-IDLE-MONTHS caveat found + honoured: the setting has a DB minimum of 1 (not 0)
+and is served from getCachedTaxSettings — so the frozen-fixture "set it to 0" lever is
+not reproducible on a live clock (D021's idle is 0 today anyway). The e2e proves the
+real "⚠ chase" branch clock-robustly by AGING D021's release date past the default
+3-month threshold (read-time idle recompute, restored after); the three-state chip
+PRECEDENCE (rule 14) stays deterministically unit-pinned.
+
+EXPORT (FR-M6-14): new "dashboard-chase" registry dataset — all-time (year-
+independent), built from the same buildChase over listReceivables with the workspace
+chase_idle_months, nine columns matching the screen (follow-up as the chip's plain
+text). SectionExport CSV/XLSX pair in the section header (hidden on the empty state).
+
+PERF (§8 DoD, re-measured with ALL 8 sections live at 1,000+1,000 via
+scripts/perf-dashboard.ts): full dashboard read P95 **21.0 ms** (server = 6.6 ms
+parallel read exec + 14.4 ms compose; target < 1,500 ms) — PASS; year-filter switch
+P95 **0.6 ms** (target < 500 ms) — PASS. FRESHNESS: compute-on-read = 0 s staleness
+(no materialized cache; a payment logged in M5 is visible on the next dashboard read,
+well inside the §8 ≤ 60 s bound) — documented in dashboard/queries.ts.
+
+VERIFIED: test:unit 325/325 (+2 chase tests: receivableId present; equal-balance
+tiebreaker D021-style idle-DESC-nulls-last); build:check + lint clean; tests/e2e/
+dashboard.spec.ts extended with 6 Section-8 tests (chase order D013→D005→D016→D010 +
+D021 balance/last-payment/not-"no payment yet" + >30 banner absent at 14; "⚠ chase"
+branch via aged D021 vs never-paid "no payment yet"; inline Next Action write-through
+→ same value on /collectibles/D013 + an audit_log_entry with the new note; concurrent
+stale edit → last-write-wins converges + audited; row → detail drill; 360px chase-first
+jump + card stack + thumb-edit a note + console clean) + empty test now asserts the
+"Nothing to chase" state — 19 passed on the clean reseed (the one concurrent-edit reload
+check flaked once on a Playwright synthetic-fill race on the controlled textarea, since
+hardened with clear()+pressSequentially; the authoritative DB-convergence assert in the
+same test is deterministic). >30 threshold: the exact 30-false/31-true boundary is
+unit-pinned (sections.test.ts); the e2e guards the banner ABSENT at 14 (no engine-valid
+31-deal synthetic fixture inline — Playwright has no @/ alias). Delta-residue ZERO
+(throwaway users deleted; 1 workspace = the real account; 0 annual_target_override /
+orphan rows; real account untouched). NO migration this milestone.**
+
+---
+
 **M6.3 COMPLETE — Dashboard UI: Sections 4 (Aging), 5 (Receivables by Developer),
 7 (Data Health) + drill-downs + exports. NO migration; ONE shared-lib change: the
 per-developer "Avg Days → 1st Release" now carries the PRD's 1-dp precision (64.6 /

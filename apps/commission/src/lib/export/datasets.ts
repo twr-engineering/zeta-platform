@@ -25,8 +25,13 @@ import {
   receivablePayor,
   type ReceivableRow,
 } from "@/lib/receivables/queries";
-import { agingBucketOf, type AgingBucketKey } from "@/lib/receivables/projections";
-import { buildAging, buildByDeveloper } from "@/lib/dashboard/sections";
+import {
+  agingBucketOf,
+  type AgingBucketKey,
+  type ChaseFollowUp,
+} from "@/lib/receivables/projections";
+import { buildAging, buildByDeveloper, buildChase } from "@/lib/dashboard/sections";
+import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { listPayments, getWorkspaceRates, type PaymentRow } from "@/lib/payments/queries";
 import { isStaleBasis } from "@/lib/payments/stale";
 import type { ExportColumn, ExportDataset } from "./format";
@@ -287,6 +292,43 @@ const BY_DEVELOPER_COLUMNS: readonly ExportColumn<DeveloperExportRow>[] = [
   },
 ];
 
+/** The plain-text follow-up label the chase export writes (the on-screen chip text). */
+const CHASE_FOLLOW_UP_LABELS: Record<ChaseFollowUp, string> = {
+  no_payment_yet: "no payment yet",
+  chase: "⚠ chase",
+  ok: "ok",
+};
+
+/** One chase-list row as an export row — the nine on-screen columns (FR-M6-14). */
+type ChaseExportRow = {
+  dealCode: string;
+  clientName: string;
+  balance: string | null;
+  lastPaymentDate: string | null;
+  monthsIdle: number | null;
+  followUp: ChaseFollowUp;
+  developerName: string | null;
+  bookedNetGci: string;
+  nextActionNote: string | null;
+};
+
+const CHASE_COLUMNS: readonly ExportColumn<ChaseExportRow>[] = [
+  { header: "Deal ID", type: "text", value: (r) => r.dealCode, width: 12 },
+  { header: "Client", type: "text", value: (r) => r.clientName, width: 26 },
+  { header: "Balance", type: "money", value: (r) => r.balance ?? "", width: 18 },
+  { header: "Last Payment", type: "date", value: (r) => r.lastPaymentDate, width: 14 },
+  {
+    header: "Months Idle",
+    type: "text",
+    value: (r) => (r.monthsIdle === null ? "—" : String(r.monthsIdle)),
+    width: 12,
+  },
+  { header: "Follow up?", type: "text", value: (r) => CHASE_FOLLOW_UP_LABELS[r.followUp], width: 14 },
+  { header: "Developer", type: "text", value: (r) => r.developerName ?? "", width: 22 },
+  { header: "Booked GCI", type: "money", value: (r) => r.bookedNetGci, width: 16 },
+  { header: "Next Action", type: "text", value: (r) => r.nextActionNote ?? "", width: 40 },
+];
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
   "deals",
@@ -297,6 +339,7 @@ export const EXPORT_DATASETS = [
   "lead-sources",
   "dashboard-aging",
   "dashboard-by-developer",
+  "dashboard-chase",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -515,6 +558,31 @@ export async function loadExportDataset(
         name: "dashboard-by-developer",
         sheet: "By Developer",
         columns: BY_DEVELOPER_COLUMNS,
+        rows,
+      });
+    }
+    case "dashboard-chase": {
+      // Year-independent (§4): the chase list is all-time current-state, ordered by
+      // the same Rule Q the screen uses (balance DESC, idle DESC, deal_code). The
+      // follow-up chip needs the workspace's chase_idle_months, exactly as the screen.
+      const context = await getWorkspaceContext();
+      const chaseIdleMonths = context?.taxSettings?.chase_idle_months ?? 3;
+      const chase = buildChase(await listReceivables({ today: manilaToday() }), chaseIdleMonths);
+      const rows: ChaseExportRow[] = chase.rows.map((r) => ({
+        dealCode: r.dealCode,
+        clientName: r.clientName,
+        balance: r.balance,
+        lastPaymentDate: r.lastPaymentDate,
+        monthsIdle: r.monthsIdle,
+        followUp: r.followUp,
+        developerName: r.developerName,
+        bookedNetGci: r.bookedNetGci,
+        nextActionNote: r.nextActionNote,
+      }));
+      return dataset({
+        name: "dashboard-chase",
+        sheet: "Chase List",
+        columns: CHASE_COLUMNS,
         rows,
       });
     }
