@@ -40,6 +40,21 @@ export function exportPath(dataset: string, format: "csv" | "xlsx"): string {
   return `/api/export/${dataset}?format=${format}`;
 }
 
+/**
+ * The Search Console export URL (FR-M9-11). `params` is the serialized SearchQuery
+ * (source + active filters + sort — the same params the screen carries), so the
+ * download is exactly the filtered/sorted set on screen. The dedicated route
+ * (`/api/export/search`) streams it; it is gated by its own handler, not public.
+ */
+export function searchExportPath(
+  params: URLSearchParams,
+  format: "csv" | "xlsx"
+): string {
+  const p = new URLSearchParams(params);
+  p.set("format", format);
+  return `/api/export/search?${p.toString()}`;
+}
+
 /** The fast-entry form, optionally preselecting a deal (deal detail cross-link). */
 export function paymentNewPath(dealId?: string): string {
   return dealId ? `${ROUTES.paymentNew}?deal=${encodeURIComponent(dealId)}` : ROUTES.paymentNew;

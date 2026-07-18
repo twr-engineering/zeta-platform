@@ -358,3 +358,78 @@ test("360px — filter bar collapses into a Filters sheet, rows become cards (§
   await page.getByTestId("search-filters-trigger").click();
   await expect(page.getByText("Filters", { exact: true })).toBeVisible();
 });
+
+// === M9.3 — export & hardening =============================================
+
+test("Export CSV of Open+balance reproduces the 14 rows, D013 first, §3.2 columns (AC11)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=collectibles&status=open&only_with_balance=true");
+  await expect(page.getByTestId("search-row")).toHaveCount(14);
+
+  // The Export CSV link is a browser download (not a fetch), so catch the event.
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByTestId("export-search-csv").click(),
+  ]);
+  // Filename carries the source + filter hints (repo convention).
+  expect(download.suggestedFilename()).toMatch(
+    /^zeta-search-collectibles-open-with-balance-\d{4}-\d{2}-\d{2}\.csv$/
+  );
+
+  const file = await download.path();
+  const text = readFileSync(file!, "utf8").replace(/^﻿/, "");
+  const lines = text.trimEnd().split("\r\n");
+
+  // Header = the §3.2 Collectibles columns verbatim; 14 data rows; D013 first.
+  expect(lines[0]).toBe(
+    "Deal ID,Client,Property,Deal Type,Total Collectible,Collected,Balance,Status"
+  );
+  expect(lines.length).toBe(15); // header + 14
+  expect(lines[1]).toMatch(/^D013,/);
+  // Money is the exact stored string, unformatted (the archival copy).
+  expect(lines[1]).toContain("906752.23");
+  // D021 present with its exact balance.
+  expect(lines.some((l) => l.startsWith("D021,") && l.includes("309948.98"))).toBe(true);
+});
+
+test("Export XLSX downloads a non-empty spreadsheet", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=collectibles&status=open&only_with_balance=true");
+  await expect(page.getByTestId("search-row")).toHaveCount(14);
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByTestId("export-search-xlsx").click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
+  const file = await download.path();
+  // A valid XLSX is a zip — starts with "PK" and has real content.
+  const buf = readFileSync(file!);
+  expect(buf.length).toBeGreaterThan(0);
+  expect(buf.subarray(0, 2).toString("latin1")).toBe("PK");
+});
+
+test("Export buttons disable at zero rows (§6)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page);
+  await page.getByTestId("search-text").fill("zzzznomatch");
+  await expect(page.getByTestId("search-empty-message")).toBeVisible();
+  await expect(page.getByTestId("export-search-csv")).toBeDisabled();
+  await expect(page.getByTestId("export-search-xlsx")).toBeDisabled();
+});
+
+test("the export route is read-only — a write verb returns 405 (FR-M9-14)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email); // establishes the auth cookies page.request rides
+  for (const verb of ["post", "put", "delete"] as const) {
+    const res = await page.request[verb]("/api/export/search?source=deals");
+    expect(res.status(), `${verb.toUpperCase()} should be 405`).toBe(405);
+  }
+});

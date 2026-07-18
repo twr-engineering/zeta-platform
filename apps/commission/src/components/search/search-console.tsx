@@ -27,6 +27,7 @@ import {
 import type { SearchDealOption } from "@/lib/search/filter-options";
 import { SearchFilterBar } from "./search-filter-bar";
 import { SearchResults } from "./search-results";
+import { SearchExport } from "./search-export";
 
 /**
  * M9.2 — the Search Console screen (§6). The URL is the single source of truth:
@@ -275,10 +276,15 @@ export function SearchConsole({
         </p>
       )}
 
-      {/* Count readout (§6, FR-M9-08). */}
-      <p className="text-sm text-muted-foreground" data-testid="search-count">
-        {result.total} matching {result.total === 1 ? "record" : "records"}
-      </p>
+      {/* Table header: count readout (§6, FR-M9-08) + export pair (FR-M9-11).
+          Export is disabled at zero rows (§6) — the whole filtered/sorted set, not
+          the visible page, streamed by /api/export/search. */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground" data-testid="search-count">
+          {result.total} matching {result.total === 1 ? "record" : "records"}
+        </p>
+        <SearchExport query={query} disabled={isEmpty} />
+      </div>
 
       {/* Results / empty state. */}
       <div

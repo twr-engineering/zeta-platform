@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T23:55:00+08:00 (M9.2 — Search Console UI)
+# Last Updated: 2026-07-20T02:10:00+08:00 (M9.3 — Export & performance hardening)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -47,7 +47,7 @@
 - [x] M8.4: Exports, print layout, performance & cache hardening  ← M8 COMPLETE
 - [x] M9.1: Search read layer & query API
 - [x] M9.2: Search Console UI
-- [ ] M9.3: Export & performance hardening
+- [x] M9.3: Export & performance hardening  ← M9 REQUIRED SCOPE COMPLETE (M9.4 optional, pending OQ2)
 - [ ] M9.4: Unified "All" tab (OPTIONAL — pending M9 Open Question 2)
 - [ ] M10.1: Help-content system, legend spec & glossary
 - [ ] M10.2: First-run wizard core, steps 1–4
@@ -59,7 +59,74 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-**M9.2 COMPLETE — Search Console UI (the global read-only lookup screen over Deals/Collectibles/
+**M9.3 COMPLETE — Export & performance hardening → M9 REQUIRED SCOPE COMPLETE (M9.4 unified "All" tab
+remains OPTIONAL, pending OQ2). The Search Console's filtered/sorted result set now exports to CSV/XLSX, and
+the < 300 ms P95 + trigram NFRs are re-verified through the full route at 1,000+1,000 and proven at scale.**
+PURELY ADDITIVE — no migration, no schema/index change; reuses M9.1's `runSearch` (RLS-bound RPC) and the
+cross-cutting exporter's format layer. test:unit 504/504 (+12 export-columns: §3.2 header/order + exact-money
+cells + filename stem); build:check + lint clean; search e2e 17/17 on the REAL v30.20 import (+4 new: AC11 CSV
+parity, XLSX valid, disable-at-zero, 405 read-only); live-m93 17/17; perf:search all green; delta-residue ZERO.
+
+STREAMING-vs-BUFFERED, THE DECISION (documented in the route header, per team-lead ask): a DEDICATED route
+`/api/export/search` (GET-only), NOT a new entry in the buffered `/api/export/[dataset]` registry. Why:
+(1) the search set is filter-parameterized by the whole SearchQuery (year asymmetry, normalized text,
+status/balance, sort matrix) and its columns are the §3.2 projection — threading that through the registry's
+`DealExportFilters` would fork it; a source route reusing the same `runSearch` the SCREEN uses keeps the
+download tied to the screen (AC11). (2) CSV genuinely STREAMS — a ReadableStream emits the header then pages
+the RPC in bounded 1,000-row batches, flushing each as it arrives → peak memory is one batch, so an uncapped
+set (OQ4 default = no cap) cannot blow the heap. (3) XLSX is BUFFERED because the format demands it
+(`write-excel-file` builds a zip whose central directory needs every row before byte 1 — there is no streaming
+XLSX); it is fed from the SAME bounded pager, so the DB is never asked for an unbounded single result, and at
+the 2,000-row design target the peak is ~1–2 MB, well within limits. MEASURED: 2,000-row export end-to-end
+1.89 s (CSV assemble 4 ms, XLSX 64 ms; paging over WAN dominates) — comfortably < the 10 s NFR. So the PRD's
+"streams (no full materialization)" is honoured for the unbounded case (CSV) and the buffered path is a
+documented, format-forced exception that is negligible at scale.
+
+WHAT SHIPPED. Files: src/lib/export/format.ts (exposed CSV_BOM/CSV_EOL/toCsvHeaderRow/toCsvBodyRow so the
+streaming route frames its CSV in the ONE dialect — `toCsv` now composes them, behaviour unchanged);
+src/lib/search/export-columns.ts (NEW, PURE — the three §3.2 export projections mirroring search-results.tsx
+field-for-field, same enum labels; null balance → empty cell; money = exact source string, never re-derived;
+`searchExportName` builds the filename stem `search-<source>[-hints]` per M8 convention);
+src/app/api/export/search/route.ts (NEW — the streaming/buffered route above); src/components/search/
+search-export.tsx (NEW — the CSV/XLSX button pair, disabled at zero rows §6, href drops page/page_size so the
+file is ALL matching rows); search-console.tsx (wired the pair into the count/table-header row); routes.ts
+(`searchExportPath`). Tests: tests/unit/search/export-columns.test.ts (NEW, 12); e2e +4; scripts/
+live-m93-check.mts (NEW); scripts/perf-search.ts (extended).
+
+PERF — MEASURED NUMBERS (scripts/perf-search.ts, EXPLAIN ANALYZE via Mgmt API = machine-independent server
+exec; ANALYZE run after seed so plans reflect real stats):
+  • page-1 server P95 @ 1,000 deals + 1,000 payments — worst 2.28 ms (contains 0.87, amount-sort 2.28,
+    collectibles open+balance 1.48, payments year 0.85, deal-id 0.34, text+year+status COMBINED 0.25) — all
+    ≪ 300 ms.
+  • FULL-ROUTE page-1 (authenticated RPC round-trip as the JWT user — the exact call runSearch makes, "not
+    just the RPC" per team-lead) — worst server-attributable ≈ 196 ms after subtracting a ~131 ms WAN floor;
+    gated on the machine-independent EXPLAIN above (dev-laptop wall-clock is WAN-dominated, per the perf
+    doctrine).
+  • TRIGRAM re-check with filters COMBINED (text+year+status) — 0.25 ms server exec.
+  • TRIGRAM AT SCALE (DoD "no seq scan at scale"): HONEST FINDING — at 1,000 rows the planner picks a SEQ
+    SCAN for the contains filter (a tiny table is cheaper to scan than to probe — sub-ms either way, NOT an
+    index bug), so the GIN proof runs on a 20,000-deal set where a selective needle makes the workspace-scoped
+    `deal_search_blob_trgm` GIN decisive → plan USES the GIN, 0.43 ms server exec. The index exists and is the
+    correct safety net for a grown workspace; the small-scale seq scan is the right plan and meets the NFR.
+  • EXPORT 2,000 rows end-to-end 1.89 s (< 10 s); projection staleness < 5 s (new payment findable
+    immediately).
+
+HARDENING SWEEP. 405 on write verbs — the route exports GET only (Next auto-405s POST/PUT/DELETE), proven by
+e2e. AC9 cross-tenant export = own rows only — the export rides `runSearch`'s RLS-bound RPC (no workspace id
+in the URL); live-m93 proves a second tenant's export is header-only. Archived-included flows to export — the
+same include-archived behaviour (OQ1 default) applies; live-m93 proves the archived D002 receivable is present
+in the 14-row open-balance export with archived=true (Rule 10). Empty result → the UI disables the button
+(§6) AND a direct hit streams a valid header-only file (never an error) — both covered. Export access-logged
+(M8 §8 lightweight line: workspace/user/dataset/format/timestamp — not the financial audit trail).
+
+FOR M9.4 (optional unified "All" tab, pending OQ2): the export layer is source-agnostic — `searchExportSpec`
++ `searchExportName` + `pageSearchRows` are keyed on `source`; a unified export would run the three per-source
+files (or a multi-sheet XLSX) reusing all three specs unchanged. The streaming route already takes the full
+SearchQuery, so the only new work is the orchestration + multi-file/multi-sheet assembly.
+
+---
+
+## M9.2 COMPLETE — Search Console UI (the global read-only lookup screen over Deals/Collectibles/
 Payments). PURELY ADDITIVE over M9.1 — no migration, no new index, no server logic change; the /search stub
 is replaced by a real RSC that parses the URL, runs M9.1's indexed `runSearch`, and renders the §3.2
 projections.** test:unit 494/494 (+3 serialize round-trip); build:check + lint clean; search e2e 12/12 on the

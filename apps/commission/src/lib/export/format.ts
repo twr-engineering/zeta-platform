@@ -96,15 +96,33 @@ function csvValue<Row>(column: ExportColumn<Row>, row: Row): string {
   return String(raw);
 }
 
-export function toCsv<Row>(dataset: ExportDataset<Row>): string {
-  const header = dataset.columns.map((c) => csvCell(c.header)).join(",");
-  const body = dataset.rows.map((row) =>
-    dataset.columns.map((c) => csvCell(csvValue(c, row))).join(",")
-  );
+/**
+ * The CSV framing constants, named once. A BOM so Excel on Windows reads UTF-8
+ * rather than mangling "Sphere / Personal Network" and every ₱; CRLF per RFC 4180.
+ * Exported so the streaming exporter (M9 search) frames its response identically
+ * to the buffered `toCsv` — there is exactly one CSV dialect (see the header note).
+ */
+export const CSV_BOM = "﻿";
+export const CSV_EOL = "\r\n";
 
-  // CRLF per RFC 4180, and a BOM so Excel on Windows reads UTF-8 rather than
-  // mangling "Sphere / Personal Network" and every ₱ in later modules.
-  return `﻿${[header, ...body].join("\r\n")}\r\n`;
+/** One header line — the columns' header cells, CSV-quoted. No trailing EOL. */
+export function toCsvHeaderRow<Row>(columns: readonly ExportColumn<Row>[]): string {
+  return columns.map((c) => csvCell(c.header)).join(",");
+}
+
+/** One body line for a single row, CSV-quoted per column type. No trailing EOL. */
+export function toCsvBodyRow<Row>(
+  columns: readonly ExportColumn<Row>[],
+  row: Row
+): string {
+  return columns.map((c) => csvCell(csvValue(c, row))).join(",");
+}
+
+export function toCsv<Row>(dataset: ExportDataset<Row>): string {
+  const header = toCsvHeaderRow(dataset.columns);
+  const body = dataset.rows.map((row) => toCsvBodyRow(dataset.columns, row));
+
+  return `${CSV_BOM}${[header, ...body].join(CSV_EOL)}${CSV_EOL}`;
 }
 
 // --- XLSX -------------------------------------------------------------------
