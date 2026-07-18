@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T17:30:00+08:00 (M6.4 — M6 COMPLETE, MVP CUT COMPLETE)
+# Last Updated: 2026-07-18T18:20:00+08:00 (M2.1 — segment classifier & aggregation core)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -30,7 +30,7 @@
 - [x] M6.2: Dashboard UI: sections 1, 2, 3, 6
 - [x] M6.3: Aging, receivables by developer, Data Health
 - [x] M6.4: Chase list + inline Next Action + performance hardening  ← M6 COMPLETE — MVP CUT COMPLETE
-- [ ] M2.1: Segment classifier & aggregation functions
+- [x] M2.1: Segment classifier & aggregation functions
 - [ ] M2.2: Materialized aggregates & event-driven restatement
 - [ ] M2.3: PlanningBasis API for M3
 - [ ] M2.4: Yield Summary screen & polish
@@ -58,7 +58,25 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-**M6.4 COMPLETE — Chase list + inline Next Action + performance hardening.
+**M2.1 COMPLETE — Segment classifier & aggregation functions (pure core).
+Fast-follow M2 (Yield Summary) begun. PURE library only: src/lib/yield/ (segments.ts
+classifier + YieldDeal type + Rule 9 partition invariant; aggregate.ts buildYieldReport
++ buildPlanningBasis). NO persistence, NO UI, NO migration — those are M2.2/M2.4. ZERO
+app-runtime touched (purely additive), so e2e is provably unaffected. test:unit 349/349
+(24 new fixture + property tests); build:check + lint clean. Every §9 live value reproduced
+to the centavo (17 sales / ₱159,280,945.00 / ₱6,488,497.25 / 4.0736%; blended avg
+₱9,369,467.35; memos ₱357,142.87 / (₱75,000.00); archive-D021 → 4.0546% / ₱9,455,059.06).
+PRECISION: report ratios 6-dp (display); planning basis ratios FULL precision to M3 — the
+§3.4 identity yield×price = gci÷deals = ₱381,676.31 proven in CI (Rule 7); display-rounded
+would give ₱381,674.62. Rule 8 ₱0.01 memo consequence proven & intentional. OQ2: Cancelled
+deals INCLUDED by construction (no status field carried) — booked-basis parity, needs owner
+sign-off to change. Classifier fixtures reuse the engine's WORKBOOK_DEALS → double as M1
+importer regression cover. API handed to M2.2/M2.3 in pipeline-state m2_1Handoff.
+NEXT: M2.2 (materialized yield_aggregate table + event-driven −old/+new restatement +
+reconciliation) — recomputes from these SAME pure functions and asserts zero drift.
+
+--- prior ---
+M6.4 COMPLETE — Chase list + inline Next Action + performance hardening.
 🎉 M6 COMPLETE — MVP CUT COMPLETE. NO migration; ONE shared-lib change (a builder
 extension): ProjectionReceivable + ChaseRow now carry the RECEIVABLE's own id as
 `receivableId` — the write key the inline Next Action editor passes to the audited
