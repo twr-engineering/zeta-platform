@@ -143,6 +143,7 @@ export type Database = {
           referral_out_pct: number
           referral_paid: boolean
           representation: Database["public"]["Enums"]["deal_representation"]
+          search_blob: string | null
           taxable: boolean
           transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
           updated_at: string
@@ -193,6 +194,7 @@ export type Database = {
           referral_out_pct?: number
           referral_paid?: boolean
           representation: Database["public"]["Enums"]["deal_representation"]
+          search_blob?: string | null
           taxable: boolean
           transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
           updated_at?: string
@@ -243,6 +245,7 @@ export type Database = {
           referral_out_pct?: number
           referral_paid?: boolean
           representation?: Database["public"]["Enums"]["deal_representation"]
+          search_blob?: string | null
           taxable?: boolean
           transaction_type?: Database["public"]["Enums"]["deal_transaction_type"]
           updated_at?: string
@@ -884,6 +887,7 @@ export type Database = {
           override_review_flagged_at: string | null
           pct_collected: number | null
           property_details: string
+          search_blob: string | null
           status: Database["public"]["Enums"]["receivable_status"]
           total_collectible: number | null
           updated_at: string
@@ -921,6 +925,7 @@ export type Database = {
           override_review_flagged_at?: string | null
           pct_collected?: number | null
           property_details: string
+          search_blob?: string | null
           status?: Database["public"]["Enums"]["receivable_status"]
           total_collectible?: number | null
           updated_at?: string
@@ -958,6 +963,7 @@ export type Database = {
           override_review_flagged_at?: string | null
           pct_collected?: number | null
           property_details?: string
+          search_blob?: string | null
           status?: Database["public"]["Enums"]["receivable_status"]
           total_collectible?: number | null
           updated_at?: string
@@ -1541,6 +1547,81 @@ export type Database = {
         Returns: Json
       }
       run_workbook_import: { Args: { p_payload: Json }; Returns: Json }
+      search_collectibles: {
+        Args: {
+          p_deal_code?: string
+          p_limit?: number
+          p_offset?: number
+          p_only_with_balance?: boolean
+          p_sort?: string
+          p_status?: Database["public"]["Enums"]["receivable_status"]
+          p_text?: string
+          p_year?: number
+        }
+        Returns: {
+          archived: boolean
+          balance: string
+          booked_year: number
+          client_name: string
+          collected_net: string
+          deal_code: string
+          deal_id: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          id: string
+          property_details: string
+          status: Database["public"]["Enums"]["receivable_status"]
+          total_collectible: string
+          total_count: number
+        }[]
+      }
+      search_deals: {
+        Args: {
+          p_deal_code?: string
+          p_limit?: number
+          p_offset?: number
+          p_sort?: string
+          p_text?: string
+          p_year?: number
+        }
+        Returns: {
+          archived: boolean
+          booked_date: string
+          booked_year: number
+          client_name: string
+          deal_code: string
+          deal_type: Database["public"]["Enums"]["deal_type"]
+          developer_name: string
+          id: string
+          net_gci: string
+          property_details: string
+          total_count: number
+          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+        }[]
+      }
+      search_payments: {
+        Args: {
+          p_deal_code?: string
+          p_limit?: number
+          p_offset?: number
+          p_sort?: string
+          p_text?: string
+          p_year?: number
+        }
+        Returns: {
+          archived: boolean
+          client_name: string
+          deal_code: string
+          deal_id: string
+          gross: string
+          id: string
+          net_cash: string
+          net_of_vat: string
+          payment_date: string
+          property_details: string
+          total_count: number
+          year_paid: number
+        }[]
+      }
       seed_developers: { Args: { p_items: Json }; Returns: Json }
       seed_lead_sources: { Args: { p_items: Json }; Returns: Json }
       seed_property_types: { Args: { p_items: Json }; Returns: Json }
@@ -1692,6 +1773,8 @@ export type Database = {
         }
         Returns: Json
       }
+      zeta_search_needle: { Args: { input: string }; Returns: string }
+      zeta_search_normalize: { Args: { input: string }; Returns: string }
     }
     Enums: {
       audit_action:

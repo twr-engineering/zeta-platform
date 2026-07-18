@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T20:30:00+08:00 (M8.4 — Exports, print layout, performance & cache hardening — M8 COMPLETE)
+# Last Updated: 2026-07-19T22:30:00+08:00 (M9.1 — Search read layer & query API)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -45,7 +45,7 @@
 - [x] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
 - [x] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
 - [x] M8.4: Exports, print layout, performance & cache hardening  ← M8 COMPLETE
-- [ ] M9.1: Search read layer & query API
+- [x] M9.1: Search read layer & query API
 - [ ] M9.2: Search Console UI
 - [ ] M9.3: Export & performance hardening
 - [ ] M9.4: Unified "All" tab (OPTIONAL — pending M9 Open Question 2)
@@ -58,6 +58,88 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M9.1 COMPLETE — Search read layer & query API (the global read-only lookup over Deals/Collectibles/
+Payments). SERVER-SIDE ONLY, no UI (M9.2 owns it).** One additive migration + a typed src/lib/search/
+layer + one GET route; proven against the REAL v30.20 import (AC 1–9) and at 1,000+1,000 scale. test:unit
+491/491 (+13 normalize/params); build:check + lint clean; live-m91-check ALL PASSED (30 assertions across
+AC1–9); perf worst server P95 1.86 ms at 1,000 deals / 1,000 receivables / 1,000 payments (161× under the
+< 300 ms bar) with the contains filter proven to use the GIN trigram index (no seq scan); full clean-reseed
+e2e regression green (additive server-only change — no existing runtime file touched); delta-residue ZERO.
+
+MIGRATION 20260719210000_m91_search_read_layer.sql (applied live via the Management API + registered): the
+unaccent + pg_trgm + btree_gin extensions; an IMMUTABLE public.zeta_search_normalize (trim → collapse
+whitespace → unaccent → lowercase, PRD §3.3) + public.zeta_search_needle (normalize + escape LIKE %/_/\ as
+literals, Rule 12); a GENERATED-STORED search_blob on BOTH deal and receivable (receivable already
+denormalizes client+property so Collectibles searches WITHOUT a join); a WORKSPACE-SCOPED trigram GIN index
+(gin (workspace_id, search_blob gin_trgm_ops) via btree_gin — so the contains filter is tenant-scoped in the
+index and the planner picks it for `workspace_id = X AND search_blob LIKE '%…%'`, never scanning another
+tenant); receivable_deal_code_idx + payment_search_date_idx (the (workspace,deal_code)/(workspace,
+payment_date) gaps the FULL incl-archived set needs — the existing composites are partial on archived_at).
+GENERATED-COLUMN SAFETY (verified before applying): every deal/receivable write-path fn loads rows via
+%ROWTYPE (absorbs the new column) and builds audit/snapshots via explicit jsonb_build_object field lists
+(app.deal_audit_row / app.deal_snapshot / receivable audit — never whole-row to_jsonb) and INSERTs with
+explicit column lists, so a GENERATED column changes nothing upstream — no consumer, no audit noise.
+
+THREE QUERY FUNCTIONS (public.search_deals / search_collectibles / search_payments; security invoker,
+set search_path='', RLS is the tenant boundary + an explicit workspace_id = app.current_workspace_id()
+predicate so the composites engage; money returned ::text; a window count(*) over() rides every row as
+total_count for the pagination readout, absent when zero rows match = the empty-state contract). Filter
+matrix per PRD §3.2 / Rules 3/6/7: YEAR asymmetry — booked_year for Deals/Collectibles, a payment_date
+RANGE (year PAID) for Payments ("the asymmetry is the feature"); status + only_with_balance Collectibles-
+ONLY; all AND-combine. SORT — Deals default booked_date DESC / date_oldest ASC / amount_desc net_gci DESC;
+Payments default payment_date DESC / date_oldest ASC / amount_desc gross DESC, tie deal_code then id;
+Collectibles ALWAYS balance DESC (the sheet ignores the selector) EXCEPT date_oldest → booking_date ASC
+(OQ5 defined improvement), tie deal_code. Archived rows INCLUDED with an `archived` flag (OQ1 default,
+Rule 10), applied identically to all three sources.
+
+TS LAYER (src/lib/search/): types.ts (SearchQuery + the three §3.2 projection row types + EMPTY_STATE_MESSAGE
+"No matching records — adjust your filters above." verbatim); normalize.ts (JS mirror of the SQL normalize/
+escape for the M9.2 type-ahead + unit tests — the actual DB match is 100% SQL, so needle and blob pass the
+identical transform, no drift); params.ts (parseSearchQuery — enforces the applicability matrix at the edge:
+status/only_with_balance dropped for non-Collectibles; 4-digit year or "all"→null; 200-char text cap with a
+truncation flag; page_size clamp ≤200; nothing throws, bad values fall to defaults per Rules 8/9); queries.ts
+("server-only" — getDealSearch/getCollectibleSearch/getPaymentSearch + runSearch dispatcher, calling the
+RPCs via @/lib/supabase/server, mapping to camelCase rows, money strings passed through untouched).
+
+ROUTE src/app/api/search/route.ts — GET-ONLY (FR-M9-14 read-only guarantee: only GET is exported so Next
+answers every write verb with 405 automatically, enforced by the ABSENCE of write handlers, not UI omission),
+auth via getWorkspaceContext (getUser, 401 signed out; RLS scopes rows, AC9), no-store; returns {source, rows,
+total, page, pageSize, emptyMessage, textTruncated}. An unknown deal_code (D999) or over-constrained AND is a
+200 with zero rows and the verbatim empty-state — never a 4xx (Rules 8/9).
+
+RECONCILIATION with M4.4: the pre-existing in-memory receivables.searchProjection (src/lib/receivables/
+projections.ts) is an M4-era collectibles-only stub that loads all rows and filters in TS — it does NOT meet
+M9's index/EXPLAIN NFR (it can't prove GIN use and only covers one source). LEFT IN PLACE (still unit-tested,
+still valid for its in-memory callers), but M9's API is the new DB-backed, GIN-indexed, three-source layer.
+Its 14-open-balance / D013-first / status semantics match, so the two agree on the collectibles result set.
+
+VERIFIED (scripts/live-m91-check.mts, throwaway workspaces, REAL v30.20 import, real JWTs — ALL PASSED):
+AC1 text "lainie" → 3 Deals (D013/D014/D015) + 3 Collectibles + 0 Payments (padded/cased "  LAINIE  " → same
+3); AC2 Collectibles Open+only_with_balance → 14 {D002,D003,D005,D007,D008..D016,D021} balance-desc, D013
+first (906,752.23), D021 (309,948.98), Status=Closed → the 7 {D001,D004,D006,D017..D020}; AC3 Payments 2026 →
+8 newest-first (2026-07-09 D021 release first, Net of VAT 44,642.86 / Net Cash 45,535.71), 2025 → empty; AC4
+Deals amount_desc → D013 first (906,752.23), default → D021 (2026-07-10), date_oldest → D001 (2026-01-01);
+AC5 D021 across sources (Deals 354,591.84 / Collectibles 309,948.98 Open / Payments 50,000 release); AC6 year
+asymmetry (a synthetic booked-2025/paid-2026 deal appears in Deals+Collectibles/2025, its payment in
+Payments/2026, Payments/2025 still empty); AC7 text "%" and "_" → 0 rows (literals, not wildcards); AC8 D999
+→ 0 rows on all three, no error; AC9 archived D002 still findable WITH the archived flag (+ its receivable),
+second tenant sees nothing (RLS), empty-state string verbatim; + pagination (page_size 5 → 5 rows, total 21).
+PERF (scripts/perf-search.ts, pnpm perf:search): worst server P95 1.86 ms (EXPLAIN ANALYZE, machine-
+independent) — contains 1.11 ms USING deal_search_blob_trgm, amount sort 1.86, collectibles open+balance 1.69,
+payments year-range 1.01, deal-id 0.35; projection staleness < 5 s proven (a just-inserted payment is findable
+immediately, Rule 16).
+
+FOR M9.2 (Search Console UI): consume runSearch / the three get*Search fns (src/lib/search/queries.ts) and
+parseSearchQuery + the SearchQuery/row types + EMPTY_STATE_MESSAGE (src/lib/search/types.ts); normalize.ts is
+ready for the debounced type-ahead. The API route /api/search mirrors the same shape if the UI prefers fetch.
+Source tabs must LABEL the year filter "Year booked" (Deals/Collectibles) vs "Year paid" (Payments) to make
+the Rule-3 asymmetry visible; show Status chips + the balance toggle on Collectibles ONLY (params.ts already
+drops them elsewhere); render the `archived` flag as the grey badge (Rule 10); wire row click-through to
+M1/M4/M5 detail views (FR-M9-10). The M7 source drill-through (dealsPath) is the seam to SWAP to M9 search
+pre-filtered to (source, year) once the UI ships. M9.3 owns export + the load-test at scale (the perf harness
++ the GIN-use EXPLAIN already exist here to extend).
+
+## Prior Status
 **M8.4 COMPLETE — Exports, print layout, performance & cache hardening. 🎉 M8 COMPLETE (Collection
 Reports).** The month-end hand-off works end to end: CSV/XLSX on every report tab + the Report 4 print
 layout + measured perf. PURELY ADDITIVE over M8.3 — no migration, no new index (the PRD's paid_date/
