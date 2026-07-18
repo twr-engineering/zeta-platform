@@ -54,7 +54,7 @@
 - [ ] M10.3: First-deal walkthrough, sample lifecycle & checklist
 - [ ] M10.4: Contextual help placements & empty states across modules
 - [ ] M10.5: Mobile, end-to-end scripts & hardening
-- [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on a specific cohesive color theme; applies across all surfaces; must not alter any computed value or testid contract
+- [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
 - [ ] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
 - [x] `pnpm run build` clean
 
