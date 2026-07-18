@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T00:40:00+08:00 (M3.3 — Planning screen)
+# Last Updated: 2026-07-19T02:10:00+08:00 (M3.4 — Pace vs actual + hardening · M3 COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -37,7 +37,7 @@
 - [x] M3.1: Planning engine library
 - [x] M3.2: Targets & rates persistence + M6 feed
 - [x] M3.3: Planning screen
-- [ ] M3.4: Pace vs actual + hardening
+- [x] M3.4: Pace vs actual + hardening  ← M3 COMPLETE
 - [ ] M7.1: Aggregation service + fixture parity
 - [ ] M7.2: Report UI, year filter & export
 - [ ] M7.3: Source-lifecycle & edge hardening, cross-links, perf
@@ -58,6 +58,80 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M3.4 COMPLETE — Pace vs actual + hardening. 🎉 M3 COMPLETE. The pace card is wired to
+LIVE M1 data (Rule P12) — the last seam of the planning screen closed. NO client math added;
+NO covering-index migration needed (measured — see PERF). ONE additive migration applied live
++ registered (20260718120000_m34_plan_ytd). test:unit 418/418 (+2: engine OQ-1 flag-delta +
+export-rows live-pace wiring); build:check + lint clean; live-m34-check ALL PASSED on the REAL
+v30.20 import; calculator e2e 10/10 CLEAN (zero retries after the hydration hardening below);
+delta-residue ZERO.
+
+THE QUERY (Rule P12). src/lib/planning/queries.ts getPlanYtdAggregate(year, {includeRentals=true})
+→ {ytdActualSales} calls the new public RPC plan_ytd_actual_sales(p_year, p_include_rentals):
+`coalesce(sum(list_price),0)::text` over public.deal where workspace = app.current_workspace_id()
+AND archived_at IS NULL AND booked_year = p_year AND representation <> 'referrer' AND
+(p_include_rentals OR transaction_type='sale'). SECURITY INVOKER (RLS confines the scan; the
+explicit workspace predicate lets it ride the index) + set search_path=''. Money ::text (never a
+JSON float); empty year → "0" → the engine rounds to "0.00" and the balance is the full target.
+The engine already did the P13 subtraction (computePlan's ytd? param) — this milestone only
+supplies the aggregate; NO engine change.
+
+OQ-1 LIVES IN THE QUERY, NOT THE ENGINE (per m3_3Handoff). includeRentals defaults TRUE = the
+workbook's sheet behaviour (a rental's list_price IS its annual rent, M1). The flag is NOT
+user-visible — it is the single switch the product-owner rental decision flips: 2026 include =
+₱161,680,945.00, exclude = ₱159,280,945.00 (the four workbook rentals, ₱2,400,000). Both values
+proven live (live-m34-check) AND at the engine boundary (engine.test.ts OQ-1 delta: exclude
+balance 256,074,642.83 vs include 253,674,642.83).
+
+WIRING (the m3_3Handoff seam RESOLVED). /calculator page load (src/app/(app)/calculator/page.tsx)
+adds getPlanYtdAggregate(year) to the ONE parallel read pass → passes ytd to <PlanningScreen>,
+which threads it into computePlan(target, rates, basis, ytd) (a STABLE prop, so the client's
+instant rate-edit recompute preserves it — funnel rates don't move total_sales_required or ytd
+anyway, both are basis/booked-only). The PaceCard now lights up: Total Sales required (=goal÷yield)
+/ YTD actual booked (P12) / Balance to target (P13) with ahead/behind coloring (balance<0 = target
+beaten = positive tone). The export loader (src/lib/export/datasets.ts calculator-plan arm) reads
+the same ytd → planToRows so the CSV/XLSX carries the pace figures (161680945.00 / 253674642.83).
+The M3.3 "lands with M3.4" seam copy is retired across pace-card + export-rows; the null branch
+survives as a defensive "no booked-sales read" (the loaders always supply the aggregate now).
+
+PERF DECISION — NO NEW INDEX (measured & decided, the M2.3/M6.1 doctrine). scripts/perf-plan-ytd.ts
+(pnpm perf:plan-ytd, wired into ci.yml self-skipping) seeds 1,000 deals across 3 booked years and
+EXPLAIN-ANALYZEs the aggregate both OQ-1 ways: server exec **0.82 ms** (include) / 0.71 ms (exclude)
+— 365× under the 300 ms §8 budget. The planner uses the EXISTING partial index deal_list_idx
+(workspace_id, booked_date DESC) WHERE archived_at IS NULL; deal_booked_year_idx (workspace_id,
+booked_year) also covers it. PRD §8 NAMES a covering index (workspace_id, booked_year,
+transaction_type, representation) but at realistic scale the existing indexes give sub-ms — adding
+it would be write-side cost for ZERO measurable read benefit, so it is deliberately NOT added
+(EXPLAIN reported per the brief). list_price is not in any index so the sum needs the heap either
+way; no index-only scan is possible.
+
+VERIFIED (scripts/live-m34-check.mts, throwaway workspaces, real v30.20 import — ALL PASSED):
+P12 YTD 2026 include = ₱161,680,945.00 (17 sales ₱159,280,945 + 4 rentals ₱2,400,000, Referrer
+excluded) / exclude = ₱159,280,945.00; computePlan over the STORED 2026 row + LIVE ytd → Total
+Sales ₱415,355,587.83 / YTD ₱161,680,945.00 / Balance ₱253,674,642.83 (P11/P13 through the pure
+engine, arithmetic never hand-rolled); future year 2099 (no booked deals) → YTD ₱0.00 + balance =
+the whole ₱415,355,587.83 (booked-year filter, not a clock); AC10/FR-M3-13 a new ₱10,000,000 2026
+Sale → YTD ₱171,680,945.00 (+₱10M), archiving it → back to ₱161,680,945.00 (archived EXCLUDED);
+AC9 tenant B's plan_ytd_actual_sales(2026) = ₱0 (reads none of A's deals). Delta-residue ZERO
+(0 throwaway users, 0 plan_year_target/funnel_rates rows, live-check deal hard-deleted; real
+account untouched).
+
+E2E (tests/e2e/calculator.spec.ts, extended for the live pace — 10/10 CLEAN, zero retries):
+2026 renders the live pace on screen (Total Sales 415,355,587.83 / YTD 161,680,945.00 / Balance
+253,674,642.83 / "Still to transact" behind-colour); AC10 a new 2026 sale logged through the deal
+form raises YTD to 171,680,945.00, then archiving from the deal detail restores it; the CSV carries
+161680945.00 / 253674642.83. HARDENING: the M3.3 AC6/AC7 rate-edit test was flaky under the dev-
+server cold-compile race (a rate typed before hydration never fired the recompute) — added a
+data-hydrated marker to PlanningScreen (mirrors the deal form) + the test waits on it, and a
+gotoResilient() retry for the /deals/[code] cold-compile ERR_ABORTED. The spec now runs
+deterministically (10/10, no retries). FULL E2E on a clean reseed: the run stays dominated by the
+documented dev-server cold-compile/serial cascade (nav ERR_ABORTED / toBeVisible timeouts on
+UNTOUCHED specs — configuration-lists, deals, payments-list — that pass warm/on retry, the class
+progress.txt has tracked since M5.4); M3.4 is ADDITIVE (new RPC + one prop + added reads) and
+regressed nothing — the only M3.4-touched spec (calculator) is 10/10 green in isolation, and the
+authoritative to-the-centavo proof is live-m34-check + the unit suite.
+
+--- prior: M3.3 ---
 **M3.3 COMPLETE — Planning screen. The /calculator stub is replaced by the full
 one-screen planning experience over computePlan (M3.1) + the M3.2 records + the M2.3
 PlanningBasis — ZERO client math (the pure engine is the only figure source; the UI

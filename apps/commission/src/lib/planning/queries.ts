@@ -3,7 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_YEAR_TARGET_SELECT } from "@/lib/supabase/selects";
 import type { PlanYearTarget } from "@/types/entities";
-import { DEFAULT_FUNNEL_RATES, type FunnelRates } from "./engine";
+import { DEFAULT_FUNNEL_RATES, type FunnelRates, type PlanYtdAggregate } from "./engine";
 
 /**
  * M3.2 — server-only reads for the planning module (RLS-scoped, no workspace_id
@@ -78,4 +78,32 @@ export async function getFunnelRates(): Promise<FunnelRates> {
     buyerContactToViewing: r.buyer_contact_to_viewing,
     buyerLeadToContact: r.buyer_lead_to_contact,
   };
+}
+
+/**
+ * M3.4 — Rule P12's YTD actual booked volume for `year`, the pace card's live figure
+ * (FR-M3-08/13). Σ list_price of non-Referrer, non-archived deals booked in the plan
+ * year — Sale always, Rental iff `includeRentals` (default TRUE = the workbook's sheet
+ * behaviour). The engine only does the P13 subtraction; the sum happens here, in SQL
+ * (plan_ytd_actual_sales), so it rides the deal index and never ships 1,000 rows to Node.
+ *
+ * OQ-1 lives HERE, not in the engine: `includeRentals` is the single, NOT-user-visible
+ * switch the product owner's rental decision flips. Default include → 2026 reads
+ * ₱161,680,945.00; exclude → ₱159,280,945.00 (the four workbook rentals, ₱2,400,000).
+ *
+ * The RPC sums numeric(14,2) and returns it ::text (never a JSON float); an empty year
+ * comes back "0" → the engine rounds it to "0.00" and the balance is the full target.
+ */
+export async function getPlanYtdAggregate(
+  year: number,
+  { includeRentals = true }: { includeRentals?: boolean } = {}
+): Promise<PlanYtdAggregate> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("plan_ytd_actual_sales", {
+    p_year: year,
+    p_include_rentals: includeRentals,
+  });
+
+  if (error) throw new Error(`Could not read your booked sales pace: ${error.message}`);
+  return { ytdActualSales: data ?? "0" };
 }

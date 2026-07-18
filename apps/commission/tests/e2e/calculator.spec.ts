@@ -4,11 +4,13 @@ import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * M3.3 — the GCI Calculator (planning screen), end to end (M3 §9 AC 1, 2, 4, 6, 7, 8 +
- * export + 360px). Provisions its OWN throwaway users, imports the REAL v30.20 workbook
- * so 2026 is plannable over the live basis, then drives /calculator: every §10 figure,
- * instant funnel recalc + gated save, add-a-year, the opex+cos validation, a per-year
- * override + revert, the empty state, and the plan export.
+ * M3.3/M3.4 — the GCI Calculator (planning screen + live pace), end to end (M3 §9
+ * AC 1, 2, 3, 4, 6, 7, 8, 10 + export + 360px). Provisions its OWN throwaway users,
+ * imports the REAL v30.20 workbook so 2026 is plannable over the live basis, then drives
+ * /calculator: every §10 figure, the live Rule P12 pace (YTD ₱161,680,945 / balance
+ * ₱253,674,642.83), a new deal moving YTD then archiving it back (FR-M3-13), instant
+ * funnel recalc + gated save, add-a-year, the opex+cos validation, a per-year override +
+ * revert, the empty state, and the plan export.
  *
  * CLOCK-ROBUST value assertions use ?year=2026 (the workbook's plan year); mutating tests
  * revert so later tests read the pristine 2026 plan. Skips cleanly when the workbook is
@@ -69,6 +71,19 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   for (const uid of users) await admin.auth.admin.deleteUser(uid);
 });
+
+/** Navigate, retrying the dev-server cold-compile ERR_ABORTED ("frame detached") that a
+ * first hit on an uncompiled route throws under load (documented in progress.txt since M5.4). */
+async function gotoResilient(page: Page, url: string) {
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      await page.goto(url);
+      return;
+    } catch (e) {
+      if (i === 2 || !/ERR_ABORTED|frame was detached/.test(String(e))) throw e;
+    }
+  }
+}
 
 async function signIn(page: Page, who: string) {
   await page.goto("/login");
@@ -139,9 +154,12 @@ test("2026 reproduces every §10 value (AC1/AC2)", async ({ page }) => {
   await expect(page.getByTestId("funnel-buyer_contacts-yearly")).toHaveText("211.10");
   await expect(page.getByTestId("funnel-buyer_leads-yearly")).toHaveText("2,110.99");
 
-  // pace: Total Sales required real; YTD is the M3.4 seam
+  // pace (M3.4, Rules P11–P13): Total Sales required, live YTD actual, and Balance —
+  // 17 sales ₱159,280,945 + 4 rentals ₱2,400,000 = ₱161,680,945; balance behind-coloured.
   await expect(page.getByTestId("pace-total-value")).toContainText("415,355,587.83");
-  await expect(page.getByTestId("pace-ytd-value")).toHaveText("—");
+  await expect(page.getByTestId("pace-ytd-value")).toContainText("161,680,945.00");
+  await expect(page.getByTestId("pace-balance-value")).toContainText("253,674,642.83");
+  await expect(page.getByTestId("pace-balance")).toContainText("Still to transact");
 });
 
 test("editing a funnel rate recomputes instantly and persists on confirm (AC6/AC7)", async ({
@@ -150,6 +168,8 @@ test("editing a funnel rate recomputes instantly and persists on confirm (AC6/AC
   test.skip(!HAVE_WORKBOOK, "real workbook not present");
   await signIn(page, email);
   await page.goto("/calculator?year=2026");
+  // Wait for the client to hydrate — a rate typed before hydration never fires the recompute.
+  await expect(page.getByTestId("planning-screen")).toHaveAttribute("data-hydrated", "true");
 
   // Listing-to-Sold 25% → 30% recomputes Listings to take = 44.33 ÷ 0.30 = 147.77 LIVE.
   await page.getByTestId("rate-listingToSold").fill("30");
@@ -163,6 +183,7 @@ test("editing a funnel rate recomputes instantly and persists on confirm (AC6/AC
   await expect(page.getByTestId("funnel-listings_to_take-yearly")).toHaveText("147.77");
 
   // Restore to 25% so global rates stay pristine for later reads.
+  await expect(page.getByTestId("planning-screen")).toHaveAttribute("data-hydrated", "true");
   await page.getByTestId("rate-listingToSold").fill("25");
   await page.getByTestId("rates-save").click();
   await confirmGate(page, "rates-save-gate");
@@ -242,11 +263,57 @@ test("the plan exports to CSV/XLSX matching the screen (FR-M3-12)", async ({ pag
   expect(text).toContain("16920000.00"); // exact stored working goal
   expect(text).toContain("381676.31"); // fees per deal
   expect(text).toContain("415355587.83"); // total sales required
-  expect(text).toContain("M3.4"); // the documented pace seam
+  expect(text).toContain("161680945.00"); // live YTD actual booked (Rule P12)
+  expect(text).toContain("253674642.83"); // balance to target (Rule P13)
 
   const xlsx = await page.request.get("/api/export/calculator-plan?format=xlsx&year=2026");
   expect(xlsx.status()).toBe(200);
   expect(xlsx.headers()["content-type"]).toContain("spreadsheetml");
+});
+
+test("AC10/FR-M3-13: a new 2026 Sale moves YTD live; archiving restores it", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  // baseline pace
+  await page.goto("/calculator?year=2026");
+  await expect(page.getByTestId("pace-ytd-value")).toContainText("161,680,945.00");
+
+  // log a ₱10,000,000 2026 resale sale through the real deal form
+  await page.goto("/deals/new");
+  await expect(page.getByTestId("deal-form")).toHaveAttribute("data-hydrated", "true");
+  await page.getByTestId("field-dealType").selectOption("resale");
+  await page.getByTestId("field-bookedDate").fill("2026-05-05");
+  await page.getByTestId("field-clientName").fill("M34 Pace Test");
+  await page.getByTestId("field-representation").selectOption("buyer");
+  await page.getByTestId("field-propertyTypeId").selectOption({ index: 1 });
+  await page.getByTestId("field-leadSourceId").selectOption({ index: 1 });
+  await page.getByTestId("field-propertyDetails").fill("M34 synthetic sale");
+  await page.getByTestId("field-modeOfPayment").selectOption("cash");
+  await page.getByTestId("field-listPrice").fill("10000000");
+  await page.getByTestId("field-rate").fill("5");
+  await page.getByTestId("deal-submit").click();
+  // A one-sided (buyer) resale can raise a soft split warning that turns the button into
+  // "Save anyway" — tolerate it so the create is deterministic under load.
+  const submit = page.getByTestId("deal-submit");
+  if (await submit.getByText(/Save anyway/i).isVisible().catch(() => false)) await submit.click();
+  await expect(page).toHaveURL(/\/deals$/);
+
+  // YTD rises by exactly ₱10,000,000 (Σ list_price is basis-independent, live off the deal table)
+  await page.goto("/calculator?year=2026");
+  await expect(page.getByTestId("pace-ytd-value")).toContainText("171,680,945.00");
+
+  // archive the new deal from its detail page. The import created exactly 21 deals
+  // (D001–D021) and no test creates another before this, so the new deal is D022.
+  await gotoResilient(page, "/deals/D022");
+  await expect(page.getByTestId("detail-net-gci")).toBeVisible();
+  await page.getByTestId("archive-deal").click();
+  await expect(page.getByTestId("restore-deal")).toBeVisible();
+
+  // archived deals are EXCLUDED → pace is pristine again (YTD + balance to the centavo)
+  await page.goto("/calculator?year=2026");
+  await expect(page.getByTestId("pace-ytd-value")).toContainText("161,680,945.00");
+  await expect(page.getByTestId("pace-balance-value")).toContainText("253,674,642.83");
 });
 
 test("a brand-new workspace shows the guided empty state (FR-M3-09)", async ({ page }) => {

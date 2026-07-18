@@ -17,6 +17,7 @@ import {
   type Plan,
   type PlanIssue,
   type PlanYearTargetInput,
+  type PlanYtdAggregate,
 } from "@/lib/planning";
 import type { PlanningBasisContract } from "@/lib/yield";
 import { formatAmount, parseAmountInput, percentToRate, rateToPercent } from "@/lib/money";
@@ -77,11 +78,16 @@ export function PlanningScreen({
   targetRow,
   rates,
   basis,
+  ytd,
 }: {
   year: number;
   targetRow: PlanYearTarget | null;
   rates: FunnelRates;
   basis: PlanningBasisContract;
+  /** M3.4 — Rule P12 booked volume for the plan year (server-read), lights the pace
+   * card's YTD actual + balance. Null while no aggregate is supplied (kept for the
+   * rate-edit recompute: the value is a stable prop, so instant recalc preserves it). */
+  ytd: PlanYtdAggregate | null;
 }) {
   const serverPercent = useMemo(() => toRatesPercent(rates), [rates]);
   const serverKey = JSON.stringify(serverPercent);
@@ -93,6 +99,13 @@ export function PlanningScreen({
   }, [serverKey]);
 
   const dirty = JSON.stringify(ratesPercent) !== serverKey;
+
+  // Hydration marker (mirrors the deal form): a rate typed into a controlled input before
+  // React hydrates updates the DOM but not the state, so the recompute + Save bar never
+  // fire. Tests wait for data-hydrated="true" before editing a rate. (Added: M3.4, to
+  // stabilise the AC6/AC7 rate-edit e2e under the dev-server cold-compile race. 2026-07-18)
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
 
   const targetInput: PlanYearTargetInput = useMemo(
     () =>
@@ -123,8 +136,8 @@ export function PlanningScreen({
   );
 
   const planResult = useMemo(
-    () => computePlan(targetInput, ratesDecimal, basis),
-    [targetInput, ratesDecimal, basis]
+    () => computePlan(targetInput, ratesDecimal, basis, ytd),
+    [targetInput, ratesDecimal, basis, ytd]
   );
 
   // Hold the last good plan so a transiently-invalid rate keeps the ladder visible.
@@ -214,7 +227,7 @@ export function PlanningScreen({
 
   // --- the full plan ----------------------------------------------------------
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="planning-screen" data-hydrated={hydrated ? "true" : "false"}>
       <DashboardSection index={1} title="Economic model" testId="section-economic">
         <EconomicModelCard
           model={plan.economicModel}

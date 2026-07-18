@@ -26,7 +26,7 @@ import {
   CALCULATOR_PLAN_COLUMNS,
   type PlanExportRow,
 } from "@/lib/planning";
-import { getPlanYearTarget, getFunnelRates } from "@/lib/planning/queries";
+import { getPlanYearTarget, getFunnelRates, getPlanYtdAggregate } from "@/lib/planning/queries";
 import { getPlanningBasis } from "@/lib/yield/planning-basis";
 import { listDeals } from "@/lib/deals/queries";
 import {
@@ -648,10 +648,11 @@ export async function loadExportDataset(
       // Manila year, matching the screen's default. A not-plannable year exports a single
       // line naming why (the same typed issues the screen renders inline), never an error.
       const year = filters.year ?? manilaYear();
-      const [row, rates, basis] = await Promise.all([
+      const [row, rates, basis, ytd] = await Promise.all([
         getPlanYearTarget(year),
         getFunnelRates(),
         getPlanningBasis(),
+        getPlanYtdAggregate(year),
       ]);
       const input = row
         ? planYearTargetToInput(row)
@@ -663,7 +664,7 @@ export async function loadExportDataset(
             yieldOverride: null,
             avgPriceOverride: null,
           };
-      const result = computePlan(input, rates, basis);
+      const result = computePlan(input, rates, basis, ytd);
       const rows: PlanExportRow[] = result.ok
         ? planToRows(result.plan)
         : [

@@ -17,7 +17,8 @@
     "perf:receivables": "node --import ./tests/alias-hooks.mjs scripts/perf-receivables.ts",
     "perf:payments": "node --import ./tests/alias-hooks.mjs scripts/perf-payments.ts",
   "perf:dashboard": "node --import ./tests/alias-hooks.mjs scripts/perf-dashboard.ts",
-    "perf:yield": "node --import ./tests/alias-hooks.mjs scripts/perf-yield.ts"
+    "perf:yield": "node --import ./tests/alias-hooks.mjs scripts/perf-yield.ts",
+    "perf:plan-ytd": "node --import ./tests/alias-hooks.mjs scripts/perf-plan-ytd.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

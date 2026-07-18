@@ -5,11 +5,11 @@ import { formatPHP, toMoney } from "@/lib/money";
 import type { Pace } from "@/lib/planning";
 
 /**
- * M3.3 §6 pace block (FR-M3-08, Rules P11–P13). Total Sales required is real today
- * (= GCI goal ÷ yield). YTD actual booked + Balance to target are M3.4's live aggregate
- * (Rule P12) — until then this renders the documented seam: a muted "—" that names when
- * the live figure arrives. When M3.4 supplies the aggregate the same tiles light up with
- * ahead/behind coloring (balance < 0 = target beaten).
+ * §6 pace block (FR-M3-08, Rules P11–P13). Total Sales required = GCI goal ÷ yield;
+ * YTD actual booked is Rule P12's live aggregate (M3.4 — Sale+Rental, ≠Referrer, booked
+ * this plan year) and Balance = Total − YTD, colored ahead (balance < 0 = target beaten)
+ * or behind. A plan computed without an aggregate leaves YTD/Balance null → a muted "—"
+ * (defensive; the calculator page and the export loader always supply the aggregate).
  */
 export function PaceCard({ pace }: { pace: Pace }) {
   const hasYtd = pace.ytdActualSales !== null;
@@ -28,7 +28,7 @@ export function PaceCard({ pace }: { pace: Pace }) {
         label="YTD actual booked"
         value={hasYtd ? formatPHP(pace.ytdActualSales!) : "—"}
         tone={hasYtd ? "default" : "muted"}
-        caption={hasYtd ? "Booked this plan year" : "Live year-to-date pace lands with M3.4"}
+        caption={hasYtd ? "Booked this plan year (sales + rentals)" : "No booked-sales read"}
       />
       <StatTile
         testId="pace-balance"
@@ -40,7 +40,7 @@ export function PaceCard({ pace }: { pace: Pace }) {
             ? balanceAhead
               ? "Ahead of target"
               : "Still to transact"
-            : "Live year-to-date pace lands with M3.4"
+            : "No booked-sales read"
         }
       />
     </div>

@@ -6,7 +6,7 @@ import { DashboardSection } from "@/components/dashboard/section";
 import { PlanningScreen } from "@/components/planning/planning-screen";
 import { PlanningYearSelector } from "@/components/planning/planning-year-selector";
 import { TargetsTableEditor } from "@/components/planning/targets-table-editor";
-import { listPlanYearTargets, getFunnelRates } from "@/lib/planning/queries";
+import { listPlanYearTargets, getFunnelRates, getPlanYtdAggregate } from "@/lib/planning/queries";
 import { getPlanningBasis } from "@/lib/yield/planning-basis";
 import { manilaYear } from "@/lib/date/manila";
 import { formatAmount, rateToPercent } from "@/lib/money";
@@ -38,10 +38,14 @@ export default async function CalculatorPage({
   const year =
     Number.isInteger(parsed) && parsed >= 2000 && parsed <= 2100 ? parsed : currentYear;
 
-  const [targets, rates, basis] = await Promise.all([
+  // The Rule P12 aggregate is booked for the SELECTED year — loaded in the same
+  // parallel pass so the pace card lights up on first paint (FR-M3-08/13). OQ-1's
+  // rental-inclusion flag defaults to the workbook's include-rentals behaviour.
+  const [targets, rates, basis, ytd] = await Promise.all([
     listPlanYearTargets(),
     getFunnelRates(),
     getPlanningBasis(),
+    getPlanYtdAggregate(year),
   ]);
 
   const targetRow = targets.find((t) => t.year === year) ?? null;
@@ -93,7 +97,7 @@ export default async function CalculatorPage({
         </div>
       </div>
 
-      <PlanningScreen key={year} year={year} targetRow={targetRow} rates={rates} basis={basis} />
+      <PlanningScreen key={year} year={year} targetRow={targetRow} rates={rates} basis={basis} ytd={ytd} />
 
       <DashboardSection
         index={6}

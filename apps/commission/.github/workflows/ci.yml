@@ -81,6 +81,13 @@ jobs:
       - name: Yield perf harness (self-skips without live credentials)
         run: pnpm run perf:yield
 
+      # M3 pace budget (M3 PRD §8): Rule P12's YTD aggregate over ≥ 1,000 deals
+      # < 300 ms P95. Same self-skipping contract — seeds 1,000 deals across three
+      # booked years and measures plan_ytd_actual_sales' true server execution
+      # (EXPLAIN ANALYZE) both OQ-1 flag ways, failing the build if the budget is missed.
+      - name: Plan-YTD perf harness (self-skips without live credentials)
+        run: pnpm run perf:plan-ytd
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

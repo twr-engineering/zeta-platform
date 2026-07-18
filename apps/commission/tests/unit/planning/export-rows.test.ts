@@ -12,9 +12,10 @@ import {
 import { WORKBOOK_PLANNING_BASIS } from "../../doubles/planning-basis";
 
 /**
- * M3.3 — the plan export flattening (FR-M3-12). Asserts the §10 / §9.1 fixtures survive
- * the flatten to the centavo, so the CSV/XLSX download ties to the screen (AC8-style),
- * and that the pace lines carry the documented M3.4 seam.
+ * M3.3/M3.4 — the plan export flattening (FR-M3-12). Asserts the §10 / §9.1 fixtures
+ * survive the flatten to the centavo, so the CSV/XLSX download ties to the screen
+ * (AC8-style). The pace lines carry the live Rule P12 YTD + P13 balance when an aggregate
+ * is supplied, and fall back to null with a "no read" note when it is not (defensive).
  */
 
 const TARGET_2026: PlanYearTargetInput = {
@@ -73,14 +74,30 @@ test("deal + funnel counts flatten at full-precision 2-dp (Rules P7/P9/P10)", ()
   assert.equal(byLine("Seller funnel: Listings to take").yearly, "177.32");
 });
 
-test("pace: Total Sales required is real; YTD + Balance are the M3.4 seam", () => {
+test("pace: Total Sales real; YTD + Balance null (defensive) without an aggregate", () => {
   assert.equal(byLine("Total Sales required").yearly, "415355587.83");
 
   const ytd = byLine("YTD actual booked");
   assert.equal(ytd.yearly, null);
-  assert.match(ytd.detail ?? "", /M3\.4/);
+  assert.match(ytd.detail ?? "", /no booked-sales read/);
 
   const balance = byLine("Balance to target");
   assert.equal(balance.yearly, null);
-  assert.match(balance.detail ?? "", /M3\.4/);
+  assert.match(balance.detail ?? "", /no booked-sales read/);
+});
+
+test("M3.4 — pace lines carry the live Rule P12 YTD + P13 balance when supplied", () => {
+  // Updated: M3.4 wires the aggregate through; the export loader always supplies it. 2026-07-18
+  const result = computePlan(TARGET_2026, DEFAULT_FUNNEL_RATES, WORKBOOK_PLANNING_BASIS, {
+    ytdActualSales: "161680945.00",
+  });
+  assert.equal(result.ok, true);
+  if (!result.ok) throw new Error("unreachable");
+  const wired = planToRows(result.plan);
+  const line = (l: string) => wired.find((r) => r.line === l)!;
+
+  assert.equal(line("YTD actual booked").yearly, "161680945.00");
+  assert.match(line("YTD actual booked").detail ?? "", /sales \+ rentals/);
+  assert.equal(line("Balance to target").yearly, "253674642.83");
+  assert.match(line("Balance to target").detail ?? "", /Total Sales required − YTD actual/);
 });

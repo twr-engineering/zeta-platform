@@ -11,8 +11,9 @@ import { assumptionSourceLabel, funnelRatePercentLabel } from "./display";
  * so the download ties to the screen to the centavo). Percents/formulae ride in the
  * text `detail` column. A Yearly/Monthly/Weekly cell is null on scalar lines.
  *
- * The pace lines carry the M3.4 seam: with no YTD aggregate yet, YTD actual and
- * Balance are null and the detail says so — Total Sales required is real today.
+ * The pace lines: Total Sales required = GCI goal ÷ yield; YTD actual + Balance come
+ * from Rule P12's booked-volume aggregate (M3.4). A plan flattened without an aggregate
+ * leaves YTD/Balance null and the detail says so — the export loader always supplies one.
  */
 export type PlanExportRow = {
   line: string;
@@ -126,7 +127,7 @@ export function planToRows(plan: Plan): PlanExportRow[] {
     scalar(
       "YTD actual booked",
       pace.ytdActualSales,
-      pace.ytdActualSales === null ? "Live year-to-date pace lands with M3.4" : "booked this plan year"
+      pace.ytdActualSales === null ? "no booked-sales read" : "booked this plan year (sales + rentals)"
     )
   );
   rows.push(
@@ -134,7 +135,7 @@ export function planToRows(plan: Plan): PlanExportRow[] {
       "Balance to target",
       pace.balanceToTarget,
       pace.balanceToTarget === null
-        ? "Live year-to-date pace lands with M3.4"
+        ? "no booked-sales read"
         : "= Total Sales required − YTD actual"
     )
   );

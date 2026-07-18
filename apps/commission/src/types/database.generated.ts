@@ -1506,6 +1506,10 @@ export type Database = {
         Args: { p_job_id: string; p_limit: number }
         Returns: Json
       }
+      plan_ytd_actual_sales: {
+        Args: { p_include_rentals?: boolean; p_year: number }
+        Returns: string
+      }
       reconcile_yield_aggregate: { Args: never; Returns: Json }
       reference_count:
         | {

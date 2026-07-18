@@ -203,6 +203,26 @@ test("P12/P13 — YTD actual and balance from the M3.4 aggregate", () => {
   assert.equal(withYtd.pace.balanceToTarget, "253674642.83");
 });
 
+test("OQ-1 — the rental-inclusion flag's effect at the engine boundary (P12/P13)", () => {
+  // The flag lives in the QUERY (getPlanYtdAggregate), not the engine — the engine just
+  // consumes whatever Σ list_price it is handed. This proves the two YTD values the flag
+  // produces on the 2026 workbook data land as two distinct, exact balances (the OQ-1
+  // evidence fixture; the delta is the four rentals' ₱2,400,000 annual-rent volume).
+  const include = plan(
+    computePlan(TARGET_2026, DEFAULT_FUNNEL_RATES, WORKBOOK_PLANNING_BASIS, {
+      ytdActualSales: "161680945.00", // p_include_rentals = true (workbook default)
+    })
+  );
+  const exclude = plan(
+    computePlan(TARGET_2026, DEFAULT_FUNNEL_RATES, WORKBOOK_PLANNING_BASIS, {
+      ytdActualSales: "159280945.00", // p_include_rentals = false (sales only)
+    })
+  );
+  assert.equal(include.pace.balanceToTarget, "253674642.83");
+  assert.equal(exclude.pace.ytdActualSales, "159280945.00");
+  assert.equal(exclude.pace.balanceToTarget, "256074642.83"); // +₱2,400,000 to transact
+});
+
 test("balance may be negative (target beaten) and is never clamped", () => {
   const beaten = plan(
     computePlan(TARGET_2026, DEFAULT_FUNNEL_RATES, WORKBOOK_PLANNING_BASIS, {
