@@ -88,6 +88,15 @@ jobs:
       - name: Plan-YTD perf harness (self-skips without live credentials)
         run: pnpm run perf:plan-ytd
 
+      # M7 Source Performance perf budget (M7 PRD §8 / criterion 10): the report and
+      # each year-filter change < 500 ms P95 at 1,000 deals / 1,000 payments / 60
+      # sources. Same self-skipping contract — "skipped" on the placeholder credentials
+      # CI runs with; against a real project it seeds 1,000 deals across 60 sources and
+      # measures the two parallel reads' true server execution (EXPLAIN ANALYZE) plus
+      # the pure sourcePerformance() compose, failing the build if the budget is missed.
+      - name: Source Performance perf harness (self-skips without live credentials)
+        run: pnpm run perf:source-performance
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

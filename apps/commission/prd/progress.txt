@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T06:30:00+08:00 (M7.2 — Source Performance Report UI, year filter & export)
+# Last Updated: 2026-07-19T08:15:00+08:00 (M7.3 — Source-lifecycle & edge hardening, cross-links, perf — M7 COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -40,7 +40,7 @@
 - [x] M3.4: Pace vs actual + hardening  ← M3 COMPLETE
 - [x] M7.1: Aggregation service + fixture parity
 - [x] M7.2: Report UI, year filter & export
-- [ ] M7.3: Source-lifecycle & edge hardening, cross-links, perf
+- [x] M7.3: Source-lifecycle & edge hardening, cross-links, perf  ← M7 COMPLETE
 - [ ] M8.1: Aggregation service: payment-period reports 1, 3, 4
 - [ ] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
 - [ ] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
@@ -58,6 +58,86 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M7.3 COMPLETE — Source-lifecycle & edge hardening, cross-links, perf. 🎉 M7 COMPLETE
+(the lead-channel scorecard). PURELY ADDITIVE HARDENING — ZERO src/ runtime files touched
+(git status: new tests/unit/source-performance/lifecycle.test.ts + scripts/live-m73-check.mts
++ scripts/perf-source-performance.ts; additive edits to package.json, .github/workflows/ci.yml,
+tests/e2e/source-performance.spec.ts) → e2e regression structurally impossible. test:unit
+440/440 (+5 lifecycle); build:check + lint clean; live-m73-check ALL 16 PASSED on the REAL
+v30.20 import; perf 5.11 ms P95 (98× under the 500 ms budget); source-performance e2e 10/10
+(+1 rename-propagation); delta-residue ZERO (0 m73-/perf-source throwaway users; real account
+juliusbaliling25 untouched).
+
+NO NEW SURFACE / NO CACHE (the measured decision, §4 rule 12). M7.1/M7.2 are compute-on-read
+and STAY so: getSourcePerformance loads listReceivables()+allLeadSources() live on every read,
+so a deal create/edit, a payment, a status change, or an M0 rename/archive reflects on the very
+NEXT read — proven live (freshness checks below). Adding an event-driven cache would be pure
+invalidation complexity for a report that already measures 5.11 ms P95 at 1,000 deals / 60
+sources; the PRD names a cache as ONE acceptable path (FR-M7-11 "aggregate query OR cached
+projection"), not a requirement, and sets no staleness bound compute-on-read can't meet. Same
+call M6.1/M2.3/M2.4/M3.4 made and documented. No migration; no index added — the receivable
+read EXPLAINs at 0.88 ms on the existing workspace-scoped partial index, the lead_source read
+at 0.13 ms; adding an index would be write-side cost for zero measurable read benefit.
+
+UNIT (tests/unit/source-performance/lifecycle.test.ts, +5, pure over ProjectionReceivable[]):
+EC18 rename → row LABEL follows the current M0 name (FK is identity, name never stored on the
+receivable), one continuous row, no orphan/leftover; EC18 archive → "(inactive)" + figures
+unchanged + restore reverts; EC18 SUM-PRESERVATION property (fast-check, 200 runs) — no random
+rename/archive/drop-from-master sequence ever changes TOTAL Booked or drops a deal's NET GCI
+(Σ rows === TOTAL always); EC19 cross-year — a 2025-booked deal collected 2026 shows in the
+2025 lens WITH its cash and is ABSENT from 2026 (booking-year is the only key, §4 rule 1);
+cancelled-with-partial — source row keeps the REAL cash, Outstanding excludes the write-off,
+% Collected honest (NOT the sheet's Booked−Outstanding). (build.test.ts already pinned AC7
+cancelled + edge-19 booked-uncollected + never-orphan from M7.1 — these ADD the cross-year and
+lifecycle-property laws.)
+
+LIVE EDGE SUITE (scripts/live-m73-check.mts, pnpm-less: node --import; throwaway workspaces,
+REAL v30.20 import, ALL 16 PASSED). Drives the report through the REAL pipelines (create_deal→
+consume_deal_events→receivable, create_payment→consume_payment_events, cancel_receivable,
+reopen_receivable) and composes the SAME sourcePerformance the app reads:
+· EC18 rename YouTube→"YouTube Organic" via M0 → same 7 deals/₱2,455,541.29 under the new label
+  on next read, one row, no leftover "YouTube", TOTAL still ties (history intact); restore.
+· EC18 archive Lamudi (2 deals) → "Lamudi (inactive)" figures unchanged; restore → bare label.
+· EC19 book a 2025 deal on "Website", pay it in 2026 (payment year ≠ booking year): the 2025
+  lens shows it with collected ₱120,000 on its booked figure; the 2026 lens EXCLUDES it (cash
+  does not leak across booking-year buckets); the year dropdown now offers 2025.
+· FRESHNESS: a new ₱80,000 payment → collected 120,000→200,000 on the next read (no cache);
+  reopening the cancelled receivable restates Outstanding 0→(collectible−cash) on the next read.
+· CANCELLED-WITH-PARTIAL: fresh deal, pay ₱100,000, cancel_receivable(reason) → receivable
+  cancelled + ₱100,000 cash kept + remainder written off (Rule O); the SOURCE ROW keeps the real
+  ₱100,000, Outstanding +0 (cancelled ⇒ excluded from the open-balance sum), % Collected honest
+  (100,000÷booked, NOT the sheet's Booked−Outstanding which would over-claim the full booked).
+· AC9 tenant B reads 0 of A's deals; A unchanged by B's read (isolation).
+  NOTE the stored receivable.balance is RETAINED on cancel (Rule O records written_off); M7's
+  outstandingNet is the open-only sum, so cancelled rows contribute 0 — the honest lens the PRD
+  §3.2/§4-rule-7 specifies (verified: outstandingNet 0.00 while written_off = collectible−cash).
+
+PERF (scripts/perf-source-performance.ts, pnpm perf:source-performance, wired into ci.yml
+self-skipping; criterion 10 / §8 < 500 ms P95 at 1,000 deals / 1,000 payments / 60 sources).
+Seeds 1,000 deals + 1,000 receivables across 60 sources (a fifth archived, lifecycle mix incl.
+cancelled-with-partial) in a throwaway workspace, EXPLAIN-ANALYZEs the TWO parallel reads
+getSourcePerformance issues + times the pure sourcePerformance() compose (all-years + a single-
+year filter switch). Measured: receivable read 0.88 ms + lead_source 0.13 ms (parallel max 0.88)
++ compose all-years 4.23 ms / year-filter 1.42 ms → total **5.11 ms P95** vs 500 ms budget (98×
+under). No N+1 (one grouped compose over one flat receivable read). NO INDEX added (measured).
+
+M9 CROSS-LINK SEAM (FR-M7-09, unchanged from M7.2 — the v1 drill STANDS). Each source row/card
+still links to dealsPath({source: leadSourceId, year}) → the deal list's source filter (M7.2's
+additive plumbing). M9 does not exist yet; when M9.1 ships its search read layer, SWAP/EXTEND
+this single call site to target M9 search pre-filtered to (source, year) — the report itself
+needs no change (it emits leadSourceId+year; only the link target moves). Documented as the
+upgrade seam; nothing blocks on M9.
+
+VERIFIED: test:unit 440/440; build:check + lint clean; live-m73-check 16/16 on the real import;
+perf 5.11 ms P95; source-performance e2e 10/10 (incl. the new rename-propagation test); full
+e2e clean reseed [see run note]; delta-residue ZERO.
+
+FOR M8 (next module — Collection Reports, payment-period + vintage matrix): M7 is DONE and is a
+read-only projection tying to M2 (Booked 6,688,497.25) / M6 (Collected 1,908,192.86 / Outstanding
+4,855,304.39). M8's paid-year cash lens (§10 out-of-scope for M7, OQ3) is the natural fast-follow
+that would let M7 offer a per-source paid-year cut reusing M8's aggregation.
+
+--- prior: M7.2 ---
 **M7.2 COMPLETE — Source Performance Report UI, year filter & export. The
 /source-performance STUB becomes the full lead-channel scorecard over the M7.1
 service — ZERO client math (the sole client work is row SORTING, which compares

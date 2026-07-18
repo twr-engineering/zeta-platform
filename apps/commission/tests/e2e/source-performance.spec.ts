@@ -259,6 +259,41 @@ test("an archived source with deals stays visible, badged '(inactive)' (edge cas
   await expect(sourceRow(page, "Lamudi")).not.toContainText("(inactive)");
 });
 
+test("a source rename propagates to the row label on reload (edge case 18)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  const wsId = await mainWorkspaceId();
+  const { data: youtube } = await admin
+    .from("lead_source")
+    .select("id")
+    .eq("workspace_id", wsId)
+    .eq("name", "YouTube")
+    .single();
+  const youtubeId = (youtube as { id: string }).id;
+
+  // Rename YouTube → "YouTube Organic" in M0. The report stores lead_source_id (FK),
+  // never the name — the same 7 deals / ₱2,455,541.29 must reappear under the new
+  // label on the next read, as one continuous row with no orphaned "YouTube" bucket.
+  await admin.from("lead_source").update({ name: "YouTube Organic" }).eq("id", youtubeId);
+  try {
+    await signIn(page, email);
+    await page.goto("/source-performance?year=all");
+    const renamed = sourceRow(page, "YouTube Organic");
+    await expect(renamed.getByTestId("sp-deals")).toHaveText("7");
+    await expect(renamed.getByTestId("sp-booked")).toContainText("2,455,541.29");
+    // No leftover "YouTube" row, and the TOTAL still ties to M6/M2 (no NET GCI lost).
+    await expect(page.getByTestId("source-row").filter({ hasText: /^YouTube$/ })).toHaveCount(0);
+    await expect(page.getByTestId("total-booked")).toContainText("6,688,497.25");
+  } finally {
+    // Restore — leave the fixture pristine for any later spec.
+    await admin.from("lead_source").update({ name: "YouTube" }).eq("id", youtubeId);
+  }
+
+  await page.goto("/source-performance?year=all");
+  await expect(sourceRow(page, "YouTube").getByTestId("sp-deals")).toHaveText("7");
+});
+
 test("empty workspace shows the 'no lead sources configured' state (§4 rule 6)", async ({
   page,
 }) => {
