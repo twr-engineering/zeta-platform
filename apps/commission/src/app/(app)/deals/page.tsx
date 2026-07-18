@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import type { DealSegmentFilter } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { listDeals } from "@/lib/deals/queries";
+import { allLeadSources } from "@/lib/settings/list-queries";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Deals" };
@@ -24,6 +25,7 @@ export default async function DealsPage({
   searchParams: Promise<{
     referral?: string | string[];
     segment?: string | string[];
+    source?: string | string[];
     year?: string | string[];
   }>;
 }) {
@@ -34,6 +36,7 @@ export default async function DealsPage({
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const referralRaw = one(params.referral);
   const segmentRaw = one(params.segment);
+  const sourceRaw = one(params.source);
   const yearRaw = one(params.year);
 
   // Yield-Summary segment drill-through (FR-M2-12): resolve the URL segment to the
@@ -43,11 +46,22 @@ export default async function DealsPage({
   const segment = SEGMENTS.find((s) => s === segmentRaw);
   const year = yearRaw && /^\d{4}$/.test(yearRaw) ? yearRaw : undefined;
 
+  // Source Performance drill-through (FR-M7-09): resolve the lead_source_id to its
+  // current name so the chip reads "Source: YouTube" (renames propagate). An id with
+  // no matching source is ignored — the list just shows all deals. Only load the source
+  // list when the param is actually present, so the common view stays a single query.
+  let source: { id: string; label: string } | undefined;
+  if (sourceRaw) {
+    const match = (await allLeadSources()).find((s) => s.id === sourceRaw);
+    if (match) source = { id: match.id, label: match.name };
+  }
+
   const initialFilters: DealListInitialFilters | undefined =
-    referralRaw === "unpaid" || segment || year
+    referralRaw === "unpaid" || segment || source || year
       ? {
           ...(referralRaw === "unpaid" ? { referralUnpaid: true } : {}),
           ...(segment ? { segment } : {}),
+          ...(source ? { source } : {}),
           ...(year ? { year } : {}),
         }
       : undefined;

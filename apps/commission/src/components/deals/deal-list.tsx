@@ -111,11 +111,14 @@ function inSegment(deal: Deal, segment: DealSegmentFilter): boolean {
 /**
  * Initial filter state seeded from a drill-down. Data Health check (d) links here
  * with `?referral=unpaid` (M6 §7, FR-M6-12); a Yield Summary segment row links here
- * with `?segment=…&year=…` (M2 §6, FR-M2-12). Absent → the list's own defaults.
+ * with `?segment=…&year=…` (M2 §6, FR-M2-12); a Source Performance row links here with
+ * `?source=…&year=…` (M7 §6, FR-M7-09). Absent → the list's own defaults.
  */
 export type DealListInitialFilters = {
   referralUnpaid?: boolean;
   segment?: DealSegmentFilter;
+  /** A lead-source drill-through: the id filters, the label names the chip. */
+  source?: { id: string; label: string };
   /** A booked year as a string ("2026"), seeding the year select. */
   year?: string;
 };
@@ -135,6 +138,9 @@ export function DealList({
   );
   const [segment, setSegment] = useState<DealSegmentFilter | null>(
     initialFilters?.segment ?? null
+  );
+  const [source, setSource] = useState<{ id: string; label: string } | null>(
+    initialFilters?.source ?? null
   );
   const [sort, setSort] = useState<{ key: ColumnKey; dir: "asc" | "desc" }>({
     key: "booked_date",
@@ -161,6 +167,8 @@ export function DealList({
       if (year !== "all" && String(d.booked_year) !== year) return false;
       // Yield Summary drill-through (FR-M2-12): the deals of one segment.
       if (segment && !inSegment(d, segment)) return false;
+      // Source Performance drill-through (FR-M7-09): the deals of one lead source.
+      if (source && d.lead_source_id !== source.id) return false;
       // Data Health (d): a referral fee owed out and not yet paid.
       if (referralUnpaid && !(toMoney(d.referral_out).greaterThan(0) && !d.referral_paid))
         return false;
@@ -183,14 +191,14 @@ export function DealList({
       });
     }
     return rows;
-  }, [deals, search, year, showArchived, referralUnpaid, segment, sort]);
+  }, [deals, search, year, showArchived, referralUnpaid, segment, source, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const clampedPage = Math.min(page, pageCount);
   const pageRows = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   // Reset to page 1 whenever the filtered set changes shape.
-  React.useEffect(() => setPage(1), [search, year, showArchived, referralUnpaid, segment]);
+  React.useEffect(() => setPage(1), [search, year, showArchived, referralUnpaid, segment, source]);
 
   const toggleSort = (key: ColumnKey) =>
     setSort((prev) =>
@@ -209,7 +217,8 @@ export function DealList({
     (year !== "all" ? `&year=${year}` : "") +
     (showArchived ? "&archived=true" : "") +
     (referralUnpaid ? "&referral=unpaid" : "") +
-    (segment ? `&segment=${segment}` : "");
+    (segment ? `&segment=${segment}` : "") +
+    (source ? `&source=${encodeURIComponent(source.id)}` : "");
 
   return (
     <div className="space-y-4">
@@ -314,6 +323,20 @@ export function DealList({
                 className="-mr-0.5 rounded-sm hover:text-foreground"
                 aria-label="Clear segment filter"
                 data-testid="segment-filter-clear"
+              >
+                ✕
+              </button>
+            </Badge>
+          )}
+          {source && (
+            <Badge variant="secondary" className="gap-1.5" data-testid="source-filter-chip">
+              Source: {source.label}
+              <button
+                type="button"
+                onClick={() => setSource(null)}
+                className="-mr-0.5 rounded-sm hover:text-foreground"
+                aria-label="Clear source filter"
+                data-testid="source-filter-clear"
               >
                 ✕
               </button>

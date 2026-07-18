@@ -14,3 +14,8 @@ export {
   type SourcePerformanceReport,
   type SourceLeadSource,
 } from "./build";
+export {
+  sourcePerformanceToRows,
+  SOURCE_PERFORMANCE_COLUMNS,
+  type SourceExportRow,
+} from "./export-rows";

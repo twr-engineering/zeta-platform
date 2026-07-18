@@ -90,20 +90,24 @@ export type DealSegmentFilter = "resale" | "developer" | "sales" | "rental" | "r
 
 /**
  * The deal log with an initial filter (M6 §7 Data Health drill-down, FR-M6-12; M2
- * segment drill-through, FR-M2-12). `referralUnpaid` seeds the list to deals with a
- * referral fee owed out (check (d)); `segment` + `year` land a Yield-Summary segment
- * row on exactly the deals it aggregated. A `year` of `"all"` is omitted (the list's
- * default), so the two filters compose cleanly.
+ * segment drill-through, FR-M2-12; M7 source drill-through, FR-M7-09). `referralUnpaid`
+ * seeds the list to deals with a referral fee owed out (check (d)); `segment` + `year`
+ * land a Yield-Summary segment row on exactly the deals it aggregated; `source` +
+ * `year` land a Source Performance row on the deals of that lead source (the M7 v1
+ * cross-link, ahead of M9). `source` is a lead_source_id. A `year` of `"all"` is
+ * omitted (the list's default), so the filters compose cleanly.
  */
 export function dealsPath(filters?: {
   referralUnpaid?: boolean;
   segment?: DealSegmentFilter;
+  source?: string;
   year?: number | "all";
 }): string {
   if (!filters) return ROUTES.deals;
   const p = new URLSearchParams();
   if (filters.referralUnpaid) p.set("referral", "unpaid");
   if (filters.segment) p.set("segment", filters.segment);
+  if (filters.source) p.set("source", filters.source);
   if (filters.year !== undefined && filters.year !== "all") p.set("year", String(filters.year));
   const s = p.toString();
   return s ? `${ROUTES.deals}?${s}` : ROUTES.deals;

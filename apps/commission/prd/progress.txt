@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T03:30:00+08:00 (M7.1 — Source Performance aggregation + fixture parity)
+# Last Updated: 2026-07-19T06:30:00+08:00 (M7.2 — Source Performance Report UI, year filter & export)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -39,7 +39,7 @@
 - [x] M3.3: Planning screen
 - [x] M3.4: Pace vs actual + hardening  ← M3 COMPLETE
 - [x] M7.1: Aggregation service + fixture parity
-- [ ] M7.2: Report UI, year filter & export
+- [x] M7.2: Report UI, year filter & export
 - [ ] M7.3: Source-lifecycle & edge hardening, cross-links, perf
 - [ ] M8.1: Aggregation service: payment-period reports 1, 3, 4
 - [ ] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
@@ -58,6 +58,77 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M7.2 COMPLETE — Source Performance Report UI, year filter & export. The
+/source-performance STUB becomes the full lead-channel scorecard over the M7.1
+service — ZERO client math (the sole client work is row SORTING, which compares
+pre-computed decimals, never a money value). NO migration; purely additive except the
+/source-performance route (was a stub). test:unit 435/435 (+5 export-rows); build:check
++ lint clean; source-performance e2e 9/9; deals+yield-summary+source-performance 27/27
+on a clean seed (the drill target proven); delta-residue ZERO (0 throwaway users; real
+account juliusbaliling25 untouched).
+
+SCREEN (src/app/(app)/source-performance/page.tsx — server): parses ?year= (default ALL
+per §6 — NOT the current year, differs from yield-summary), loads getSourcePerformance(year)
++ getSourcePerformanceYears() in ONE parallel pass, renders the sticky header (verbatim §6
+caption + blue SourceYearFilter + CSV/XLSX) → SourcePerformanceTable. EMPTY STATES (§4 rule
+6/§6): no years + no rows → "No lead sources configured" (→ settings lead sources); no years
++ rows exist → "No deals logged yet" (→ deals); a URL-deep-linked empty year → the empty-year
+hint (the dropdown never offers one).
+
+TABLE (src/components/source-performance/source-performance-table.tsx — client): 11 cols in
+3 grouped headers (Production Deals/Booked/%/Avg · Cash Collected/%Coll/Outstanding · Fast vs
+slow R+R GCI/R+R Out/Dev GCI), sticky header, ALL columns sortable (default Booked desc §4
+rule 10; nulls sink), TOTAL pinned in <tfoot> visually distinct. Every value wears LockedValue
+(hideIcon + formula tooltip) per the §6 computed-only convention; zero-₱ → "₱ 0.00"
+(FR-M7-12); null Avg/%Coll → "—". "(inactive)" badge on archived sources. %Collected>100%
+(Referral 109.38%) renders amber + a visible ⓘ whose tooltip carries the §4-rule-8 pass-through
+note, NEVER capped. Mobile (<lg) per-source cards (source+Booked, %ofGCI, %Coll, fast/slow
+split bar) + a TOTAL card. SourceYearFilter = blue affordance select, ?year= URL state,
+options = All + distinct booked years (FR-M7-02 server-side), All=default→clean URL.
+
+DRILL-THROUGH (FR-M7-09 — the M7 v1 cross-link ahead of M9): source name/card → dealsPath(
+{source: leadSourceId, year}). ADDITIVE plumbing: routes.ts dealsPath += source?:string
+(?source=id); deal-list.tsx += DealListInitialFilters.source {id,label} → predicate
+d.lead_source_id===id + a dismissible source-filter-chip + export &source=id; deals/page.tsx
+parses ?source=, resolves the CURRENT name via allLeadSources() (renames propagate; loaded
+ONLY when the param is present). Counts tie: report Deals (active receivables per source+year)
+== list default (active deals by lead_source_id+year) — YouTube 7 proven in e2e.
+
+EXPORT (FR-M7-08): pure src/lib/source-performance/export-rows.ts (sourcePerformanceToRows +
+SOURCE_PERFORMANCE_COLUMNS, barrel-exported) flattens rows + pinned TOTAL — money verbatim
+2-dp, ratios → on-screen 2-dp % / "—", NO recompute → ties to screen to the centavo (AC9).
+New registry dataset "source-performance" (loadExportDataset reads the SAME getSourcePerformance
+the screen renders, honoring ?year=); route parses source. 11 screen cols exactly (Developer
+Outstanding stays off both surfaces per §3.3/§10 sheet parity).
+
+PRECISION (unchanged from M7.1, flagged not silently resolved): the two stored-2dp drift cells
+ship as-is — YouTube Outstanding 2,058,398.43 (PRD full-precision .44), Lamudi Avg 431,501.57
+(PRD .56); both cancel at the TOTAL (.39). Every other §9 cell verbatim; the e2e asserts the
+shipped .43. No per-cell provenance footnote on-screen (the PRD's UI spec carries none); owner
+may footnote (same class as OQ5 .30→.29).
+
+VERIFIED (tests/e2e/source-performance.spec.ts, throwaway users, REAL v30.20 import,
+--workers=1, 9/9): the §9 table (YouTube 7/2,455,541.29/36.71%/397,142.86/16.17%/2,058,398.43/
+dev 2,103,041.29; Repeat Client 9/collected 200,000/R+R out 1,099,000/dev 317,414.70; Referral
+collected 875,000/109.38% + pass-through ⓘ; TOTAL 21/6,688,497.25/1,908,192.86/28.53%/
+4,855,304.39/R+R 2,887,550/dev 3,800,947.25); default Booked-desc sort; year All≡2026 +
+dropdown=[All,2026] + blue-select drives URL; source drill YouTube→/deals?source= 7 deals +
+chip; CSV/XLSX to the centavo incl. year param; archive Lamudi (admin) → "(inactive)" badge +
+figures unchanged + restore (edge 18); empty workspace "no lead sources configured"; 360px
+cards + no h-overflow + console clean. FULL e2e clean reseed: 108 passed incl. ALL 9
+source-performance + ALL yield-summary; the ONE non-green (deals.spec:70 empty-state) is the
+documented "requires FRESHLY seeded agent3" precondition — agent3 was polluted by a prior
+deals.spec run in the same session, PROVEN green after seed:dev --delete && seed:dev (my code
+never touches the empty-state path). M7.2 is additive → structurally no regression.
+
+FOR M7.3 (lifecycle/edges/perf, cross-link, invalidation): the screen+export already render
+archived-"(inactive)"/zero-rows/never-orphan from M7.1; M7.3 adds the EC18/EC19 integration
+tests, the cancelled-with-partial regression, event-driven cache invalidation (§4 rule 12 —
+M7.1/M7.2 are compute-on-read today), 1,000-deal perf (<500ms P95), and the M9 live cross-link
+(the source drill-through targets the deal list's new source filter today — swap/extend to M9
+search when it ships).**
+
+--- prior: M7.1 ---
 **M7.1 COMPLETE — Source Performance aggregation service + fixture parity. M7 (the
 lead-channel scorecard) begun. SERVER-SIDE ONLY, PURELY ADDITIVE: new src/lib/source-
 performance/ (build.ts pure + queries.ts server + index.ts barrel) + tests/unit/source-

@@ -38,6 +38,11 @@ import {
 } from "@/lib/yield";
 import { loadYieldAggregates } from "@/lib/yield/queries";
 import { yieldReportToRows, YIELD_SUMMARY_COLUMNS } from "@/lib/yield/export-rows";
+import { getSourcePerformance } from "@/lib/source-performance/queries";
+import {
+  sourcePerformanceToRows,
+  SOURCE_PERFORMANCE_COLUMNS,
+} from "@/lib/source-performance/export-rows";
 import type { DealSegmentFilter } from "@/lib/routes";
 import {
   listReceivables,
@@ -370,6 +375,7 @@ export const EXPORT_DATASETS = [
   "dashboard-chase",
   "yield-summary",
   "calculator-plan",
+  "source-performance",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -409,6 +415,10 @@ export type DealExportFilters = {
    * the drilled segment row, and the yield-summary export reads it as the year filter
    * ("all" when `year` is absent). */
   segment?: DealSegmentFilter;
+  /** Source Performance drill-through (FR-M7-09): a lead_source_id filtering the deal
+   * list export to one source. The source-performance export reads `year` as its own
+   * booking-year filter ("all" when absent). */
+  source?: string;
 };
 
 export async function loadExportDataset(
@@ -431,6 +441,8 @@ export async function loadExportDataset(
             return false;
           // Yield Summary segment drill-through (FR-M2-12) — same classifier as the list.
           if (filters.segment && !dealInSegment(deal, filters.segment)) return false;
+          // Source Performance drill-through (FR-M7-09) — the deals of one lead source.
+          if (filters.source && deal.lead_source_id !== filters.source) return false;
           return true;
         }
       );
@@ -681,6 +693,20 @@ export async function loadExportDataset(
         sheet: "GCI Plan",
         columns: CALCULATOR_PLAN_COLUMNS,
         rows,
+      });
+    }
+    case "source-performance": {
+      // The lead-channel scorecard (FR-M7-08) for the selected booking year (or "all").
+      // Reads the SAME M7.1 service the screen renders — one row per visible source +
+      // the pinned TOTAL — so the download ties to the screen to the centavo (AC9).
+      // `year` absent ⇒ the "All" filter, matching the screen's default.
+      const yearFilter: number | "all" = filters.year ?? "all";
+      const report = await getSourcePerformance(yearFilter);
+      return dataset({
+        name: "source-performance",
+        sheet: "Source Performance",
+        columns: SOURCE_PERFORMANCE_COLUMNS,
+        rows: sourcePerformanceToRows(report),
       });
     }
   }

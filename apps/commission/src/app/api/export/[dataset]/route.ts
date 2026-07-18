@@ -106,6 +106,9 @@ export async function GET(request: Request, context: RouteContext) {
     segmentParam === "referral"
       ? segmentParam
       : undefined;
+  // Source Performance drill-through (FR-M7-09) — a lead_source_id filtering the deals
+  // export to one source; ignored by every dataset but "deals".
+  const source = params.get("source") ?? undefined;
 
   const data = await loadExportDataset(dataset, {
     year,
@@ -123,6 +126,7 @@ export async function GET(request: Request, context: RouteContext) {
     stale,
     referralUnpaid,
     segment,
+    source,
   });
   const filename = exportFilename(data.name, format, manilaToday());
 
