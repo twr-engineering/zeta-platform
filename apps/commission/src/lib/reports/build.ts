@@ -287,3 +287,253 @@ export function buildTaxPerMonth(
     },
   };
 }
+
+// --- Report 2 — Collection × Booking-Year Matrix (vintage; all-time) ---------
+
+/**
+ * The verbatim reading-guide caption (§3.3 / FR-M8-03). Exported so the M8.3 matrix
+ * component and the export writer share one source of truth rather than each
+ * restating it — a caption drift here would be a spec violation.
+ */
+export const VINTAGE_MATRIX_CAPTION =
+  "Diagonal = collected in the year booked · below diagonal = pre-selling collection tail.";
+
+/** The matrix value toggle (§3.3 / FR-M8-04) — Net of VAT is the default. */
+export type MatrixValue = "net_of_vat" | "net_cash";
+
+/**
+ * The payment shape the vintage matrix reads: the two toggle-able money columns, the
+ * paid year (the row axis), and the deal's CURRENT `booked_year` (the column axis) —
+ * the FIRST place a payment→deal join carries money attribution. That join is LIVE,
+ * not a snapshot (rule 6): correcting a deal's mis-entered booked date re-vintages its
+ * payments into the right column, while the money splits stay frozen (rule 5). The
+ * query layer flattens PaymentRow.deal.booked_year onto the row; a full PaymentRow
+ * with its deal joined satisfies this once flattened.
+ *
+ * `booked_year` is typed nullable ONLY to model the dangling-reference failure
+ * (rule 15): M5 rejects payments against nonexistent deals, so every payment reaching
+ * M8 has a resolvable booked_year — but if a dangling row ever appears, the builder
+ * fails loudly (throws) rather than silently dropping the cash from the matrix.
+ */
+export type MatrixPayment = {
+  /** Col K — the Net of VAT toggle value. */
+  net_of_vat: string;
+  /** Col N — the Net Cash toggle value. */
+  net_cash: string;
+  /** Calendar year the cash moved — the matrix ROW axis (M5's generated year_paid). */
+  year_paid: number | null;
+  /** The deal's current booking year — the matrix COLUMN axis (live join, rule 6). */
+  booked_year: number | null;
+};
+
+/** One paid-year row of the matrix: a cell per booking-year column + the row total. */
+export type VintageMatrixRow = {
+  /** The paid year `y_paid` (the row's fixed axis value). */
+  yearPaid: number;
+  /**
+   * One cell per booking-year column, index-aligned with `bookedYears`. Zero cells
+   * are "0.00" (exports carry the zero; the M8.3 grid renders `—`). A cell where
+   * `yearPaid < bookedYear` (above the diagonal — paid before booking) is rendered
+   * as-is, never hidden (rule 9); flagging that anomaly is M6's job, not M8's.
+   */
+  cells: string[];
+  /**
+   * Σ over every booking-year column for this paid year — equals report 1's column
+   * for the same toggle value (FR-M8-14: matrix row total ≡ report 1 per-year).
+   */
+  total: string;
+};
+
+export type VintageMatrix = {
+  /** The active toggle (§3.3 default Net of VAT) — labelled on screen and in exports. */
+  value: MatrixValue;
+  /** The row axis: contiguous paid years (rule 2). A paid-but-unbooked year is a row. */
+  paidYears: number[];
+  /**
+   * The column axis: contiguous booking years across all active deals (rule 2). A
+   * booked-but-uncollected year is a column with an all-zero body (AC8); a paid year
+   * with no booking does NOT add a column (columns span booking years only, rule 8 /
+   * AC7).
+   */
+  bookedYears: number[];
+  /** One row per paid year, ascending. */
+  rows: VintageMatrixRow[];
+  /** Σ per booking-year column, index-aligned with `bookedYears` (the TOTAL row). */
+  columnTotals: string[];
+  /** Σ over the whole matrix — the TOTAL row's corner; ties to report 1's TOTAL. */
+  grandTotal: string;
+};
+
+/** The money accessor for the active toggle value. */
+function matrixAccessor(value: MatrixValue): (p: MatrixPayment) => string {
+  return value === "net_cash" ? (p) => p.net_cash : (p) => p.net_of_vat;
+}
+
+/**
+ * Report 2 (§3.3 / FR-M8-03/04) — the paid-year × booking-year vintage matrix. Rows
+ * span the contiguous paid-year range (from the payments); columns span the contiguous
+ * booking-year range (from ALL active deals, so a booked-but-uncollected year still
+ * shows a column — AC8). Each cell is Σ of the toggle value over payments whose
+ * year_paid = the row AND deal.booked_year = the column; the row total equals report
+ * 1's per-year figure for the same value (the FR-M8-14 cross-check). The TOTAL is the
+ * decimal sum of the same payment set, never a re-sum of display-rounded cells.
+ *
+ * DANGLING REFERENCE (rule 15): a payment whose deal cannot resolve a booking year
+ * throws — M8 must fail loudly, never silently drop a row of real cash from the vintage
+ * picture. `bookedYears` is the column-axis source (the active deals' booking years);
+ * passing the deals' years, not the payments' joined years, is what lets a zero-payment
+ * booking year still be a column.
+ */
+export function buildVintageMatrix(
+  payments: readonly MatrixPayment[],
+  bookedYears: readonly number[],
+  value: MatrixValue = "net_of_vat"
+): VintageMatrix {
+  const scoped = payments.filter((p) => p.year_paid !== null);
+
+  // Rule 15 — a payment reaching the matrix with no resolvable booking year is a
+  // dangling reference; surface it loudly rather than dropping the cash.
+  for (const p of scoped) {
+    if (p.booked_year === null) {
+      throw new Error(
+        "A payment references a deal with no booking year — the vintage matrix cannot attribute it. This is a dangling reference (rule 15); it must be fixed upstream, never silently dropped."
+      );
+    }
+  }
+
+  const get = matrixAccessor(value);
+  const paidYears = contiguousYearRange(scoped.map((p) => p.year_paid));
+  const bookedAxis = contiguousYearRange(bookedYears);
+
+  const rows: VintageMatrixRow[] = paidYears.map((yearPaid) => {
+    const inRow = scoped.filter((p) => p.year_paid === yearPaid);
+    return {
+      yearPaid,
+      cells: bookedAxis.map((yearBooked) =>
+        sumMoney(inRow.filter((p) => p.booked_year === yearBooked), get)
+      ),
+      total: sumMoney(inRow, get),
+    };
+  });
+
+  return {
+    value,
+    paidYears,
+    bookedYears: bookedAxis,
+    rows,
+    columnTotals: bookedAxis.map((yearBooked) =>
+      sumMoney(scoped.filter((p) => p.booked_year === yearBooked), get)
+    ),
+    grandTotal: sumMoney(scoped, get),
+  };
+}
+
+// --- Report 5 — Booking-Year Summary (all-time) -----------------------------
+
+/**
+ * The receivable shape report 5 reads (§3.6) — booked year, status, and the earned/
+ * collected/outstanding money the M4 engine already computed. A full M4 ReceivableRow
+ * satisfies it; only ACTIVE (non-archived) receivables are passed in (the M1 cascade-
+ * archive contract, rule 12). Reads deals+receivables, NOT payments — the one report
+ * whose money never touches the payment ledger.
+ */
+export type ReportReceivable = {
+  /** The deal's booking year — report 5's row grouping (live, rule 6). */
+  booked_year: number;
+  /** Open rows feed Outstanding; Cancelled rows feed Written-off (OQ4 split). */
+  status: "open" | "closed" | "cancelled";
+  /** Σ = report 5's GCI (Net of VAT) column — equals Σ deal.net_gci (M4 mirrors it). */
+  booked_net_gci: string;
+  /** Σ payment net_of_vat for the deal — report 5's Collected column. */
+  collected_net: string;
+  /** Total Collectible − Collected — summed (signed, rule 11) over OPEN rows. */
+  balance: string | null;
+  /** The Cancelled deal's written-off balance (Rule O) — the OQ4 split column. */
+  written_off: string | null;
+};
+
+/** One booking-year row of report 5 (§3.6). */
+export type BookingYearSummaryRow = {
+  /** The booking year `B`. */
+  year: number;
+  /** count(receivables where booked_year = B) — every deal, all statuses. */
+  deals: number;
+  /** Σ booked_net_gci where booked_year = B — GCI (Net of VAT). */
+  gci: string;
+  /** Σ collected_net where booked_year = B. */
+  collected: string;
+  /**
+   * Σ balance over OPEN rows where booked_year = B (signed, rule 11). OQ4 DEFAULT
+   * (master PRD Q18 = "Split, flagged as sheet departure"): open balances ONLY —
+   * Cancelled deals' written-off amounts are split out into `writtenOff` below rather
+   * than lumped in here as the v30.20 sheet does. This changes the sheet's Outstanding
+   * on any workspace carrying Cancelled deals; it matches M6's position block, which
+   * reports written-off separately. The workbook fixture has no Cancelled deals, so
+   * Outstanding is identical to the sheet there (₱4,855,304.39).
+   */
+  outstanding: string;
+  /**
+   * Σ written_off over CANCELLED rows where booked_year = B (the OQ4 split column).
+   * Zero unless the workspace has Cancelled deals in that booking year.
+   */
+  writtenOff: string;
+};
+
+/** Report 5's TOTAL row — the same measures over every booking year (no `year`). */
+export type BookingYearSummaryTotal = Omit<BookingYearSummaryRow, "year">;
+
+export type BookingYearSummaryReport = {
+  /** One row per year in the rule-2 union range (zeros where no deals), ascending. */
+  rows: BookingYearSummaryRow[];
+  /** The pinned TOTAL — decimal sum of the rows to the centavo (rule 13). */
+  total: BookingYearSummaryTotal;
+};
+
+/** The report-5 measures over an arbitrary receivable set (a row body or the TOTAL). */
+function summariseReceivables(
+  group: readonly ReportReceivable[]
+): Omit<BookingYearSummaryRow, "year"> {
+  return {
+    deals: group.length,
+    gci: sumMoney(group, (r) => r.booked_net_gci),
+    collected: sumMoney(group, (r) => r.collected_net),
+    // Rule 11 — sum OPEN balances signed, as-is (an overpaid open deal's negative
+    // balance nets in; it is never clamped). Cancelled balances are NOT here (OQ4).
+    outstanding: sumMoney(
+      group.filter((r) => r.status === "open"),
+      (r) => r.balance
+    ),
+    writtenOff: sumMoney(
+      group.filter((r) => r.status === "cancelled"),
+      (r) => r.written_off
+    ),
+  };
+}
+
+/**
+ * Report 5 (§3.6 / FR-M8-08) — the Booking-Year Summary over deals + receivables.
+ * Rows span the contiguous UNION of booked years (the receivables) and paid years
+ * (the payments) — rule 2: a booking year with no cash is a zero-money row (AC8), and
+ * a paid year with no booking is a row with Deals 0 and all-zero money (AC7). Each row
+ * counts deals and sums GCI / Collected / Outstanding / Written-off; the TOTAL sums
+ * the whole set at full precision, so its Collected ties to report 1's all-years
+ * Net-of-VAT TOTAL (FR-M8-14) and every column ties to Σ rows to the centavo (rule
+ * 13). `paidYears` is the range-union input only — no payment money is read here
+ * (report 5 reads receivables, never the payment ledger).
+ */
+export function buildBookingYearSummary(
+  receivables: readonly ReportReceivable[],
+  paidYears: readonly (number | null)[]
+): BookingYearSummaryReport {
+  const range = contiguousYearRange([
+    ...receivables.map((r) => r.booked_year),
+    ...paidYears,
+  ]);
+
+  const rows: BookingYearSummaryRow[] = range.map((year) => ({
+    year,
+    ...summariseReceivables(receivables.filter((r) => r.booked_year === year)),
+  }));
+
+  return { rows, total: summariseReceivables(receivables) };
+}

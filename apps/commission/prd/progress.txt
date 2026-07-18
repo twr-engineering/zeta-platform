@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T10:30:00+08:00 (M8.1 — Aggregation service: payment-period reports 1, 3, 4)
+# Last Updated: 2026-07-19T14:20:00+08:00 (M8.2 — Vintage matrix + booking-year summary, reports 2, 5)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -42,7 +42,7 @@
 - [x] M7.2: Report UI, year filter & export
 - [x] M7.3: Source-lifecycle & edge hardening, cross-links, perf  ← M7 COMPLETE
 - [x] M8.1: Aggregation service: payment-period reports 1, 3, 4
-- [ ] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
+- [x] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
 - [ ] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
 - [ ] M8.4: Exports, print layout, performance & cache hardening
 - [ ] M9.1: Search read layer & query API
@@ -58,46 +58,71 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-**M8.1 COMPLETE — Aggregation service: payment-period Collection Reports (1, 3, 4).**
-SERVER-SIDE ONLY, purely additive: new src/lib/reports/{build,queries,params,index}.ts + three
-GET-only routes under src/app/api/reports/{cash-per-year,monthly-cash-flow,tax-per-month} +
-tests/unit/reports/build.test.ts + scripts/live-m81-check.mts. ZERO existing runtime files
-touched → no e2e surface. NO migration, NO UI (M8.3 owns it). test:unit 454/454 (+14);
-build:check + lint clean; live-m81-check ALL PASSED on the REAL v30.20 import; delta-residue zero.
+**M8.2 COMPLETE — Vintage matrix (report 2) + Booking-Year Summary (report 5).**
+SERVER-SIDE ONLY, purely additive: extended src/lib/reports/{build,queries,params,index}.ts (new
+exports only, no existing behaviour changed) + two GET-only routes src/app/api/reports/{vintage-
+matrix,booking-year-summary} + tests/unit/reports/build-vintage.test.ts + scripts/live-m82-check.mts.
+NO migration, NO UI (M8.3 owns it). test:unit 473/473 (+19); build:check + lint clean;
+live-m82-check ALL PASSED on the REAL v30.20 import; delta-residue zero (0 throwaway rows stranded).
 
-WHAT SHIPPED. Three pure builders over the STORED payment split (rule 5 — reports 1/3/4 never
-dereference the deal for money, so a later deal/settings edit can't restate historical cash/tax):
-buildCashPerYear (report 1, all-time, one row per paid year), buildMonthlyCashFlow (report 3,
-selected year, 12 months), buildTaxPerMonth (report 4, the accountant hand-off, 12 months). Plus
-the rule-2 contiguousYearRange helper (union of paid + booked years, contiguous, zero rows for
-gaps — a booked-but-uncollected year is a visible zero row not a gap; a paid-but-unbooked year
-appears too) and the rule-4 12-month frame (all months render, zeros filled). TOTAL rows are the
-decimal sum of the payment set → tie to Σ rows to the centavo (rule 13). Server reads
-(getCashPerYear/getMonthlyCashFlow/getTaxPerMonth/getReportYears) load listPayments() (active
-only, rule 12) once, RLS-scoped, compute-on-read (0 s staleness, FR-M8-13). Two-year doctrine
-held (rule 1): reports 1/3/4 group by year(paid_date); booked_year only feeds the range union.
-The month-frame walk is kept in reports/build.ts, NOT reached into M6's buildMonthly — report 3 is
-M6 §6 minus cumulative/target, but reports carry no target/pace coupling (deliberate non-reuse).
+WHAT SHIPPED. Two pure builders + a caption constant, over the same rule-2 contiguousYearRange:
+• buildVintageMatrix(payments, bookedYears, value="net_of_vat"|"net_cash") → report 2. Rows =
+  contiguous PAID years (from payments); columns = contiguous BOOKING years (from ALL active deals,
+  so a booked-but-uncollected year is a column with an all-zero body — AC8; a paid-but-unbooked year
+  is a ROW but NO column — AC7/rule 8). cell(y_paid,y_booked) = Σ toggle value; per-row total (≡
+  report 1's per-year for that value, FR-M8-14); columnTotals + grandTotal. The booking-year
+  attribution is a LIVE JOIN (rule 6): the matrix reads deal.booked_year off the current payment
+  join, so a corrected booked date re-vintages the cash — while the stored money splits stay frozen
+  (rule 5). RULE 15 loud-fail wired IN THE BUILDER: a payment with a null booked_year (dangling
+  deal) THROWS → the route answers 500, never silently drops real cash. Above-diagonal cells
+  (paid<booked) are summed and rendered as-is (rule 9) — the anomaly tint/flag is M8.3/M6.
+  VINTAGE_MATRIX_CAPTION is the verbatim reading-guide string, exported so M8.3 + exports share it.
+• buildBookingYearSummary(receivables, paidYears) → report 5. Reads deals+receivables, NOT payments.
+  Rows span the contiguous UNION of booked + paid years (rule 2): a paid-only year is a Deals-0 zero
+  row (AC7), a booked/no-cash year a zero-money row (AC8). Per year: Deals (all statuses) / GCI =
+  Σ booked_net_gci / Collected = Σ collected_net / Outstanding = Σ OPEN balance (signed, rule 11) /
+  Written-off = Σ Cancelled write-off; TOTAL row ties to Σ rows (rule 13). OQ4 DECISION — master
+  PRD Q18 = "Split, flagged as sheet departure": Outstanding is open balances ONLY and Cancelled
+  write-offs are SPLIT into their own Written-off column (matches M6's position block), rather than
+  lumped into Outstanding as the v30.20 sheet does. This changes the sheet's Outstanding only on a
+  workspace carrying Cancelled deals; the fixture has none, so it's a no-op there and the workbook
+  number holds. Server reads getVintageMatrix(value)/getBookingYearSummary() load listPayments +
+  activeBookedYears / listReceivables once, RLS-scoped, compute-on-read (0 s staleness, FR-M8-13).
+  params.ts adds parseMatrixValueParam (missing → net_of_vat default; unknown → 400).
 
-WORKBOOK PARITY (verified live + unit, to the centavo): R1 2026 = 1,908,192.86 / 1,909,085.71 /
-5,357.14 / 4,464.29 / 8 (TOTAL identical). R3 2026: Jan 436,050/436,050, Jul 1,472,142.86/
-1,473,035.71, ten zero months. R4 2026: Jul VAT 5,357.14 / EWT 4,464.29 / base 1,472,142.86 / 7
-(D021 incentive release = the ONLY taxable payment), Jan 0/0/436,050/1. FR-M8-14 asserted:
-R1 net-of-VAT ≡ R3 TOTAL ≡ R4 base TOTAL. Live check also proves freshness (an inserted 2027
-payment extends R1 to a 2026→2027 contiguous range and moves the TOTAL on the next read) and AC9
-cross-tenant isolation (a second tenant reads an empty report).
+REUSE NOTE. M4.4's projections.bookingYearSummary (getBookingYearSummary in projection-queries) was
+NOT reused for report 5: it emits only booked-year rows descending, no paid-year union, no TOTAL, no
+Written-off split — so it can't meet report 5's DoD (rule-2 union range + TOTAL + OQ4 split). The
+canonical Report 5 is now buildBookingYearSummary in @/lib/reports (a distinct namespace from the
+M4 projection; both remain valid for their own consumers). buildCashPerYear etc. from M8.1 unchanged.
 
-E2E NOTE: the dev server is USER-OWNED and was DOWN this pass; per the project rule it is never
-started/killed by an agent, so the full clean-reseed Playwright regression was not run. M8.1 is
-new lib + new routes only (zero existing runtime files touched), so the e2e regression surface is
-structurally nil — the verification rests on the 454-green unit suite, the live import check, and
-build:check + lint.
+WORKBOOK PARITY (verified live + unit, to the centavo): R2 single cell (paid 2026, booked 2026) =
+1,908,192.86 (Net of VAT) / 1,909,085.71 (Net Cash toggle); axes [2026]×[2026]; row total = cell.
+R5 row 2026 = 21 deals / 6,688,497.25 / 1,908,192.86 / 4,855,304.39 / written-off 0.00; Collected +
+Outstanding = 6,763,497.25 = Σ Total Collectible (₱75,000 above GCI, D004's referral-out). FR-M8-14
+asserted BOTH: matrix row total ≡ report 1 net-of-VAT (2026); R5 Collected TOTAL ≡ report 1 all-years
+net-of-VAT TOTAL (1,908,192.86). Live check proves the LIVE-JOIN re-vintage: editing D021's
+booked_year 2026→2025 MOVES its 44,642.86 to the 2025 matrix column (2026 column drops to
+1,863,550.00, row total unchanged at 1,908,192.86) while report 1's MONEY is conserved — the 2026
+row + TOTAL byte-identical (rule 5), the range extending only by a 2025 ZERO row (rule 2 live range).
+AC9 cross-tenant isolation holds (second tenant reads an empty matrix + report 5).
 
-NEXT — M8.2 (vintage matrix + booking-year summary, reports 2 & 5): reuse contiguousYearRange
-(exported from @/lib/reports) for the matrix rows/columns and report 5's booking-year rows. Report
-2 is the FIRST payment→deal money-attribution join — wire rule-15 loud-fail there (a payment with
-an unresolvable booked_year must 500, never silently drop). Report 5 reads deals + receivables;
-FR-M8-14 asserts its Collected TOTAL ≡ report 1 all-years net-of-VAT TOTAL (1,908,192.86).
+E2E: the dev server was USER-OWNED and UP this pass. Clean-reseed regression GREEN — after
+`seed-dev.mjs --delete` + recreate (fixture accounts back to empty workspaces), the CI-faithful
+serial run (CI=1, workers:1) passed 118/118 in 11.4m. (The fixture accounts must be freshly seeded
+first: several specs assert an EMPTY workspace / the workbook seed offer — running the suite without
+reseeding leaves imported data behind and those empty-state assertions fail, which is a fixture-
+state artifact, not a product bug.) M8.2 touches zero existing runtime behaviour (strictly additive
+exports + two new routes; git shows 0 lines removed), so the regression surface is structurally nil.
+
+NEXT — M8.3 (Reports UI: five tabs, toggle, year selector, reading guide). Consume from
+@/lib/reports: buildCashPerYear/buildMonthlyCashFlow/buildTaxPerMonth (M8.1) + buildVintageMatrix/
+buildBookingYearSummary + VINTAGE_MATRIX_CAPTION (M8.2), and the server reads in
+@/lib/reports/queries. Matrix UI: sticky first col + header row, shaded diagonal, muted above-
+diagonal cells (paid<booked) with "paid before booking year" tooltip, `—` for zero cells (exports
+carry 0.00), segmented Net of VAT | Net Cash toggle (default Net of VAT), horizontal scroll,
+VINTAGE_MATRIX_CAPTION verbatim under the title. Report 5: render the Written-off column and mark it
+as the OQ4 sheet departure. Shared year selector for tabs 3–4 (getReportYears, default current year).
 
 --- prior: M7.3 ---
 **M7.3 COMPLETE — Source-lifecycle & edge hardening, cross-links, perf. 🎉 M7 COMPLETE

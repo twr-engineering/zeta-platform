@@ -3,14 +3,21 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { manilaYear } from "@/lib/date/manila";
 import { listPayments } from "@/lib/payments/queries";
+import { listReceivables } from "@/lib/receivables/queries";
 import {
   buildCashPerYear,
   buildMonthlyCashFlow,
   buildTaxPerMonth,
+  buildVintageMatrix,
+  buildBookingYearSummary,
   contiguousYearRange,
   type CashPerYearReport,
   type MonthlyCashFlowReport,
   type TaxPerMonthReport,
+  type MatrixValue,
+  type MatrixPayment,
+  type VintageMatrix,
+  type BookingYearSummaryReport,
 } from "./build";
 
 /**
@@ -82,6 +89,55 @@ export async function getTaxPerMonth(
   year: number = manilaYear()
 ): Promise<TaxPerMonthReport> {
   return buildTaxPerMonth(await listPayments(), year);
+}
+
+/**
+ * Report 2 (§3.3 / FR-M8-03/04) — the paid-year × booking-year vintage matrix for the
+ * chosen toggle value (default Net of VAT). The row axis comes from the payments'
+ * paid years; the column axis from ALL active deals' booking years (so a booked-but-
+ * uncollected year is still a column, AC8). The payment→deal booking year is joined
+ * LIVE (rule 6): the matrix reads deal.booked_year off the current payment join, so a
+ * corrected booked date re-vintages the cash — while the money splits stay snapshot
+ * (rule 5). A dangling payment (no resolvable deal) makes the builder throw (rule 15),
+ * which the route turns into a 500 — M8 never silently drops real cash.
+ */
+export async function getVintageMatrix(
+  value: MatrixValue = "net_of_vat"
+): Promise<VintageMatrix> {
+  const [payments, bookedYears] = await Promise.all([
+    listPayments(),
+    activeBookedYears(),
+  ]);
+  // Flatten the live-joined deal booking year onto each payment; a null deal (dangling
+  // reference) becomes a null booked_year, which buildVintageMatrix rejects loudly.
+  const matrixPayments: MatrixPayment[] = payments.map((p) => ({
+    net_of_vat: p.net_of_vat,
+    net_cash: p.net_cash,
+    year_paid: p.year_paid,
+    booked_year: p.deal?.booked_year ?? null,
+  }));
+  return buildVintageMatrix(matrixPayments, bookedYears, value);
+}
+
+/**
+ * Report 5 (§3.6 / FR-M8-08) — the Booking-Year Summary over deals + receivables:
+ * per booking year Deals / GCI (Σ net_gci) / Collected (Σ receivable.collected) /
+ * Outstanding (Σ open balance) / Written-off (Σ cancelled write-off — the OQ4 split,
+ * master PRD Q18 "Split, flagged as sheet departure"). Rows span the contiguous union
+ * of booked + paid years (rule 2), so a paid-only year appears as a Deals-0 row (AC7)
+ * and a booked-but-uncollected year as a zero-money row (AC8). Reads receivables (the
+ * M4 engine's earned/collected/outstanding) and the payment paid years for the range;
+ * no payment money crosses this seam. Collected TOTAL ties to report 1 (FR-M8-14).
+ */
+export async function getBookingYearSummary(): Promise<BookingYearSummaryReport> {
+  const [receivables, payments] = await Promise.all([
+    listReceivables(),
+    listPayments(),
+  ]);
+  return buildBookingYearSummary(
+    receivables,
+    payments.map((p) => p.year_paid)
+  );
 }
 
 /**
