@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T23:10:00+08:00 (M2.4 — Yield Summary screen & polish · M2 COMPLETE)
+# Last Updated: 2026-07-18T23:55:00+08:00 (M3.1 — Planning engine library)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -34,7 +34,7 @@
 - [x] M2.2: Materialized aggregates & event-driven restatement
 - [x] M2.3: PlanningBasis API for M3
 - [x] M2.4: Yield Summary screen & polish  ← M2 COMPLETE
-- [ ] M3.1: Planning engine library
+- [x] M3.1: Planning engine library
 - [ ] M3.2: Targets & rates persistence + M6 feed
 - [ ] M3.3: Planning screen
 - [ ] M3.4: Pace vs actual + hardening
@@ -58,6 +58,60 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M3.1 COMPLETE — Planning engine library. PURE library only: src/lib/planning/
+(economics.ts + engine.ts + index.ts). NO UI, NO persistence, NO migration — those
+are M3.2–M3.4. Only runtime touched is a behaviour-preserving refactor of
+src/lib/dashboard/target.ts (see SINGLE-SOURCE below). test:unit 399/399 (+32 planning);
+build:check + lint clean; dashboard e2e 20/20 green (proves the target.ts refactor is
+byte-behaviour-identical end-to-end).
+
+THE ENGINE (src/lib/planning/engine.ts): computePlan(target, rates, basis, ytd?) →
+PlanResult — a discriminated union {ok:true, plan} | {ok:false, issues[]}. NEVER throws
+on user input (Rule 1): opex+cos ≥ 100%, a rate ∉ (0,1], a null NIT, or an empty basis
+with no override all come back as typed PlanIssue[] (codes net_income_pct_nonpositive /
+rate_out_of_range / net_income_target_missing / basis_unavailable), collected TOGETHER so
+the UI can flag every bad field at once. Plan shape: economicModel (netIncomePct,
+gciRawTarget, workingGciGoal + opexIsDefault/cosIsDefault OQ markers), assumptions
+(priceEff/yieldEff + priceSource/yieldSource 'override'|'all_time' + feesPerDeal), goals
+{gci, netIncome, listingsSold, buyerAtp} each a GoalRow {yearly, monthly ÷12, weekly ÷48},
+sellerFunnel/buyerFunnel (ordered stages bottom→top, each with the rate applied + a GoalRow),
+pace {totalSalesRequired, ytdActualSales|null, balanceToTarget|null}. basis is the M2.3
+PlanningBasisContract (consumed via the tests/doubles/planning-basis double in unit tests).
+
+FULL-PRECISION CHAINING (Rule P7): every derived figure computes from the UNROUNDED
+upstream MoneyValue; strings round to display precision only at the boundary (money/counts
+2 dp, yield_eff full precision per Rule 7). The two silent failure modes each have a
+tripwire test: (a) ÷1.12 on fees — asserts feesPerDeal ≠ 340,782.42 AND == 381,676.31;
+(b) chained-display funnels — proves rounding each stage to 2 dp before dividing drifts to
+253.31 at S2 while the engine holds the full-precision 253.32. P11 identity pinned both
+ways (price×ATP == goal÷yield == 415,355,587.83 to the centavo; display-rounded product
+drifts ~₱7,100 and must NOT match).
+
+SINGLE-SOURCE (brief + FR-M3-11): ROUNDUP_10K and the NIT ÷ (1−opex−cos) working-goal
+derivation now live ONCE in src/lib/planning/economics.ts (roundUp10k, effectiveOpex/Cos,
+netIncomePct, deriveAnnualTarget, TargetTableRow, DEFAULT_OPEX_PCT/COS_PCT).
+src/lib/dashboard/target.ts RE-EXPORTS roundUp10k / deriveAnnualTarget / TargetTableRow
+from planning (removed its own copies), so every M6 consumer that imports them from
+@/lib/dashboard/target keeps working and M6's Section-2 target runs the EXACT same math as
+the calculator. deriveAnnualTarget behaviour unchanged (null on no-row / degenerate
+denominator); dashboard target.test.ts + sections.test.ts still green, dashboard e2e 20/20.
+
+FIXTURES (PRD §9.1 / §10 / Milestones DoD, all reproduced to the centavo from the 2026
+live basis): netIncomePct 0.68; raw 16,911,764.71; working goal 16,920,000.00; priceEff
+9,369,467.35 (all_time); feesPerDeal 381,676.31; deals 44.33 (SOLD ≡ ATP); GCI monthly
+1,410,000.00 / weekly 352,500.00; NIT monthly 958,333.33 / weekly 239,583.33; seller funnel
+177.32 / 253.32 / 844.40 / 4,221.98 (leads weekly 87.96); buyer funnel 147.77 / 211.10 /
+2,110.99; total sales 415,355,587.83; with ytd 161,680,945.00 → balance 253,674,642.83.
+AC4 round-up boundary; AC5 opex 60%+cos 40% rejected; AC6 lead-to-contact 20%→25% ⇒ Seller
+Leads 3,377.58; AC7 override pair (7,000,000 / 4.2%) ⇒ fees 294,000.00 / deals 57.55;
+AC8 empty basis blocks then unblocks with overrides (no NaN); AC9 null NIT not plannable.
+Property tests: funnels strictly increasing upward, working goal ≥ raw, net income % ∈ (0,1].
+
+NEXT: M3.2 (Targets & rates persistence + M6 feed) — PlanYearTarget/FunnelRates schema +
+CRUD/audit + the M6 TargetTable feed (getTargetTableRow returns the real row; the derivation
+is already single-sourced here). See m3_1Handoff in pipeline-state.**
+
+--- prior ---
 **M2.4 COMPLETE — Yield Summary screen & polish. 🎉 M2 COMPLETE.
 The user-facing report at full sheet parity, over the M2.2/M2.3 read model — ZERO
 client math. NO migration; purely additive (new files: src/lib/yield/{report-queries,

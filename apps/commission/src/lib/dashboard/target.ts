@@ -1,5 +1,18 @@
 import { toMoney, unsafeFromNumber, ZERO, type MoneyValue } from "@/lib/money";
 import type { CivilDate } from "@/lib/date/manila";
+import {
+  deriveAnnualTarget,
+  roundUp10k,
+  type TargetTableRow,
+} from "@/lib/planning";
+
+/**
+ * ROUNDUP_10K + the NIT ÷ (1 − opex − cos) working-goal derivation are single-sourced
+ * in the M3 planning engine (`@/lib/planning`, FR-M3-11). They are re-exported here so
+ * every existing M6 consumer that imports them from `@/lib/dashboard/target` keeps
+ * working, and the dashboard target line runs the exact same math as the calculator.
+ */
+export { deriveAnnualTarget, roundUp10k, type TargetTableRow };
 
 /**
  * M6 §2 target derivation + the day-accurate pace line — PURE, clock-injectable.
@@ -28,47 +41,6 @@ import type { CivilDate } from "@/lib/date/manila";
  * precision and rounded to centavos once at the boundary (Master PRD §4.3). Day
  * counts and years are exact integers (never money), so they use plain arithmetic.
  */
-
-/** The per-year planning inputs M3's TargetTable row will supply (§3.3 rule 8). */
-export type TargetTableRow = {
-  /** Net Income Target for the year (decimal string). */
-  netIncomeTarget: string;
-  /** Operating-expense fraction, e.g. "0.22"; blank/null defaults to 0.22 (M3). */
-  opexPct: string | null;
-  /** Cost-of-sales fraction, e.g. "0.10"; blank/null defaults to 0.10 (M3). */
-  cosPct: string | null;
-};
-
-/** M3's documented defaults when the TargetTable leaves opex/cos blank (rule 8). */
-const DEFAULT_OPEX = "0.22";
-const DEFAULT_COS = "0.10";
-
-/**
- * ROUNDUP_10K(x) = ⌈x ÷ 10,000⌉ × 10,000 — always rounds UP to the next ₱10,000,
- * so an exact multiple is unchanged (16,920,000 → 16,920,000) but any remainder
- * rounds up (16,911,764.71 → 16,920,000, never 16,910,000). The workbook's
- * ROUNDUP(x, −4). Returns a centavo-exact decimal string.
- */
-export function roundUp10k(value: string | MoneyValue): string {
-  return toMoney(value).dividedBy(10000).ceil().times(10000).toFixed(2);
-}
-
-/**
- * The derived annual target from a TargetTable row:
- *   ROUNDUP_10K( net_income_target ÷ (1 − opex − cos) ).
- * Returns null when there is no row (rule 9 — target "—", no division error) or the
- * net-income denominator is not positive (a degenerate table row can't yield a
- * target). NOT override-aware — getAnnualTarget layers the override on top.
- */
-export function deriveAnnualTarget(row: TargetTableRow | null): string | null {
-  if (row === null) return null;
-  const opex = toMoney(row.opexPct ?? DEFAULT_OPEX);
-  const cos = toMoney(row.cosPct ?? DEFAULT_COS);
-  const netIncomePct = toMoney("1").minus(opex).minus(cos);
-  if (netIncomePct.lessThanOrEqualTo(0)) return null;
-  const raw = toMoney(row.netIncomeTarget).dividedBy(netIncomePct);
-  return roundUp10k(raw);
-}
 
 /**
  * The annual GCI target for the year: the override amount if one is set, else the
