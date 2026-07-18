@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { ModuleStub } from "@/components/common/module-stub";
+import { reportPath, DEFAULT_REPORT_TAB } from "@/lib/reports/tabs";
 
-export const metadata: Metadata = { title: "Reports" };
-
-export default function ReportsPage() {
-  return (
-    <ModuleStub
-      title="Reports"
-      module="M8"
-      description="Five collection reports: cash and tax by period, plus vintage analysis for your bookkeeper."
-    />
-  );
+/**
+ * M8.3 — `/reports` lands on the first tab in sheet order (Cash per Year). The five
+ * reports are each their own deep-linkable route; this keeps the bare `/reports`
+ * path (the nav item) meaningful.
+ */
+export default function ReportsIndexPage() {
+  redirect(reportPath(DEFAULT_REPORT_TAB));
 }

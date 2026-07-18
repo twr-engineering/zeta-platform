@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T14:20:00+08:00 (M8.2 — Vintage matrix + booking-year summary, reports 2, 5)
+# Last Updated: 2026-07-19T18:05:00+08:00 (M8.3 — Reports UI: five tabs, toggle, year selector, reading guide)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -43,7 +43,7 @@
 - [x] M7.3: Source-lifecycle & edge hardening, cross-links, perf  ← M7 COMPLETE
 - [x] M8.1: Aggregation service: payment-period reports 1, 3, 4
 - [x] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
-- [ ] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
+- [x] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
 - [ ] M8.4: Exports, print layout, performance & cache hardening
 - [ ] M9.1: Search read layer & query API
 - [ ] M9.2: Search Console UI
@@ -58,6 +58,63 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M8.3 COMPLETE — Reports UI: five deep-linkable tabs, matrix toggle, shared year selector, reading guide.**
+The /reports STUB becomes the month-end reporting surface over the M8.1/M8.2 read models — ZERO client
+math (every peso is the server aggregator's string; the ONLY client work is URL navigation on the two
+controls). NO migration; additive except the /reports stub → a redirect + layout, and the reports/page.tsx
+stub replaced. test:unit 473/473 (UI milestone — no new unit tests; the pure builders were pinned in
+M8.1/M8.2); build:check + lint clean; reports e2e 10/10 on the REAL v30.20 import; full clean-reseed e2e
+[see run note]; delta-residue ZERO.
+
+ROUTE-BASED TABS (FR-M8-01 / §6 deep-linkable). Five sub-routes under /reports in sheet order —
+/reports/{cash-per-year,vintage-matrix,monthly-cash-flow,tax-per-month,booking-year-summary}; /reports
+redirects to the first. A shared reports/layout.tsx renders the sticky header + the ReportsTabs bar +
+the always-available two-year-semantics ReadingGuide (<details>, §1, M10 consumes it); each tab is a
+server page that loads its M8.2 query and renders. src/lib/reports/tabs.ts (PURE, client+server) is the
+single slug↔label↔path source: REPORT_TABS + reportPath(slug,{year,value}). ReportsTabs (client,
+usePathname+useSearchParams) lights the active tab and carries ?year= across the two shared-year tabs
+(3&4) ONLY — the all-time tabs link clean (rule 3).
+
+CONTROLS = the two blue "input" affordances on an otherwise all-black-cell module (§6). MatrixValueToggle
+(segmented Net of VAT | Net Cash, default Net of VAT, URL ?value= — net_of_vat links clean, FR-M8-04) and
+ReportYearSelector (blue SelectField, URL ?year=, default current Manila year, options = getReportYears()
+rule-2 range; present on tabs 3&4 only — reports 1/2/5 render NO selector). Both router.push and re-request
+the SERVER aggregate — no client re-aggregation (FR-M8-09).
+
+MATRIX (report 2, §3.3/§6). VintageMatrixTable: sticky first column (paid year) + sticky header row
+(booking years) via border-separate + sticky left-0/top-0; diagonal cells (paid=booked) subtly shaded
+(bg-muted/40); above-diagonal cells (paid<booked) a muted amber tint + "paid before booking year" tooltip
+(rule 9 — rendered as-is, never hidden); "—" for 0.00 cells (exports carry 0.00, M8.4); row-total column +
+TOTAL row (columnTotals + grandTotal); horizontal scroll INSIDE the matrix-scroll container (never a card
+layout at 360px — a card would destroy the diagonal semantics). VINTAGE_MATRIX_CAPTION verbatim under the
+title.
+
+TABLES. Reports 1/3/4/5 = desktop table + 360px stacked cards; bold TOTAL row with a top rule; months
+spelled out (rule 4, all 12 always render); zero rows at reduced emphasis (text-muted-foreground); ₱
+#,##0.00 right-aligned via formatPHP. Report 4 carries the VERBATIM BIR captions in the column headers
+("Output VAT — to remit to BIR" / "EWT withheld — creditable, BIR Form 2307") + ⓘ tooltips with the fuller
+tax meaning (§3.5, M10 help copy). Report 5 renders the OQ4 Written-off column split out of Outstanding,
+MARKED as a deliberate sheet departure (⚑ header tooltip + a footnote) per m8_2 decision. Empty states
+(rule 14): reports 1–4 → "No payments logged yet" → Payments Log; report 5 → "No deals logged yet" → Deal
+Log.
+
+EXPORT/PRINT SEAM = M8.4 (not this milestone). The M8_Milestones split puts CSV/XLSX on every tab + the
+report-4 print stylesheet in M8.4; M8.3 renders NO export/print buttons (omitted, not dead-disabled) so the
+seam stays clean. The matrix already returns 0.00 (not "—") in its data for exports; the "—" is a render-
+only substitution. M8.4 wires the export registry datasets (5) + print layout + cache/perf.
+
+VERIFIED (tests/e2e/reports.spec.ts, throwaway users, REAL v30.20 import, --workers=1, 10/10): AC1 /reports
+→ cash-per-year, row 2026 = 1,908,192.86 / 1,909,085.71 / 5,357.14 / 4,464.29 / 8 + TOTAL identical;
+AC2/AC3 matrix diagonal cell (2026,2026) = 1,908,192.86 shaded, verbatim caption, row total = cell, toggle
+→ Net Cash 1,909,085.71 + ?value=net_cash, back → clean URL; AC4 all 12 months, Jan 436,050/436,050, Jul
+1,472,142.86/1,473,035.71, Feb zero present, TOTAL 1,908,192.86/1,909,085.71; AC5 verbatim BIR captions, Jul
+5,357.14/4,464.29/1,472,142.86/7, Jan 0/0/436,050/1, TOTAL 5,357.14/4,464.29/1,908,192.86/8; AC6 booking
+row 2026 = 21/6,688,497.25/1,908,192.86/4,855,304.39/written-off 0.00 + departure marker; deep-link +
+shared-year (3&4 carry ?year=, 1/2/5 don't; year selector absent on 1/2/5); AC12 POST /api/reports/* → 405;
+rule-14 empty states (payments vs deals); 360px cards + matrix in-container scroll + no body h-overflow +
+console clean.
+
+## Prior Status
 **M8.2 COMPLETE — Vintage matrix (report 2) + Booking-Year Summary (report 5).**
 SERVER-SIDE ONLY, purely additive: extended src/lib/reports/{build,queries,params,index}.ts (new
 exports only, no existing behaviour changed) + two GET-only routes src/app/api/reports/{vintage-
