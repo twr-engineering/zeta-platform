@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T02:10:00+08:00 (M3.4 — Pace vs actual + hardening · M3 COMPLETE)
+# Last Updated: 2026-07-19T03:30:00+08:00 (M7.1 — Source Performance aggregation + fixture parity)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -38,7 +38,7 @@
 - [x] M3.2: Targets & rates persistence + M6 feed
 - [x] M3.3: Planning screen
 - [x] M3.4: Pace vs actual + hardening  ← M3 COMPLETE
-- [ ] M7.1: Aggregation service + fixture parity
+- [x] M7.1: Aggregation service + fixture parity
 - [ ] M7.2: Report UI, year filter & export
 - [ ] M7.3: Source-lifecycle & edge hardening, cross-links, perf
 - [ ] M8.1: Aggregation service: payment-period reports 1, 3, 4
@@ -58,6 +58,85 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M7.1 COMPLETE — Source Performance aggregation service + fixture parity. M7 (the
+lead-channel scorecard) begun. SERVER-SIDE ONLY, PURELY ADDITIVE: new src/lib/source-
+performance/ (build.ts pure + queries.ts server + index.ts barrel) + tests/unit/source-
+performance/build.test.ts + scripts/live-m71-check.mts. NO migration, NO UI (M7.2 owns
+it), ZERO existing runtime files touched (git status = 3 new paths only → e2e regression
+structurally impossible, the M2.1/M2.3 additive-lib precedent). test:unit 430/430 (+12
+M7.1); build:check + lint clean; live-m71-check ALL PASSED on the REAL v30.20 import;
+delta-residue ZERO (0 throwaway users after cleanup incl. one orphan from a transient
+auth-500 first attempt; real account juliusbaliling25 untouched).
+
+THE SERVICE (src/lib/source-performance/build.ts). sourcePerformance(receivables,
+leadSources, year|'all') → {year, rows[], total}: one row per VISIBLE lead source + the
+TOTAL, all 11 §3.3 columns. PURE over ProjectionReceivable[] (a ReceivableRow satisfies
+it) + the M0 lead-source master list — mirrors the receivables/projections.ts pattern.
+metricsFor(group, totalBooked) computes cols 2–11 and is SHARED by every source row AND
+the TOTAL (which passes its own booked as the denominator → % of NET GCI = 100.00% by
+construction, §3.5; Avg = Booked÷Deals recomputed; % Collected = Collected÷Booked
+recomputed from totals, NEVER averaged). Every ₱ summed at FULL precision (Money/toFixed
+edge); every ratio 6-dp off the full-precision aggregates. queries.ts getSourcePerformance
+(year) / getSourcePerformanceYears() load listReceivables + allLeadSources ONCE (RLS is
+the tenant boundary — no workspaceId param), compute-on-read (M6.1 doctrine).
+
+FR-M7-03 / OQ1 ISOLATION. collectedNetForSource(rows) = Σ receivable.collected_net is the
+ENTIRE surface of Open Question 1 — the spec-default honest cash figure, a DELIBERATE
+divergence from the sheet's Booked−Outstanding. A product-owner reversal is a ONE-LINE
+change in that function; every column/TOTAL/% recomputes from it. PROVEN by the Referral
+row: Collected 875,000 / 109.38% (NOT the sheet's 800,000 / 100%) — % Collected is NOT
+capped (pass-through referral cash, §4 rule 8), denominator = Booked (OQ4 default).
+
+VISIBILITY (§4 rules 2–3). A source with ≥1 in-scope deal always reports (active or
+archived → "Name (inactive)"); an ACTIVE zero-deal source renders a row of zeros (₱0.00,
+not blank — FR-M7-12); an ARCHIVED zero-deal source is hidden. Never-orphan: a
+lead_source_id present on a receivable but absent from the master list still reports
+(edge case 18). Ordering Booked NET GCI desc, ties by lead-source list order; TOTAL
+returned separately for M7.2 to pin. year compares deal.booked_year (NEVER payment year).
+
+PRECISION DRIFT DECISION (the PRD-rule-9 "visible centavo drift", flagged not silently
+resolved). M7 reads the receivable, whose booked_net_gci/collected_net/balance are all
+numeric(14,2). It SUMS those stored 2-dp columns — the Rule-8/M4.4/M6 doctrine and the
+ONLY way the TOTAL ties to M6 (§8). TWO per-source cells differ by a centavo from the
+PRD §9 table, which prints the full-precision DEAL figures (net_gci before 2-dp storage):
+YouTube Outstanding stored-2dp Σbalance = 2,058,398.43 (PRD full-precision .44); Lamudi
+Avg 863,003.13÷2 = .565→.57 (PRD full 863,003.125÷2 = .5625→.56, D010 stored as .13).
+The SHIPPED SaaS value is the stored-2dp figure (what the live import produces, what ties
+to M6) — .43 / .57. Both drifts CANCEL at the TOTAL (.39 either way). Every OTHER §9 cell
+matches verbatim. Recommend owner note the two cells (same class as OQ5 .30→.29 and the
+memo 357,142.87/.86); reproducing the PRD's .44/.56 would require M7 to bypass the
+receivable and re-aggregate deal-level full precision — violating the "reads the M4
+receivable" data model AND still tying to .39. FLAGGED for M7.2/owner.
+
+VERIFIED (scripts/live-m71-check.mts, throwaway workspaces, real v30.20 import — ALL
+PASSED): every PRD §9 row to the centavo (YouTube 7/2,455,541.29/36.71%/avg 350,791.61/
+collected 397,142.86/16.17%/out 2,058,398.43/R+R 352,500/0/Dev 2,103,041.29; Repeat
+Client 9/1,616,414.70/24.17%/179,601.63/200,000/12.37%/1,416,414.70/R+R out 1,099,000/
+Dev 317,414.70; Lamudi 2/863,003.13/12.90%/431,501.57/436,050/50.53%/426,953.13; Referral
+1/800,000/11.96%/875,000/109.38%/0 — the OQ1 anchor; Sphere 1/630,813.93/9.43%/0/0.00%;
+Facebook Organic 1/322,724.20/4.83%; TOTAL 21/6,688,497.25/100.00%/318,499.87/1,908,192.86/
+28.53%/4,855,304.39/R+R 2,887,550/1,099,000/Dev 3,800,947.25); §8 ties (Booked=M2 GCI,
+Collected+Outstanding=M6 position); visibility 6-with-deals + 7 active zero rows = 13;
+ordering; AC2 Year=2026 ≡ All (booking-year filter); distinct years [2026]; AC5/edge-18
+archive Lamudi (has deals) → "Lamudi (inactive)" figures unchanged + TOTAL still ties;
+AC9 tenant B reads 0 of A's deals, A intact. The unit fixture (tests/unit/source-
+performance/build.test.ts, 12 tests) pins the same §9 table + AC7 cancelled-with-partial +
+FR-M7-06 edge-19 + never-orphan off frozen fixtures.
+
+FOR M7.2 (Report UI, year filter & export): import getSourcePerformance(year)/
+getSourcePerformanceYears() from @/lib/source-performance/queries (server), or the pure
+sourcePerformance/distinctBookedYears from @/lib/source-performance for a held row set.
+Row shape SourcePerformanceRow {leadSourceId, source (already "(inactive)"-suffixed),
+archived (badge flag), deals, bookedNetGci, pctOfNetGci|null, avgNetGciPerDeal|null,
+collectedNet, pctCollected|null, outstandingNet, resaleRentalNetGci, resaleRentalOutstanding,
+developerNetGci}; total is SourcePerformanceTotal (same measures, label "TOTAL", pctOfNetGci
+"1.000000"). Money = 2-dp strings, ratios 6-dp (format 0.00% at the edge); a null
+avg/pctCollected is a zero-deal / zero-booked cell. The /source-performance route is a
+pre-existing stub — M7.2 wires it to getSourcePerformance. % Collected > 1.0 needs the
+pass-through tooltip (§4 rule 8); the two precision-drift cells above are M7.2/owner's to
+footnote if desired.
+
+--- prior: M3.4 ---
 **M3.4 COMPLETE — Pace vs actual + hardening. 🎉 M3 COMPLETE. The pace card is wired to
 LIVE M1 data (Rule P12) — the last seam of the planning screen closed. NO client math added;
 NO covering-index migration needed (measured — see PERF). ONE additive migration applied live
