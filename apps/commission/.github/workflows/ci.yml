@@ -54,6 +54,16 @@ jobs:
       - name: Recompute perf harness (self-skips without live credentials)
         run: pnpm run perf:recompute
 
+      # M5.4 perf budget (M5 PRD §8, DoD): the 1,000-payment load fixture and the
+      # four payment targets (list P95 < 500 ms, create round-trip < 300 ms, split
+      # preview < 100 ms, picker < 150 ms). Same self-skipping contract as the
+      # recompute harness — on the placeholder credentials CI runs with it prints
+      # "skipped" and exits 0; against a real project it seeds 1,000 deals+payments,
+      # measures server time (WAN round-trips subtracted), and fails the build if any
+      # target is missed.
+      - name: Payments perf harness (self-skips without live credentials)
+        run: pnpm run perf:payments
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

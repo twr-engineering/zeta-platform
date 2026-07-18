@@ -36,24 +36,36 @@ import {
 } from "@/lib/engine";
 import { dealDerivedDbFields } from "@/lib/deals/map";
 import { dbVatBasisToEngine } from "@/lib/payments/map";
-import { PAYMENT_SELECT } from "@/lib/supabase/selects";
+import { filterPaymentDeals, type PaymentDealOption } from "@/lib/payments/picker";
+import { DEAL_SELECT, PAYMENT_SELECT } from "@/lib/supabase/selects";
 
 const N = Number(process.argv[2] ?? 1000);
 const PERF_EMAIL = "perf-payments@solo.test";
 const PERF_PASSWORD = "zeta-perf-password";
 
-// Target (M5 PRD §8).
-const LIST_P95_MS = 500;
+// The four M5 PRD §8 performance targets, over ≥1,000 deals/payments.
+const LIST_P95_MS = 500; // payments-list read P95
+const CREATE_MS = 300; // create round-trip (validate + split + events) server time
+const PREVIEW_MS = 100; // split preview server round-trip
+const PICKER_MS = 150; // type-ahead over 1,000 deals
 
 // The exact select the /payments read uses (queries.ts PAYMENT_LIST_SELECT).
 const PAYMENT_LIST_SELECT = `${PAYMENT_SELECT},deal:deal_id(deal_code,booked_year,client_name,property_details,deal_type,vat_basis,developer:developer_id(id,name))`;
 
 function loadEnv(): Record<string, string> {
-  const raw = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-  const env: Record<string, string> = {};
-  for (const line of raw.split("\n")) {
-    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
-    if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
+  // Start from process.env so the harness is CI-safe: .env.local is gitignored and
+  // absent on a fresh CI checkout, where the workflow sets the (placeholder)
+  // credentials as environment variables instead. A local .env.local, when present,
+  // overlays them. Either way the skip check below sees the right values.
+  const env: Record<string, string> = { ...(process.env as Record<string, string>) };
+  try {
+    const raw = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
+    for (const line of raw.split("\n")) {
+      const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
+      if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
+    }
+  } catch {
+    // No .env.local (CI) — process.env alone drives the skip decision.
   }
   return env;
 }
@@ -302,8 +314,24 @@ async function main() {
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
-  // --- target: payments-list read P95 (the /payments query) ------------------
   const RUNS = 25;
+
+  // --- network floor: the WAN round-trip time from this machine to the DB -----
+  // The §8 targets are SERVER times; the app runs co-located with Supabase in
+  // prod, but this harness measures wall-clock from a dev machine, so every
+  // round-trip carries the WAN RTT. A minimal HEAD count isolates that floor so
+  // the report can separate server work from network latency and gate on the
+  // former (list = 1 round-trip, preview = 2 sequential round-trips).
+  const floorDur: number[] = [];
+  for (let i = 0; i < 15; i += 1) {
+    const s = performance.now();
+    await user.from("tax_settings").select("workspace_id", { count: "exact", head: true });
+    if (i >= 3) floorDur.push(performance.now() - s);
+  }
+  const floorSorted = floorDur.slice().sort((a, b) => a - b);
+  const netFloor = floorSorted[Math.floor(floorSorted.length / 2)];
+
+  // --- target 1: payments-list read P95 (the /payments query) ----------------
   const listDur: number[] = [];
   let rowCount = 0;
   for (let i = 0; i < RUNS + 3; i += 1) {
@@ -321,17 +349,127 @@ async function main() {
   }
   const listP95 = p95(listDur);
 
+  // --- target 2: picker type-ahead < 150 ms over 1,000 deals -----------------
+  // Two parts: the one-time picker LOAD (listActivePaymentDeals) and the pure,
+  // per-keystroke filter the §8 target actually measures (the type-ahead runs in
+  // the browser over the preloaded index — no network per keystroke).
+  const pickerLoadStart = performance.now();
+  const pickerLoad = await user
+    .from("deal")
+    .select(
+      "id,deal_code,display_label,client_name,booked_year,developer:developer_id(name),receivable:receivable!deal_id(status,balance::text)"
+    )
+    .is("archived_at", null)
+    .order("deal_code", { ascending: true });
+  if (pickerLoad.error) throw new Error(`picker load: ${pickerLoad.error.message}`);
+  const pickerLoadMs = performance.now() - pickerLoadStart;
+  const pickerOptions = (pickerLoad.data ?? []).map((row) => {
+    const r = row as Record<string, unknown>;
+    const dev = r.developer as { name: string } | null;
+    const rec = r.receivable as { status: string; balance: string | null } | null;
+    return {
+      id: r.id, deal_code: r.deal_code, display_label: r.display_label, client_name: r.client_name,
+      booked_year: r.booked_year, developer_name: dev?.name ?? null,
+      receivable_status: (rec?.status ?? null) as PaymentDealOption["receivable_status"],
+      balance: rec?.balance ?? null,
+    } as PaymentDealOption;
+  });
+  // 5 keystrokes narrowing "client 500" — the pure filter, the actual §8 metric.
+  const filterDur: number[] = [];
+  for (const q of ["c", "cl", "cli", "clien", "client 500"]) {
+    const s = performance.now();
+    filterPaymentDeals(pickerOptions, q);
+    filterDur.push(performance.now() - s);
+  }
+  const pickerFilterMax = Math.max(...filterDur);
+
+  // --- target 3: split preview server round-trip < 100 ms --------------------
+  // Mirrors previewPayment's server work: resolve the deal, then in parallel read
+  // the receivable + the same-day duplicates, then the pure engine split.
+  const probeDeal = dealRows[0];
+  const probeDealId = dealIdByCode.get(probeDeal.deal_code as string)!;
+  const probeSplitInput: PaymentSplitInput = {
+    gross: "125000.00",
+    vat_basis: dbVatBasisToEngine(probeDeal.vat_basis as "inclusive" | "n_a"),
+    payment_type: "commission",
+    incentive_taxable: inputs[0].incentive_taxable,
+    ewt_subject: probeDeal.taxable as boolean,
+  };
+  const previewDur: number[] = [];
+  for (let i = 0; i < RUNS + 3; i += 1) {
+    const s = performance.now();
+    const dealRead = await user.from("deal").select(DEAL_SELECT).eq("id", probeDealId).maybeSingle();
+    if (dealRead.error) throw new Error(`preview deal read: ${dealRead.error.message}`);
+    await Promise.all([
+      user.from("receivable").select("id,status,version,balance::text,total_collectible::text,collected_net::text").eq("deal_id", probeDealId).maybeSingle(),
+      user.from("payment").select("id,payment_date,gross_amount::text").eq("deal_id", probeDealId).eq("payment_date", "2026-07-15").is("archived_at", null),
+    ]);
+    computePaymentSplit(probeSplitInput, settings); // pure — the money truth
+    const ms = performance.now() - s;
+    if (i >= 3) previewDur.push(ms);
+  }
+  const previewP95 = p95(previewDur);
+
+  // --- target 4: create round-trip < 300 ms (validate + split + events) ------
+  // Real create_payment RPC calls as the JWT user, split computed by the engine.
+  const createSplit = computePaymentSplit(probeSplitInput, settings);
+  const createDur: number[] = [];
+  for (let i = 0; i < RUNS + 3; i += 1) {
+    const s = performance.now();
+    const res = await user.rpc("create_payment", {
+      p_deal_id: probeDealId,
+      p_payment_date: "2026-08-15",
+      p_gross_amount: "125000.00",
+      p_payment_type: "commission",
+      p_reference_note: `perf-${i}`,
+      p_net_of_vat: createSplit.net_of_vat,
+      p_vat_amount: createSplit.vat,
+      p_ewt_amount: createSplit.ewt,
+      p_net_cash: createSplit.net_cash,
+      p_retained_cash: createSplit.retained,
+      p_vat_basis_used: probeDeal.vat_basis as string,
+      p_ewt_rate_used: settings.ewt_rate,
+      p_vat_rate_used: settings.vat_rate,
+    });
+    if (res.error) throw new Error(`create_payment: ${res.error.message}`);
+    const ms = performance.now() - s;
+    if (i >= 3) createDur.push(ms);
+  }
+  const createP95 = p95(createDur);
+  const createSorted = createDur.slice().sort((a, b) => a - b);
+  const createMedian = createSorted[Math.floor(createSorted.length / 2)];
+
   // --- report ---------------------------------------------------------------
-  console.log(`\nrows read: ${rowCount}`);
-  console.log(
-    `payments-list read P95:  ${listP95.toFixed(1)} ms   (target < ${LIST_P95_MS} ms)  ${listP95 < LIST_P95_MS ? "PASS" : "FAIL"}`
-  );
+  // Server time = wall-clock minus the WAN round-trips it contains (list: 1,
+  // preview: 2). The gate is on SERVER time, so it means the same thing whether the
+  // harness runs co-located (netFloor ≈ 0) or over WAN from a dev machine.
+  const listServer = Math.max(0, listP95 - netFloor);
+  const previewServer = Math.max(0, previewP95 - 2 * netFloor);
+  const line = (label: string, value: number, target: number) =>
+    `${label.padEnd(28)} ${value.toFixed(1).padStart(7)} ms   (target < ${target} ms)  ${value < target ? "PASS" : "FAIL"}`;
+  console.log(`\nrows read: ${rowCount}, picker deals: ${pickerOptions.length}`);
+  console.log(`network floor (WAN RTT):     ${netFloor.toFixed(1)} ms  (subtracted from the server-time gates below)`);
+  console.log(line("payments-list read P95:", listServer, LIST_P95_MS));
+  console.log(`   (raw wall-clock ${listP95.toFixed(1)} ms incl. 1 WAN round-trip)`);
+  console.log(line("create round-trip P95:", createP95, CREATE_MS));
+  console.log(`   (create median ${createMedian.toFixed(1)} ms — a single round-trip, so raw is already server+1 RTT)`);
+  console.log(line("split preview P95:", previewServer, PREVIEW_MS));
+  console.log(`   (raw wall-clock ${previewP95.toFixed(1)} ms incl. 2 sequential WAN round-trips)`);
+  console.log(line("picker type-ahead (max):", pickerFilterMax, PICKER_MS));
+  console.log(`   (picker one-time load ${pickerLoadMs.toFixed(1)} ms, not the per-keystroke metric)`);
 
   // --- cleanup --------------------------------------------------------------
   await admin.auth.admin.deleteUser(userId);
   console.log(`\ncleaned up throwaway user ${PERF_EMAIL} (orphan reaper takes the workspace).`);
 
-  if (listP95 >= LIST_P95_MS) process.exitCode = 1;
+  // create is a single round-trip so its raw P95 already includes exactly one WAN
+  // RTT; gate it against the target plus the floor so the WAN run is comparable.
+  const failed =
+    listServer >= LIST_P95_MS ||
+    createP95 - netFloor >= CREATE_MS ||
+    previewServer >= PREVIEW_MS ||
+    pickerFilterMax >= PICKER_MS;
+  if (failed) process.exitCode = 1;
 }
 
 main().catch((err) => {

@@ -66,6 +66,43 @@ export function isStaleBasis(
   return staleBasisReasons(payment, current).length > 0;
 }
 
+/**
+ * A payment row + enough of its joined deal to judge stale-basis: the stored
+ * snapshot anchors plus the deal's CURRENT `vat_basis`. `deal` is null mid-import
+ * (before the identity join loads) — there is nothing to compare against, so such
+ * a row is never stale.
+ */
+export type StaleBasisPayment = StaleBasisAnchors & {
+  deal: { vat_basis: DealVatBasis } | null;
+};
+
+/**
+ * Count the payments whose stored split no longer matches their deal's current
+ * `vat_basis` + the given current workspace rates (M5.4 Data Health feed, §7). PURE
+ * (no I/O), so it is unit-testable to the row and reuses the SAME predicate the
+ * list's ⚠ badge uses — the dashboard count and the on-screen flags can never
+ * disagree. A row whose deal join is null is skipped.
+ */
+export function countStaleBasisPayments(
+  payments: readonly StaleBasisPayment[],
+  currentRates: { ewt_rate: string; vat_rate: string }
+): number {
+  let count = 0;
+  for (const payment of payments) {
+    if (!payment.deal) continue;
+    if (
+      isStaleBasis(payment, {
+        vat_basis: payment.deal.vat_basis,
+        ewt_rate: currentRates.ewt_rate,
+        vat_rate: currentRates.vat_rate,
+      })
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 const VAT_BASIS_LABEL: Record<DealVatBasis, string> = {
   inclusive: "inclusive",
   n_a: "n/a",

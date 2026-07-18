@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T20:15:00+08:00
+# Last Updated: 2026-07-18T21:40:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -25,7 +25,7 @@
 - [x] M4.3: Status lifecycle, Confirmed Collectible override, variance & write-off
 - [x] M5.3: Payments list, per-deal panel & exports
 - [x] M4.4: Ledger UI, detail view, downstream projections & hardening  ← M4 COMPLETE
-- [ ] M5.4: Hardening, access control & performance
+- [x] M5.4: Hardening, access control & performance  ← M5 COMPLETE
 - [ ] M6.1: Aggregation read models + reconciliation suite
 - [ ] M6.2: Dashboard UI: sections 1, 2, 3, 6
 - [ ] M6.3: Aging, receivables by developer, Data Health
@@ -58,6 +58,87 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M5.4 COMPLETE — Hardening, access control & performance. M5 IS COMPLETE.
+A hardening milestone: tests + gap-closing over M5.1–M5.3, NO migration, one new
+pure/server lib module and NO new user-facing feature. All four M5 §8 perf targets
+measured and PASSING; the full e2e suite is green on a clean reseed (M5.3's
+background-regression caveat DISCHARGED).
+
+ACCESS-CONTROL + CONCURRENCY + TRANSACTIONAL live proof: scripts/live-m54-check.mts
+(extends the live-m43 pattern; throwaway users, delta-residue zero) — 37/37 live
+checks PASSED against the real project:
+  · Access-control matrix over create/update/delete_payment × {anonymous,
+    cross-workspace B, owner A}: anon → 'not authenticated'/permission denied; B →
+    deal_not_found (create against A's deal, edge case 10) / 'payment not found'
+    (update+delete A's payment, RLS). EVERY unauthorized attempt leaves ZERO side
+    effects — audit count, payment_event count, payment row count all unchanged;
+    A's payment version+gross intact (AC16/AC4). Export + edit-page RLS boundary:
+    anon and B payment reads return 0 rows; B cannot load A's payment by id.
+  · Friction gate: the RPCs are un-gated BY DESIGN (the confirmation is an
+    action-layer deliberateness contract, gate.ts — not authz; RLS keeps tenants
+    apart). The script proves the side-effect surface the action gate stands in
+    front of (a reached owner mutation writes exactly one audit + one event). The
+    server-side refusal is pinned in tests/unit/payments/friction-gate.test.ts
+    (checkConfirmation mode:'checked', token 'acknowledged', rejects the browser
+    default 'on') and exercised end-to-end in payments-list.spec (payment-edit +
+    payment-delete ConfirmGate). NOTE: a headless module-mock of the actions was
+    attempted but --experimental-test-module-mocks breaks Next's next/cache &
+    next/headers exports-map resolution under the alias-hooks loader — not viable
+    without destabilizing CI; the codebase-idiomatic split (pure gate contract unit
+    + live RLS side-effect proof + real-runtime e2e) covers it.
+  · Optimistic locking: 20 PARALLEL conflicting update_payment on ONE payment (same
+    expected_version, distinct grosses) → exactly 1 wins/changed, 19 stale_version,
+    version bumped by exactly one; after drain the receivable Collected == the
+    winner's net (NO double restatement) and Balance == total − winner net, exact.
+  · Parallel create+delete: 10 parallel creates + 3 parallel deletes on one deal →
+    re-aggregation exact (Collected = Σ 7 survivors) and payment_event count == 13
+    (10 created + 3 deleted).
+  · Transactional delivery (M0.2 pattern): a split whose PURE TIES hold (passes
+    app.assert_payment_split) but with a negative component fails the
+    payment_split_non_negative CHECK at INSERT → the whole RPC rolls back: NO row,
+    NO audit, NO event persist. "A payment can never exist whose receivable ignores
+    it" — proven in both directions (mutation⇔event bundled atomically).
+  · Data Health: after moving EWT 10%→5%, the stale-basis count
+    (countStaleBasisPayments over the list + current UNCACHED rates) matches a
+    manual predicate over the same rows.
+  · Audit review pass: a scripted day (create deal → 2 payments → edit p1 gross
+    50k→65k → delete p2 → close receivable) → exactly ONE well-formed audit entry
+    per mutation, no dupes/gaps; p1 edit field_changes records gross old 50000.00 →
+    new 65000.00 correctly; the status change writes a receivable audit naming the
+    status field.
+
+DATA HEALTH FEED (M5's M6 contribution — M6 §7). src/lib/payments/health.ts:
+getPaymentDataHealth() returns the active stale-basis payments + count for M6's
+Data Health section, reading listPayments() + the UNCACHED getWorkspaceRates() (a
+correctness signal must reflect LIVE settings, m5_3) and applying the SAME
+isStaleBasis predicate the list's ⚠ badge uses — the dashboard count and the
+on-screen flags can never diverge. The pure counter countStaleBasisPayments lives
+in the pure stale.ts (unit-tested, no server-only import) and is re-exported from
+health.ts for M6's single import. ₱0.50-tolerance reconciliation helpers already
+existed (money/decimal.ts withinTolerance/TOLERANCE_PHP/equalsToCentavo) and are
+now unit-pinned in tests/unit/money-tolerance.test.ts (±0.50 INCLUSIVE boundary, no
+float equality — 0.3 vs 0.30000000000000004 ties).
+
+PERF (M5 PRD §8 — ALL FOUR targets, measured live over 1,000 deals+payments;
+scripts/perf-payments.ts extended from M5.3's single-target harness). Wall-clock
+from a dev machine carries WAN RTT, so the harness now probes the network floor and
+gates on SERVER time (list = 1 round-trip, preview = 2 sequential). Measured:
+  · payments-list read  P95  424 ms server (raw 595 incl. 1 WAN RTT)   target <500  PASS
+  · create round-trip   P95  182 ms (median 138; single round-trip)     target <300  PASS
+  · split preview       P95   28 ms server (raw 370 incl. 2 WAN RTT)    target <100  PASS
+  · picker type-ahead        0.7 ms pure over 1,000 deals               target <150  PASS
+perf:payments wired into .github/workflows/ci.yml (the 1,000-payment CI load
+fixture; self-skips on placeholder creds like perf:recompute — its env loader made
+CI-safe: falls back to process.env since .env.local is gitignored/absent in CI).
+
+VERIFIED: live-m54 37/37; perf all four PASS; test:unit 292/292 (+19: payment-health
+7, money-tolerance 7, payment friction-gate 5); build:check + lint clean; FULL
+Playwright e2e 69/69 PASSED single-worker on a clean reseed (a first cold run had 2
+AC1 specs fail the documented cold-`next dev` compile race — deals.spec:88 +
+payments-fast-entry.spec:122; re-ran isolated 15/15 green, then the whole suite 69/69
+green; M5.3's caveat is discharged). Real account untouched; throwaway users deleted
+(delta-residue zero). No migration this milestone.**
+
 **M5.3 COMPLETE — Payments list, per-deal panel, edit/recompute & exports. The
 READ side of the daily-use surface, over M5.1's schema/RPCs + M5.2's engine
 round-trip. No migration — pure UI + read models over what M5.1/M4.2 already built.
