@@ -372,14 +372,14 @@
       "completedAt": "2026-07-18T13:10:00+08:00"
     },
     "deploy": {
-      "status": "pending",
-      "startedAt": null,
-      "completedAt": null
+      "status": "completed",
+      "startedAt": "2026-07-18T13:15:00+08:00",
+      "completedAt": "2026-07-18T13:30:00+08:00"
     }
   },
   "deploy": {
-    "githubUrl": null,
-    "vercelUrl": null,
-    "liveUrl": null
+    "githubUrl": "https://github.com/Illamapalooza/nurture-your-commission",
+    "vercelUrl": "https://vercel.com/illamapaloozas-projects/nurture-your-commission",
+    "liveUrl": "https://nurture-your-commission.vercel.app"
   }
 }
