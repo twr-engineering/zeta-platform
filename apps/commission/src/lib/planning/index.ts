@@ -43,3 +43,13 @@ export {
   planYearTargetToInput,
   planYearTargetToTargetTableRow,
 } from "./map";
+export {
+  assumptionSourceLabel,
+  funnelRatePercentLabel,
+  ratePercentInputValue,
+} from "./display";
+export {
+  planToRows,
+  CALCULATOR_PLAN_COLUMNS,
+  type PlanExportRow,
+} from "./export-rows";

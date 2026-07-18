@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T23:55:00+08:00 (M3.1 — Planning engine library)
+# Last Updated: 2026-07-19T00:40:00+08:00 (M3.3 — Planning screen)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -36,7 +36,7 @@
 - [x] M2.4: Yield Summary screen & polish  ← M2 COMPLETE
 - [x] M3.1: Planning engine library
 - [x] M3.2: Targets & rates persistence + M6 feed
-- [ ] M3.3: Planning screen
+- [x] M3.3: Planning screen
 - [ ] M3.4: Pace vs actual + hardening
 - [ ] M7.1: Aggregation service + fixture parity
 - [ ] M7.2: Report UI, year filter & export
@@ -58,6 +58,97 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M3.3 COMPLETE — Planning screen. The /calculator stub is replaced by the full
+one-screen planning experience over computePlan (M3.1) + the M3.2 records + the M2.3
+PlanningBasis — ZERO client math (the pure engine is the only figure source; the UI
+calls it directly). NO migration; purely additive except the /calculator route (was a
+stub) + one export-registry arm. test:unit 416/416 (+7: planning/display 3,
+planning/export-rows 4); build:check + lint clean; calculator e2e 9/9; FULL e2e on a
+clean reseed = 107 passed / 0 failed (my 9 new + every existing spec — additive → zero
+regression, no flakes this run); delta-residue ZERO (0 throwaway users, 0
+plan_year_target/funnel_rates rows after cleanup; real account juliusbaliling25 untouched).
+
+INSTANT RECALC (FR-M3-03/07, Rule 8). src/components/planning/planning-screen.tsx is the
+client orchestrator: it holds the seven conversion rates in state and re-runs computePlan
+on every keystroke (client-side, <10ms — the engine is pure TS, imported from
+'@/lib/planning' which re-exports ONLY pure modules; the M1.3 previewDeal precedent is a
+SERVER round-trip because computeDeal needs tax settings — here the engine is
+self-contained so it runs client-side, per m3_2Handoff's explicit instruction). It NEVER
+re-implements a formula. A transiently-invalid rate keeps the ladder on its last-good
+counts (a useRef) + flags the field; the whole screen is keyed by year so switching years
+resets cleanly. Rate edits PERSIST ON CONFIRM through the gated M3.2 updateFunnelRates
+(a Save-rates bar appears only when dirty); the form owns percent→decimal (25→0.25).
+
+SCREEN (src/app/(app)/calculator/page.tsx — server): parses ?year= (per-user URL state,
+default manilaYear, clamp 2000–2100), loads listPlanYearTargets + getFunnelRates +
+getPlanningBasis in ONE parallel pass, resolves the year's row, renders the sticky header
+(plan-year selector = the sole blue nav input + CSV/XLSX export) → <PlanningScreen> →
+section 6 <TargetsTableEditor>. COMPONENTS (src/components/planning/): planning-year-selector
+(URL-driven blue SelectField, mirrors yield-year-filter), economic-model-card (NIT/opex/cos
+blue with "default 22%/10%" badges → net income % locked → working GCI goal LARGE + round-up
+badge + formula tooltip, raw struck-small), assumptions-row (price/yield each source-labelled
+"All-time realized" linked→/yield-summary vs "Override for {year}" chip w/ one-click revert;
+fees/deal locked w/ "no ÷1.12" formula), goals-table (GCI/Net Income/Listings SOLD/Buyer ATP
+× Yearly/Monthly/Weekly + the 48-week caption; money vs 2-dp counts), funnel-ladders (two
+side-by-side, top→down leads→deals; every count LOCKED, every rate a blue input w/ instant
+recalc + inline out-of-range error), pace-card (Total Sales required REAL via StatTile; YTD
+actual + Balance = the M3.4 seam, a documented muted "—" naming when the live aggregate
+lands), targets-table-editor (all years mirroring TargetTable, blank=default/all-time in
+placeholder styling, add-a-year, per-row edit + delete gates), edit-target-gate (the ONE
+gated surface writing a target row — always submits ALL FIVE fields so a partial edit never
+nulls the rest; opened from the economic card, assumptions row, the empty states, and every
+targets-editor row). EMPTY/VALIDATION STATES in the orchestrator: no NIT → "Set a Net Income
+Target" (rule 9); opex+cos ≥ 100% → the AC5 inline error (rule 1); empty basis → "enter a
+working yield and average price" (rule 5) — priority NIT→invalid→basis so the first blocker
+shows first, each with a guided EditTargetGate CTA.
+
+EDIT SURFACES ARE ALL GATED (rule 14). Every target write goes through the M3.2
+ConfirmGate-wrapped upsertPlanYearTarget/deletePlanYearTarget (mode 'checked', audited
+old→new); rate writes through updateFunnelRates. The e2e confirmGate helper waits for the
+dialog to CLOSE (action resolved + revalidated) before reloading, so a follow-up read never
+races the in-flight server action. The three editing modals reuse EditTargetGate (DRY + can
+never null a field); the assumptions "Revert to all-time" is a dedicated gate submitting the
+whole row with one override blanked (stored decimals pass straight through — no percent
+round-trip).
+
+PURE HELPERS (unit-tested). src/lib/planning/display.ts (assumptionSourceLabel,
+funnelRatePercentLabel, ratePercentInputValue) + src/lib/planning/export-rows.ts
+(planToRows + CALCULATOR_PLAN_COLUMNS — flattens a computed Plan to Line/Yearly/Monthly/
+Weekly/Detail rows; money+counts as the engine's exact 2-dp strings, formulae/sources in
+Detail, the pace lines carry the M3.4 seam). Both exported from the '@/lib/planning' barrel.
+tests/unit/planning/{display,export-rows}.test.ts pin the §9.1 fixtures through the flatten
+(working goal 16,920,000.00 / fees 381,676.31 / deals 44.33 / seller 177.32/253.32/844.40/
+4,221.98 leads-weekly 87.96 / buyer 147.77/211.10/2,110.99 / total 415,355,587.83).
+
+EXPORT (FR-M3-12). New registry dataset "calculator-plan" (src/lib/export/datasets.ts):
+the loader reads getPlanYearTarget(year)+getFunnelRates()+getPlanningBasis() → computePlan →
+planToRows over the SAME server model the screen computes, so the download ties to the
+screen; ?year= rides the existing route filter (no route change); a not-plannable year
+exports one line naming the typed issues, never an error. Header CSV/XLSX buttons carry the
+active year.
+
+VERIFICATION. M3.3 is a UI milestone; its live proof is the BROWSER e2e over the REAL v30.20
+import (tests/e2e/calculator.spec.ts, throwaway workspaces, --workers=1) — NOT a separate
+scripts/live-mNN-check (following M3.1's precedent for compute-only work: computePlan+planToRows
+are unit-proven against the WORKBOOK_PLANNING_BASIS double, itself pinned to reality by the
+M2.3 test). The spec drives, on real data: 2026 renders EVERY §10 value exactly (economic
+model / assumptions incl. 4-dp yield 4.0736% / goals / both funnels / Total Sales
+415,355,587.83 / YTD seam "—"); listing_to_sold 25%→30% recomputes Listings-to-take
+44.33÷0.30=147.77 INSTANTLY (no reload) → gated save → reload persisted → restore 25%; a
+not-plannable 2027 shows the empty state, setting a NIT unblocks it (derives 16,920,000);
+opex 60%+cos 40% refused inline with the verbatim AC5 message + the year never persists; a
+2026 yield override flips the source to "Override for 2026" then one-click reverts to
+"All-time realized"; the CSV/XLSX export carries 16920000.00 / 381676.31 / 415355587.83 /
+the M3.4 seam; an empty workspace shows the guided empty state; 360px renders with no
+horizontal overflow + console clean.
+
+NEXT: M3.4 (Pace vs actual + hardening) — supply the Rule P12 PlanYtdAggregate (Sale+Rental,
+≠Referrer, booked plan year; OQ-1 rental flag isolated IN the query) to computePlan; the
+PaceCard already renders YTD actual + Balance with ahead/behind coloring the moment a
+non-null aggregate arrives (the seam is a documented stub today). See m3_3Handoff in
+pipeline-state.
+
+--- prior: M3.2 ---
 **M3.2 COMPLETE — Targets & rates persistence + the M6 feed. Two hosted, additive
 migrations applied live via the Management API + registered:
 20260718110000_m32_targets_rates (plan_year_target + funnel_rates tables, RLS, CHECKs

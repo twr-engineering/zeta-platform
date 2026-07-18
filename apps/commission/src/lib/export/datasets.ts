@@ -18,7 +18,16 @@ import {
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
 import { formatRateAsPercent, toMoney } from "@/lib/money";
-import { manilaToday } from "@/lib/date/manila";
+import { manilaToday, manilaYear } from "@/lib/date/manila";
+import {
+  computePlan,
+  planYearTargetToInput,
+  planToRows,
+  CALCULATOR_PLAN_COLUMNS,
+  type PlanExportRow,
+} from "@/lib/planning";
+import { getPlanYearTarget, getFunnelRates } from "@/lib/planning/queries";
+import { getPlanningBasis } from "@/lib/yield/planning-basis";
 import { listDeals } from "@/lib/deals/queries";
 import {
   classifySegment,
@@ -360,6 +369,7 @@ export const EXPORT_DATASETS = [
   "dashboard-by-developer",
   "dashboard-chase",
   "yield-summary",
+  "calculator-plan",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -627,6 +637,48 @@ export async function loadExportDataset(
         name: "yield-summary",
         sheet: "Yield Summary",
         columns: YIELD_SUMMARY_COLUMNS,
+        rows,
+      });
+    }
+    case "calculator-plan": {
+      // The plan view (economic model + goals + funnels + pace) for the selected year
+      // (FR-M3-12). Reads the SAME server model the screen computes from — the stored
+      // target row + global rates + the M2 planning basis — through the ONE engine
+      // (computePlan), so the download ties to the screen. `year` absent ⇒ the current
+      // Manila year, matching the screen's default. A not-plannable year exports a single
+      // line naming why (the same typed issues the screen renders inline), never an error.
+      const year = filters.year ?? manilaYear();
+      const [row, rates, basis] = await Promise.all([
+        getPlanYearTarget(year),
+        getFunnelRates(),
+        getPlanningBasis(),
+      ]);
+      const input = row
+        ? planYearTargetToInput(row)
+        : {
+            year,
+            netIncomeTarget: null,
+            opexPct: null,
+            cosPct: null,
+            yieldOverride: null,
+            avgPriceOverride: null,
+          };
+      const result = computePlan(input, rates, basis);
+      const rows: PlanExportRow[] = result.ok
+        ? planToRows(result.plan)
+        : [
+            {
+              line: `No plan for ${year}`,
+              yearly: null,
+              monthly: null,
+              weekly: null,
+              detail: result.issues.map((i) => i.message).join("; "),
+            },
+          ];
+      return dataset({
+        name: "calculator-plan",
+        sheet: "GCI Plan",
+        columns: CALCULATOR_PLAN_COLUMNS,
         rows,
       });
     }
