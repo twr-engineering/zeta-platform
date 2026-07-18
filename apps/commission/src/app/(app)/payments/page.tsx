@@ -21,11 +21,21 @@ export const metadata: Metadata = { title: "Payments" };
  * The whole page is a single RLS-scoped read plus the tax settings; all filtering,
  * pagination and totals run client-side over those rows (§8 budget).
  */
-export default async function PaymentsPage() {
-  const [payments, currentRates] = await Promise.all([
+export default async function PaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string | string[]; month?: string | string[] }>;
+}) {
+  const [payments, currentRates, params] = await Promise.all([
     listPayments(),
     getWorkspaceRates(),
+    searchParams,
   ]);
+  const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
+  const initialFilters = {
+    year: one(params.year),
+    month: one(params.month),
+  };
 
   return (
     <div className="space-y-6">
@@ -58,7 +68,11 @@ export default async function PaymentsPage() {
           }
         />
       ) : (
-        <PaymentsList payments={payments} currentRates={currentRates} />
+        <PaymentsList
+          payments={payments}
+          currentRates={currentRates}
+          initialFilters={initialFilters}
+        />
       )}
     </div>
   );

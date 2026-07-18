@@ -86,19 +86,43 @@ function moneyNum(v: string | null): number {
 
 const PAGE_SIZE = 50;
 
+/**
+ * Initial filter state seeded from a dashboard drill-down (M6 §6, FR-M6-12). A
+ * position tile links to e.g. `?status=open&hasBalance=true`; the collectibles page
+ * parses those params and passes them here so the ledger opens on exactly the rows
+ * the tile aggregated. Absent → the ledger's own defaults (all rows).
+ */
+export type LedgerInitialFilters = {
+  status?: "all" | ReceivableStatus;
+  developer?: string;
+  onlyWithBalance?: boolean;
+  overriddenOnly?: boolean;
+};
+
 export type ReceivablesLedgerProps = {
   receivables: readonly ReceivableRow[];
   /** M6's ⚠-chase threshold from tax settings — a row idle ≥ this is flagged. */
   chaseIdleMonths: number;
+  initialFilters?: LedgerInitialFilters;
 };
 
-export function ReceivablesLedger({ receivables, chaseIdleMonths }: ReceivablesLedgerProps) {
+export function ReceivablesLedger({
+  receivables,
+  chaseIdleMonths,
+  initialFilters,
+}: ReceivablesLedgerProps) {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"all" | ReceivableStatus>("all");
-  const [developer, setDeveloper] = useState("all");
+  const [status, setStatus] = useState<"all" | ReceivableStatus>(
+    initialFilters?.status ?? "all"
+  );
+  const [developer, setDeveloper] = useState(initialFilters?.developer ?? "all");
   const [year, setYear] = useState("all");
-  const [onlyWithBalance, setOnlyWithBalance] = useState(false);
-  const [overriddenOnly, setOverriddenOnly] = useState(false);
+  const [onlyWithBalance, setOnlyWithBalance] = useState(
+    initialFilters?.onlyWithBalance ?? false
+  );
+  const [overriddenOnly, setOverriddenOnly] = useState(
+    initialFilters?.overriddenOnly ?? false
+  );
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "chase",
     dir: "desc",

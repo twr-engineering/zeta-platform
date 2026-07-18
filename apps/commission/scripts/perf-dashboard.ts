@@ -358,7 +358,7 @@ async function main() {
     // The pure compose — the CPU work getDashboardData does after the rows land.
     const c = performance.now();
     const receivables = (recQ.data ?? []).map((row) => {
-      const r = row as Record<string, unknown> & { last_payment_date: string | null; booking_date: string; status: string; balance: string | null };
+      const r = row as unknown as Record<string, unknown> & { last_payment_date: string | null; booking_date: string; status: string; balance: string | null };
       return { ...r, months_idle: computeMonthsIdle(r as never, today), age_months: computeAgeMonths(r as never, today) };
     }).sort(compareChasePriority as never) as never[];
     const payments = (payQ.data ?? []) as unknown as DashboardPayment[];

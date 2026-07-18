@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T23:30:00+08:00
+# Last Updated: 2026-07-19T00:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -27,7 +27,7 @@
 - [x] M4.4: Ledger UI, detail view, downstream projections & hardening  ← M4 COMPLETE
 - [x] M5.4: Hardening, access control & performance  ← M5 COMPLETE
 - [x] M6.1: Aggregation read models + reconciliation suite
-- [ ] M6.2: Dashboard UI: sections 1, 2, 3, 6
+- [x] M6.2: Dashboard UI: sections 1, 2, 3, 6
 - [ ] M6.3: Aging, receivables by developer, Data Health
 - [ ] M6.4: Chase list + inline Next Action + performance hardening
 - [ ] M2.1: Segment classifier & aggregation functions
@@ -58,6 +58,82 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M6.2 COMPLETE — Dashboard UI: Sections 1 (Position), 2 (Collected vs Target),
+3 (Cash & Tax), 6 (Monthly Cash-In) + the year filter. NO migration, NO new
+server/query code — pure UI over M6.1's getDashboardData payload. ZERO client
+money math: every peso/percent is a display string the M6.1 builders produced;
+the ONE thing the UI needed that the builder didn't expose (the |vsPace| magnitude
+for the "behind by ₱…" line, since the sign is carried separately by paceLabel) was
+added to buildTarget as vsPaceMagnitude + unit-pinned — NOT computed in a component
+(the established rule).
+
+/dashboard is a server component: reads ?year= (per-user view state in the URL;
+default manilaYear()), calls getDashboardData({dashboardYear}), renders the eight
+sections in the sheet's fixed 1→8 order. Sections 4/5/7/8 are clean placeholders
+holding their place until M6.3/M6.4 slot in (sheet order never shifts). Empty
+workspace (position.counts all 0 ⇒ no deals) shows the "Log deals and payments to
+light this up" banner with Log-a-deal / Import-workbook CTAs AND still renders every
+section with zeros/"—" (rule 19).
+
+COMPONENTS (src/components/dashboard/): section.tsx (numbered heading wrapper),
+stat-tile.tsx (a tile; value is a display string, whole tile is a drill-down Link
+when href set, tone default/positive/negative/muted), position-section.tsx (S1 —
+8 tiles), target-section.tsx (S2 — 4 measures + the ahead/behind line + pace bar +
+override affordance), cash-tax-section.tsx (S3 — 5-line waterfall + the WORKBOOK §6
+explainer reproduced VERBATIM), monthly-section.tsx (S6 — 12-row table, mobile
+cards, signed +/− colored), pace-bar.tsx (PURE CSS proportional bar — the only
+"chart", no library: fill=pctOfTarget, marker=paceFraction, green ahead / red
+behind), dashboard-year-filter.tsx (sticky select, URL-driven value, router.push
+?year=, the MANDATORY scope caption "Filters 'Collected vs Target' and 'Monthly
+Cash-In' only"), target-override-control.tsx (the E15 affordance), section-placeholder.tsx.
+
+YEAR FILTER SCOPE (§4 rule 1) — enforced structurally in M6.1 (only buildTarget/
+buildMonthly see the year) and PROVEN at the UI: the AC13 e2e captures S1 + S3
+innerHTML at 2026, switches the sticky select to 2025 (URL → ?year=2025), asserts
+S2 collected → ₱0.00 / S6 zeros while S1 + S3 are BYTE-IDENTICAL.
+
+OVERRIDE FLOW (FR-M6-03) — target-override-control.tsx wires the EXISTING gated
+actions (setAnnualTargetOverride/clearAnnualTargetOverride) through ConfirmGate
+(mode 'checked'): a hidden year field + amount + optional note; each gate wraps its
+action to capture the outcome (the tax-settings-form pattern — ConfirmGate closes on
+success and takes its state, so the parent keeps it for FormStatus). revalidatePath
+('/dashboard') restates the tiles + pace bar on the refresh. Provenance always
+shown beside the target ("Derived: ₱… from 2026 targets" when overridden; "No
+target set for 2026" when neither). With NO TargetTable row until M3 (getTargetTableRow
+→ null), Section 2 shows "—" per rule 9 (NOT 16,920,000 — that derived value needs
+M3.2); the OVERRIDE is what lights up target/pace/% and Monthly's cumulative-target
+column. Verified in-browser: set 15,000,000 → target ₱15,000,000.00 + override
+badge + provenance + %-of-target 12.72% + pace bar + "behind" line; clear → reverts
+to "—".
+
+DRILL-DOWNS (FR-M6-12) — new route helpers collectiblesPath({status,hasBalance,
+overridden,developer}) + paymentsPath({year,month}); position tiles → filtered
+/collectibles (Balance Outstanding → ?status=open&hasBalance=true, Written-off →
+?status=cancelled, Variance → ?status=closed), Net Cash / Collected-year → /payments
+(+?year=), referral → /deals, each Monthly row with payments → /payments?year=&month=.
+The M4 ledger + M5 payments list now SEED their client filter state from those params
+(additive `initialFilters` prop, defaults unchanged) — the pages parse searchParams
+and pass them, so a tile lands on exactly the rows it aggregated. Proven by e2e
+(rec-status='open' + only-with-balance checked; pay-year=2026 + pay-month=1).
+
+FIXED PRE-EXISTING: scripts/perf-dashboard.ts had a TS2352 (regressed since M6.1's
+clean claim — a Supabase GenericStringError cast) that failed build:check; corrected
+with a through-`unknown` cast (perf script only, no product change).
+
+VERIFIED: build:check + lint clean; test:unit 321/321 (the 2 new vsPaceMagnitude
+assertions live inside the existing Section-2 builder tests); NEW tests/e2e/dashboard.spec.ts
+(10 tests) drives a workbook-imported throwaway in a REAL browser — S1
+6,763,497.25 / 1,908,192.86 / 4,855,304.39 / 28.21% / net cash 1,909,085.71 /
+"across 0 deals"; S3 1,913,550.00 / 5,357.14 / 4,464.29 / 1,909,085.71 /
+1,903,728.57 + verbatim explainer; S2 "—"→override→clear; S6 Jan 436,050.00 / Dec
+cum == S2 1,908,192.86; year-scope byte-identical; override set/clear; drill-downs;
+360px (tiles stack, monthly→cards, no body h-scroll, CONSOLE CLEAN); empty dashboard
+— ALL green single-worker. Dashboard reads the LIVE Manila clock (no page-level
+clock override, by design) so the e2e asserts clock-independent centavos + pace
+DIRECTION; the frozen-clock pace numbers stay in the unit/live-check suites. Full
+Playwright suite green on a clean reseed; throwaway users deleted (delta-residue
+zero). Real account untouched. NO migration this milestone.**
+
 **M6.1 COMPLETE — Aggregation read models + reconciliation suite. NO UI (M6.2–M6.4
 own the eight-section screens). ONE additive migration applied live + registered:
 20260718090000_m61_annual_target_override — public.annual_target_override

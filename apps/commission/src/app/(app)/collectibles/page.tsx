@@ -4,12 +4,36 @@ import { Wallet } from "lucide-react";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Button } from "@/components/ui/button";
-import { ReceivablesLedger } from "@/components/receivables/receivables-ledger";
+import {
+  ReceivablesLedger,
+  type LedgerInitialFilters,
+} from "@/components/receivables/receivables-ledger";
 import { listReceivables } from "@/lib/receivables/queries";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { ROUTES } from "@/lib/routes";
+import type { ReceivableStatus } from "@/types/entities";
 
 export const metadata: Metadata = { title: "Collectibles" };
+
+/** Parse the dashboard drill-down params (FR-M6-12) into the ledger's filter seed. */
+function initialFiltersFrom(params: {
+  status?: string | string[];
+  hasBalance?: string | string[];
+  overridden?: string | string[];
+  developer?: string | string[];
+}): LedgerInitialFilters | undefined {
+  const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
+  const status = one(params.status);
+  const developer = one(params.developer);
+  const filters: LedgerInitialFilters = {};
+  if (status === "open" || status === "closed" || status === "cancelled") {
+    filters.status = status as ReceivableStatus;
+  }
+  if (one(params.hasBalance) === "true") filters.onlyWithBalance = true;
+  if (one(params.overridden) === "true") filters.overriddenOnly = true;
+  if (developer) filters.developer = developer;
+  return Object.keys(filters).length > 0 ? filters : undefined;
+}
 
 /**
  * The receivables ledger (M4.4) — the module's home. One receivable per deal,
@@ -21,12 +45,23 @@ export const metadata: Metadata = { title: "Collectibles" };
  * The header carries the module's most-misread rule verbatim (WORKBOOK §5): Booked
  * NET GCI is an earnings figure, Total Collectible is the cash you expect in.
  */
-export default async function CollectiblesPage() {
-  const [receivables, context] = await Promise.all([
+export default async function CollectiblesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    status?: string | string[];
+    hasBalance?: string | string[];
+    overridden?: string | string[];
+    developer?: string | string[];
+  }>;
+}) {
+  const [receivables, context, params] = await Promise.all([
     listReceivables({ includeArchived: false }),
     getWorkspaceContext(),
+    searchParams,
   ]);
   const chaseIdleMonths = context?.taxSettings?.chase_idle_months ?? 3;
+  const initialFilters = initialFiltersFrom(params);
 
   if (receivables.length === 0) {
     return (
@@ -58,7 +93,11 @@ export default async function CollectiblesPage() {
         </p>
       </header>
 
-      <ReceivablesLedger receivables={receivables} chaseIdleMonths={chaseIdleMonths} />
+      <ReceivablesLedger
+        receivables={receivables}
+        chaseIdleMonths={chaseIdleMonths}
+        initialFilters={initialFilters}
+      />
     </div>
   );
 }

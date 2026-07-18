@@ -142,6 +142,11 @@ export type TargetSection = {
   paceFraction: string;
   /** collectedForYear − paceToDate (signed), or null when target is null. */
   vsPace: string | null;
+  /**
+   * |vsPace| — the magnitude the "ahead/behind by ₱…" line displays (the sign is
+   * carried by paceLabel, so the UI never re-derives it). Null when suppressed.
+   */
+  vsPaceMagnitude: string | null;
   /** "ahead" when vsPace ≥ 0, else "behind"; null when the line is suppressed. */
   paceLabel: "ahead" | "behind" | null;
 };
@@ -185,6 +190,7 @@ export function buildTarget(
     paceToDate,
     paceFraction: paceFraction(dashboardYear, today).toFixed(6),
     vsPace,
+    vsPaceMagnitude: vsPace === null ? null : toMoney(vsPace).abs().toFixed(2),
     paceLabel: vsPace === null ? null : toMoney(vsPace).isNegative() ? "behind" : "ahead",
   };
 }

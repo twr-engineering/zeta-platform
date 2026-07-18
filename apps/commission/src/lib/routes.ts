@@ -50,6 +50,40 @@ export function paymentEditPath(id: string): string {
   return `/payments/${encodeURIComponent(id)}/edit`;
 }
 
+/**
+ * The collectibles ledger with an initial filter applied (M6 dashboard drill-downs,
+ * FR-M6-12). The ledger seeds its client filter state from these params, so a
+ * position tile lands on exactly the receivables it aggregated.
+ */
+export function collectiblesPath(filters?: {
+  status?: "open" | "closed" | "cancelled";
+  hasBalance?: boolean;
+  overridden?: boolean;
+  developer?: string;
+}): string {
+  if (!filters) return ROUTES.collectibles;
+  const p = new URLSearchParams();
+  if (filters.status) p.set("status", filters.status);
+  if (filters.hasBalance) p.set("hasBalance", "true");
+  if (filters.overridden) p.set("overridden", "true");
+  if (filters.developer) p.set("developer", filters.developer);
+  const s = p.toString();
+  return s ? `${ROUTES.collectibles}?${s}` : ROUTES.collectibles;
+}
+
+/**
+ * The payments list with an initial year/month filter (M6 §6, FR-M6-12) — the Net
+ * Cash / Cash & Tax tiles and every Monthly Cash-In row drill down here.
+ */
+export function paymentsPath(filters?: { year?: number; month?: number }): string {
+  if (!filters) return ROUTES.payments;
+  const p = new URLSearchParams();
+  if (filters.year !== undefined) p.set("year", String(filters.year));
+  if (filters.month !== undefined) p.set("month", String(filters.month));
+  const s = p.toString();
+  return s ? `${ROUTES.payments}?${s}` : ROUTES.payments;
+}
+
 /** A deal's detail / edit routes, keyed on its permanent code (D021). */
 export function dealDetailPath(code: string): string {
   return `/deals/${encodeURIComponent(code)}`;

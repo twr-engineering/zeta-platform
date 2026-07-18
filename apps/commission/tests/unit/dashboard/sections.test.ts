@@ -182,6 +182,7 @@ test("Section 2 — target, collected-for-year, %, pace, behind-by (v30.20)", ()
   assert.equal(t.pctOfTarget, "0.112777");
   assert.equal(t.paceToDate, "9178520.55");
   assert.equal(t.vsPace, "-7270327.69");
+  assert.equal(t.vsPaceMagnitude, "7270327.69"); // the "behind by ₱…" line's magnitude
   assert.equal(t.paceLabel, "behind");
 });
 
@@ -203,6 +204,7 @@ test("Section 2 — no target row and no override → '—' (null), line suppres
   assert.equal(t.pctOfTarget, null);
   assert.equal(t.paceToDate, null);
   assert.equal(t.vsPace, null);
+  assert.equal(t.vsPaceMagnitude, null);
   assert.equal(t.paceLabel, null);
 });
 

@@ -48,10 +48,18 @@ const MONTH_LABEL = [
 
 const PAGE_SIZE = 50;
 
+/**
+ * Initial filter state seeded from a dashboard drill-down (M6 §6, FR-M6-12) — the
+ * Net Cash / Cash & Tax tiles link to `?year=`, a Monthly Cash-In row to
+ * `?year=&month=`. Absent → the list's own defaults (all rows).
+ */
+export type PaymentsInitialFilters = { year?: string; month?: string };
+
 export type PaymentsListProps = {
   payments: readonly PaymentRow[];
   /** The workspace's CURRENT rates — the stale-basis anchors (FR-M5-12). */
   currentRates: { ewt_rate: string; vat_rate: string };
+  initialFilters?: PaymentsInitialFilters;
 };
 
 /** The current deal + settings a payment's snapshot is compared against. */
@@ -67,10 +75,10 @@ function currentBasisOf(
   };
 }
 
-export function PaymentsList({ payments, currentRates }: PaymentsListProps) {
+export function PaymentsList({ payments, currentRates, initialFilters }: PaymentsListProps) {
   const [search, setSearch] = useState("");
-  const [year, setYear] = useState("all");
-  const [month, setMonth] = useState("all");
+  const [year, setYear] = useState(initialFilters?.year ?? "all");
+  const [month, setMonth] = useState(initialFilters?.month ?? "all");
   const [developer, setDeveloper] = useState("all");
   const [type, setType] = useState<"all" | PaymentRow["payment_type"]>("all");
   const [page, setPage] = useState(1);
