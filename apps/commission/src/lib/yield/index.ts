@@ -32,3 +32,8 @@ export {
   reportFromAggregates,
   type YieldAggregateCell,
 } from "./materialized";
+export {
+  toPlanningBasisContract,
+  type BasisVersionStamp,
+  type PlanningBasisContract,
+} from "./contract";
