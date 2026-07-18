@@ -21,6 +21,16 @@ import { formatRateAsPercent, toMoney } from "@/lib/money";
 import { manilaToday } from "@/lib/date/manila";
 import { listDeals } from "@/lib/deals/queries";
 import {
+  classifySegment,
+  reportFromAggregates,
+  planningBasisFromAggregates,
+  type ClassifiableDeal,
+  type YearFilter,
+} from "@/lib/yield";
+import { loadYieldAggregates } from "@/lib/yield/queries";
+import { yieldReportToRows, YIELD_SUMMARY_COLUMNS } from "@/lib/yield/export-rows";
+import type { DealSegmentFilter } from "@/lib/routes";
+import {
   listReceivables,
   receivablePayor,
   type ReceivableRow,
@@ -329,6 +339,15 @@ const CHASE_COLUMNS: readonly ExportColumn<ChaseExportRow>[] = [
   { header: "Next Action", type: "text", value: (r) => r.nextActionNote ?? "", width: 40 },
 ];
 
+// --- Yield Summary (FR-M2-09) -----------------------------------------------
+
+/** Segment membership for a deal export drill-through — the shared classifier. */
+function dealInSegment(deal: Deal, segment: DealSegmentFilter): boolean {
+  const seg = classifySegment(deal as unknown as ClassifiableDeal);
+  if (segment === "sales") return seg === "resale" || seg === "developer";
+  return seg === segment;
+}
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
   "deals",
@@ -340,6 +359,7 @@ export const EXPORT_DATASETS = [
   "dashboard-aging",
   "dashboard-by-developer",
   "dashboard-chase",
+  "yield-summary",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -375,6 +395,10 @@ export type DealExportFilters = {
   varianceOverTolerance?: boolean;
   stale?: boolean;
   referralUnpaid?: boolean;
+  /** Yield Summary segment drill-through (FR-M2-12): the deal list export ties to
+   * the drilled segment row, and the yield-summary export reads it as the year filter
+   * ("all" when `year` is absent). */
+  segment?: DealSegmentFilter;
 };
 
 export async function loadExportDataset(
@@ -395,6 +419,8 @@ export async function loadExportDataset(
             !(toMoney(deal.referral_out).greaterThan(0) && !deal.referral_paid)
           )
             return false;
+          // Yield Summary segment drill-through (FR-M2-12) — same classifier as the list.
+          if (filters.segment && !dealInSegment(deal, filters.segment)) return false;
           return true;
         }
       );
@@ -583,6 +609,24 @@ export async function loadExportDataset(
         name: "dashboard-chase",
         sheet: "Chase List",
         columns: CHASE_COLUMNS,
+        rows,
+      });
+    }
+    case "yield-summary": {
+      // The report table + memos + averages are year-scoped (the on-screen filter);
+      // the planning-basis lines are all-time (Rule 4). Both read the ONE materialized
+      // aggregate — the same cells the screen reduces — so the download ties to the
+      // screen (AC8 / FR-M2-09). `year` absent ⇒ the "All" filter, matching the screen.
+      const yearFilter: YearFilter = filters.year ?? "all";
+      const cells = await loadYieldAggregates();
+      const rows = yieldReportToRows(
+        reportFromAggregates(cells, yearFilter),
+        planningBasisFromAggregates(cells)
+      );
+      return dataset({
+        name: "yield-summary",
+        sheet: "Yield Summary",
+        columns: YIELD_SUMMARY_COLUMNS,
         rows,
       });
     }

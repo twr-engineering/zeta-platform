@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { YIELD_AGGREGATE_SELECT } from "@/lib/supabase/selects";
+import { classifySegment, type ClassifiableDeal } from "./segments";
 import type { YieldAggregateCell } from "./materialized";
 
 /**
@@ -28,6 +29,32 @@ export async function loadYieldAggregates(): Promise<YieldAggregateCell[]> {
     throw new Error(`Could not load yield aggregates: ${error.message}`);
   }
   return (data ?? []) as unknown as YieldAggregateCell[];
+}
+
+/**
+ * The Rule 9 partition invariant, run on every report render (FR-M2-08). Returns the
+ * deal codes of non-archived deals that classify to NO segment — [] when the four
+ * predicates partition the population (always, for data logged through M1's validated
+ * form, which couples Sale ⇒ {Developer, Resale}). Reuses the SAME pure `classifySegment`
+ * as the aggregation and the badge, so the invariant can never disagree with the report.
+ *
+ * This is the light on-render check, distinct from the heavier `reconcileYieldAggregate`
+ * drift job (FR-M2-10, on-demand/nightly): it scans only the four classification columns,
+ * server-side, and normally returns nothing. The aggregate itself excludes unclassified
+ * deals by construction, so this is the only place a screen learns of them.
+ */
+export async function loadUnclassifiedDealCodes(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("deal")
+    .select("deal_code,transaction_type,deal_type,representation")
+    .is("archived_at", null);
+  if (error) {
+    throw new Error(`Could not load deals for the partition invariant: ${error.message}`);
+  }
+  return (data ?? [])
+    .filter((d) => classifySegment(d as unknown as ClassifiableDeal) === null)
+    .map((d) => (d as { deal_code: string }).deal_code);
 }
 
 /** The per-workspace basis_version + last-computed stamp (null before the first drain). */

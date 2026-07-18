@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T21:20:00+08:00 (M2.3 — PlanningBasis API for M3)
+# Last Updated: 2026-07-18T23:10:00+08:00 (M2.4 — Yield Summary screen & polish · M2 COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -33,7 +33,7 @@
 - [x] M2.1: Segment classifier & aggregation functions
 - [x] M2.2: Materialized aggregates & event-driven restatement
 - [x] M2.3: PlanningBasis API for M3
-- [ ] M2.4: Yield Summary screen & polish
+- [x] M2.4: Yield Summary screen & polish  ← M2 COMPLETE
 - [ ] M3.1: Planning engine library
 - [ ] M3.2: Targets & rates persistence + M6 feed
 - [ ] M3.3: Planning screen
@@ -58,6 +58,97 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M2.4 COMPLETE — Yield Summary screen & polish. 🎉 M2 COMPLETE.
+The user-facing report at full sheet parity, over the M2.2/M2.3 read model — ZERO
+client math. NO migration; purely additive (new files: src/lib/yield/{report-queries,
+export-rows}.ts + src/components/yield/{yield-year-filter,segment-table,avg-price-block,
+planning-basis-card}.tsx + tests/unit/yield/export-rows.test.ts + tests/e2e/
+yield-summary.spec.ts + scripts/{live-m24-check.mts,perf-yield.ts}; additive edits:
+routes.ts dealsPath widened, deals/page.tsx + deal-list.tsx segment+year drill,
+export/datasets.ts + api/export route (yield-summary dataset + segment filter),
+yield/queries.ts loadUnclassifiedDealCodes, yield-summary/page.tsx replaces the stub,
+ci.yml perf:yield, package.json perf:yield).
+
+SCREEN (src/app/(app)/yield-summary/page.tsx): the sole BLUE year filter (affordance
+"input", mirroring the sheet's one blue cell — default = current Manila booked year,
+?year= URL state, options = All + every booked year present); the five-segment table
+(Resale/Developer/SALES SUBTOTAL emphasized/Rental "(on rent)"/Referral "(fees)")
+with LockedValue formula tooltips on every value + verbatim "already inside the GCI
+figures above" memo caption; TOTAL GCI (ALL OPERATIONS) + the memo pair (Incentives +,
+Referral-outs − shown as parentheses); the avg-price block (Resale/Developer/BLENDED
+"→ feeds calculator"/Rental annual GCI YTD) via StatTile; the Planning Basis card
+(border-highlighted, "All-time realized — feeds the GCI Calculator; ignores the
+report-year filter", each figure a "used by the GCI Calculator" link into M3). Mobile
+360px: per-segment cards + the planning card PINNED FIRST via order utilities.
+
+DATA (src/lib/yield/report-queries.ts getYieldSummaryView): ONE parallel read pass —
+loadYieldAggregates (report + all-time planning basis via the M2.2 reducers) +
+getYieldBasisVersion (card stamp) + loadUnclassifiedDealCodes (Rule 9 invariant). The
+report is year-scoped; the planning basis is ALWAYS all-time (Rule 4) — proven the
+card is byte-identical under 2026/All/2027.
+
+YIELD-PRECISION DECISION (§6/§7 vs the brief's "renders exactly" + app convention):
+realized yields render at 4 dp ON SCREEN (formatYield), matching the shipped M1 deal-
+list yield column and making every §9 fixture (4.8643%/3.6537%/8.3333%/4.0736%) render
+verbatim; share of sales at 2 dp (34.69%/65.31%). §7's "2 dp default" is superseded by
+the render-exactly directive + deal-list consistency; the CSV/XLSX export also carries
+yields at 4 dp (FR-M2-09). Money ₱ #,##0.00; planning price display-rounded to 2 dp on
+screen/export (the FULL-precision figures cross to M3 ONLY over the PlanningBasis API,
+never an export — Rule 7).
+
+RULE 9 (FR-M2-08): the partition invariant runs on EVERY render via the light
+loadUnclassifiedDealCodes (scans the 4 classification columns, reuses the pure
+classifySegment — the single source of truth), NOT the heavier reconcile drift job
+(that stays the on-demand FR-M2-10 path). Unreachable via M1's validated deal form
+(Sale ⇒ {Developer,Resale}); the banner seam fires only on imported/legacy data that
+broke the type coupling. Clean partition on the workbook → 0 unclassified.
+
+DRILL-THROUGH (FR-M2-12): each segment name links to /deals?segment=<seg>&year=<y>
+(SALES SUBTOTAL → segment=sales); the deal list gained an additive `segment` filter
+resolving through the SAME classifier → exact row parity (7/10/4/0/17). A dismissible
+chip shows/clears the active segment. The deals EXPORT honours segment too (AC8).
+
+EXPORT (FR-M2-09): new registry dataset "yield-summary" (year-scoped table+memos+avgs;
+all-time planning-basis lines) built from the pure yieldReportToRows over the same
+materialized cells the screen reduces — download ties to the screen; yields 4 dp, money
+2 dp. Header CSV/XLSX buttons carry the active year.
+
+VERIFIED (all clock-independent — M2 is booked-basis, no clock):
+· scripts/live-m24-check.mts (throwaway workspace, real workbook import + drain) —
+  ALL PASSED: every §9 value to the centavo (Resale 7/55,251,000.00/2,687,550.00/
+  4.8643%/34.69%; Developer 10/104,029,945.00/3,800,947.25/3.6537%/65.31%; SUBTOTAL
+  17/159,280,945.00/6,488,497.25/4.0736%/100.00%; Rental 4/2,400,000.00/200,000.00/
+  8.3333%/—; Referral empty; TOTAL 6,688,497.25; memos 357,142.87 / -75,000.00; avgs
+  7,893,000.00/10,402,994.50/9,369,467.35; rental YTD 200,000.00; Planning Basis
+  4.0736%/9,369,467.35/17); 2026 ≡ All byte-identical; 2027 zeroed table + Planning
+  Basis UNMOVED (Rule 4); Rule 9 zero unclassified; basis_version ≥1.
+· PERF (scripts/perf-yield.ts, pnpm perf:yield, wired into ci.yml self-skipping):
+  yield read server P95 **0.64 ms** at 1,000 deals (EXPLAIN ANALYZE, parallel max:
+  aggregate 0.18 / invariant 0.64 / version 0.09) << 500 ms NFR/criterion 13. Raw
+  dev wall-clock 440.8 ms is WAN-bound (12 cells + 1,000-row invariant scan), absent
+  in prod.
+· test:unit 367/367 (+5 export-rows: §9 fixtures at 4-dp yields, Rule-4 year
+  independence, drill parity 7/10/4/0/17); build:check + lint clean (route registered,
+  yield-summary 3.9 kB).
+· tests/e2e/yield-summary.spec.ts 9/9 (real workbook import → segment table §9 verbatim
+  ON SCREEN incl. 4-dp yields; TOTAL+memos+avgs; Planning Basis card + calculator links;
+  year filter 2026≡All + 2027 zeros + basis unmoved + the blue select drives the URL;
+  segment drill-through Resale→7 / Developer→10 + chip; CSV has 4-dp yields + planning
+  block, XLSX 200; 360px per-segment cards + planning card + console clean; empty
+  workspace → global empty state).
+· FULL E2E (clean reseed, --workers=1): 94 passed incl. all 9 new yield tests + deals/
+  collectibles/payments/dashboard/workbook-import (my additive changes regressed
+  NOTHING). The ONLY non-green was the documented tax-settings cold-compile/serial-state
+  flake (UNRELATED to M2.4 — shares zero code): the failure MOVED between runs
+  (tax-settings:253 → :62 → :253), and once an early cold-compile flake aborts the
+  serial group its :307 "restore fixture to defaults" never runs, leaving vat_rate=12.50
+  so the next :62 sees a stale value — a self-cascading environmental artifact, exactly
+  the class progress.txt documents since M5.4. Reseeded to defaults afterward.
+· Delta-residue ZERO (0 m24-/perf-yield throwaway users; real account
+  juliusbaliling25@gmail.com untouched; dev fixtures reseeded to AC1 defaults).
+NO migration this milestone.**
+
+--- prior ---
 **M2.3 COMPLETE — PlanningBasis API for M3. The module's most important external
 contract: the versioned, full-precision feed M3's GCI Calculator reads on every render.
 NO migration, purely additive (new files: src/lib/yield/{contract,planning-basis}.ts +

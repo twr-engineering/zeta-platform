@@ -13,8 +13,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { formatManilaDate } from "@/lib/date/manila";
 import { formatPHP, formatYield, toMoney } from "@/lib/money";
-import { dealDetailPath, exportPath, ROUTES } from "@/lib/routes";
+import { dealDetailPath, exportPath, ROUTES, type DealSegmentFilter } from "@/lib/routes";
 import { DEAL_TYPE_LABELS, TRANSACTION_TYPE_LABELS } from "@/lib/deals/labels";
+import { classifySegment, type ClassifiableDeal } from "@/lib/yield";
 import type { Deal } from "@/types/entities";
 
 /**
@@ -87,12 +88,37 @@ function moneyKey(value: string): number {
 
 const PAGE_SIZE = 50;
 
+/** Labels for the active-segment drill chip (FR-M2-12). */
+const SEGMENT_LABELS: Record<DealSegmentFilter, string> = {
+  resale: "Resale",
+  developer: "Developer",
+  sales: "Sales (Resale + Developer)",
+  rental: "Rental",
+  referral: "Referral",
+};
+
 /**
- * Initial filter state seeded from a dashboard drill-down (M6 §7, FR-M6-12). Data
- * Health check (d) links here with `?referral=unpaid` so the row lands on exactly
- * the deals with a referral fee still owed out. Absent → the list's own defaults.
+ * True when a deal belongs to the drilled segment. `sales` is the SALES SUBTOTAL
+ * population (Resale + Developer); the rest map 1:1 to the shared classifier, so the
+ * filtered count matches the Yield Summary segment row exactly (7 / 10 / 4 / 0).
  */
-export type DealListInitialFilters = { referralUnpaid?: boolean };
+function inSegment(deal: Deal, segment: DealSegmentFilter): boolean {
+  const seg = classifySegment(deal as unknown as ClassifiableDeal);
+  if (segment === "sales") return seg === "resale" || seg === "developer";
+  return seg === segment;
+}
+
+/**
+ * Initial filter state seeded from a drill-down. Data Health check (d) links here
+ * with `?referral=unpaid` (M6 §7, FR-M6-12); a Yield Summary segment row links here
+ * with `?segment=…&year=…` (M2 §6, FR-M2-12). Absent → the list's own defaults.
+ */
+export type DealListInitialFilters = {
+  referralUnpaid?: boolean;
+  segment?: DealSegmentFilter;
+  /** A booked year as a string ("2026"), seeding the year select. */
+  year?: string;
+};
 
 export function DealList({
   deals,
@@ -102,10 +128,13 @@ export function DealList({
   initialFilters?: DealListInitialFilters;
 }) {
   const [search, setSearch] = useState("");
-  const [year, setYear] = useState("all");
+  const [year, setYear] = useState(initialFilters?.year ?? "all");
   const [showArchived, setShowArchived] = useState(false);
   const [referralUnpaid, setReferralUnpaid] = useState(
     initialFilters?.referralUnpaid ?? false
+  );
+  const [segment, setSegment] = useState<DealSegmentFilter | null>(
+    initialFilters?.segment ?? null
   );
   const [sort, setSort] = useState<{ key: ColumnKey; dir: "asc" | "desc" }>({
     key: "booked_date",
@@ -130,6 +159,8 @@ export function DealList({
       if (!showArchived && d.archived_at) return false;
       if (showArchived && !d.archived_at) return false;
       if (year !== "all" && String(d.booked_year) !== year) return false;
+      // Yield Summary drill-through (FR-M2-12): the deals of one segment.
+      if (segment && !inSegment(d, segment)) return false;
       // Data Health (d): a referral fee owed out and not yet paid.
       if (referralUnpaid && !(toMoney(d.referral_out).greaterThan(0) && !d.referral_paid))
         return false;
@@ -152,14 +183,14 @@ export function DealList({
       });
     }
     return rows;
-  }, [deals, search, year, showArchived, referralUnpaid, sort]);
+  }, [deals, search, year, showArchived, referralUnpaid, segment, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const clampedPage = Math.min(page, pageCount);
   const pageRows = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   // Reset to page 1 whenever the filtered set changes shape.
-  React.useEffect(() => setPage(1), [search, year, showArchived, referralUnpaid]);
+  React.useEffect(() => setPage(1), [search, year, showArchived, referralUnpaid, segment]);
 
   const toggleSort = (key: ColumnKey) =>
     setSort((prev) =>
@@ -177,7 +208,8 @@ export function DealList({
   const exportQuery =
     (year !== "all" ? `&year=${year}` : "") +
     (showArchived ? "&archived=true" : "") +
-    (referralUnpaid ? "&referral=unpaid" : "");
+    (referralUnpaid ? "&referral=unpaid" : "") +
+    (segment ? `&segment=${segment}` : "");
 
   return (
     <div className="space-y-4">
@@ -273,6 +305,20 @@ export function DealList({
             />
             Referral fee unpaid
           </label>
+          {segment && (
+            <Badge variant="secondary" className="gap-1.5" data-testid="segment-filter-chip">
+              {SEGMENT_LABELS[segment]}
+              <button
+                type="button"
+                onClick={() => setSegment(null)}
+                className="-mr-0.5 rounded-sm hover:text-foreground"
+                aria-label="Clear segment filter"
+                data-testid="segment-filter-clear"
+              >
+                ✕
+              </button>
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground" data-testid="result-count">
           {filtered.length} {filtered.length === 1 ? "deal" : "deals"}

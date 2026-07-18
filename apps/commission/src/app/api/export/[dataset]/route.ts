@@ -96,6 +96,16 @@ export async function GET(request: Request, context: RouteContext) {
   const varianceOverTolerance = params.get("variance") === "over-tolerance";
   const stale = params.get("stale") === "true";
   const referralUnpaid = params.get("referral") === "unpaid";
+  // Yield Summary segment drill-through (FR-M2-12) — the deals export ties to the row.
+  const segmentParam = params.get("segment");
+  const segment =
+    segmentParam === "resale" ||
+    segmentParam === "developer" ||
+    segmentParam === "sales" ||
+    segmentParam === "rental" ||
+    segmentParam === "referral"
+      ? segmentParam
+      : undefined;
 
   const data = await loadExportDataset(dataset, {
     year,
@@ -112,6 +122,7 @@ export async function GET(request: Request, context: RouteContext) {
     varianceOverTolerance,
     stale,
     referralUnpaid,
+    segment,
   });
   const filename = exportFilename(data.name, format, manilaToday());
 

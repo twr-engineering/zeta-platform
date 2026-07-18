@@ -73,6 +73,14 @@ jobs:
       - name: Dashboard perf harness (self-skips without live credentials)
         run: pnpm run perf:dashboard
 
+      # M2 Yield Summary perf budget (M2 PRD §8 / criterion 13): the report read
+      # < 500 ms P95 at 1,000 deals. Same self-skipping contract — "skipped" on the
+      # placeholder credentials CI runs with; against a real project it seeds 1,000
+      # deals, rebuilds the materialized aggregate, and measures the three parallel
+      # reads' true server execution (EXPLAIN ANALYZE), failing the build if missed.
+      - name: Yield perf harness (self-skips without live credentials)
+        run: pnpm run perf:yield
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

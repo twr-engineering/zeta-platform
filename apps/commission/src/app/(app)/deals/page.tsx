@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText, Plus, Upload } from "lucide-react";
 
-import { DealList } from "@/components/deals/deal-list";
+import { DealList, type DealListInitialFilters } from "@/components/deals/deal-list";
 import { EmptyState } from "@/components/common/empty-state";
+import type { DealSegmentFilter } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { listDeals } from "@/lib/deals/queries";
 import { ROUTES } from "@/lib/routes";
@@ -20,15 +21,36 @@ export const metadata: Metadata = { title: "Deals" };
 export default async function DealsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ referral?: string | string[] }>;
+  searchParams: Promise<{
+    referral?: string | string[];
+    segment?: string | string[];
+    year?: string | string[];
+  }>;
 }) {
   const [deals, params] = await Promise.all([
     listDeals({ includeArchived: true }),
     searchParams,
   ]);
-  const referralRaw = Array.isArray(params.referral) ? params.referral[0] : params.referral;
-  const initialFilters =
-    referralRaw === "unpaid" ? { referralUnpaid: true } : undefined;
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const referralRaw = one(params.referral);
+  const segmentRaw = one(params.segment);
+  const yearRaw = one(params.year);
+
+  // Yield-Summary segment drill-through (FR-M2-12): resolve the URL segment to the
+  // classifier bucket + booked year the row aggregated, so the list opens on exactly
+  // those deals. Only additive — absent params leave the list's own defaults.
+  const SEGMENTS: readonly DealSegmentFilter[] = ["resale", "developer", "sales", "rental", "referral"];
+  const segment = SEGMENTS.find((s) => s === segmentRaw);
+  const year = yearRaw && /^\d{4}$/.test(yearRaw) ? yearRaw : undefined;
+
+  const initialFilters: DealListInitialFilters | undefined =
+    referralRaw === "unpaid" || segment || year
+      ? {
+          ...(referralRaw === "unpaid" ? { referralUnpaid: true } : {}),
+          ...(segment ? { segment } : {}),
+          ...(year ? { year } : {}),
+        }
+      : undefined;
 
   if (deals.length === 0) {
     return (

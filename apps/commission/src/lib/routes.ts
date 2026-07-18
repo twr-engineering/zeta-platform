@@ -81,13 +81,32 @@ export function collectiblesPath(filters?: {
 }
 
 /**
- * The deal log with an initial filter (M6 §7 Data Health drill-down, FR-M6-12).
- * `referralUnpaid` seeds the list to deals with a referral fee owed out (the check
- * (d) records) so the health row lands on exactly the deals it flagged.
+ * A Yield-Summary segment for a deal-list drill-through (M2 §6, FR-M2-12). `sales`
+ * is the SALES SUBTOTAL population (Resale + Developer); the other four map 1:1 to
+ * the classifier segments. The deal list resolves it through `classifySegment` so
+ * the drilled-in count matches the segment row exactly (7 / 10 / 4 / 0).
  */
-export function dealsPath(filters?: { referralUnpaid?: boolean }): string {
-  if (filters?.referralUnpaid) return `${ROUTES.deals}?referral=unpaid`;
-  return ROUTES.deals;
+export type DealSegmentFilter = "resale" | "developer" | "sales" | "rental" | "referral";
+
+/**
+ * The deal log with an initial filter (M6 §7 Data Health drill-down, FR-M6-12; M2
+ * segment drill-through, FR-M2-12). `referralUnpaid` seeds the list to deals with a
+ * referral fee owed out (check (d)); `segment` + `year` land a Yield-Summary segment
+ * row on exactly the deals it aggregated. A `year` of `"all"` is omitted (the list's
+ * default), so the two filters compose cleanly.
+ */
+export function dealsPath(filters?: {
+  referralUnpaid?: boolean;
+  segment?: DealSegmentFilter;
+  year?: number | "all";
+}): string {
+  if (!filters) return ROUTES.deals;
+  const p = new URLSearchParams();
+  if (filters.referralUnpaid) p.set("referral", "unpaid");
+  if (filters.segment) p.set("segment", filters.segment);
+  if (filters.year !== undefined && filters.year !== "all") p.set("year", String(filters.year));
+  const s = p.toString();
+  return s ? `${ROUTES.deals}?${s}` : ROUTES.deals;
 }
 
 /**
