@@ -198,6 +198,21 @@ type PaymentOverride = Omit<PaymentTable, "Row"> & {
   Row: WithMoneyStrings<PaymentTable["Row"], PaymentMoneyColumns>;
 };
 
+// --- annual_target_override (M6 §3.1) ---------------------------------------
+
+type AnnualTargetOverrideTable = GeneratedTables["annual_target_override"];
+
+/**
+ * `amount` is numeric(14,2), so it arrives as a JSON float unless the query casts
+ * `::text` (see @/lib/supabase/selects ANNUAL_TARGET_OVERRIDE_SELECT). Only the Row
+ * is re-typed: the table is written exclusively by the SECURITY INVOKER DB
+ * functions (set/clear_annual_target_override), never inserted through the client,
+ * so the Insert/Update shapes are unused.
+ */
+type AnnualTargetOverrideOverride = Omit<AnnualTargetOverrideTable, "Row"> & {
+  Row: WithMoneyStrings<AnnualTargetOverrideTable["Row"], "amount">;
+};
+
 // --- Functions --------------------------------------------------------------
 
 type GeneratedFunctions = PublicSchema["Functions"];
@@ -330,6 +345,23 @@ type UpdatePaymentOverride = Omit<UpdatePaymentFn, "Args"> & {
   Args: WithPaymentRpcArgs<UpdatePaymentFn["Args"]>;
 };
 
+/**
+ * set_annual_target_override (M6.1). `p_amount` is the numeric override amount —
+ * the float trap from the argument side: PostgREST casts a JSON *string* straight
+ * to numeric, so it is `string`, never a float. `p_note` (text) and `p_year`
+ * (integer) round-trip exactly. clear_annual_target_override takes only p_year, so
+ * it needs no override.
+ */
+type SetAnnualTargetOverrideFn = GeneratedFunctions["set_annual_target_override"];
+type SetAnnualTargetOverrideOverride = Omit<SetAnnualTargetOverrideFn, "Args"> & {
+  Args: Omit<SetAnnualTargetOverrideFn["Args"], "p_amount" | "p_note"> & {
+    p_amount: string;
+    // A null note clears/omits it (the RPC coalesces to null); the generator marks
+    // it required-string.
+    p_note: string | null;
+  };
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
@@ -342,6 +374,7 @@ export type Database = Omit<Generated, "public"> & {
       | "deal"
       | "receivable"
       | "payment"
+      | "annual_target_override"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
@@ -349,6 +382,7 @@ export type Database = Omit<Generated, "public"> & {
       deal: DealOverride;
       receivable: ReceivableOverride;
       payment: PaymentOverride;
+      annual_target_override: AnnualTargetOverrideOverride;
     };
     Functions: Omit<
       GeneratedFunctions,
@@ -359,6 +393,7 @@ export type Database = Omit<Generated, "public"> & {
       | "set_confirmed_collectible"
       | "create_payment"
       | "update_payment"
+      | "set_annual_target_override"
     > & {
       update_tax_settings: UpdateTaxSettingsOverride;
       create_deal: CreateDealOverride;
@@ -367,6 +402,7 @@ export type Database = Omit<Generated, "public"> & {
       set_confirmed_collectible: SetConfirmedCollectibleOverride;
       create_payment: CreatePaymentOverride;
       update_payment: UpdatePaymentOverride;
+      set_annual_target_override: SetAnnualTargetOverrideOverride;
     };
   };
 };

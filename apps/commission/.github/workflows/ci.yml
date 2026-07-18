@@ -64,6 +64,15 @@ jobs:
       - name: Payments perf harness (self-skips without live credentials)
         run: pnpm run perf:payments
 
+      # M6 dashboard perf budget (M6 PRD §8): the full eight-section read < 1.5 s and
+      # the year-filter switch < 500 ms at 1,000 deals + 1,000 payments. Same
+      # self-skipping contract — "skipped" on the placeholder credentials CI runs
+      # with; against a real project it seeds 1,000×3 rows, measures the true server
+      # execution (EXPLAIN ANALYZE, machine-independent) plus the pure compose CPU,
+      # and fails the build if either target is missed.
+      - name: Dashboard perf harness (self-skips without live credentials)
+        run: pnpm run perf:dashboard
+
       # Also typechecks — `next build` runs tsc, which is what enforces the
       # money-safe types (a float in a rate column fails to compile).
       - name: Build

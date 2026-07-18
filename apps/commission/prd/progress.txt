@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T21:40:00+08:00
+# Last Updated: 2026-07-18T23:30:00+08:00
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -26,7 +26,7 @@
 - [x] M5.3: Payments list, per-deal panel & exports
 - [x] M4.4: Ledger UI, detail view, downstream projections & hardening  ← M4 COMPLETE
 - [x] M5.4: Hardening, access control & performance  ← M5 COMPLETE
-- [ ] M6.1: Aggregation read models + reconciliation suite
+- [x] M6.1: Aggregation read models + reconciliation suite
 - [ ] M6.2: Dashboard UI: sections 1, 2, 3, 6
 - [ ] M6.3: Aging, receivables by developer, Data Health
 - [ ] M6.4: Chase list + inline Next Action + performance hardening
@@ -58,6 +58,63 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M6.1 COMPLETE — Aggregation read models + reconciliation suite. NO UI (M6.2–M6.4
+own the eight-section screens). ONE additive migration applied live + registered:
+20260718090000_m61_annual_target_override — public.annual_target_override
+(workspace_id+year UNIQUE, amount numeric(14,2)>0, note ≤240, audit fields; RLS
+member policies; touch_updated_at) + set_annual_target_override (upsert, audited
+create/update) + clear_annual_target_override (delete → reverts to derivation,
+audited 'archive'; idempotent). Friction gate at the ACTION layer (checkConfirmation
+mode 'checked', OQ3); the RPCs are single writer+audit; tenant isolation via
+app.current_workspace_id(). Types regenerated additive; database.ts overrides
+amount→string + set RPC args; ANNUAL_TARGET_OVERRIDE_SELECT (amount::text);
+AnnualTargetOverride entity.
+
+src/lib/dashboard/: target.ts (PURE clock-injectable — roundUp10k, deriveAnnualTarget
+[NIT÷(1−opex−cos), blanks default 22%/10%, null on no-row], getAnnualTarget
+[override→derivation→null], daysInYear/ordinalDayInYear/paceFraction [clamp[0,1],
+leap-aware], dayAccuratePace); sections.ts (PURE builders over loaded rows, mirroring
+receivables/projections.ts — buildPosition[reuses positionTotals + net cash +
+referral], buildTarget, buildCashTax, buildAging/buildByDeveloper[reuse verbatim],
+buildMonthly, buildChase[+>30 warning]); queries.ts getDashboardData({dashboardYear?,
+today?}) → all 8 sections in ONE parallel RLS read pass → pure builders; actions.ts
+override set/clear; target-queries.ts getAnnualTargetOverride + getTargetTableRow.
+
+YEAR FILTER SCOPE (§4 rule 1) enforced STRUCTURALLY — only buildTarget/buildMonthly
+receive `year`; sections 1/3/4/5/8 cannot see it. FRESHNESS: compute-on-read, no
+cache (0s staleness < §8 60s bound; measured 22ms server << 1.5s — a cache would only
+add invalidation complexity; documented). DATA HEALTH (§7): DataHealthSection composes
+the EXISTING receivables/health.ts (b/c/d) + payments/health.ts (stale); (a) dropped
+(status defaults Open — structurally impossible), (e)/(f) dropped (M0 referential
+integrity, rule 17) — documented in the type.
+
+M3 STUB SEAM (Milestones 'manual-override-only first'): M3 lands AFTER M6, so
+getTargetTableRow(year) returns null → Section 2 shows '—' for a year with no override
+(rule 9, no error). deriveAnnualTarget is DONE + unit-pinned (16,920,000); M3.2's ONLY
+change is to make getTargetTableRow return the real per-year row. BUCKET-LABELS
+DECISION: PRD §3.3/AC (<1/1–3/3–6/6+) and FR-M6-05 (0/1–2/3–5/6+) describe the SAME
+half-open intervals [0,1)[1,3)[3,6)[6,∞) — M4.4's agingRows already implements exactly
+that; the two labelings are a display choice for M6.3 (recommend §3.3's <1/1–3/3–6/6+).
+KNOWN MINOR: perDeveloperRollups.avgDaysToFirstRelease is integer-rounded (M4.4) →
+resale shows 65 vs PRD's 64.6 display (1dp); M6.3 can extend the projection if wanted.
+
+VERIFIED: scripts/live-m61-check.mts 50/50 on the REAL v30.20 import (every section to
+the centavo at frozen 2026-07-17 — S1 6,763,497.25/1,908,192.86/4,855,304.39/28.21%/net
+cash 1,909,085.71; S2 target 16,920,000/11.28%/pace 9,178,520.55/behind 7,270,327.69;
+S3 gross 1,913,550.00/VAT 5,357.14/EWT 4,464.29/net 1,909,085.71/retained 1,903,728.57;
+S4 aging 9/0/5/0 ties to outstanding at frozen AND live clock; S5 Abrown 5.71%/−1,
+Resale 1,863,550@62.90%, TOTAL ties; S6 Jan cum −973,950, Jul 1,472,142.86/1,473,035.71/
+7 cum 1,908,192.86 vs 9,870,000, Dec cum == S2; S8 head D013 906,752.23, order
+D013→D005→D016→D010, D021 idle 0 'ok'; override 15,000,000 → pace 8,136,986.30 + audit
+'create', clear → reverts + audit 'archive'; data health baseline 0/0/0 then b/c/d each
+fire, (c) −0.50 tolerance boundary does NOT fire). PERF (scripts/perf-dashboard.ts,
+pnpm perf:dashboard, wired into ci.yml self-skipping): full 8-section read server P95
+21.8ms (receivable EXPLAIN exec 6.9ms ∥ payment 1.3ms + compose 14.9ms) << 1,500ms;
+year-filter switch 0.7ms << 500ms — measured via EXPLAIN ANALYZE (machine-independent;
+dev-machine wall-clock is WAN-payload bound, absent in prod). test:unit 321/321 (+29
+dashboard: target 12 + sections 17); build:check + lint clean. Real account untouched;
+throwaway users deleted (delta-residue zero).**
+
 **M5.4 COMPLETE — Hardening, access control & performance. M5 IS COMPLETE.
 A hardening milestone: tests + gap-closing over M5.1–M5.3, NO migration, one new
 pure/server lib module and NO new user-facing feature. All four M5 §8 perf targets

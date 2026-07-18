@@ -158,6 +158,23 @@ export const PAYMENT_SELECT = [
 ].join(",");
 
 /**
+ * annual_target_override (M6 §3.1) — `amount` is numeric(14,2), so it is selected
+ * `::text` (the override in @/types/database types it `string`). The rest (year,
+ * note, audit fields) round-trip exactly. NEVER `select("*")` here.
+ */
+export const ANNUAL_TARGET_OVERRIDE_SELECT = [
+  "id",
+  "workspace_id",
+  "year",
+  "amount::text",
+  "note",
+  "created_at",
+  "updated_at",
+  "created_by",
+  "updated_by",
+].join(",");
+
+/**
  * payment_event (§3.4) — the append-only event log. No `numeric` column: the money
  * lives inside old_values/new_values (jsonb the write path filled with ::text
  * strings via app.payment_snapshot), so `*` is safe — the exact decimal never

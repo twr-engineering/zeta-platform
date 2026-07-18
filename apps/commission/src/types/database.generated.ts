@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      annual_target_override: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+          year: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "annual_target_override_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log_entry: {
         Row: {
           action: Database["public"]["Enums"]["audit_action"]
@@ -1120,6 +1164,7 @@ export type Database = {
         }
         Returns: Json
       }
+      clear_annual_target_override: { Args: { p_year: number }; Returns: Json }
       clear_override_review_flag: {
         Args: { p_receivable_id: string }
         Returns: Json
@@ -1280,6 +1325,10 @@ export type Database = {
       seed_developers: { Args: { p_items: Json }; Returns: Json }
       seed_lead_sources: { Args: { p_items: Json }; Returns: Json }
       seed_property_types: { Args: { p_items: Json }; Returns: Json }
+      set_annual_target_override: {
+        Args: { p_amount: number; p_note: string; p_year: number }
+        Returns: Json
+      }
       set_confirmed_collectible: {
         Args: { p_note: string; p_receivable_id: string; p_value: number }
         Returns: Json

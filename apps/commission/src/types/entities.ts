@@ -44,6 +44,11 @@ export type PaymentEvent = Tables<"payment_event">;
 export type PaymentTypeEnum = Enums<"payment_type">;
 export type PaymentEventType = Enums<"payment_event_type">;
 
+// M6 §3.1. One optional manual annual GCI target per (workspace, year) — the
+// sheet's cell E15. The money-safe Row (amount re-typed string) comes from the
+// override layer in ./database — see ANNUAL_TARGET_OVERRIDE_SELECT.
+export type AnnualTargetOverride = Tables<"annual_target_override">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;
