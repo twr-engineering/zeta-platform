@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T08:15:00+08:00 (M7.3 — Source-lifecycle & edge hardening, cross-links, perf — M7 COMPLETE)
+# Last Updated: 2026-07-19T10:30:00+08:00 (M8.1 — Aggregation service: payment-period reports 1, 3, 4)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -41,7 +41,7 @@
 - [x] M7.1: Aggregation service + fixture parity
 - [x] M7.2: Report UI, year filter & export
 - [x] M7.3: Source-lifecycle & edge hardening, cross-links, perf  ← M7 COMPLETE
-- [ ] M8.1: Aggregation service: payment-period reports 1, 3, 4
+- [x] M8.1: Aggregation service: payment-period reports 1, 3, 4
 - [ ] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
 - [ ] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
 - [ ] M8.4: Exports, print layout, performance & cache hardening
@@ -58,6 +58,48 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M8.1 COMPLETE — Aggregation service: payment-period Collection Reports (1, 3, 4).**
+SERVER-SIDE ONLY, purely additive: new src/lib/reports/{build,queries,params,index}.ts + three
+GET-only routes under src/app/api/reports/{cash-per-year,monthly-cash-flow,tax-per-month} +
+tests/unit/reports/build.test.ts + scripts/live-m81-check.mts. ZERO existing runtime files
+touched → no e2e surface. NO migration, NO UI (M8.3 owns it). test:unit 454/454 (+14);
+build:check + lint clean; live-m81-check ALL PASSED on the REAL v30.20 import; delta-residue zero.
+
+WHAT SHIPPED. Three pure builders over the STORED payment split (rule 5 — reports 1/3/4 never
+dereference the deal for money, so a later deal/settings edit can't restate historical cash/tax):
+buildCashPerYear (report 1, all-time, one row per paid year), buildMonthlyCashFlow (report 3,
+selected year, 12 months), buildTaxPerMonth (report 4, the accountant hand-off, 12 months). Plus
+the rule-2 contiguousYearRange helper (union of paid + booked years, contiguous, zero rows for
+gaps — a booked-but-uncollected year is a visible zero row not a gap; a paid-but-unbooked year
+appears too) and the rule-4 12-month frame (all months render, zeros filled). TOTAL rows are the
+decimal sum of the payment set → tie to Σ rows to the centavo (rule 13). Server reads
+(getCashPerYear/getMonthlyCashFlow/getTaxPerMonth/getReportYears) load listPayments() (active
+only, rule 12) once, RLS-scoped, compute-on-read (0 s staleness, FR-M8-13). Two-year doctrine
+held (rule 1): reports 1/3/4 group by year(paid_date); booked_year only feeds the range union.
+The month-frame walk is kept in reports/build.ts, NOT reached into M6's buildMonthly — report 3 is
+M6 §6 minus cumulative/target, but reports carry no target/pace coupling (deliberate non-reuse).
+
+WORKBOOK PARITY (verified live + unit, to the centavo): R1 2026 = 1,908,192.86 / 1,909,085.71 /
+5,357.14 / 4,464.29 / 8 (TOTAL identical). R3 2026: Jan 436,050/436,050, Jul 1,472,142.86/
+1,473,035.71, ten zero months. R4 2026: Jul VAT 5,357.14 / EWT 4,464.29 / base 1,472,142.86 / 7
+(D021 incentive release = the ONLY taxable payment), Jan 0/0/436,050/1. FR-M8-14 asserted:
+R1 net-of-VAT ≡ R3 TOTAL ≡ R4 base TOTAL. Live check also proves freshness (an inserted 2027
+payment extends R1 to a 2026→2027 contiguous range and moves the TOTAL on the next read) and AC9
+cross-tenant isolation (a second tenant reads an empty report).
+
+E2E NOTE: the dev server is USER-OWNED and was DOWN this pass; per the project rule it is never
+started/killed by an agent, so the full clean-reseed Playwright regression was not run. M8.1 is
+new lib + new routes only (zero existing runtime files touched), so the e2e regression surface is
+structurally nil — the verification rests on the 454-green unit suite, the live import check, and
+build:check + lint.
+
+NEXT — M8.2 (vintage matrix + booking-year summary, reports 2 & 5): reuse contiguousYearRange
+(exported from @/lib/reports) for the matrix rows/columns and report 5's booking-year rows. Report
+2 is the FIRST payment→deal money-attribution join — wire rule-15 loud-fail there (a payment with
+an unresolvable booked_year must 500, never silently drop). Report 5 reads deals + receivables;
+FR-M8-14 asserts its Collected TOTAL ≡ report 1 all-years net-of-VAT TOTAL (1,908,192.86).
+
+--- prior: M7.3 ---
 **M7.3 COMPLETE — Source-lifecycle & edge hardening, cross-links, perf. 🎉 M7 COMPLETE
 (the lead-channel scorecard). PURELY ADDITIVE HARDENING — ZERO src/ runtime files touched
 (git status: new tests/unit/source-performance/lifecycle.test.ts + scripts/live-m73-check.mts
