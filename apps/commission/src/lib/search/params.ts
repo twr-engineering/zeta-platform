@@ -21,6 +21,33 @@ import {
   type SortOption,
 } from "./types";
 
+/**
+ * Serialize a SearchQuery back to URL params (the inverse of parseSearchQuery).
+ *
+ * Only non-default values are written, so a bare source reads `?source=deals` and
+ * a shared link stays legible (FR-M9-12). `parseSearchQuery(serializeSearchQuery(q))`
+ * round-trips every field. The client filter bar builds every navigation through
+ * this one function so the URL — the single source of truth for the whole screen —
+ * can never drift from the query the server ran (Rules 5/6; §6 "shareable URL").
+ */
+export function serializeSearchQuery(query: SearchQuery): URLSearchParams {
+  const p = new URLSearchParams();
+  p.set("source", query.source);
+  if (query.year !== null) p.set("year", String(query.year));
+  if (query.dealCode) p.set("deal_code", query.dealCode);
+  // status / only_with_balance are Collectibles-only — never serialize them for
+  // another source even if the caller left stale values on the object (Rule 6).
+  if (query.source === "collectibles") {
+    if (query.status) p.set("status", query.status);
+    if (query.onlyWithBalance) p.set("only_with_balance", "true");
+  }
+  if (query.text.length > 0) p.set("text", query.text);
+  if (query.sort !== "default") p.set("sort", query.sort);
+  if (query.page > 1) p.set("page", String(query.page));
+  if (query.pageSize !== DEFAULT_PAGE_SIZE) p.set("page_size", String(query.pageSize));
+  return p;
+}
+
 export type ParsedSearchQuery = {
   query: SearchQuery;
   /** True when the text filter exceeded MAX_TEXT_LENGTH and was trimmed (Rule 12). */

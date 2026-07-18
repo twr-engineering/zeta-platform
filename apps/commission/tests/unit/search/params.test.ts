@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseSearchQuery } from "../../../src/lib/search/params.ts";
+import { parseSearchQuery, serializeSearchQuery } from "../../../src/lib/search/params.ts";
+import type { SearchQuery } from "../../../src/lib/search/types.ts";
 
 // PRD §3.1 / Rules 3/6/9/12 — query parsing + the filter-applicability matrix.
 
@@ -83,4 +84,57 @@ test("pagination — positive ints only; page_size clamped to 200", () => {
   assert.equal(parse("page=-2").query.page, 1);
   assert.equal(parse("page_size=5000").query.pageSize, 200);
   assert.equal(parse("page_size=abc").query.pageSize, 50);
+});
+
+// --- serializeSearchQuery (M9.2 — the URL is the single source of truth) ------
+
+test("serialize — defaults produce a bare ?source=… (clean shareable URL)", () => {
+  const q: SearchQuery = {
+    source: "deals",
+    year: null,
+    dealCode: null,
+    status: null,
+    onlyWithBalance: false,
+    text: "",
+    sort: "default",
+    page: 1,
+    pageSize: 50,
+  };
+  assert.equal(serializeSearchQuery(q).toString(), "source=deals");
+});
+
+test("serialize — status/only_with_balance only written for Collectibles (Rule 6)", () => {
+  const base: SearchQuery = {
+    source: "deals",
+    year: null,
+    dealCode: null,
+    status: "open",
+    onlyWithBalance: true,
+    text: "",
+    sort: "default",
+    page: 1,
+    pageSize: 50,
+  };
+  // On Deals they are dropped even if present on the object.
+  assert.equal(serializeSearchQuery(base).toString(), "source=deals");
+  // On Collectibles they serialize.
+  const coll = serializeSearchQuery({ ...base, source: "collectibles" });
+  assert.equal(coll.get("status"), "open");
+  assert.equal(coll.get("only_with_balance"), "true");
+});
+
+test("serialize → parse round-trips every field", () => {
+  const q: SearchQuery = {
+    source: "collectibles",
+    year: 2026,
+    dealCode: "D021",
+    status: "open",
+    onlyWithBalance: true,
+    text: "ventura residences",
+    sort: "date_oldest",
+    page: 3,
+    pageSize: 25,
+  };
+  const { query } = parseSearchQuery(serializeSearchQuery(q));
+  assert.deepEqual(query, q);
 });

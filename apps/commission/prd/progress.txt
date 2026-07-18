@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T22:30:00+08:00 (M9.1 — Search read layer & query API)
+# Last Updated: 2026-07-19T23:55:00+08:00 (M9.2 — Search Console UI)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -46,7 +46,7 @@
 - [x] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
 - [x] M8.4: Exports, print layout, performance & cache hardening  ← M8 COMPLETE
 - [x] M9.1: Search read layer & query API
-- [ ] M9.2: Search Console UI
+- [x] M9.2: Search Console UI
 - [ ] M9.3: Export & performance hardening
 - [ ] M9.4: Unified "All" tab (OPTIONAL — pending M9 Open Question 2)
 - [ ] M10.1: Help-content system, legend spec & glossary
@@ -59,6 +59,63 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M9.2 COMPLETE — Search Console UI (the global read-only lookup screen over Deals/Collectibles/
+Payments). PURELY ADDITIVE over M9.1 — no migration, no new index, no server logic change; the /search stub
+is replaced by a real RSC that parses the URL, runs M9.1's indexed `runSearch`, and renders the §3.2
+projections.** test:unit 494/494 (+3 serialize round-trip); build:check + lint clean; search e2e 12/12 on the
+REAL v30.20 import (AC1–5, 7–9, 12; DoD 1–10 + 12); full clean-reseed regression green for every search
+assertion (the 4 unrelated timeouts in calculator/deals/payments-list/configuration-lists were cold-compile /
+hosted-auth flakes — Test timeout on page.goto("/login"), no logic/money failure, all in specs this milestone
+never touched — and passed on isolated re-run); delta-residue ZERO (throwaway users reaped).
+
+ARCHITECTURE — the URL is the single source of truth. Server page src/app/(app)/search/page.tsx (force-dynamic,
+auth+RLS via the app-group layout) parses searchParams with the existing parseSearchQuery, runs runSearch +
+getSearchFilterOptions in parallel, and hands the result page + option sets to the client <SearchConsole>. Every
+control rewrites the URL through the NEW serializeSearchQuery (src/lib/search/params.ts — the inverse of the
+parser; only non-defaults written so a shared link reads clean; status/only_with_balance serialized for
+Collectibles ONLY; a serialize→parse round-trip unit test pins every field), which re-renders the server
+component — so there is ZERO client-side money math or filtering (M9 renders projection strings, never
+re-derives, §3.2) and a pasted URL reproduces the exact view (FR-M9-12/AC12). The only local state is the text
+box's keystroke buffer (debounced 300 ms ≥ the 250 ms floor before it touches the URL, FR-M9-06) and the mobile
+sheet's open flag.
+
+COMPONENTS (all under src/components/search/): search-console.tsx (client orchestrator — source tabs, the
+desktop filter bar + mobile Filters sheet, count readout, pagination, empty state, keyboard nav, a data-hydrated
+marker for e2e); search-filter-bar.tsx (fully-controlled, stateless — Year label flips "Year booked"
+[deals/collectibles] vs "Year paid" [payments] to make the Rule-3 asymmetry visible via a data-year-label attr;
+Status chips + Only-with-balance render on Collectibles ONLY, Rule 6; Sort worded per source); deal-code-
+combobox.tsx (the FR-M9-03 type-ahead over display_label applying an exact deal_code, clearable, pure/synchronous
+over the preloaded index like the payments picker); search-results.tsx (the three §3.2 projection tables + their
+360px card reflow, ₱ right-aligned exact strings, status chips, the grey `archived` badge per Rule 10/OQ1, whole-
+row click-through to /deals/[code] · /collectibles/[dealCode] · /payments/[id]/edit, FR-M9-10). New server loader
+src/lib/search/filter-options.ts (getSearchFilterOptions — the year union [booked ∪ paid, incl. archived] + the
+deal-code picker index, two small RLS-scoped reads riding the server render). New src/lib/search/types.ts export
+sortOptionsFor(source) centralizes the per-source sort labels.
+
+SORT QUIRK (Rule 7 / OQ5) is legible, not hidden: on Collectibles the selector shows exactly TWO options —
+"Balance (high → low)" (default, the sheet's always-balance-desc) and "Oldest booked" (the one defined mapping,
+date_oldest → booking-date ASC); amount_desc is OMITTED because it would be identical to the default (a no-op),
+per the PRD wording. Deals/Payments keep all three, worded by their amount field (NET GCI / Gross).
+
+KEYBOARD + MOBILE (FR-M9-13 / §6): `/` focuses the text box (unless already typing); ↑/↓ walk the result-row
+links (data-search-row-link), Enter opens natively. At 360px the desktop filter bar (hidden md:block) collapses
+into a left Sheet with an active-filter-count badge (the mobile filter-bar instance carries NO data-testids so
+the canonical ones stay unique — single desktop source of truth), and rows reflow to cards (Deals: code/client/
+date/NET GCI · Collectibles: code/client/balance/status · Payments: date/code/gross). Read-only affordance: the
+verbatim caption "Search is read-only — nothing here changes your data." + NO edit control anywhere. Empty state
+renders the verbatim "No matching records — adjust your filters above." (Rule 8/AC9) + a Clear-filters link.
+
+M7 SOURCE-DRILL NOTE (checked, left as-is): the PRD's eventual home for M7's source drill is M9, BUT M9's
+SearchQuery has NO lead-source filter param (§3.2 projections carry no source field) — so /source-performance's
+deal-list drill (dealsPath with source+year) CANNOT be repointed to /search without adding a param M9 doesn't
+define. Left untouched; revisit only if a future M9 FR adds a source filter.
+
+FOR M9.3 (Export & perf hardening): the screen is export-ready — the URL already carries the full query and the
+/api/search route mirrors it; add a "search" export dataset (registry + a flattener per §3.2 columns) reading the
+SAME runSearch, wire an Export button on the table header (disabled at zero rows, §6), and extend the M9.1 perf
+harness (scripts/perf-search.ts) + GIN-use EXPLAIN to the 1,000+1,000 load test. No UI restructure needed.
+
+## Prior Status
 **M9.1 COMPLETE — Search read layer & query API (the global read-only lookup over Deals/Collectibles/
 Payments). SERVER-SIDE ONLY, no UI (M9.2 owns it).** One additive migration + a typed src/lib/search/
 layer + one GET route; proven against the REAL v30.20 import (AC 1–9) and at 1,000+1,000 scale. test:unit

@@ -15,6 +15,44 @@ export type SearchSource = (typeof SEARCH_SOURCES)[number];
 export const SORT_OPTIONS = ["default", "date_oldest", "amount_desc"] as const;
 export type SortOption = (typeof SORT_OPTIONS)[number];
 
+/**
+ * The sort selector's options, worded per source (Rule 7 / the sheet's SORT).
+ * The amount field and the date basis differ by source, so the labels must too —
+ * a Deals reader sorts by NET GCI, a Payments reader by Gross, a Collectibles
+ * reader by Balance.
+ *
+ * The Collectibles quirk (Rule 7 / OQ5): the sheet ALWAYS sorts Collectibles
+ * balance-high→low and ignores the selector. The SaaS keeps that as the default and
+ * adds exactly one defined mapping — Date (oldest) → booking date ascending — so
+ * `amount_desc` would be identical to the default and is OMITTED from the selector
+ * rather than shown as a no-op. The two visible options make the quirk legible:
+ * balance-desc is the resting state, date-oldest the one deviation.
+ */
+export function sortOptionsFor(
+  source: SearchSource
+): { value: SortOption; label: string }[] {
+  switch (source) {
+    case "payments":
+      return [
+        { value: "default", label: "Newest paid" },
+        { value: "date_oldest", label: "Oldest paid" },
+        { value: "amount_desc", label: "Highest gross" },
+      ];
+    case "collectibles":
+      return [
+        { value: "default", label: "Balance (high → low)" },
+        { value: "date_oldest", label: "Oldest booked" },
+      ];
+    case "deals":
+    default:
+      return [
+        { value: "default", label: "Newest booked" },
+        { value: "date_oldest", label: "Oldest booked" },
+        { value: "amount_desc", label: "Highest NET GCI" },
+      ];
+  }
+}
+
 /** Status filter — Collectibles only (PRD C7 / Rule 6). */
 export const SEARCH_STATUSES = ["open", "closed", "cancelled"] as const;
 export type SearchStatus = (typeof SEARCH_STATUSES)[number];
