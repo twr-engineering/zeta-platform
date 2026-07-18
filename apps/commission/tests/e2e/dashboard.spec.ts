@@ -66,6 +66,7 @@ async function makeUser(tag: string): Promise<{ uid: string; email: string }> {
 const users: string[] = [];
 let email = "";
 let emptyEmail = "";
+let mainUid = "";
 
 test.beforeAll(async () => {
   if (!HAVE_WORKBOOK) return;
@@ -74,7 +75,19 @@ test.beforeAll(async () => {
   users.push(main.uid, empty.uid);
   email = main.email;
   emptyEmail = empty.email;
+  mainUid = main.uid;
 });
+
+/** The workspace id the throwaway agent owns — for admin-scoped Data Health seeding. */
+async function workspaceOf(uid: string): Promise<string> {
+  const { data, error } = await admin
+    .from("membership")
+    .select("workspace_id")
+    .eq("user_id", uid)
+    .single();
+  if (error) throw error;
+  return (data as { workspace_id: string }).workspace_id;
+}
 
 test.afterAll(async () => {
   for (const uid of users) await admin.auth.admin.deleteUser(uid);
@@ -141,6 +154,91 @@ test("Section 6 — Monthly Cash-In: Jan collected, Dec cumulative == Section 2 
   // Jan (month 1) collected 436,050.00; Dec cumulative == the year's collected.
   await expect(page.locator('[data-testid="monthly-row"][data-month="1"]')).toContainText("436,050.00");
   await expect(page.locator('[data-testid="monthly-row"][data-month="12"]')).toContainText("1,908,192.86");
+});
+
+test("Section 4 — Aging buckets 9/0/5/0 + TOTAL ties to Balance Outstanding (AC5)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // The clock is live, so a booking-age deal can cross a month boundary from the
+  // frozen 2026-07-17 counts. Assert the invariant that never rots: the four
+  // bucket counts sum to 14 and the TOTAL balance ties to Balance Outstanding.
+  const bucketCount = async (key: string) =>
+    Number(
+      await page
+        .locator(`[data-testid="aging-row"][data-bucket="${key}"] td:nth-child(2)`)
+        .innerText()
+    );
+  const total =
+    (await bucketCount("lt1")) +
+    (await bucketCount("m1to3")) +
+    (await bucketCount("m3to6")) +
+    (await bucketCount("m6plus"));
+  expect(total).toBe(14);
+
+  await expect(page.getByTestId("aging-total-balance")).toHaveText("₱ 4,855,304.39");
+  // The tie is SHOWN, not hidden (rule 4) — green ✓ at import (no overpaid rows).
+  await expect(page.getByTestId("aging-tie")).toHaveAttribute("data-ties", "true");
+  await expect(page.getByTestId("aging-tie")).toContainText("4,855,304.39");
+});
+
+test("Section 5 — By developer: Abrown 5.71%/−1, Resale 62.90%/64.6, TOTAL ties (AC6)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // The "Resale / Rental (no developer)" row: collected 1,863,550.00 @ 62.90% / 64.6 days.
+  const resale = page.locator('[data-testid="by-developer-row"][data-developer="none"]');
+  await expect(resale).toContainText("₱ 1,863,550.00");
+  await expect(resale).toContainText("62.90%");
+  await expect(resale).toContainText("64.6");
+
+  // Abrown Inc. — 5.71% collected, avg days −1 (release precedes booking, legal).
+  const abrown = page.locator('[data-testid="by-developer-row"]', {
+    hasText: "Abrown Inc.",
+  });
+  await expect(abrown).toContainText("5.71%");
+  // Rendered with an ASCII hyphen (String(-1)), not the PRD prose's unicode minus.
+  await expect(abrown).toContainText("-1");
+
+  // TOTAL ties to Section 1 (balance 4,855,304.39; collected 1,908,192.86).
+  await expect(page.getByTestId("by-developer-total-balance")).toHaveText("₱ 4,855,304.39");
+  await expect(page.getByTestId("by-developer-total-collected")).toHaveText("₱ 1,908,192.86");
+});
+
+test("Section 7 — Data Health all-clear at import (AC8 baseline)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  await expect(page.getByTestId("data-health-all-clear")).toBeVisible();
+  for (const id of ["b", "c", "d", "stale"]) {
+    await expect(page.getByTestId(`health-check-${id}`)).toHaveAttribute("data-ok", "true");
+  }
+});
+
+test("Section 4/5 drill-downs land on the filtered views (FR-M6-12)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  // An aging bucket → open, balance-owing receivables in that age band.
+  await page.goto("/dashboard");
+  await page.getByTestId("aging-link-lt1").click();
+  await expect(page).toHaveURL(/\/collectibles\?.*bucket=lt1/, { timeout: 30000 });
+  await expect(page.getByTestId("rec-status")).toHaveValue("open");
+  await expect(page.getByTestId("rec-age")).toHaveValue("lt1");
+  await expect(page.getByTestId("only-with-balance")).toBeChecked();
+
+  // The "Resale / Rental (no developer)" row → the no-developer receivables.
+  await page.goto("/dashboard");
+  await page.getByTestId("by-developer-link-none").click();
+  await expect(page).toHaveURL(/\/collectibles\?.*developer=none/, { timeout: 30000 });
+  await expect(page.getByTestId("rec-developer")).toHaveValue("none");
 });
 
 test("Section 2 — '—' with no target, then override 15,000,000 lights it up (AC2/AC3)", async ({
@@ -251,6 +349,73 @@ test("360px: tiles stack, monthly collapses to cards, console clean", async ({ p
   expect(overflow).toBe(true);
 
   expect(errors, `console errors: ${errors.join("\n")}`).toEqual([]);
+});
+
+test("Section 7 — Data Health FIRES on constructed cases + tolerance boundary (AC8/AC9)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  // This test MUTATES the workspace, so it runs last among the data-user tests
+  // (serial mode = declaration order); the rendering/drill-down asserts above all
+  // read the pristine import. Constructs each check the way the M6.1 live-check
+  // does — direct RLS-bypassing admin writes on the stored balance/variance columns.
+  const ws = await workspaceOf(mainUid);
+
+  // (b) fully-paid-open: an Open receivable paid to exactly its collectible.
+  await admin
+    .from("receivable")
+    .update({ collected_net: "126500.00", balance: "0.00" })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D002");
+  // (c) tolerance boundary — exactly −0.50 must NOT fire (|−0.50| > 0.50 is false).
+  await admin
+    .from("receivable")
+    .update({ variance: "-0.50" })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D001");
+  // (d) referral owed: flip D004's imported Paid=Yes to unpaid.
+  await admin
+    .from("deal")
+    .update({ referral_paid: false })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D004");
+
+  await signIn(page, email);
+  await page.goto("/dashboard");
+
+  // (b) fires with a count and a drill-down to exactly the flagged receivable.
+  await expect(page.getByTestId("health-check-b")).toHaveAttribute("data-ok", "false");
+  await expect(page.getByTestId("health-count-b")).toHaveText("1");
+  // (c) at the −0.50 boundary stays ✓ (does not fire).
+  await expect(page.getByTestId("health-check-c")).toHaveAttribute("data-ok", "true");
+  // (d) fires.
+  await expect(page.getByTestId("health-check-d")).toHaveAttribute("data-ok", "false");
+  await expect(page.getByTestId("health-count-d")).toHaveText("1");
+  // Not everything is clear now — the all-clear banner is gone.
+  await expect(page.getByTestId("data-health-all-clear")).toHaveCount(0);
+
+  // Drill (b) → open receivables paid in full/over; lands on exactly D002.
+  await page.getByTestId("health-link-b").click();
+  await expect(page).toHaveURL(/\/collectibles\?.*overpaid=true/, { timeout: 30000 });
+  await expect(page.getByTestId("overpaid-only")).toBeChecked();
+  await expect(page.getByTestId("result-count")).toContainText("1 receivable");
+  await expect(page.locator('[data-testid="receivable-row"]')).toContainText("D002");
+
+  // Push the closed variance one centavo past tolerance: −0.51 now FIRES (AC9).
+  await admin
+    .from("receivable")
+    .update({ variance: "-0.51" })
+    .eq("workspace_id", ws)
+    .eq("deal_code", "D001");
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("health-check-c")).toHaveAttribute("data-ok", "false");
+  await expect(page.getByTestId("health-count-c")).toHaveText("1");
+
+  // Drill (c) → closed receivables over tolerance; lands on exactly D001.
+  await page.getByTestId("health-link-c").click();
+  await expect(page).toHaveURL(/\/collectibles\?.*variance=over-tolerance/, { timeout: 30000 });
+  await expect(page.getByTestId("variance-over-tolerance")).toBeChecked();
+  await expect(page.locator('[data-testid="receivable-row"]')).toContainText("D001");
 });
 
 test("empty workspace renders the empty dashboard with zeros (rule 19)", async ({ page }) => {

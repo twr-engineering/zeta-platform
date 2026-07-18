@@ -17,8 +17,18 @@ export const metadata: Metadata = { title: "Deals" };
  * An empty workspace gets the first-deal empty state with the importer entry
  * point (§6).
  */
-export default async function DealsPage() {
-  const deals = await listDeals({ includeArchived: true });
+export default async function DealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ referral?: string | string[] }>;
+}) {
+  const [deals, params] = await Promise.all([
+    listDeals({ includeArchived: true }),
+    searchParams,
+  ]);
+  const referralRaw = Array.isArray(params.referral) ? params.referral[0] : params.referral;
+  const initialFilters =
+    referralRaw === "unpaid" ? { referralUnpaid: true } : undefined;
 
   if (deals.length === 0) {
     return (
@@ -66,7 +76,7 @@ export default async function DealsPage() {
         </Button>
       </header>
 
-      <DealList deals={deals} />
+      <DealList deals={deals} initialFilters={initialFilters} />
     </div>
   );
 }

@@ -245,8 +245,30 @@ test("per-developer — a 'Resale / Rental (no developer)' row exists and sinks 
 
 test("per-developer — avg days to first release averages the non-null releases", () => {
   const { total } = perDeveloperRollups(workbookReceivables());
-  // Non-null days: D021 -1, D001 12, D004 115 → avg 42.
+  // Non-null days: D021 -1, D001 12, D004 115 → avg 42 (whole, no ".0").
   assert.equal(total.avgDaysToFirstRelease, 42);
+});
+
+test("per-developer — avg days is rounded to ONE decimal (M6 §3.3 display precision)", () => {
+  // Three developer deals with releases summing to 452 days ÷ 7 payments is the
+  // sheet's 64.6; here a fabricated set proves the 1-dp rounding directly.
+  const rows = [
+    row({ deal_code: "P1", developer_id: DEV_A, status: "closed", total_collectible: "100.00", collected_net: "100.00", days_to_first_release: 12 }),
+    row({ deal_code: "P2", developer_id: DEV_A, status: "closed", total_collectible: "100.00", collected_net: "100.00", days_to_first_release: 115 }),
+    row({ deal_code: "P3", developer_id: DEV_A, status: "closed", total_collectible: "100.00", collected_net: "100.00", days_to_first_release: 82 }),
+  ];
+  const { rows: devs } = perDeveloperRollups(rows);
+  const ayala = devs.find((d) => d.developerId === DEV_A);
+  // (12 + 115 + 82) / 3 = 69.6666… → 69.7, NOT the integer 70.
+  assert.equal(ayala?.avgDaysToFirstRelease, 69.7);
+});
+
+test("per-developer — a lone negative release stays a whole −1 (legal, §4 rule 10)", () => {
+  const rows = [
+    row({ deal_code: "N1", developer_id: DEV_M, status: "open", total_collectible: "100.00", balance: "50.00", collected_net: "50.00", days_to_first_release: -1 }),
+  ];
+  const { rows: devs } = perDeveloperRollups(rows);
+  assert.equal(devs.find((d) => d.developerId === DEV_M)?.avgDaysToFirstRelease, -1);
 });
 
 // --- chase -------------------------------------------------------------------

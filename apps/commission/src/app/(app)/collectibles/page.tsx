@@ -15,16 +15,22 @@ import type { ReceivableStatus } from "@/types/entities";
 
 export const metadata: Metadata = { title: "Collectibles" };
 
+const AGING_BUCKETS = ["lt1", "m1to3", "m3to6", "m6plus"] as const;
+
 /** Parse the dashboard drill-down params (FR-M6-12) into the ledger's filter seed. */
 function initialFiltersFrom(params: {
   status?: string | string[];
   hasBalance?: string | string[];
   overridden?: string | string[];
   developer?: string | string[];
+  bucket?: string | string[];
+  overpaid?: string | string[];
+  variance?: string | string[];
 }): LedgerInitialFilters | undefined {
   const one = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
   const status = one(params.status);
   const developer = one(params.developer);
+  const bucket = one(params.bucket);
   const filters: LedgerInitialFilters = {};
   if (status === "open" || status === "closed" || status === "cancelled") {
     filters.status = status as ReceivableStatus;
@@ -32,6 +38,11 @@ function initialFiltersFrom(params: {
   if (one(params.hasBalance) === "true") filters.onlyWithBalance = true;
   if (one(params.overridden) === "true") filters.overriddenOnly = true;
   if (developer) filters.developer = developer;
+  if (bucket && (AGING_BUCKETS as readonly string[]).includes(bucket)) {
+    filters.bucket = bucket as LedgerInitialFilters["bucket"];
+  }
+  if (one(params.overpaid) === "true") filters.overpaidOnly = true;
+  if (one(params.variance) === "over-tolerance") filters.varianceOverTolerance = true;
   return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
@@ -53,6 +64,9 @@ export default async function CollectiblesPage({
     hasBalance?: string | string[];
     overridden?: string | string[];
     developer?: string | string[];
+    bucket?: string | string[];
+    overpaid?: string | string[];
+    variance?: string | string[];
   }>;
 }) {
   const [receivables, context, params] = await Promise.all([

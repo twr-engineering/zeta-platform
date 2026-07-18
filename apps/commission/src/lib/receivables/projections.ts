@@ -82,6 +82,20 @@ function pct(collected: string, collectible: string): string | null {
   return toMoney(collected).dividedBy(denom).toFixed(6);
 }
 
+/**
+ * Mean of a day-count list, rounded to ONE decimal place, or null when empty.
+ * M6 §3.3 / AC6 display the developer "Avg Days → 1st Release" to 1 dp (the sheet's
+ * 64.6 / 56.4), NOT the integer M4.4 first shipped; the value is produced here at the
+ * displayed precision so the dashboard cell never rounds (the module's no-client-math
+ * rule extends to this non-money figure). Negative means a release preceded booking
+ * (fixture D021 = −1, legal per §4 rule 10); a whole result renders without a ".0".
+ */
+function avgDaysTo1dp(days: readonly number[]): number | null {
+  if (days.length === 0) return null;
+  const mean = days.reduce((a, b) => a + b, 0) / days.length;
+  return Math.round(mean * 10) / 10;
+}
+
 /** Only the non-archived rows take part in every projection (§4 rule 16). */
 function active<T extends { archived_at: string | null }>(rows: readonly T[]): T[] {
   return rows.filter((r) => r.archived_at === null);
@@ -161,14 +175,20 @@ export type Aging = {
   totalBalance: string;
 };
 
-const AGING_LABELS: Record<AgingBucketKey, string> = {
+/**
+ * The bucket captions (§3.3's <1 / 1–3 / 3–6 / 6+, the m6_1 labelling decision).
+ * Exported so the Section-4 UI and the ledger's aging drill-down filter share one
+ * source of labels rather than restating the intervals.
+ */
+export const AGING_LABELS: Record<AgingBucketKey, string> = {
   lt1: "< 1 month",
   m1to3: "1–3 months",
   m3to6: "3–6 months",
   m6plus: "6+ months",
 };
 
-function agingBucketOf(ageMonths: number): AgingBucketKey {
+/** The half-open interval an age (whole months) falls in: [0,1)[1,3)[3,6)[6,∞). */
+export function agingBucketOf(ageMonths: number): AgingBucketKey {
   if (ageMonths < 1) return "lt1";
   if (ageMonths < 3) return "m1to3";
   if (ageMonths < 6) return "m3to6";
@@ -264,10 +284,7 @@ export function perDeveloperRollups(all: readonly ProjectionReceivable[]): {
       collectedNet,
       collectible,
       pctCollected: pct(collectedNet, collectible),
-      avgDaysToFirstRelease:
-        days.length === 0
-          ? null
-          : Math.round(days.reduce((a, b) => a + b, 0) / days.length),
+      avgDaysToFirstRelease: avgDaysTo1dp(days),
     });
   }
 
@@ -293,10 +310,7 @@ export function perDeveloperRollups(all: readonly ProjectionReceivable[]): {
     collectedNet: totalCollected,
     collectible: totalCollectible,
     pctCollected: pct(totalCollected, totalCollectible),
-    avgDaysToFirstRelease:
-      totalDays.length === 0
-        ? null
-        : Math.round(totalDays.reduce((a, b) => a + b, 0) / totalDays.length),
+    avgDaysToFirstRelease: avgDaysTo1dp(totalDays),
   };
 
   return { rows: rollups, total };

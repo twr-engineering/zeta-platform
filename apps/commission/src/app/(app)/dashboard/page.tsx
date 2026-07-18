@@ -10,7 +10,10 @@ import { DashboardYearFilter } from "@/components/dashboard/dashboard-year-filte
 import { PositionSection } from "@/components/dashboard/position-section";
 import { TargetSection } from "@/components/dashboard/target-section";
 import { CashTaxSection } from "@/components/dashboard/cash-tax-section";
+import { AgingSection } from "@/components/dashboard/aging-section";
+import { ByDeveloperSection } from "@/components/dashboard/by-developer-section";
 import { MonthlySection } from "@/components/dashboard/monthly-section";
+import { DataHealthSection } from "@/components/dashboard/data-health-section";
 import { SectionPlaceholder } from "@/components/dashboard/section-placeholder";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -101,24 +104,13 @@ export default async function DashboardPage({
       <TargetSection data={data.target} />
       <CashTaxSection data={data.cashTax} />
 
-      <SectionPlaceholder
-        index={4}
-        title="Aging of Open Balances"
-        note="Open balances bucketed by months since last activity — arriving in the next dashboard pass (M6.3)."
-      />
-      <SectionPlaceholder
-        index={5}
-        title="Receivables by Developer"
-        note="Who owes what, per developer, with collection speed — arriving in the next dashboard pass (M6.3)."
-      />
+      <AgingSection data={data.aging} balanceOutstanding={data.position.balanceOutstanding} />
+      <ByDeveloperSection data={data.byDeveloper} />
 
       <MonthlySection data={data.monthly} />
 
-      <SectionPlaceholder
-        index={7}
-        title="Data Health"
-        note="Bookkeeping hygiene checks — arriving in the next dashboard pass (M6.3)."
-      />
+      <DataHealthSection data={data.dataHealth} />
+
       <SectionPlaceholder
         index={8}
         title="Chase List"

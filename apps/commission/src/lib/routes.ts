@@ -60,6 +60,12 @@ export function collectiblesPath(filters?: {
   hasBalance?: boolean;
   overridden?: boolean;
   developer?: string;
+  /** Aging drill-down (§4): an open, balance-owing row in this age bucket. */
+  bucket?: "lt1" | "m1to3" | "m3to6" | "m6plus";
+  /** Data Health (b): Open receivables paid in full or over (balance ≤ 0). */
+  overpaid?: boolean;
+  /** Data Health (c): Closed receivables short/over by more than ₱0.50. */
+  varianceOverTolerance?: boolean;
 }): string {
   if (!filters) return ROUTES.collectibles;
   const p = new URLSearchParams();
@@ -67,19 +73,38 @@ export function collectiblesPath(filters?: {
   if (filters.hasBalance) p.set("hasBalance", "true");
   if (filters.overridden) p.set("overridden", "true");
   if (filters.developer) p.set("developer", filters.developer);
+  if (filters.bucket) p.set("bucket", filters.bucket);
+  if (filters.overpaid) p.set("overpaid", "true");
+  if (filters.varianceOverTolerance) p.set("variance", "over-tolerance");
   const s = p.toString();
   return s ? `${ROUTES.collectibles}?${s}` : ROUTES.collectibles;
+}
+
+/**
+ * The deal log with an initial filter (M6 §7 Data Health drill-down, FR-M6-12).
+ * `referralUnpaid` seeds the list to deals with a referral fee owed out (the check
+ * (d) records) so the health row lands on exactly the deals it flagged.
+ */
+export function dealsPath(filters?: { referralUnpaid?: boolean }): string {
+  if (filters?.referralUnpaid) return `${ROUTES.deals}?referral=unpaid`;
+  return ROUTES.deals;
 }
 
 /**
  * The payments list with an initial year/month filter (M6 §6, FR-M6-12) — the Net
  * Cash / Cash & Tax tiles and every Monthly Cash-In row drill down here.
  */
-export function paymentsPath(filters?: { year?: number; month?: number }): string {
+export function paymentsPath(filters?: {
+  year?: number;
+  month?: number;
+  /** Data Health (M5 stale-basis): payments whose stored split anchors drifted. */
+  stale?: boolean;
+}): string {
   if (!filters) return ROUTES.payments;
   const p = new URLSearchParams();
   if (filters.year !== undefined) p.set("year", String(filters.year));
   if (filters.month !== undefined) p.set("month", String(filters.month));
+  if (filters.stale) p.set("stale", "true");
   const s = p.toString();
   return s ? `${ROUTES.payments}?${s}` : ROUTES.payments;
 }

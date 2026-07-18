@@ -18,8 +18,16 @@ import {
 import { formatPHP, formatRateAsPercent, toMoney } from "@/lib/money";
 import { collectibleDetailPath, exportPath } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import {
+  AGING_LABELS,
+  agingBucketOf,
+  type AgingBucketKey,
+} from "@/lib/receivables/projections";
 import type { ReceivableRow } from "@/lib/receivables/queries";
 import type { ReceivableStatus } from "@/types/entities";
+
+/** The ₱0.50 Data Health tolerance for the closed-variance drill-down filter (c). */
+const VARIANCE_TOLERANCE = toMoney("0.50");
 
 /**
  * The receivables ledger (FR-M4-08, §6) — the module's home screen. A sticky-header
@@ -97,7 +105,26 @@ export type LedgerInitialFilters = {
   developer?: string;
   onlyWithBalance?: boolean;
   overriddenOnly?: boolean;
+  /** Aging drill-down (§4): open, balance-owing rows in this age bucket. */
+  bucket?: "all" | AgingBucketKey;
+  /** Data Health (b) drill-down: Open rows paid in full or over (balance ≤ 0). */
+  overpaidOnly?: boolean;
+  /** Data Health (c) drill-down: Closed rows short/over by more than ₱0.50. */
+  varianceOverTolerance?: boolean;
 };
+
+const AGE_OPTIONS: readonly { value: "all" | AgingBucketKey; label: string }[] = [
+  { value: "all", label: "All ages" },
+  { value: "lt1", label: AGING_LABELS.lt1 },
+  { value: "m1to3", label: AGING_LABELS.m1to3 },
+  { value: "m3to6", label: AGING_LABELS.m3to6 },
+  { value: "m6plus", label: AGING_LABELS.m6plus },
+];
+
+/** An open, balance-owing row — the aging/chase membership test, mirrored here. */
+function isOpenWithBalance(r: ReceivableRow): boolean {
+  return r.status === "open" && r.balance !== null && toMoney(r.balance).greaterThan(0);
+}
 
 export type ReceivablesLedgerProps = {
   receivables: readonly ReceivableRow[];
@@ -122,6 +149,15 @@ export function ReceivablesLedger({
   );
   const [overriddenOnly, setOverriddenOnly] = useState(
     initialFilters?.overriddenOnly ?? false
+  );
+  const [bucket, setBucket] = useState<"all" | AgingBucketKey>(
+    initialFilters?.bucket ?? "all"
+  );
+  const [overpaidOnly, setOverpaidOnly] = useState(
+    initialFilters?.overpaidOnly ?? false
+  );
+  const [varianceOverTolerance, setVarianceOverTolerance] = useState(
+    initialFilters?.varianceOverTolerance ?? false
   );
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "chase",
@@ -155,6 +191,20 @@ export function ReceivablesLedger({
       if (onlyWithBalance && !(r.balance !== null && toMoney(r.balance).greaterThan(0)))
         return false;
       if (overriddenOnly && r.confirmed_collectible === null) return false;
+      // Aging bucket (§4): only open, balance-owing rows age; match the live age.
+      if (bucket !== "all") {
+        if (!isOpenWithBalance(r) || r.age_months === null) return false;
+        if (agingBucketOf(r.age_months) !== bucket) return false;
+      }
+      // Data Health (b): Open and paid in full or over (signed balance ≤ 0).
+      if (overpaidOnly && !(r.status === "open" && r.balance !== null && toMoney(r.balance).lessThanOrEqualTo(0)))
+        return false;
+      // Data Health (c): Closed and short/over by more than ₱0.50 (|variance| > 0.50).
+      if (
+        varianceOverTolerance &&
+        !(r.status === "closed" && r.variance !== null && toMoney(r.variance).abs().greaterThan(VARIANCE_TOLERANCE))
+      )
+        return false;
       if (needle) {
         const hay = `${r.deal_code} ${r.client_name} ${r.property_details}`.toLowerCase();
         if (!hay.includes(needle)) return false;
@@ -179,7 +229,7 @@ export function ReceivablesLedger({
       rows.reverse();
     }
     return rows;
-  }, [receivables, search, status, developer, year, onlyWithBalance, overriddenOnly, sort]);
+  }, [receivables, search, status, developer, year, onlyWithBalance, overriddenOnly, bucket, overpaidOnly, varianceOverTolerance, sort]);
 
   // Full-precision totals of the FILTERED set (stored strings, never displays).
   const totals = useMemo(() => {
@@ -204,7 +254,7 @@ export function ReceivablesLedger({
 
   React.useEffect(
     () => setPage(1),
-    [search, status, developer, year, onlyWithBalance, overriddenOnly]
+    [search, status, developer, year, onlyWithBalance, overriddenOnly, bucket, overpaidOnly, varianceOverTolerance]
   );
 
   const toggleSort = (key: SortKey) =>
@@ -220,10 +270,13 @@ export function ReceivablesLedger({
     if (year !== "all") p.set("year", year);
     if (onlyWithBalance) p.set("hasBalance", "true");
     if (overriddenOnly) p.set("overridden", "true");
+    if (bucket !== "all") p.set("bucket", bucket);
+    if (overpaidOnly) p.set("overpaid", "true");
+    if (varianceOverTolerance) p.set("variance", "over-tolerance");
     if (search.trim()) p.set("q", search.trim());
     const s = p.toString();
     return s ? `&${s}` : "";
-  }, [status, developer, year, onlyWithBalance, overriddenOnly, search]);
+  }, [status, developer, year, onlyWithBalance, overriddenOnly, bucket, overpaidOnly, varianceOverTolerance, search]);
 
   return (
     <div className="space-y-4">
@@ -281,6 +334,19 @@ export function ReceivablesLedger({
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor="rec-age">Age</Label>
+          <SelectField
+            id="rec-age"
+            affordance="plain"
+            value={bucket}
+            onChange={(e) => setBucket(e.target.value as "all" | AgingBucketKey)}
+            className="w-32"
+            options={AGE_OPTIONS}
+            data-testid="rec-age"
+          />
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="rec-year">Year</Label>
           <SelectField
             id="rec-year"
@@ -323,6 +389,22 @@ export function ReceivablesLedger({
               data-testid="overridden-only"
             />
             Overridden only
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={overpaidOnly}
+              onCheckedChange={(v) => setOverpaidOnly(v === true)}
+              data-testid="overpaid-only"
+            />
+            Fully paid / over (≤ 0)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={varianceOverTolerance}
+              onCheckedChange={(v) => setVarianceOverTolerance(v === true)}
+              data-testid="variance-over-tolerance"
+            />
+            Variance &gt; ₱0.50
           </label>
         </div>
         <p className="text-sm text-muted-foreground" data-testid="result-count">

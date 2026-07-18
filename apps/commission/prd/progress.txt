@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T00:30:00+08:00
+# Last Updated: 2026-07-18T14:00:00+08:00 (M6.3)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -28,7 +28,7 @@
 - [x] M5.4: Hardening, access control & performance  ← M5 COMPLETE
 - [x] M6.1: Aggregation read models + reconciliation suite
 - [x] M6.2: Dashboard UI: sections 1, 2, 3, 6
-- [ ] M6.3: Aging, receivables by developer, Data Health
+- [x] M6.3: Aging, receivables by developer, Data Health
 - [ ] M6.4: Chase list + inline Next Action + performance hardening
 - [ ] M2.1: Segment classifier & aggregation functions
 - [ ] M2.2: Materialized aggregates & event-driven restatement
@@ -58,6 +58,63 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M6.3 COMPLETE — Dashboard UI: Sections 4 (Aging), 5 (Receivables by Developer),
+7 (Data Health) + drill-downs + exports. NO migration; ONE shared-lib change: the
+per-developer "Avg Days → 1st Release" now carries the PRD's 1-dp precision (64.6 /
+56.4), replacing M4.4's integer round — perDeveloperRollups' avgDaysToFirstRelease
+is now Math.round(mean*10)/10 (a whole result still renders without a ".0", a
+negative stays legal per §4 rule 10). The one shared display value that was at the
+wrong precision was fixed IN THE BUILDER + unit-pinned (the no-client-math rule
+extends to this non-money figure), never rounded in the component; live-m61-check
+assertion updated 65→64.6.
+
+AVG-DAYS DECISION (the flagged m6_1 open item): PRD §3.3 + AC6 display 1 dp; FR-M6-05
+integer was M4.4's rounding artifact. Chose 1 dp — the projection now produces it, so
+S5 renders 64.6 / −1 / 56.4 exactly with zero component math. Touched the M4.4 test
+(added two 1-dp assertions; the existing TOTAL 42 is a whole number, unchanged).
+
+SECTIONS. src/components/dashboard/: aging-section.tsx (S4 — 4 buckets + TOTAL, %
+of outstanding, the TIE indicator SHOWN not hidden per §4 rule 4: green ✓ when it
+ties to Balance Outstanding, amber caveat naming the overpaid-open gap when it does
+not), by-developer-section.tsx (S5 — all columns + Resale/Rental row + TOTAL; avg
+days "—"/negative handled), data-health-section.tsx (S7 — checks (b)/(c)/(d) + M5
+stale, each an ✓ "nothing to fix" row or ⚠ count + drill-down; all-clear banner;
+(a)/(e)/(f) dropped per rule 17, documented), section-export.tsx (CSV/XLSX pair).
+Page swaps the three placeholders in place; S8 stays a placeholder for M6.4.
+
+DRILL-DOWNS (FR-M6-12, all additive filter params — lists default unchanged when
+absent): aging bucket → /collectibles?status=open&hasBalance=true&bucket=<key> (new
+Age select on the ledger, reusing the exported agingBucketOf); developer row →
+/collectibles?developer=<id|none>; health (b) → ?status=open&overpaid=true (new
+"Fully paid / over (≤0)" ledger checkbox); (c) → ?status=closed&variance=over-tolerance
+(new "Variance > ₱0.50" checkbox); (d) → /deals?referral=unpaid (new deal-list
+"Referral fee unpaid" checkbox + initialFilters); stale → /payments?stale=true (new
+"Stale basis only" checkbox). Every new visible filter feeds its list's export query
+too, and the export route + loadExportDataset honour them, so a drilled-in download
+still matches the screen (AC8).
+
+EXPORTS (FR-M6-14): two new registry datasets — "dashboard-aging" +
+"dashboard-by-developer" — all-time (year-independent), built from the same pure
+buildAging/buildByDeveloper over listReceivables; % columns formatted to the
+on-screen 2-dp percent, avg-days as the 1-dp value/"—".
+
+VERIFIED: test:unit 323/323 (+2 avg-days 1-dp assertions); build:check + lint clean;
+tests/e2e/dashboard.spec.ts extended (S4 buckets sum 14 + TOTAL ₱4,855,304.39 tie
+shown; S5 Abrown 5.71%/-1, Resale 1,863,550@62.90%/64.6, TOTAL ties; S7 all-clear at
+import then (b)/(c)/(d) FIRE on constructed admin-seeded cases with (c) tolerance
+boundary −0.50 ✓ / −0.51 flags; bucket + developer + health (b)/(c) drill-downs land
+on exactly the flagged rows) — 13 passed on the warm server; the only non-green was a
+pre-existing M6.2 monthly→payments drill-down flaking ONCE on a cold /payments
+compile and passing on retry (compile-timeout class, not a product bug). Affected
+list specs (collectibles/payments-list/deals) 27 passed — additive filters, no
+regression (1 cold-compile import flake, passed on retry). Delta-residue ZERO
+(throwaway users deleted; 0 orphan workspaces / annual_target_override rows; real
+account untouched). 360px + console-clean cover the new sections (whole-page overflow
+assertion). NOTE for M6.4: S8 chase placeholder remains; reuse StatTile/section-export
++ the Age/overpaid/variance/stale/referral filter params already wired.
+
+---
+
 **M6.2 COMPLETE — Dashboard UI: Sections 1 (Position), 2 (Collected vs Target),
 3 (Cash & Tax), 6 (Monthly Cash-In) + the year filter. NO migration, NO new
 server/query code — pure UI over M6.1's getDashboardData payload. ZERO client

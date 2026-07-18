@@ -8,6 +8,7 @@ import { InputField } from "@/components/affordance/input-field";
 import { SelectField } from "@/components/affordance/select-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -53,7 +54,12 @@ const PAGE_SIZE = 50;
  * Net Cash / Cash & Tax tiles link to `?year=`, a Monthly Cash-In row to
  * `?year=&month=`. Absent → the list's own defaults (all rows).
  */
-export type PaymentsInitialFilters = { year?: string; month?: string };
+export type PaymentsInitialFilters = {
+  year?: string;
+  month?: string;
+  /** Data Health (M5 stale-basis) drill-down: show only the flagged rows. */
+  stale?: boolean;
+};
 
 export type PaymentsListProps = {
   payments: readonly PaymentRow[];
@@ -81,6 +87,7 @@ export function PaymentsList({ payments, currentRates, initialFilters }: Payment
   const [month, setMonth] = useState(initialFilters?.month ?? "all");
   const [developer, setDeveloper] = useState("all");
   const [type, setType] = useState<"all" | PaymentRow["payment_type"]>("all");
+  const [staleOnly, setStaleOnly] = useState(initialFilters?.stale ?? false);
   const [page, setPage] = useState(1);
 
   // Hydration marker so e2e waits for the controlled <select>s to be live before
@@ -114,13 +121,17 @@ export function PaymentsList({ payments, currentRates, initialFilters }: Payment
         const devId = p.deal?.developer?.id ?? null;
         if (developer === "none" ? devId !== null : devId !== developer) return false;
       }
+      if (staleOnly) {
+        const basis = currentBasisOf(p, currentRates);
+        if (!basis || !staleBasisExplanation(p, basis)) return false;
+      }
       if (needle) {
         const hay = `${p.deal?.deal_code ?? ""} ${p.deal?.client_name ?? ""} ${p.deal?.property_details ?? ""} ${p.reference_note ?? ""}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
-  }, [payments, search, year, month, type, developer]);
+  }, [payments, search, year, month, type, developer, staleOnly, currentRates]);
 
   // Full-precision totals of the FILTERED set (stored strings, never displays).
   const totals = useMemo(() => {
@@ -149,7 +160,7 @@ export function PaymentsList({ payments, currentRates, initialFilters }: Payment
   const clampedPage = Math.min(page, pageCount);
   const pageRows = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  useEffect(() => setPage(1), [search, year, month, type, developer]);
+  useEffect(() => setPage(1), [search, year, month, type, developer, staleOnly]);
 
   // The download honours the on-screen filters (AC15).
   const exportQuery = useMemo(() => {
@@ -158,10 +169,11 @@ export function PaymentsList({ payments, currentRates, initialFilters }: Payment
     if (month !== "all") p.set("month", month);
     if (type !== "all") p.set("type", type);
     if (developer !== "all") p.set("developer", developer);
+    if (staleOnly) p.set("stale", "true");
     if (search.trim()) p.set("q", search.trim());
     const s = p.toString();
     return s ? `&${s}` : "";
-  }, [year, month, type, developer, search]);
+  }, [year, month, type, developer, staleOnly, search]);
 
   return (
     <div className="space-y-4" data-testid="payments-list" data-hydrated={hydrated ? "true" : "false"}>
@@ -248,6 +260,15 @@ export function PaymentsList({ payments, currentRates, initialFilters }: Payment
             data-testid="pay-type"
           />
         </div>
+
+        <label className="flex items-center gap-2 self-end pb-2 text-sm">
+          <Checkbox
+            checked={staleOnly}
+            onCheckedChange={(v) => setStaleOnly(v === true)}
+            data-testid="pay-stale-only"
+          />
+          Stale basis only
+        </label>
 
         <div className="flex gap-2">
           <Button variant="outline" nativeButton={false} render={<a href={`${exportPath("payments", "csv")}${exportQuery}`} />} data-testid="export-csv">

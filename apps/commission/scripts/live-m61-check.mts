@@ -179,7 +179,9 @@ async function main() {
   const abrown = dev("Abrown Inc.");
   const resale = devs.find((d) => d.developerId === null);
   check("S5 Abrown % Collected 5.71% + avg days −1", !!abrown && (Number(abrown.pctCollected) * 100).toFixed(2) === "5.71" && abrown.avgDaysToFirstRelease === -1, `${abrown ? (Number(abrown.pctCollected) * 100).toFixed(2) : "?"}/${abrown?.avgDaysToFirstRelease}`);
-  check("S5 Resale/Rental collected 1,863,550 @ 62.90% / 64.6 days", !!resale && resale.collectedNet === "1863550.00" && (Number(resale.pctCollected) * 100).toFixed(2) === "62.90" && resale.avgDaysToFirstRelease === 65, `${resale?.collectedNet}/${resale ? (Number(resale.pctCollected) * 100).toFixed(2) : "?"}/${resale?.avgDaysToFirstRelease}`);
+  // Updated: M6.3 renders Avg Days → 1st Release at the PRD's 1-dp precision
+  // (64.6, not the integer 65 M4.4 first rounded to), 2026-07-18.
+  check("S5 Resale/Rental collected 1,863,550 @ 62.90% / 64.6 days", !!resale && resale.collectedNet === "1863550.00" && (Number(resale.pctCollected) * 100).toFixed(2) === "62.90" && resale.avgDaysToFirstRelease === 64.6, `${resale?.collectedNet}/${resale ? (Number(resale.pctCollected) * 100).toFixed(2) : "?"}/${resale?.avgDaysToFirstRelease}`);
   check("S5 TOTAL ties to position (balance/collected/collectible)", devTotal.balance === pos.balanceOutstanding && devTotal.collectedNet === pos.collectedNet && devTotal.collectible === pos.totalCollectible);
 
   // === Section 6 — Monthly Cash-In (2026) =====================================

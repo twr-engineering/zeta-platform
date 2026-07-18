@@ -87,10 +87,26 @@ function moneyKey(value: string): number {
 
 const PAGE_SIZE = 50;
 
-export function DealList({ deals }: { deals: readonly Deal[] }) {
+/**
+ * Initial filter state seeded from a dashboard drill-down (M6 §7, FR-M6-12). Data
+ * Health check (d) links here with `?referral=unpaid` so the row lands on exactly
+ * the deals with a referral fee still owed out. Absent → the list's own defaults.
+ */
+export type DealListInitialFilters = { referralUnpaid?: boolean };
+
+export function DealList({
+  deals,
+  initialFilters,
+}: {
+  deals: readonly Deal[];
+  initialFilters?: DealListInitialFilters;
+}) {
   const [search, setSearch] = useState("");
   const [year, setYear] = useState("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [referralUnpaid, setReferralUnpaid] = useState(
+    initialFilters?.referralUnpaid ?? false
+  );
   const [sort, setSort] = useState<{ key: ColumnKey; dir: "asc" | "desc" }>({
     key: "booked_date",
     dir: "desc",
@@ -114,6 +130,9 @@ export function DealList({ deals }: { deals: readonly Deal[] }) {
       if (!showArchived && d.archived_at) return false;
       if (showArchived && !d.archived_at) return false;
       if (year !== "all" && String(d.booked_year) !== year) return false;
+      // Data Health (d): a referral fee owed out and not yet paid.
+      if (referralUnpaid && !(toMoney(d.referral_out).greaterThan(0) && !d.referral_paid))
+        return false;
       if (needle) {
         const hay = `${d.deal_code} ${d.client_name} ${d.property_details}`.toLowerCase();
         if (!hay.includes(needle)) return false;
@@ -133,14 +152,14 @@ export function DealList({ deals }: { deals: readonly Deal[] }) {
       });
     }
     return rows;
-  }, [deals, search, year, showArchived, sort]);
+  }, [deals, search, year, showArchived, referralUnpaid, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const clampedPage = Math.min(page, pageCount);
   const pageRows = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   // Reset to page 1 whenever the filtered set changes shape.
-  React.useEffect(() => setPage(1), [search, year, showArchived]);
+  React.useEffect(() => setPage(1), [search, year, showArchived, referralUnpaid]);
 
   const toggleSort = (key: ColumnKey) =>
     setSort((prev) =>
@@ -156,7 +175,9 @@ export function DealList({ deals }: { deals: readonly Deal[] }) {
     });
 
   const exportQuery =
-    (year !== "all" ? `&year=${year}` : "") + (showArchived ? "&archived=true" : "");
+    (year !== "all" ? `&year=${year}` : "") +
+    (showArchived ? "&archived=true" : "") +
+    (referralUnpaid ? "&referral=unpaid" : "");
 
   return (
     <div className="space-y-4">
@@ -235,14 +256,24 @@ export function DealList({ deals }: { deals: readonly Deal[] }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <Checkbox
-            checked={showArchived}
-            onCheckedChange={(v) => setShowArchived(v === true)}
-            data-testid="archived-toggle"
-          />
-          Show archived
-        </label>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={showArchived}
+              onCheckedChange={(v) => setShowArchived(v === true)}
+              data-testid="archived-toggle"
+            />
+            Show archived
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={referralUnpaid}
+              onCheckedChange={(v) => setReferralUnpaid(v === true)}
+              data-testid="referral-unpaid"
+            />
+            Referral fee unpaid
+          </label>
+        </div>
         <p className="text-sm text-muted-foreground" data-testid="result-count">
           {filtered.length} {filtered.length === 1 ? "deal" : "deals"}
           {year !== "all" ? ` in ${year}` : ""}

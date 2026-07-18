@@ -17,14 +17,18 @@ import {
   listLeadSources,
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
-import { toMoney } from "@/lib/money";
+import { formatRateAsPercent, toMoney } from "@/lib/money";
+import { manilaToday } from "@/lib/date/manila";
 import { listDeals } from "@/lib/deals/queries";
 import {
   listReceivables,
   receivablePayor,
   type ReceivableRow,
 } from "@/lib/receivables/queries";
-import { listPayments, type PaymentRow } from "@/lib/payments/queries";
+import { agingBucketOf, type AgingBucketKey } from "@/lib/receivables/projections";
+import { buildAging, buildByDeveloper } from "@/lib/dashboard/sections";
+import { listPayments, getWorkspaceRates, type PaymentRow } from "@/lib/payments/queries";
+import { isStaleBasis } from "@/lib/payments/stale";
 import type { ExportColumn, ExportDataset } from "./format";
 import type {
   AuditLogEntry,
@@ -229,6 +233,60 @@ const PAYMENT_COLUMNS: readonly ExportColumn<PaymentRow>[] = [
   { header: "Status", type: "text", value: archivedState, width: 12 },
 ];
 
+// --- dashboard tabular sections (M6 §4/§5, FR-M6-14) ------------------------
+
+/**
+ * One aging bucket (or the TOTAL) as an export row. % of outstanding is the
+ * builder's exact rate string, formatted to the on-screen 2-dp percent so the
+ * download ties to the table (AC8); "—" when there is nothing outstanding.
+ */
+type AgingExportRow = {
+  bucket: string;
+  count: number;
+  balance: string;
+  share: string | null;
+};
+
+const AGING_COLUMNS: readonly ExportColumn<AgingExportRow>[] = [
+  { header: "Bucket", type: "text", value: (r) => r.bucket, width: 16 },
+  { header: "# Deals", type: "number", value: (r) => r.count, width: 10 },
+  { header: "Balance", type: "money", value: (r) => r.balance, width: 18 },
+  {
+    header: "% of Outstanding",
+    type: "text",
+    value: (r) => (r.share === null ? "—" : formatRateAsPercent(r.share)),
+    width: 18,
+  },
+];
+
+type DeveloperExportRow = {
+  developer: string;
+  dealsWithBalance: number;
+  balance: string;
+  collectedNet: string;
+  pctCollected: string | null;
+  avgDaysToFirstRelease: number | null;
+};
+
+const BY_DEVELOPER_COLUMNS: readonly ExportColumn<DeveloperExportRow>[] = [
+  { header: "Developer", type: "text", value: (r) => r.developer, width: 30 },
+  { header: "Deals w/ Balance", type: "number", value: (r) => r.dealsWithBalance, width: 16 },
+  { header: "Balance", type: "money", value: (r) => r.balance, width: 18 },
+  { header: "Collected Net", type: "money", value: (r) => r.collectedNet, width: 18 },
+  {
+    header: "% Collected",
+    type: "text",
+    value: (r) => (r.pctCollected === null ? "—" : formatRateAsPercent(r.pctCollected)),
+    width: 14,
+  },
+  {
+    header: "Avg Days → 1st Release",
+    type: "text",
+    value: (r) => (r.avgDaysToFirstRelease === null ? "—" : String(r.avgDaysToFirstRelease)),
+    width: 20,
+  },
+];
+
 /** The URL segment: /api/export/property-types?format=csv */
 export const EXPORT_DATASETS = [
   "deals",
@@ -237,6 +295,8 @@ export const EXPORT_DATASETS = [
   "property-types",
   "developers",
   "lead-sources",
+  "dashboard-aging",
+  "dashboard-by-developer",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -263,6 +323,15 @@ export type DealExportFilters = {
    * the on-screen search covers — so the download matches the screen (AC8). */
   month?: number;
   paymentType?: PaymentRow["payment_type"];
+  /** M6 dashboard drill-down filters (FR-M6-12) that ride along so a download
+   * from a drilled-in list still matches the screen (AC8). Aging bucket + the
+   * two Data-Health receivable filters; the payment stale-basis flag; and the
+   * deal referral-owed flag. Each is honoured only by the dataset that owns it. */
+  bucket?: AgingBucketKey;
+  overpaid?: boolean;
+  varianceOverTolerance?: boolean;
+  stale?: boolean;
+  referralUnpaid?: boolean;
 };
 
 export async function loadExportDataset(
@@ -274,7 +343,17 @@ export async function loadExportDataset(
       // The list toggle is exclusive — active OR archived — so mirror that here
       // rather than always dumping both, and honour the year filter.
       const rows = (await listDeals({ includeArchived: true, year: filters.year })).filter(
-        (deal) => (filters.archived ? deal.archived_at !== null : deal.archived_at === null)
+        (deal) => {
+          if (filters.archived ? deal.archived_at === null : deal.archived_at !== null)
+            return false;
+          // Data Health (d) drill-down: referral fee owed out and not yet paid.
+          if (
+            filters.referralUnpaid &&
+            !(toMoney(deal.referral_out).greaterThan(0) && !deal.referral_paid)
+          )
+            return false;
+          return true;
+        }
       );
       return dataset({
         name: "deals",
@@ -302,6 +381,24 @@ export async function loadExportDataset(
         if (filters.hasBalance && !(r.balance !== null && toMoney(r.balance).greaterThan(0)))
           return false;
         if (filters.overridden && r.confirmed_collectible === null) return false;
+        // Aging bucket (§4): open, balance-owing rows matching the live age.
+        if (filters.bucket !== undefined) {
+          const owing = r.status === "open" && r.balance !== null && toMoney(r.balance).greaterThan(0);
+          if (!owing || r.age_months === null || agingBucketOf(r.age_months) !== filters.bucket)
+            return false;
+        }
+        // Data Health (b): Open, paid in full or over (signed balance ≤ 0).
+        if (
+          filters.overpaid &&
+          !(r.status === "open" && r.balance !== null && toMoney(r.balance).lessThanOrEqualTo(0))
+        )
+          return false;
+        // Data Health (c): Closed, short/over by more than ₱0.50.
+        if (
+          filters.varianceOverTolerance &&
+          !(r.status === "closed" && r.variance !== null && toMoney(r.variance).abs().greaterThan(toMoney("0.50")))
+        )
+          return false;
         if (needle) {
           const hay = `${r.deal_code} ${r.client_name} ${r.property_details}`.toLowerCase();
           if (!hay.includes(needle)) return false;
@@ -320,11 +417,26 @@ export async function loadExportDataset(
       // exactly what is shown (AC8, FR-M5-11). Mirrors payments-list.tsx's client
       // filter predicate field-for-field; money/identity are read-time joins.
       const needle = filters.text?.trim().toLowerCase() ?? "";
+      // Stale-basis (M5 Data Health) rides along too: read the CURRENT rates once
+      // and apply the same pure predicate the list uses, so a drilled-in download
+      // matches the flagged rows (AC8, FR-M5-12).
+      const currentRates = filters.stale ? await getWorkspaceRates() : null;
       const rows = (await listPayments({ includeArchived: true })).filter((p) => {
         if (filters.archived ? p.archived_at === null : p.archived_at !== null) return false;
         if (filters.year !== undefined && p.year_paid !== filters.year) return false;
         if (filters.month !== undefined && p.month_paid !== filters.month) return false;
         if (filters.paymentType && p.payment_type !== filters.paymentType) return false;
+        if (currentRates) {
+          if (
+            p.deal === null ||
+            !isStaleBasis(p, {
+              vat_basis: p.deal.vat_basis,
+              ewt_rate: currentRates.ewt_rate,
+              vat_rate: currentRates.vat_rate,
+            })
+          )
+            return false;
+        }
         if (filters.developerId !== undefined) {
           const devId = p.deal?.developer?.id ?? null;
           if (filters.developerId === "none" ? devId !== null : devId !== filters.developerId)
@@ -364,6 +476,48 @@ export async function loadExportDataset(
         columns: LEAD_SOURCE_COLUMNS,
         rows: await listLeadSources(),
       });
+    case "dashboard-aging": {
+      // Year-independent (§4): the aging table is all-time current-state. Build
+      // from the same pure builder the screen reads, then append the TOTAL row.
+      const aging = buildAging(await listReceivables({ today: manilaToday() }));
+      const rows: AgingExportRow[] = aging.buckets.map((b) => ({
+        bucket: b.label,
+        count: b.count,
+        balance: b.balance,
+        share: b.shareOfOutstanding,
+      }));
+      const totalCount = aging.buckets.reduce((n, b) => n + b.count, 0);
+      rows.push({
+        bucket: "TOTAL",
+        count: totalCount,
+        balance: aging.totalBalance,
+        // 100% when anything is outstanding; "—" when the table is empty.
+        share: toMoney(aging.totalBalance).isZero() ? null : "1",
+      });
+      return dataset({
+        name: "dashboard-aging",
+        sheet: "Aging",
+        columns: AGING_COLUMNS,
+        rows,
+      });
+    }
+    case "dashboard-by-developer": {
+      const byDev = buildByDeveloper(await listReceivables({ today: manilaToday() }));
+      const rows: DeveloperExportRow[] = [...byDev.rows, byDev.total].map((d) => ({
+        developer: d.developerName,
+        dealsWithBalance: d.dealsWithBalance,
+        balance: d.balance,
+        collectedNet: d.collectedNet,
+        pctCollected: d.pctCollected,
+        avgDaysToFirstRelease: d.avgDaysToFirstRelease,
+      }));
+      return dataset({
+        name: "dashboard-by-developer",
+        sheet: "By Developer",
+        columns: BY_DEVELOPER_COLUMNS,
+        rows,
+      });
+    }
   }
 }
 

@@ -24,7 +24,11 @@ export const metadata: Metadata = { title: "Payments" };
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string | string[]; month?: string | string[] }>;
+  searchParams: Promise<{
+    year?: string | string[];
+    month?: string | string[];
+    stale?: string | string[];
+  }>;
 }) {
   const [payments, currentRates, params] = await Promise.all([
     listPayments(),
@@ -35,6 +39,7 @@ export default async function PaymentsPage({
   const initialFilters = {
     year: one(params.year),
     month: one(params.month),
+    stale: one(params.stale) === "true",
   };
 
   return (

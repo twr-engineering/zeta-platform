@@ -85,6 +85,17 @@ export async function GET(request: Request, context: RouteContext) {
   const typeParam = params.get("type");
   const paymentType =
     typeParam === "commission" || typeParam === "incentive" ? typeParam : undefined;
+  // M6 dashboard drill-down filters (FR-M6-12) so a drilled-in list's download
+  // still matches the screen (AC8). Each dataset reads only the ones it owns.
+  const bucketParam = params.get("bucket");
+  const bucket =
+    bucketParam === "lt1" || bucketParam === "m1to3" || bucketParam === "m3to6" || bucketParam === "m6plus"
+      ? bucketParam
+      : undefined;
+  const overpaid = params.get("overpaid") === "true";
+  const varianceOverTolerance = params.get("variance") === "over-tolerance";
+  const stale = params.get("stale") === "true";
+  const referralUnpaid = params.get("referral") === "unpaid";
 
   const data = await loadExportDataset(dataset, {
     year,
@@ -96,6 +107,11 @@ export async function GET(request: Request, context: RouteContext) {
     text,
     month,
     paymentType,
+    bucket,
+    overpaid,
+    varianceOverTolerance,
+    stale,
+    referralUnpaid,
   });
   const filename = exportFilename(data.name, format, manilaToday());
 
