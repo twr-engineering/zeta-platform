@@ -34,7 +34,7 @@ export default async function AppLayout({
       />
 
       <div className="mx-auto flex w-full max-w-screen-2xl">
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r bg-sidebar p-3 lg:block">
+        <aside className="no-print sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r bg-sidebar p-3 lg:block">
           <SidebarNav />
         </aside>
 

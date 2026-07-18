@@ -4,11 +4,13 @@ import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * M8.3 — the Collection Reports UI, end to end (M8 §9 AC 1–8 + AC12). Provisions its
- * OWN throwaway users, imports the REAL v30.20 workbook through the UI (21 deals + 8
- * payments, all 2026), then drives the five deep-linkable report tabs: cash per year,
- * the vintage matrix + value toggle, monthly cash flow, tax per month (with the BIR
- * captions), and the booking-year summary (with the OQ4 Written-off split).
+ * M8.3/M8.4 — the Collection Reports UI, end to end (M8 §9 AC 1–8, AC10, AC12).
+ * Provisions its OWN throwaway users, imports the REAL v30.20 workbook through the UI
+ * (21 deals + 8 payments, all 2026), then drives the five deep-linkable report tabs:
+ * cash per year, the vintage matrix + value toggle, monthly cash flow, tax per month
+ * (with the BIR captions), and the booking-year summary (with the OQ4 Written-off
+ * split) — plus the M8.4 CSV/XLSX exports (content + filename params tie to the screen)
+ * and the Report 4 print layout under emulated print media (AC10 / FR-M8-11).
  *
  * CLOCK-ROBUST. The fixture is all 2026 and today (the CI clock) is 2026, so the
  * shared year selector's default (current Manila year) lands on the data without a
@@ -238,6 +240,107 @@ test("booking-year summary: row 2026, Written-off split marked as departure (AC6
   await expect(page.getByTestId("written-off-note")).toContainText("departure");
 
   await expect(page.getByTestId("booking-total-collected")).toContainText("1,908,192.86");
+});
+
+test("export: Report 1 CSV ties to the on-screen rows incl. TOTAL, dated filename (AC10)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  const res = await page.request.get("/api/export/cash-per-year?format=csv");
+  expect(res.status()).toBe(200);
+  // Filename stem is the report; the route dates it (zeta-cash-per-year-YYYY-MM-DD.csv).
+  expect(res.headers()["content-disposition"]).toMatch(/filename="zeta-cash-per-year-\d{4}-\d{2}-\d{2}\.csv"/);
+  const csv = await res.text();
+  // Exact stored strings — no thousands separators, no ₱ (the archival copy).
+  expect(csv).toContain("Year,Net of VAT,Net Cash,Output VAT,EWT,# Payments");
+  expect(csv).toContain("2026,1908192.86,1909085.71,5357.14,4464.29,8");
+  expect(csv).toContain("TOTAL,1908192.86,1909085.71,5357.14,4464.29,8");
+});
+
+test("export: vintage matrix CSV carries both toggle values + labels the file (AC3/AC10)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  // Net of VAT (default) — the single cell + row/column totals carry 1,908,192.86.
+  const nov = await page.request.get("/api/export/vintage-matrix?format=csv");
+  expect(nov.headers()["content-disposition"]).toMatch(/filename="zeta-vintage-matrix-net_of_vat-/);
+  const novCsv = await nov.text();
+  expect(novCsv).toContain("Year Paid,2026,Row total");
+  expect(novCsv).toContain("2026,1908192.86,1908192.86");
+  expect(novCsv).toContain("TOTAL,1908192.86,1908192.86");
+
+  // Net Cash toggle — the filename reflects it and the cash figure changes.
+  const nc = await page.request.get("/api/export/vintage-matrix?format=csv&value=net_cash");
+  expect(nc.headers()["content-disposition"]).toMatch(/filename="zeta-vintage-matrix-net_cash-/);
+  const ncCsv = await nc.text();
+  expect(ncCsv).toContain("2026,1909085.71,1909085.71");
+});
+
+test("export: Report 4 CSV carries the verbatim BIR caption headers + year in filename (AC5/AC10)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  const res = await page.request.get("/api/export/tax-per-month?format=csv&year=2026");
+  expect(res.headers()["content-disposition"]).toMatch(/filename="zeta-tax-per-month-2026-/);
+  const csv = await res.text();
+  // The plain-language captions the accountant reads, verbatim (FR-M8-07).
+  expect(csv).toContain("Output VAT — to remit to BIR");
+  expect(csv).toContain("EWT withheld — creditable, BIR Form 2307");
+  // July split + the TOTAL, exact strings.
+  expect(csv).toContain("July,5357.14,4464.29,1472142.86,7");
+  expect(csv).toContain("TOTAL,5357.14,4464.29,1908192.86,8");
+});
+
+test("export: Report 5 CSV splits the Written-off column; XLSX downloads as a workbook (AC10)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+
+  const csvRes = await page.request.get("/api/export/booking-year-summary?format=csv");
+  const csv = await csvRes.text();
+  expect(csv).toContain("Booking year,Deals,GCI (Net of VAT),Collected,Outstanding,Written off");
+  // Fixture has no cancelled deals → Written-off 0.00, Outstanding holds the workbook number.
+  expect(csv).toContain("2026,21,6688497.25,1908192.86,4855304.39,0.00");
+
+  // XLSX comes back as a real spreadsheet (binary), not an error page.
+  const xlsxRes = await page.request.get("/api/export/tax-per-month?format=xlsx&year=2026");
+  expect(xlsxRes.status()).toBe(200);
+  expect(xlsxRes.headers()["content-type"]).toContain(
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  expect(xlsxRes.headers()["content-disposition"]).toMatch(/filename="zeta-tax-per-month-2026-.*\.xlsx"/);
+  expect((await xlsxRes.body()).length).toBeGreaterThan(0);
+});
+
+test("Report 4 print layout: header block shows under print media, chrome is hidden (FR-M8-11)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await page.goto("/reports/tax-per-month?year=2026");
+
+  // The Print button is present on Report 4 (the accountant hand-off tab).
+  await expect(page.getByTestId("report-print")).toBeVisible();
+
+  // Emulate the print stylesheet: the header block (workspace · report · year ·
+  // generated-on) appears, the app chrome / tabs / export buttons drop out, and the
+  // twelve-month table stays.
+  await page.emulateMedia({ media: "print" });
+  const header = page.getByTestId("report-print-header");
+  await expect(header).toBeVisible();
+  await expect(header).toContainText("Tax Collected per Month — 2026");
+  await expect(header).toContainText("Generated");
+  await expect(page.getByTestId("reports-tabs")).toBeHidden(); // no-print chrome
+  await expect(page.getByTestId("report-print")).toBeHidden(); // the button itself
+  await expect(page.locator('[data-testid="tax-row"]')).toHaveCount(12); // table survives
+  await page.emulateMedia({ media: "screen" });
 });
 
 test("deep links + shared year: tabs 3 & 4 carry the year, others don't", async ({ page }) => {

@@ -176,3 +176,61 @@
     @apply font-heading tracking-tight;
   }
 }
+
+/*
+ * M8.4 — the Report 4 print layout (FR-M8-11): the agent's monthly hand-off to their
+ * accountant on ONE portrait page. `.print-only` blocks (the print header) are hidden
+ * on screen and shown only when printing; `.no-print` (app chrome, tab bar, reading
+ * guide, export/print buttons, the on-screen heading) is hidden when printing; and a
+ * `.report-print-area` is lifted out of the app shell to the top-left of the sheet so
+ * the twelve months + TOTAL sit alone on the page rather than under the invisible
+ * chrome's reserved space.
+ */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: portrait;
+    margin: 14mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Lift the printable region to the page origin; everything else collapses. */
+  .report-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Black ink on white, edge to edge — no card borders, shadows, or backgrounds
+     wasting toner; the table keeps its rules for legibility. */
+  body {
+    background: white;
+  }
+
+  /* Report tables print with visible cell rules and no colour fills so a monochrome
+     printer renders a clean grid. */
+  .report-print-area table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .report-print-area th,
+  .report-print-area td {
+    border: 1px solid #999;
+  }
+  .report-print-area tfoot {
+    font-weight: 600;
+  }
+}

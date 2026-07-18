@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T18:05:00+08:00 (M8.3 — Reports UI: five tabs, toggle, year selector, reading guide)
+# Last Updated: 2026-07-19T20:30:00+08:00 (M8.4 — Exports, print layout, performance & cache hardening — M8 COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -44,7 +44,7 @@
 - [x] M8.1: Aggregation service: payment-period reports 1, 3, 4
 - [x] M8.2: Vintage matrix + booking-year summary (reports 2, 5)
 - [x] M8.3: Reports UI: five tabs, toggle, year selector, reading guide
-- [ ] M8.4: Exports, print layout, performance & cache hardening
+- [x] M8.4: Exports, print layout, performance & cache hardening  ← M8 COMPLETE
 - [ ] M9.1: Search read layer & query API
 - [ ] M9.2: Search Console UI
 - [ ] M9.3: Export & performance hardening
@@ -58,6 +58,77 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M8.4 COMPLETE — Exports, print layout, performance & cache hardening. 🎉 M8 COMPLETE (Collection
+Reports).** The month-end hand-off works end to end: CSV/XLSX on every report tab + the Report 4 print
+layout + measured perf. PURELY ADDITIVE over M8.3 — no migration, no new index (the PRD's paid_date/
+booked_year/deal_id indexes already ship: M5 payment_period_idx + payment_deal_idx, M1 deal_booked_year_idx,
+M4 receivable_booked_year_idx). test:unit 478/478 (+5 export-row); build:check + lint clean; perf 3.91 ms
+worst-report P95 at 1,000 payments / 1,000 deals / 10×10 matrix (256× under the < 1 s bar); reports e2e
+green on the REAL v30.20 import (+9 export/print assertions); full clean-reseed suite [see run note];
+delta-residue ZERO.
+
+FIVE EXPORT DATASETS (FR-M8-10), each reading the SAME server query the screen renders, flattened to
+export rows incl. the pinned TOTAL so the download ties to the screen to the centavo (AC10). Registry names
+cash-per-year · vintage-matrix · monthly-cash-flow · tax-per-month · booking-year-summary in
+src/lib/export/datasets.ts; pure flatteners + column defs in NEW src/lib/reports/export-rows.ts (unit-
+testable, like yield/source-performance export-rows). The active year/toggle rides in the dataset NAME →
+filename: monthly-cash-flow-<year> · tax-per-month-<year> · vintage-matrix-<net_of_vat|net_cash> (FR-M8-10
+"active toggle/year in the filename"; the app's zeta-<name>-<date>.<ext> convention is kept, so the stem is
+e.g. zeta-tax-per-month-2026-<date>.csv). CSV carries exact stored strings (0.00 where the matrix grid
+renders "—" — the dash is render-only); XLSX via the established write-excel-file path (money → Number w/
+#,##0.00 through decimal.js, never parseFloat). Report 4's export HEADERS carry the verbatim BIR captions
+("Output VAT — to remit to BIR" / "EWT withheld — creditable, BIR Form 2307", FR-M8-07). The matrix is the
+one dataset whose COLUMNS are data (booking years) → its ExportDataset is built dynamically
+(vintageMatrixToDataset). Route src/app/api/export/[dataset]/route.ts parses ?value= → matrixValue and
+already carried ?year=; the vintage-matrix builder throws on a dangling ref (rule 15) → the route answers
+500, never silently drops cash.
+
+EXPORT BUTTONS on every tab (new ReportExport, server, CSV·XLSX anchors carrying the active year/value;
+disabled-with-tooltip on an empty workspace per §6). Wired through a new `actions` slot on ReportTabHeader
+(the right-hand control cluster). ⚠ HEADER 360px FIX: the cluster must NOT be `shrink-0` — a shrink-0
+flex-wrap cluster takes its max-content width (year selector + 2 export + print ≈ 400px) and never wraps,
+overflowing 360px. Dropped shrink-0 + added min-w-0 to the title block (matches source-performance's
+pattern). This was the one real e2e failure caught + fixed; everything else across runs was cold-compile /
+hosted-auth flake.
+
+REPORT 4 PRINT LAYOUT (FR-M8-11). A Print button (new PrintButton, client, window.print) + a print-only
+header block (new ReportPrintHeader: workspace name · "Tax Collected per Month" · year · generated-on
+manilaToday) + a @media print stylesheet in globals.css: `@page { size: portrait; margin: 14mm }`, `.no-print`
+hides the app chrome / tabs / reading guide / on-screen heading + export/print buttons, `.print-only` reveals
+the header, `.report-print-area` is lifted to the page origin so the twelve months + TOTAL sit alone on one
+portrait page. The report-4 desktop table forces `print:block` (+ cards `print:hidden`) so the grid — not the
+mobile cards — is what prints. no-print added to AppHeader + the app-shell sidebar + the reports sticky
+header/reading guide. Verified under Playwright print-media emulation (header visible, chrome hidden, 12 rows
+survive).
+
+PERF / CACHE DECISION — COMPUTE-ON-READ STAYS (measured, §8 / AC11). New scripts/perf-reports.ts
+(pnpm perf:reports) seeds 1,000 deals across 10 booking years + 1,000 payments across 10 paid years (→ a full
+10×10 matrix) into a throwaway workspace and measures each report = its RLS-scoped DB read (EXPLAIN ANALYZE,
+machine-independent) + its pure builder compose CPU. Result: worst report 3.91 ms P95 (Cash per Year) vs the
+< 1,000 ms bar — 256× under; matrix 2.66 ms, reports 3/4 ~1.4 ms, report 5 3.02 ms. So NO cache is added: the
+PRD's event-invalidation requirement applies IF caching exists (FR-M8-13); with compute-on-read at 3.91 ms
+there is nothing to invalidate and a payment/deal/receivable edit reflects on the very next read (0 s
+staleness) — same call M6.1/M7.3/M2.3/M3.4 made and documented. No new index (the four the PRD names already
+exist; the payment/receivable EXPLAINs run ~1.2 ms each).
+
+EXPORT ACCESS-LOG (M8 §8 Auditability — "exports MAY be access-logged: workspace, user, report, timestamp —
+lightweight, not part of the financial audit trail"). Implemented as a lightweight structured server-side
+console.info line in the export route ({event:"export.access", workspace, user, dataset, format, at}) — never
+a DB write, never the audit ledger. Covers every dataset at zero storage cost; satisfies the "MAY / lightweight"
+wording without a new table.
+
+VERIFIED (tests/e2e/reports.spec.ts, throwaway users, REAL v30.20 import, --workers=1): R1 CSV = header +
+"2026,1908192.86,1909085.71,5357.14,4464.29,8" + identical TOTAL, dated filename; matrix CSV both toggles
+(net_of_vat 1908192.86 cell/totals, net_cash 1909085.71) with the value in the filename; R4 CSV verbatim BIR
+caption headers + "July,5357.14,4464.29,1472142.86,7" + TOTAL, year in filename; R5 CSV "Written off" column +
+"2026,21,6688497.25,1908192.86,4855304.39,0.00"; XLSX 200 + spreadsheet content-type + .xlsx filename +
+non-empty body; R4 print layout under emulated print media (header block visible "Tax Collected per Month —
+2026" + "Generated", tabs/print button hidden, 12 rows survive). Perf numbers above. FLAKE NOTE: the reports
+spec re-authenticates per test against hosted Supabase and each report route dev-compiles on first hit, so
+isolated runs show cold-compile 30 s page.goto/signIn timeouts on DIFFERENT tests each run (never the same one
+twice) — all pass on warm retry; the ONE reproducible real failure was the 360px header overflow, fixed above.
+
+## Prior Status
 **M8.3 COMPLETE — Reports UI: five deep-linkable tabs, matrix toggle, shared year selector, reading guide.**
 The /reports STUB becomes the month-end reporting surface over the M8.1/M8.2 read models — ZERO client
 math (every peso is the server aggregator's string; the ONLY client work is URL navigation on the two

@@ -20,7 +20,7 @@ export default function ReportsLayout({
 }) {
   return (
     <div className="space-y-6">
-      <div className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 pt-4 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
+      <div className="no-print sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 pt-4 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
         <h1 className="font-heading text-2xl font-semibold tracking-tight">Reports</h1>
         <p className="mb-3 text-sm text-muted-foreground">
           Read-only collection reports over your payments, deals, and receivables.
@@ -31,7 +31,9 @@ export default function ReportsLayout({
         </Suspense>
       </div>
 
-      <ReadingGuide />
+      <div className="no-print">
+        <ReadingGuide />
+      </div>
 
       {children}
     </div>

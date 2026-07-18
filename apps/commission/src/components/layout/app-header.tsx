@@ -29,7 +29,7 @@ export function AppHeader({
   const initials = (displayName ?? email).slice(0, 2).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/70 sm:px-4">
+    <header className="no-print sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/70 sm:px-4">
       <MobileNav workspaceName={workspaceName} />
 
       <Link

@@ -1,6 +1,7 @@
 import { getBookingYearSummary } from "@/lib/reports/queries";
 import { ReportTabHeader } from "@/components/reports/report-tab-header";
 import { ReportEmptyState } from "@/components/reports/report-empty-state";
+import { ReportExport } from "@/components/reports/report-export";
 import { BookingYearSummaryTable } from "@/components/reports/booking-year-summary-table";
 
 /**
@@ -15,7 +16,16 @@ export default async function BookingYearSummaryPage() {
 
   return (
     <div className="space-y-4">
-      <ReportTabHeader slug="booking-year-summary" />
+      <ReportTabHeader
+        slug="booking-year-summary"
+        actions={
+          <ReportExport
+            dataset="booking-year-summary"
+            label="Booking-Year Summary"
+            disabled={empty}
+          />
+        }
+      />
       {empty ? (
         <ReportEmptyState source="deals" />
       ) : (

@@ -1,6 +1,7 @@
 import { getCashPerYear } from "@/lib/reports/queries";
 import { ReportTabHeader } from "@/components/reports/report-tab-header";
 import { ReportEmptyState } from "@/components/reports/report-empty-state";
+import { ReportExport } from "@/components/reports/report-export";
 import { CashPerYearTable } from "@/components/reports/cash-per-year-table";
 
 /**
@@ -14,7 +15,12 @@ export default async function CashPerYearPage() {
 
   return (
     <div className="space-y-4">
-      <ReportTabHeader slug="cash-per-year" />
+      <ReportTabHeader
+        slug="cash-per-year"
+        actions={
+          <ReportExport dataset="cash-per-year" label="Cash per Year" disabled={empty} />
+        }
+      />
       {empty ? <ReportEmptyState /> : <CashPerYearTable report={report} />}
     </div>
   );

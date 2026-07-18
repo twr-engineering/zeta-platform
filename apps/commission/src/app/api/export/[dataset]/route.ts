@@ -109,6 +109,10 @@ export async function GET(request: Request, context: RouteContext) {
   // Source Performance drill-through (FR-M7-09) — a lead_source_id filtering the deals
   // export to one source; ignored by every dataset but "deals".
   const source = params.get("source") ?? undefined;
+  // M8 vintage-matrix value toggle (FR-M8-04) — the export ties to the on-screen view.
+  const valueParam = params.get("value");
+  const matrixValue =
+    valueParam === "net_of_vat" || valueParam === "net_cash" ? valueParam : undefined;
 
   const data = await loadExportDataset(dataset, {
     year,
@@ -127,8 +131,25 @@ export async function GET(request: Request, context: RouteContext) {
     referralUnpaid,
     segment,
     source,
+    matrixValue,
   });
   const filename = exportFilename(data.name, format, manilaToday());
+
+  // Lightweight export access log (M8 §8 Auditability — "exports MAY be access-logged:
+  // workspace, user, report, timestamp — lightweight, not part of the financial audit
+  // trail"). A structured server-side line, never a DB write: it records who pulled which
+  // report as what, so an export can be traced without touching the audit ledger. Covers
+  // every dataset, not just M8's, at zero storage cost.
+  console.info(
+    JSON.stringify({
+      event: "export.access",
+      workspace: workspace.workspace.id,
+      user: workspace.email,
+      dataset: data.name,
+      format,
+      at: new Date().toISOString(),
+    })
+  );
 
   const body: Buffer | string =
     format === "csv"

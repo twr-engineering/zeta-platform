@@ -10,19 +10,24 @@ export function ReportTabHeader({
   slug,
   caption,
   control,
+  actions,
 }: {
   slug: ReportTabSlug;
   /** An extra line under the description — e.g. the matrix reading guide (verbatim). */
   caption?: React.ReactNode;
   /** The tab's control (year selector / value toggle), floated right on wide screens. */
   control?: React.ReactNode;
+  /** The tab's export/print buttons, in the same right-hand cluster as the control. */
+  actions?: React.ReactNode;
 }) {
   const tab = reportTabBySlug(slug);
   if (!tab) return null;
 
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div>
+    // `no-print` keeps the whole heading (title, description, controls, export/print
+    // buttons) off the printed page — the print layout supplies its own header block.
+    <div className="no-print flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
         <h2 className="text-lg font-semibold tracking-tight" data-testid="report-title">
           {tab.title}
         </h2>
@@ -35,7 +40,15 @@ export function ReportTabHeader({
           </p>
         )}
       </div>
-      {control && <div className="shrink-0">{control}</div>}
+      {(control || actions) && (
+        // No `shrink-0`: a shrink-0 flex-wrap cluster takes its max-content width (year
+        // selector + export + print ≈ 400px) and never wraps, overflowing 360px. Letting
+        // it shrink lets the controls wrap within the viewport (as source-performance does).
+        <div className="flex flex-wrap items-center gap-3">
+          {control}
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

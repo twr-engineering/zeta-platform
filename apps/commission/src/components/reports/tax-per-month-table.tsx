@@ -27,7 +27,7 @@ export function TaxPerMonthTable({ report }: { report: TaxPerMonthReport }) {
 
   return (
     <section data-testid="tax-per-month" className="space-y-4">
-      <div className="hidden overflow-x-auto rounded-xl border sm:block">
+      <div className="hidden overflow-x-auto rounded-xl border sm:block print:block">
         <table className="w-full text-sm">
           <thead className="bg-muted/60 text-xs text-muted-foreground">
             <tr>
@@ -95,8 +95,8 @@ export function TaxPerMonthTable({ report }: { report: TaxPerMonthReport }) {
         </table>
       </div>
 
-      {/* mobile cards */}
-      <ul className="space-y-2 sm:hidden" data-testid="tax-cards">
+      {/* mobile cards — never printed (the desktop table is the hand-off layout) */}
+      <ul className="space-y-2 sm:hidden print:hidden" data-testid="tax-cards">
         <li className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
           <p className="mb-1">
             <strong className="text-foreground">Output VAT</strong> — {VAT_MEANING.split(" — ")[1]}

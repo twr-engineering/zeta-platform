@@ -4,6 +4,7 @@ import { VINTAGE_MATRIX_CAPTION } from "@/lib/reports";
 import { ReportTabHeader } from "@/components/reports/report-tab-header";
 import { ReportEmptyState } from "@/components/reports/report-empty-state";
 import { MatrixValueToggle } from "@/components/reports/matrix-value-toggle";
+import { ReportExport } from "@/components/reports/report-export";
 import { VintageMatrixTable } from "@/components/reports/vintage-matrix-table";
 
 /**
@@ -31,6 +32,14 @@ export default async function VintageMatrixPage({
         slug="vintage-matrix"
         caption={VINTAGE_MATRIX_CAPTION}
         control={<MatrixValueToggle value={value} />}
+        actions={
+          <ReportExport
+            dataset="vintage-matrix"
+            label="Vintage Matrix"
+            value={value}
+            disabled={empty}
+          />
+        }
       />
       {empty ? <ReportEmptyState /> : <VintageMatrixTable matrix={matrix} />}
     </div>

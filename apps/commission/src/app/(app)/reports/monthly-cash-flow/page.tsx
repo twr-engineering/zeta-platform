@@ -4,6 +4,7 @@ import { manilaYear } from "@/lib/date/manila";
 import { ReportTabHeader } from "@/components/reports/report-tab-header";
 import { ReportEmptyState } from "@/components/reports/report-empty-state";
 import { ReportYearSelector } from "@/components/reports/report-year-selector";
+import { ReportExport } from "@/components/reports/report-export";
 import { MonthlyCashFlowTable } from "@/components/reports/monthly-cash-flow-table";
 
 /**
@@ -33,6 +34,14 @@ export default async function MonthlyCashFlowPage({
           !empty && (
             <ReportYearSelector slug="monthly-cash-flow" selected={String(year)} years={years} />
           )
+        }
+        actions={
+          <ReportExport
+            dataset="monthly-cash-flow"
+            label="Monthly Cash Flow"
+            year={year}
+            disabled={empty}
+          />
         }
       />
       {empty ? <ReportEmptyState /> : <MonthlyCashFlowTable report={report} />}

@@ -58,6 +58,25 @@ import { buildAging, buildByDeveloper, buildChase } from "@/lib/dashboard/sectio
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { listPayments, getWorkspaceRates, type PaymentRow } from "@/lib/payments/queries";
 import { isStaleBasis } from "@/lib/payments/stale";
+import {
+  getCashPerYear,
+  getMonthlyCashFlow,
+  getTaxPerMonth,
+  getBookingYearSummary,
+  getVintageMatrix,
+} from "@/lib/reports/queries";
+import {
+  cashPerYearToRows,
+  CASH_PER_YEAR_COLUMNS,
+  monthlyCashFlowToRows,
+  MONTHLY_CASH_FLOW_COLUMNS,
+  taxPerMonthToRows,
+  TAX_PER_MONTH_COLUMNS,
+  bookingYearSummaryToRows,
+  BOOKING_YEAR_SUMMARY_COLUMNS,
+  vintageMatrixToDataset,
+} from "@/lib/reports/export-rows";
+import type { MatrixValue } from "@/lib/reports";
 import type { ExportColumn, ExportDataset } from "./format";
 import type {
   AuditLogEntry,
@@ -376,6 +395,13 @@ export const EXPORT_DATASETS = [
   "yield-summary",
   "calculator-plan",
   "source-performance",
+  // M8 Collection Reports (FR-M8-10) — five read-only report exports. Reports 3 & 4
+  // read `year`; the vintage matrix reads `matrixValue`; 1/2/5 are all-time.
+  "cash-per-year",
+  "vintage-matrix",
+  "monthly-cash-flow",
+  "tax-per-month",
+  "booking-year-summary",
 ] as const;
 
 export type ExportDatasetName = (typeof EXPORT_DATASETS)[number];
@@ -419,6 +445,10 @@ export type DealExportFilters = {
    * list export to one source. The source-performance export reads `year` as its own
    * booking-year filter ("all" when absent). */
   source?: string;
+  /** M8 vintage-matrix value toggle (FR-M8-04/10): the export reads the active view so
+   * the download ties to the on-screen toggle and the filename labels it. Reports 3 & 4
+   * read `year` (their selected-year filter); the matrix reads this. Default net_of_vat. */
+  matrixValue?: MatrixValue;
 };
 
 export async function loadExportDataset(
@@ -708,6 +738,49 @@ export async function loadExportDataset(
         columns: SOURCE_PERFORMANCE_COLUMNS,
         rows: sourcePerformanceToRows(report),
       });
+    }
+    // --- M8 Collection Reports (FR-M8-10) -----------------------------------
+    // Each reads the SAME server query the screen renders, then flattens to export
+    // rows including the TOTAL — so the download ties to the on-screen table to the
+    // centavo (AC10). The active year/toggle rides in the dataset name → filename.
+    case "cash-per-year":
+      return dataset({
+        name: "cash-per-year",
+        sheet: "Cash per Year",
+        columns: CASH_PER_YEAR_COLUMNS,
+        rows: cashPerYearToRows(await getCashPerYear()),
+      });
+    case "monthly-cash-flow": {
+      const year = filters.year ?? manilaYear();
+      return dataset({
+        name: `monthly-cash-flow-${year}`,
+        sheet: "Monthly Cash Flow",
+        columns: MONTHLY_CASH_FLOW_COLUMNS,
+        rows: monthlyCashFlowToRows(await getMonthlyCashFlow(year)),
+      });
+    }
+    case "tax-per-month": {
+      const year = filters.year ?? manilaYear();
+      return dataset({
+        name: `tax-per-month-${year}`,
+        sheet: "Tax per Month",
+        columns: TAX_PER_MONTH_COLUMNS,
+        rows: taxPerMonthToRows(await getTaxPerMonth(year)),
+      });
+    }
+    case "booking-year-summary":
+      return dataset({
+        name: "booking-year-summary",
+        sheet: "Booking-Year Summary",
+        columns: BOOKING_YEAR_SUMMARY_COLUMNS,
+        rows: bookingYearSummaryToRows(await getBookingYearSummary()),
+      });
+    case "vintage-matrix": {
+      // The one report whose columns are data (booking years) — its dataset is built
+      // dynamically. The active toggle value labels the filename (FR-M8-04/10). A
+      // dangling reference makes getVintageMatrix throw → the route answers 500.
+      const value: MatrixValue = filters.matrixValue ?? "net_of_vat";
+      return vintageMatrixToDataset(await getVintageMatrix(value), `vintage-matrix-${value}`);
     }
   }
 }

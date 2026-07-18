@@ -19,7 +19,8 @@
   "perf:dashboard": "node --import ./tests/alias-hooks.mjs scripts/perf-dashboard.ts",
     "perf:yield": "node --import ./tests/alias-hooks.mjs scripts/perf-yield.ts",
     "perf:plan-ytd": "node --import ./tests/alias-hooks.mjs scripts/perf-plan-ytd.ts",
-    "perf:source-performance": "node --import ./tests/alias-hooks.mjs scripts/perf-source-performance.ts"
+    "perf:source-performance": "node --import ./tests/alias-hooks.mjs scripts/perf-source-performance.ts",
+    "perf:reports": "node --import ./tests/alias-hooks.mjs scripts/perf-reports.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
