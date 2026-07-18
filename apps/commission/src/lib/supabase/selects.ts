@@ -175,6 +175,26 @@ export const ANNUAL_TARGET_OVERRIDE_SELECT = [
 ].join(",");
 
 /**
+ * yield_aggregate (M2 §3.5) — the materialized yield read model. The four sum
+ * columns are numeric(14,2), so each is selected `::text` (the override in
+ * @/types/database types them `string`). NEVER `select("*")` here — it would hand
+ * back volume_sum/gci_sum as floats and break the ₱-to-the-centavo tie the
+ * reconciliation asserts. `deal_count` is a true integer and `booked_year`/segment
+ * round-trip exactly, so they need no cast.
+ */
+export const YIELD_AGGREGATE_SELECT = [
+  "workspace_id",
+  "segment",
+  "booked_year",
+  "deal_count",
+  "volume_sum::text",
+  "gci_sum::text",
+  "incentive_net_sum::text",
+  "referral_out_sum::text",
+  "updated_at",
+].join(",");
+
+/**
  * payment_event (§3.4) — the append-only event log. No `numeric` column: the money
  * lives inside old_values/new_values (jsonb the write path filled with ::text
  * strings via app.payment_snapshot), so `*` is safe — the exact decimal never

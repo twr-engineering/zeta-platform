@@ -8,6 +8,7 @@ import { TAX_SETTINGS_SELECT } from "@/lib/supabase/selects";
 import { ROUTES } from "@/lib/routes";
 import { dealTypeToEngine, dealDerivedDbFields } from "@/lib/deals/map";
 import { consumeReceivableEvents } from "@/lib/receivables/consume";
+import { consumeYieldEvents } from "@/lib/yield/consume";
 import type { RecomputeProgress, RecomputeStatus } from "./recompute";
 
 /**
@@ -191,6 +192,14 @@ async function revalidateRestated(): Promise<void> {
     await consumeReceivableEvents();
   } catch (error) {
     console.error("receivable sync after recompute failed:", error);
+  }
+  // M2.2 — a bulk recompute (e.g. an EWT rate change) moves NET GCI on many deals,
+  // so the yield gci_sum cells restate too. Drain M2's cursor over the same
+  // deal.updated events; best-effort, the cursor heals any miss.
+  try {
+    await consumeYieldEvents();
+  } catch (error) {
+    console.error("yield-aggregate sync after recompute failed:", error);
   }
   revalidatePath(ROUTES.deals);
   revalidatePath(ROUTES.collectibles);

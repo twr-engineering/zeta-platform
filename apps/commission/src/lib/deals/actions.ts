@@ -16,6 +16,7 @@ import { parseDeal, type DealInput, type RawDeal } from "./schema";
 import { computeDealWarnings } from "./deal-warnings";
 import { dealPaymentCount, findPossibleDuplicates, resolveDealRefs } from "./queries";
 import { consumeReceivableEvents } from "@/lib/receivables/consume";
+import { consumeYieldEvents } from "@/lib/yield/consume";
 
 type DealClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -32,6 +33,15 @@ async function syncReceivables(): Promise<void> {
     await consumeReceivableEvents();
   } catch (error) {
     console.error("receivable sync after deal mutation failed:", error);
+  }
+  // M2.2 — restate the materialized yield aggregates from the same deal event(s),
+  // through M2's own cursor. Independent best-effort: the receivable projection and
+  // the yield read model are separate consumers, and each cursor heals any miss on
+  // the next call, so a transient yield-sync error must not fail a saved deal.
+  try {
+    await consumeYieldEvents();
+  } catch (error) {
+    console.error("yield-aggregate sync after deal mutation failed:", error);
   }
 }
 

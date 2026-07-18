@@ -213,6 +213,28 @@ type AnnualTargetOverrideOverride = Omit<AnnualTargetOverrideTable, "Row"> & {
   Row: WithMoneyStrings<AnnualTargetOverrideTable["Row"], "amount">;
 };
 
+// --- yield_aggregate (M2 §3.5) ----------------------------------------------
+
+type YieldAggregateTable = GeneratedTables["yield_aggregate"];
+
+/**
+ * The four sum columns are numeric(14,2) — JSON floats unless the read casts
+ * `::text` (see @/lib/supabase/selects YIELD_AGGREGATE_SELECT). The table is
+ * written exclusively by the SECURITY INVOKER consumer (consume_yield_events via
+ * app.recompute_yield_cell), never through the client, so only the Row is re-typed;
+ * `deal_count` is a true integer and stays a number. M2.3 reads these rows for the
+ * PlanningBasis API; M2.4 for the report table.
+ */
+type YieldAggregateMoneyColumns =
+  | "volume_sum"
+  | "gci_sum"
+  | "incentive_net_sum"
+  | "referral_out_sum";
+
+type YieldAggregateOverride = Omit<YieldAggregateTable, "Row"> & {
+  Row: WithMoneyStrings<YieldAggregateTable["Row"], YieldAggregateMoneyColumns>;
+};
+
 // --- Functions --------------------------------------------------------------
 
 type GeneratedFunctions = PublicSchema["Functions"];
@@ -375,6 +397,7 @@ export type Database = Omit<Generated, "public"> & {
       | "receivable"
       | "payment"
       | "annual_target_override"
+      | "yield_aggregate"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
@@ -383,6 +406,7 @@ export type Database = Omit<Generated, "public"> & {
       receivable: ReceivableOverride;
       payment: PaymentOverride;
       annual_target_override: AnnualTargetOverrideOverride;
+      yield_aggregate: YieldAggregateOverride;
     };
     Functions: Omit<
       GeneratedFunctions,

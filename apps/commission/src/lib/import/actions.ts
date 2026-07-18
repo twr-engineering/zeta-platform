@@ -10,6 +10,7 @@ import {
   consumeReceivableEvents,
   consumeReceivablePaymentEvents,
 } from "@/lib/receivables/consume";
+import { consumeYieldEvents } from "@/lib/yield/consume";
 import { ROUTES } from "@/lib/routes";
 import type { ActionState } from "@/lib/forms/action-state";
 import type { Json } from "@/types/database";
@@ -193,6 +194,10 @@ export async function runImport(
   // consumer set balance = total_collectible − 0 for every row; this restates the
   // paid ones. The cursor started at zero, so this is the first drain of these events.
   await consumeReceivablePaymentEvents().catch(() => {});
+  // M2.2 — drain the deal events the import emitted (21 deals) into the materialized
+  // yield aggregates, so the Yield Summary read model is populated the moment the
+  // workbook lands. M2's own cursor started at zero; this is its first drain.
+  await consumeYieldEvents().catch(() => {});
 
   revalidatePath(ROUTES.deals);
   revalidatePath(ROUTES.collectibles);

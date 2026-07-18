@@ -33,14 +33,14 @@ export type YearFilter = number | "all";
 // --- money/ratio helpers (same discipline as dashboard/sections.ts) ----------
 
 /** Full-precision sum of a money accessor over rows, rounded to centavos once. */
-function sumMoney<T>(rows: readonly T[], get: (row: T) => string): string {
+export function sumMoney<T>(rows: readonly T[], get: (row: T) => string): string {
   return rows
     .reduce<MoneyValue>((acc, row) => acc.plus(toMoney(get(row))), ZERO)
     .toFixed(2);
 }
 
 /** a ÷ b as a 6-dp rate string (display precision), or null when b = 0 ("—"). */
-function displayRatio(a: string, b: string): string | null {
+export function displayRatio(a: string, b: string): string | null {
   const denom = toMoney(b);
   if (denom.isZero()) return null;
   return toMoney(a).dividedBy(denom).toFixed(6);
@@ -50,7 +50,7 @@ function displayRatio(a: string, b: string): string | null {
  * a ÷ b at FULL decimal precision (28 sig figs), or null when b = 0. Used ONLY for
  * the planning basis M3 consumes — NEVER display-rounded (Rule 7 / §3.4 identity).
  */
-function fullPrecisionRatio(a: string, b: string): string | null {
+export function fullPrecisionRatio(a: string, b: string): string | null {
   const denom = toMoney(b);
   if (denom.isZero()) return null;
   return toMoney(a).dividedBy(denom).toString();
@@ -59,7 +59,7 @@ function fullPrecisionRatio(a: string, b: string): string | null {
 // --- per-segment sub-totals --------------------------------------------------
 
 /** deals / volume / gci for one bucket of deals (stored-value sums, Rule 8). */
-type SegmentTotals = { deals: number; volume: string; gci: string };
+export type SegmentTotals = { deals: number; volume: string; gci: string };
 
 function totalsOf(deals: readonly YieldDeal[]): SegmentTotals {
   return {
@@ -69,7 +69,8 @@ function totalsOf(deals: readonly YieldDeal[]): SegmentTotals {
   };
 }
 
-function addTotals(a: SegmentTotals, b: SegmentTotals): SegmentTotals {
+/** Sum two SegmentTotals component-wise (Rule 8: 2-dp inputs → exact 2-dp). */
+export function addTotals(a: SegmentTotals, b: SegmentTotals): SegmentTotals {
   return {
     deals: a.deals + b.deals,
     volume: toMoney(a.volume).plus(toMoney(b.volume)).toFixed(2),
@@ -127,40 +128,36 @@ export type YieldSummaryReport = {
 };
 
 /** avg price = volume ÷ deals as a 2-dp string, or null when deals = 0 ("—"). */
-function avgPrice(totals: SegmentTotals): string | null {
+export function avgPrice(totals: SegmentTotals): string | null {
   if (totals.deals === 0) return null;
   return toMoney(totals.volume).dividedBy(totals.deals).toFixed(2);
 }
 
+/** The four per-segment sub-totals a report is assembled from (SALES = R+D). */
+export type SegmentTotalsBySegment = {
+  resale: SegmentTotals;
+  developer: SegmentTotals;
+  rental: SegmentTotals;
+  referral: SegmentTotals;
+};
+
 /**
- * Build the five-segment Yield Summary report for a year filter (PRD §3.3).
- *
- * `yearFilter = "all"` drops the year predicate; a number keeps only that booked
- * year. Archived deals are excluded first (PRD Rule 10). Every empty population
- * renders as zeros / null em-dashes — never a division error (PRD Rule 5).
+ * Assemble the five-segment report shape (PRD §3.3) from already-computed per-segment
+ * sub-totals + the segment-agnostic memos. The SINGLE home of the report's rows,
+ * ratios and footer — `buildYieldReport` (over raw deals) and the materialized-cell
+ * reducer (`reportFromAggregates`) both call it, so the two can never diverge in
+ * rounding or shape. `unclassified` is a passthrough: raw deals know it (Rule 9);
+ * the aggregate substrate does not and passes [].
  */
-export function buildYieldReport(
-  deals: readonly YieldDeal[],
-  yearFilter: YearFilter
+export function assembleReport(
+  yearFilter: YearFilter,
+  totals: SegmentTotalsBySegment,
+  memoIncentives: string,
+  memoReferralOuts: string,
+  unclassified: string[]
 ): YieldSummaryReport {
-  const active = deals.filter((d) => d.archived_at === null);
-  const inYear = active.filter(
-    (d) => yearFilter === "all" || d.booked_year === yearFilter
-  );
-
-  const bySegment = (seg: Segment) =>
-    inYear.filter((d) => classifySegment(d) === seg);
-
-  const resaleDeals = bySegment("resale");
-  const developerDeals = bySegment("developer");
-  const rentalDeals = bySegment("rental");
-  const referralDeals = bySegment("referral");
-
-  const resale = totalsOf(resaleDeals);
-  const developer = totalsOf(developerDeals);
+  const { resale, developer, rental, referral } = totals;
   const sales = addTotals(resale, developer);
-  const rental = totalsOf(rentalDeals);
-  const referral = totalsOf(referralDeals);
 
   // Share of sales is volume-based, against the SALES SUBTOTAL volume (Rule 12).
   const share = (t: SegmentTotals) => displayRatio(t.volume, sales.volume);
@@ -194,17 +191,48 @@ export function buildYieldReport(
       .plus(toMoney(rental.gci))
       .plus(toMoney(referral.gci))
       .toFixed(2),
-    // Memos are segment-agnostic — the whole-column SUM, year-filtered only (Rule 11).
-    memoIncentives: sumMoney(inYear, (d) => d.incentive_net),
-    memoReferralOuts: toMoney(sumMoney(inYear, (d) => d.referral_out))
-      .negated()
-      .toFixed(2),
+    memoIncentives,
+    memoReferralOuts,
     resaleAvgPrice: avgPrice(resale),
     developerAvgPrice: avgPrice(developer),
     blendedAvgPrice: avgPrice(sales),
     rentalAnnualGci: rental.gci,
-    unclassified: unclassifiedDealCodes(active),
+    unclassified,
   };
+}
+
+/**
+ * Build the five-segment Yield Summary report for a year filter (PRD §3.3).
+ *
+ * `yearFilter = "all"` drops the year predicate; a number keeps only that booked
+ * year. Archived deals are excluded first (PRD Rule 10). Every empty population
+ * renders as zeros / null em-dashes — never a division error (PRD Rule 5).
+ */
+export function buildYieldReport(
+  deals: readonly YieldDeal[],
+  yearFilter: YearFilter
+): YieldSummaryReport {
+  const active = deals.filter((d) => d.archived_at === null);
+  const inYear = active.filter(
+    (d) => yearFilter === "all" || d.booked_year === yearFilter
+  );
+
+  const bySegment = (seg: Segment) =>
+    totalsOf(inYear.filter((d) => classifySegment(d) === seg));
+
+  return assembleReport(
+    yearFilter,
+    {
+      resale: bySegment("resale"),
+      developer: bySegment("developer"),
+      rental: bySegment("rental"),
+      referral: bySegment("referral"),
+    },
+    // Memos are segment-agnostic — the whole-column SUM, year-filtered only (Rule 11).
+    sumMoney(inYear, (d) => d.incentive_net),
+    toMoney(sumMoney(inYear, (d) => d.referral_out)).negated().toFixed(2),
+    unclassifiedDealCodes(active)
+  );
 }
 
 // --- planning basis (the M3 feed) --------------------------------------------

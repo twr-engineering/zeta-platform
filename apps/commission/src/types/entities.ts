@@ -49,6 +49,11 @@ export type PaymentEventType = Enums<"payment_event_type">;
 // override layer in ./database — see ANNUAL_TARGET_OVERRIDE_SELECT.
 export type AnnualTargetOverride = Tables<"annual_target_override">;
 
+// M2 §3.5. One materialized yield row per (workspace, segment, booked_year). The
+// money-safe Row (the four sum columns re-typed string) comes from the override
+// layer in ./database — see YIELD_AGGREGATE_SELECT.
+export type YieldAggregate = Tables<"yield_aggregate">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;

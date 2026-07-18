@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-18T18:20:00+08:00 (M2.1 — segment classifier & aggregation core)
+# Last Updated: 2026-07-18T20:40:00+08:00 (M2.2 — materialized aggregates & event-driven restatement)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -31,7 +31,7 @@
 - [x] M6.3: Aging, receivables by developer, Data Health
 - [x] M6.4: Chase list + inline Next Action + performance hardening  ← M6 COMPLETE — MVP CUT COMPLETE
 - [x] M2.1: Segment classifier & aggregation functions
-- [ ] M2.2: Materialized aggregates & event-driven restatement
+- [x] M2.2: Materialized aggregates & event-driven restatement
 - [ ] M2.3: PlanningBasis API for M3
 - [ ] M2.4: Yield Summary screen & polish
 - [ ] M3.1: Planning engine library
@@ -58,6 +58,90 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M2.2 COMPLETE — Materialized aggregates & event-driven restatement.
+The persistence substrate for the Yield Summary (M2.3 API / M2.4 screen read it):
+ONE additive migration applied live + registered (20260718100000_m22_yield_aggregate).
+
+DELTA vs RE-AGGREGATION DECISION (the deliberate call the brief asked for): PRD §3.5
+says "−old/+new", but M4.2 faced the identical choice for collected/balance and chose
+ABSOLUTE re-aggregation over deltas for idempotency. M2.2 makes the SAME call, for the
+SAME reason — RE-AGGREGATION PER AFFECTED CELL. On each deal event the consumer reads
+the OLD (segment,year) from old_values + the NEW from new_values and RECOMPUTES each
+affected cell from scratch over the live deal table (archived excluded). Idempotent +
+replay-safe BY CONSTRUCTION: a re-drain at head is a no-op; replaying from cursor 0
+recomputes every cell from CURRENT deals → identical state, never doubled (a running
+−old/+new delta double-applies on any replay unless first zeroed — the exact trap M4.2
+documented). A move (Resale→Developer, 2026→2027, classified→unclassified) cleans the
+old cell + fills the new one with no partial-delta bookkeeping.
+
+OBJECTS (migration): public.yield_aggregate (workspace_id, segment, booked_year → PK;
+deal_count + volume/gci/incentive/referral sums numeric(14,2); sparse — zero-deal cells
+DELETED not stored; segment CHECK 4 real segments; SALES SUBTOTAL is derived R+D, never
+stored; RLS member select/insert/update/DELETE for the SECURITY INVOKER consumer). M2's
+OWN cursor public.yield_event_cursor over deal_event (distinct from M4's — each consumer
+keeps its own high-water mark, m1_2). public.yield_basis_version (per-workspace monotonic
+bigint + computed_at, §3.4 — bumped ONLY when a Sales-segment cell's values change; M3's
+cache-coherence token). app.deal_segment(txn,type,repr)→text — the SQL MIRROR of
+classifySegment (token-for-token: referrer→referral first, then rental, then sale by
+type; NULL=Rule 9 unclassified), the ONE SQL home of membership. app.recompute_yield_cell
+(workspace,segment,year)→bool — absolute per-cell rebuild from live deals (upsert or
+delete-when-empty); returns true iff a SALES cell's values changed (the basis bump
+signal). public.consume_yield_events(p_limit) — the drain (mirrors consume_deal_events
+structurally): per event recompute new+old cells, bump basis_version once per drain if
+any sales cell moved. public.reconcile_yield_aggregate() — FR-M2-10 on-demand drift
+check: full-outer-join a raw-deal GROUP BY to the materialized rows, return every
+divergence (wrong sum / stale cell / missing cell) + the Rule 9 unclassified codes +
+basis_version; read-only (a cursor reset + re-drain is the repair).
+
+APP LAYER (src/lib/yield/): consume.ts consumeYieldEvents() (server-only drain loop,
+mirrors receivables/consume.ts) wired SYNCHRONOUSLY after the existing receivable
+consumer at the SAME three seams M4 used — deals/actions.ts syncReceivables,
+settings/recompute-runner.ts revalidateRestated, import/actions.ts — each best-effort
+(try/catch; the cursor heals any miss, a transient yield-sync error never fails a saved
+deal; ≤2s met trivially — synchronous drain measured 356–393ms for the whole workbook).
+materialized.ts — the PURE reducer from cells back to the report/planning numbers
+(reportFromAggregates / planningBasisFromAggregates), built on a SHARED assembler
+extracted from aggregate.ts (assembleReport) so the materialized path and buildYieldReport
+can NEVER diverge in rounding/shape. queries.ts — loadYieldAggregates / getYieldBasisVersion
+/ reconcileYieldAggregate (typed server read/reconcile paths, RLS-scoped, money ::text).
+TYPES: YIELD_AGGREGATE_SELECT (::text money) + database.ts YieldAggregateOverride +
+entities.ts YieldAggregate; regen additive (app.* fns not in public types, only the two
+public RPCs). NO UI, NO M2.3 API — those are the NEXT milestones (this is the substrate).
+
+MEMOS from the aggregate are the segment-agnostic sum over the 4 segment cells in the
+year (Rule 11) — ties to the pure memo when the partition is clean (the fixtures); an
+unclassified deal's incentive/referral is a Rule 9 data error surfaced separately by
+reconcile, deliberately NOT folded into a cell. reportFromAggregates passes unclassified=[]
+(the aggregate excludes unclassified by construction; the Rule 9 codes come from reconcile).
+
+VERIFIED (scripts/live-m22-check.mts, throwaway workspaces, real JWTs — ALL PASSED, 60+
+checks): import→drain→ every §9 value reconstructed FROM the materialized cells to the
+centavo (Resale 7/55,251,000.00/2,687,550.00/4.8643%/34.6878%; Developer 10/104,029,945.00/
+3,800,947.25/3.6537%; SUBTOTAL 17/159,280,945.00/6,488,497.25/4.0736%; Rental 4/8.3333%;
+Referral empty; TOTAL all-ops 6,688,497.25; memos 357,142.87 / (75,000.00); avgs
+7,893,000.00/10,402,994.50/9,369,467.35; PlanningBasis full-precision yield 0.04073618… /
+price 9,369,467.3529… / identity yield×price = 381,676.31). ZERO DRIFT asserted at EVERY
+stage three ways: materialized report == buildYieldReport(raw) AND materialized basis ==
+buildPlanningBasis(raw) AND the SQL reconcile RPC (drift_count 0, unclassified []).
+Archive D021→drain (393ms ≤2s)→ SUBTOTAL 16/151,280,945.00/6,133,905.41/4.0546% /
+AllTimePrice 9,455,059.06 + basis_version 1→2; restore→ criterion-1 exactly (−old/+new
+reversibility). Create→edit(10M→20M, gci_sum 2,687,550→3,687,550)→archive→delete synthetic
+resale each restated the right cell + zero drift. Idempotent re-drain (processed 0, cells
+identical). Replay from cursor 0 (reset + clear + re-drain)→ cell VALUES identical. 60
+random archive/restore mutations → zero drift throughout, reversible back to criterion-1.
+AC9: tenant B sees 0 of A's cells, B's drain processed 0, B reconcile clean, A intact.
+test:unit 356/356 (+7 materialized parity — reportFromAggregates∘cellsFromDeals ===
+buildYieldReport, archive-D021, 2027-year, Referrer, empty); build:check + lint clean;
+full e2e green on clean reseed (additive-only runtime: the yield consumer is best-effort
+after the existing consumers, no existing flow changed — /yield-summary still a placeholder).
+Delta-residue ZERO (0 m22 users, 0 yield_aggregate rows across all workspaces; real
+account untouched). API handed to M2.3 in pipeline-state m2_2Handoff.
+NEXT: M2.3 (PlanningBasis API for M3 — read loadYieldAggregates + getYieldBasisVersion,
+serialize {all_time_yield/price/deals/volume/gci, basis_version, computed_at} full-precision,
+< 50ms P95 cached-invalidated-by-basis_version; the reducers planningBasisFromAggregates
+already produce the numbers).
+
+--- prior ---
 **M2.1 COMPLETE — Segment classifier & aggregation functions (pure core).
 Fast-follow M2 (Yield Summary) begun. PURE library only: src/lib/yield/ (segments.ts
 classifier + YieldDeal type + Rule 9 partition invariant; aggregate.ts buildYieldReport

@@ -1147,6 +1147,105 @@ export type Database = {
         }
         Relationships: []
       }
+      yield_aggregate: {
+        Row: {
+          booked_year: number
+          deal_count: number
+          gci_sum: number
+          incentive_net_sum: number
+          referral_out_sum: number
+          segment: string
+          updated_at: string
+          volume_sum: number
+          workspace_id: string
+        }
+        Insert: {
+          booked_year: number
+          deal_count?: number
+          gci_sum?: number
+          incentive_net_sum?: number
+          referral_out_sum?: number
+          segment: string
+          updated_at?: string
+          volume_sum?: number
+          workspace_id: string
+        }
+        Update: {
+          booked_year?: number
+          deal_count?: number
+          gci_sum?: number
+          incentive_net_sum?: number
+          referral_out_sum?: number
+          segment?: string
+          updated_at?: string
+          volume_sum?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yield_aggregate_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      yield_basis_version: {
+        Row: {
+          basis_version: number
+          computed_at: string
+          workspace_id: string
+        }
+        Insert: {
+          basis_version?: number
+          computed_at?: string
+          workspace_id: string
+        }
+        Update: {
+          basis_version?: number
+          computed_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yield_basis_version_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      yield_event_cursor: {
+        Row: {
+          last_event_id: string | null
+          last_occurred_at: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          last_event_id?: string | null
+          last_occurred_at?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "yield_event_cursor_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1176,6 +1275,7 @@ export type Database = {
       complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
       consume_deal_events: { Args: { p_limit?: number }; Returns: Json }
       consume_payment_events: { Args: { p_limit?: number }; Returns: Json }
+      consume_yield_events: { Args: { p_limit?: number }; Returns: Json }
       count_affected_deals: {
         Args: { p_entity_id: string; p_entity_type: string; p_fields: string[] }
         Returns: number
@@ -1292,6 +1392,7 @@ export type Database = {
         Args: { p_job_id: string; p_limit: number }
         Returns: Json
       }
+      reconcile_yield_aggregate: { Args: never; Returns: Json }
       reference_count:
         | {
             Args: { "": Database["public"]["Tables"]["developer"]["Row"] }

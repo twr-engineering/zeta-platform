@@ -18,9 +18,17 @@ export {
 export {
   buildPlanningBasis,
   buildYieldReport,
+  assembleReport,
   type PlanningBasis,
   type ReportRowKey,
   type SegmentRow,
+  type SegmentTotals,
+  type SegmentTotalsBySegment,
   type YearFilter,
   type YieldSummaryReport,
 } from "./aggregate";
+export {
+  planningBasisFromAggregates,
+  reportFromAggregates,
+  type YieldAggregateCell,
+} from "./materialized";
