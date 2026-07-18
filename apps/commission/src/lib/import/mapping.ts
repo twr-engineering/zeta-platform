@@ -22,6 +22,29 @@ export const SHEETS = {
   dealLog: "Deal Log",
   payments: "Payments Log",
   collectibles: "Collectibles",
+  gciCalculator: "GCI Calculator",
+} as const;
+
+/**
+ * GCI Calculator TARGETS table (WORKBOOK §10 — named range TargetTable = B42:G48,
+ * one row per year 2026–2032) + the two cells the importer reconciles the derived
+ * goal against: PlanYear (D4) and the cached working GCI goal (F8 = ROUNDUP(E8, −4)).
+ * Cols: B year, C Net Income Target, D Opex %, E CoS %, F Yield override, G Avg Price
+ * override. Blank/0 in D–G (and C) maps to null (rule 10).
+ */
+export const TARGET_TABLE = {
+  firstRow: 42,
+  lastRow: 48,
+  cols: {
+    year: "B",
+    net_income_target: "C",
+    opex_pct: "D",
+    cos_pct: "E",
+    yield_override: "F",
+    avg_price_override: "G",
+  },
+  planYearCell: "D4",
+  workingGoalCell: "F8",
 } as const;
 
 /** Header row (row 5) + first data row (row 6) — shared by the three list sheets. */

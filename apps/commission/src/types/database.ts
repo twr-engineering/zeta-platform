@@ -235,6 +235,52 @@ type YieldAggregateOverride = Omit<YieldAggregateTable, "Row"> & {
   Row: WithMoneyStrings<YieldAggregateTable["Row"], YieldAggregateMoneyColumns>;
 };
 
+// --- plan_year_target (M3 §3.1) ---------------------------------------------
+
+type PlanYearTargetTable = GeneratedTables["plan_year_target"];
+
+/**
+ * All five money/rate columns are nullable numeric — JSON floats unless the read
+ * casts `::text` (see @/lib/supabase/selects PLAN_YEAR_TARGET_SELECT). NULL is a
+ * real state here (use-default / use-all-time / year-not-plannable), so each maps to
+ * `string | null`, never a float. Written exclusively by the SECURITY INVOKER RPCs
+ * (upsert/delete_plan_year_target) and the importer, never inserted through the
+ * client, so only the Row is re-typed.
+ */
+type PlanYearTargetMoneyColumns =
+  | "net_income_target"
+  | "opex_pct"
+  | "cos_pct"
+  | "yield_override"
+  | "avg_price_override";
+
+type PlanYearTargetOverride = Omit<PlanYearTargetTable, "Row"> & {
+  Row: Omit<PlanYearTargetTable["Row"], PlanYearTargetMoneyColumns> &
+    Record<PlanYearTargetMoneyColumns, string | null>;
+};
+
+// --- funnel_rates (M3 §3.2) -------------------------------------------------
+
+type FunnelRatesTable = GeneratedTables["funnel_rates"];
+
+/**
+ * The seven conversion rates are numeric(6,4) NOT NULL — JSON floats unless the read
+ * casts `::text` (see @/lib/supabase/selects FUNNEL_RATES_SELECT). Written only by the
+ * SECURITY INVOKER RPCs (get_or_seed/update_funnel_rates), so only the Row is re-typed.
+ */
+type FunnelRatesRateColumns =
+  | "listing_to_sold"
+  | "listing_appointment_rate"
+  | "seller_contact_to_appt"
+  | "seller_lead_to_contact"
+  | "buyer_viewing_to_atp"
+  | "buyer_contact_to_viewing"
+  | "buyer_lead_to_contact";
+
+type FunnelRatesOverride = Omit<FunnelRatesTable, "Row"> & {
+  Row: WithMoneyStrings<FunnelRatesTable["Row"], FunnelRatesRateColumns>;
+};
+
 // --- Functions --------------------------------------------------------------
 
 type GeneratedFunctions = PublicSchema["Functions"];
@@ -384,6 +430,43 @@ type SetAnnualTargetOverrideOverride = Omit<SetAnnualTargetOverrideFn, "Args"> &
   };
 };
 
+/**
+ * upsert_plan_year_target (M3.2). The five money/rate args are numeric — PostgREST
+ * casts a JSON *string* straight to numeric, so they are strings ("11500000.00",
+ * "0.22"), never floats; null is a real value (clear the field → use default /
+ * all-time / not-plannable). p_year (integer) round-trips exactly.
+ */
+type UpsertPlanYearTargetFn = GeneratedFunctions["upsert_plan_year_target"];
+type UpsertPlanYearTargetMoneyArgs =
+  | "p_net_income_target"
+  | "p_opex_pct"
+  | "p_cos_pct"
+  | "p_yield_override"
+  | "p_avg_price_override";
+type UpsertPlanYearTargetOverride = Omit<UpsertPlanYearTargetFn, "Args"> & {
+  Args: Omit<UpsertPlanYearTargetFn["Args"], UpsertPlanYearTargetMoneyArgs> &
+    Record<UpsertPlanYearTargetMoneyArgs, string | null>;
+};
+
+/**
+ * update_funnel_rates (M3.2). All seven rate args are numeric — strings on the wire
+ * ("0.25", "0.70"), never floats. All required. delete_plan_year_target (p_year only)
+ * and get_or_seed_funnel_rates (no args) need no override.
+ */
+type UpdateFunnelRatesFn = GeneratedFunctions["update_funnel_rates"];
+type UpdateFunnelRatesRateArgs =
+  | "p_listing_to_sold"
+  | "p_listing_appointment_rate"
+  | "p_seller_contact_to_appt"
+  | "p_seller_lead_to_contact"
+  | "p_buyer_viewing_to_atp"
+  | "p_buyer_contact_to_viewing"
+  | "p_buyer_lead_to_contact";
+type UpdateFunnelRatesOverride = Omit<UpdateFunnelRatesFn, "Args"> & {
+  Args: Omit<UpdateFunnelRatesFn["Args"], UpdateFunnelRatesRateArgs> &
+    Record<UpdateFunnelRatesRateArgs, string>;
+};
+
 // --- the money-safe Database ------------------------------------------------
 
 export type Database = Omit<Generated, "public"> & {
@@ -398,6 +481,8 @@ export type Database = Omit<Generated, "public"> & {
       | "payment"
       | "annual_target_override"
       | "yield_aggregate"
+      | "plan_year_target"
+      | "funnel_rates"
     > & {
       tax_settings: TaxSettingsOverride;
       audit_log_entry: AuditOverride;
@@ -407,6 +492,8 @@ export type Database = Omit<Generated, "public"> & {
       payment: PaymentOverride;
       annual_target_override: AnnualTargetOverrideOverride;
       yield_aggregate: YieldAggregateOverride;
+      plan_year_target: PlanYearTargetOverride;
+      funnel_rates: FunnelRatesOverride;
     };
     Functions: Omit<
       GeneratedFunctions,
@@ -418,6 +505,8 @@ export type Database = Omit<Generated, "public"> & {
       | "create_payment"
       | "update_payment"
       | "set_annual_target_override"
+      | "upsert_plan_year_target"
+      | "update_funnel_rates"
     > & {
       update_tax_settings: UpdateTaxSettingsOverride;
       create_deal: CreateDealOverride;
@@ -427,6 +516,8 @@ export type Database = Omit<Generated, "public"> & {
       create_payment: CreatePaymentOverride;
       update_payment: UpdatePaymentOverride;
       set_annual_target_override: SetAnnualTargetOverrideOverride;
+      upsert_plan_year_target: UpsertPlanYearTargetOverride;
+      update_funnel_rates: UpdateFunnelRatesOverride;
     };
   };
 };

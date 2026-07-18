@@ -1,8 +1,15 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
-import { ANNUAL_TARGET_OVERRIDE_SELECT } from "@/lib/supabase/selects";
-import type { AnnualTargetOverride } from "@/types/entities";
+import {
+  ANNUAL_TARGET_OVERRIDE_SELECT,
+  PLAN_YEAR_TARGET_SELECT,
+} from "@/lib/supabase/selects";
+import { getWorkspaceContext } from "@/lib/workspace/queries";
+import { planYearTargetToTargetTableRow } from "@/lib/planning";
+import type { AnnualTargetOverride, PlanYearTarget } from "@/types/entities";
 import type { TargetTableRow } from "./target";
 
 /**
@@ -30,21 +37,63 @@ export async function getAnnualTargetOverride(
 }
 
 /**
- * M3 TARGETTABLE SEAM (M6_Milestones "manual-override-only first"). M3's Targets
- * module lands AFTER M6 in the build order, so its per-year TargetTable does not
- * exist yet (grep: no target table anywhere in the schema, confirmed at M6.1). Until
- * M3.2, the derived annual target is unavailable and this returns null — Section 2
- * shows "—" for a year with no override, exactly per §4 rule 9 (no error). The whole
- * derivation math (deriveAnnualTarget in ./target) is already correct and unit-
- * pinned against the v30.20 goal (16,920,000 from NIT 11.5M / 22% / 10%); M3.2's
- * ONLY change is to make this function return that real row for the year.
+ * M3.2 — the cache tag for a workspace's planning targets. Every PlanYearTarget
+ * write (upsert/delete/import) invalidates it so Section 2's derived target reflects
+ * the change on the next dashboard read (§8: "cacheable with invalidation on any
+ * PlanYearTarget write"). One tag per workspace — invalidating one agent's targets
+ * must never touch another's.
+ */
+export function planningTargetsTag(workspaceId: string): string {
+  return `planning-targets:${workspaceId}`;
+}
+
+/**
+ * THE M6 TARGETTABLE FEED (FR-M3-11 / M3.2). For a plan year, the three inputs Rule
+ * P3+P4 needs — NIT + opex/cos — as a TargetTableRow, or null when the year has no
+ * PlanYearTarget row OR its NIT is unset (rule 9, not plannable). M6's getAnnualTarget
+ * layers the manual override on top, and deriveAnnualTarget turns this row into the
+ * working GCI goal (16,920,000 for the 2026 workbook target) — the SAME code the
+ * calculator runs, so M6 never re-implements the formula (m6_1Handoff seam resolved).
  *
- * See [[m6_1Handoff]]. When M3.2 lands, replace the body with a read of M3's
- * TargetTable (year, net_income_target, opex_pct, cos_pct) mapped to TargetTableRow.
+ * CACHED per (workspace, year), invalidated by planningTargetsTag on any target write
+ * (§8). TENANT ISOLATION UNDER A CACHE (see @/lib/settings/cache): a cache HIT does
+ * NOT consult RLS, so `workspaceId` — which comes ONLY from the authenticated
+ * getWorkspaceContext, never user input — is the isolation boundary. The Supabase
+ * client is built OUTSIDE the cached closure (cookies() is unusable inside one, and a
+ * MISS then still reads through RLS with the caller's own token).
  */
 export async function getTargetTableRow(
   year: number
 ): Promise<TargetTableRow | null> {
-  void year; // M3.2 will read the TargetTable row for `year`; until then there is none.
-  return null;
+  const context = await getWorkspaceContext();
+  if (!context) return null;
+  const workspaceId = context.workspace.id;
+
+  const supabase = await createClient();
+
+  const load = unstable_cache(
+    async (): Promise<TargetTableRow | null> => {
+      const { data, error } = await supabase
+        .from("plan_year_target")
+        .select(PLAN_YEAR_TARGET_SELECT)
+        .eq("year", year)
+        .maybeSingle<PlanYearTarget>();
+
+      // Never cache a transient failure as "no target": a blip would blank Section 2
+      // for the revalidate window. Throw so the caller decides.
+      if (error) {
+        throw new Error(`Could not read the planning target: ${error.message}`);
+      }
+
+      return data ? planYearTargetToTargetTableRow(data) : null;
+    },
+    ["planning-target-row", workspaceId, String(year)],
+    {
+      tags: [planningTargetsTag(workspaceId)],
+      // Backstop only. Correctness comes from invalidatePlanningTargets() on write.
+      revalidate: 300,
+    }
+  );
+
+  return load();
 }

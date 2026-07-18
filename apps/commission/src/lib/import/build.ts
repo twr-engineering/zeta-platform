@@ -18,9 +18,15 @@ import type {
   PayloadDealDerived,
   PayloadOverlay,
   PayloadPayment,
+  PayloadTarget,
   RawWorkbook,
 } from "./types";
-import { reconcileDeal, reconcileOverlay, reconcilePayment } from "./reconcile";
+import {
+  reconcileDeal,
+  reconcileOverlay,
+  reconcilePayment,
+  reconcileTargets,
+} from "./reconcile";
 
 /**
  * M1.4 — turn a parsed workbook into the engine-computed, reconciled ImportPlan.
@@ -199,6 +205,19 @@ export function buildImportPlan(
     });
   }
 
+  // --- Targets: the GCI Calculator TARGETS table → PlanYearTarget rows (M3.2).
+  // Passed through verbatim (blank/0 already mapped to null at parse); the plan
+  // year's derived working goal is reconciled against the sheet's F8 cache so a
+  // planning drift is reported, not imported (2026 → 16,920,000).
+  const payloadTargets: PayloadTarget[] = workbook.planning.targets;
+  mismatches.push(
+    ...reconcileTargets(
+      workbook.planning.planYear,
+      workbook.planning.targets,
+      workbook.planning.workingGoalCache
+    )
+  );
+
   // --- Anchors (Master PRD §9), summed at full precision, rounded once.
   const totalCollectible = sum(
     payloadOverlays.map((o) => {
@@ -232,6 +251,7 @@ export function buildImportPlan(
     deals: payloadDeals,
     overlays: payloadOverlays,
     payments: payloadPayments,
+    targets: payloadTargets,
     anchors,
   };
 
@@ -244,6 +264,7 @@ export function buildImportPlan(
     lead_sources: workbook.settings.lead_sources.length,
     closed_statuses: closedStatuses,
     next_deal_code: `D${String(maxSuffix + 1).padStart(3, "0")}`,
+    targets: payloadTargets.length,
   };
 
   return { payload, counts, anchors, mismatches, headerChecks: workbook.headerChecks, notices };

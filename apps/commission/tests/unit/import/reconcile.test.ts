@@ -5,10 +5,12 @@ import {
   reconcileDeal,
   reconcileOverlay,
   reconcilePayment,
+  reconcileTargets,
 } from "@/lib/import/reconcile";
 import type {
   CachedDealFigures,
   ParsedOverlay,
+  ParsedTarget,
   PayloadDealDerived,
   PayloadPaymentSplit,
 } from "@/lib/import/types";
@@ -105,4 +107,51 @@ test("reconcileOverlay: Total Collectible + Booked NET GCI vs the Collectibles c
   const mismatch = reconcileOverlay(overlay, "999999.00", "800000.00");
   assert.equal(mismatch.length, 1);
   assert.equal(mismatch[0].field, "total_collectible");
+});
+
+// --- M3.2 targets leg: the plan year's derived working goal vs the F8 cache -------
+
+const TARGETS_2026: ParsedTarget[] = [
+  {
+    year: 2026,
+    net_income_target: "11500000",
+    opex_pct: "0.22",
+    cos_pct: "0.1",
+    yield_override: null,
+    avg_price_override: null,
+  },
+  // 2027 staged but not plannable (blank NIT, rule 9).
+  {
+    year: 2027,
+    net_income_target: null,
+    opex_pct: null,
+    cos_pct: null,
+    yield_override: null,
+    avg_price_override: null,
+  },
+];
+
+test("reconcileTargets: 2026 derived working goal ties to the F8 cache 16,920,000 → no mismatch", () => {
+  assert.deepEqual(reconcileTargets(2026, TARGETS_2026, "16920000"), []);
+});
+
+test("reconcileTargets: a tampered F8 cache over ₱0.01 is reported (working_gci_goal)", () => {
+  const out = reconcileTargets(2026, TARGETS_2026, "16930000");
+  assert.equal(out.length, 1);
+  assert.equal(out[0].scope, "target");
+  assert.equal(out[0].field, "working_gci_goal");
+  assert.equal(out[0].expected, "16920000.00");
+  assert.equal(out[0].actual, "16930000");
+});
+
+test("reconcileTargets: a lost F8 cache (null) is skipped, not a mismatch", () => {
+  assert.deepEqual(reconcileTargets(2026, TARGETS_2026, null), []);
+});
+
+test("reconcileTargets: a not-plannable plan year (null NIT) has no derived goal → skipped", () => {
+  assert.deepEqual(reconcileTargets(2027, TARGETS_2026, "0"), []);
+});
+
+test("reconcileTargets: no plan year → skipped", () => {
+  assert.deepEqual(reconcileTargets(null, TARGETS_2026, "16920000"), []);
 });

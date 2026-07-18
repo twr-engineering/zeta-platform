@@ -203,6 +203,52 @@ export const YIELD_AGGREGATE_SELECT = [
 export const PAYMENT_EVENT_SELECT = "*";
 
 /**
+ * plan_year_target (M3 §3.1) — the per-year planning inputs. The Net Income Target,
+ * two cost fractions, and two optional overrides are numeric, so each is selected
+ * `::text` (the override in @/types/database types them `string | null`; NULL is a
+ * real "use default / all-time / not-plannable" state, preserved by the cast). NEVER
+ * `select("*")` here — it would return the rates as floats and break the ₱-exact
+ * derivation the engine feeds M6 (16,920,000 to the centavo).
+ */
+export const PLAN_YEAR_TARGET_SELECT = [
+  "id",
+  "workspace_id",
+  "year",
+  "net_income_target::text",
+  "opex_pct::text",
+  "cos_pct::text",
+  "yield_override::text",
+  "avg_price_override::text",
+  "created_at",
+  "updated_at",
+  "created_by",
+  "updated_by",
+].join(",");
+
+/**
+ * funnel_rates (M3 §3.2) — the seven global conversion rates. Each is numeric(6,4),
+ * so selected `::text` (the override types them `string`). The engine divides upward
+ * by these as exact decimals, so a float from `select("*")` would drift the funnel
+ * counts. `year` (NULL = global) round-trips exactly.
+ */
+export const FUNNEL_RATES_SELECT = [
+  "id",
+  "workspace_id",
+  "year",
+  "listing_to_sold::text",
+  "listing_appointment_rate::text",
+  "seller_contact_to_appt::text",
+  "seller_lead_to_contact::text",
+  "buyer_viewing_to_atp::text",
+  "buyer_contact_to_viewing::text",
+  "buyer_lead_to_contact::text",
+  "created_at",
+  "updated_at",
+  "created_by",
+  "updated_by",
+].join(",");
+
+/**
  * deal_event (FR-M1-08) — the append-only event log. No `numeric` column: the
  * money lives inside old_values/new_values (jsonb the write path filled with
  * ::text strings via app.deal_snapshot), so `*` is safe for the same reason it

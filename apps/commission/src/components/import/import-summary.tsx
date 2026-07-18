@@ -82,6 +82,7 @@ export function ImportSummary({ plan }: { plan: ImportPlan }) {
           <Stat label="Developers" value={counts.developers} />
           <Stat label="Lead sources" value={counts.lead_sources} />
           <Stat label="Collectible states" value={counts.overlays} />
+          <Stat label="Planning-year targets" value={counts.targets} />
         </div>
       </section>
 

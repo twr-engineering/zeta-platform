@@ -35,7 +35,7 @@
 - [x] M2.3: PlanningBasis API for M3
 - [x] M2.4: Yield Summary screen & polish  ← M2 COMPLETE
 - [x] M3.1: Planning engine library
-- [ ] M3.2: Targets & rates persistence + M6 feed
+- [x] M3.2: Targets & rates persistence + M6 feed
 - [ ] M3.3: Planning screen
 - [ ] M3.4: Pace vs actual + hardening
 - [ ] M7.1: Aggregation service + fixture parity
@@ -58,6 +58,97 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M3.2 COMPLETE — Targets & rates persistence + the M6 feed. Two hosted, additive
+migrations applied live via the Management API + registered:
+20260718110000_m32_targets_rates (plan_year_target + funnel_rates tables, RLS, CHECKs
+mirroring §3.1/§3.2 validation, write RPCs) and 20260718110100_m32_import_targets_leg
+(CREATE OR REPLACE run_workbook_import + one additive leg). test:unit 409/409 (+10:
+planning/map 5, import/reconcile-targets 5); build:check + lint clean; live-m32-check
+ALL PASSED on the REAL v30.20 import (throwaway workspaces, delta-residue zero); full
+e2e on a clean reseed = 97 passed / 0 failed / 1 flaky (dashboard Section 7 Data Health,
+the documented cold-`next dev` compile timeout — green on retry, untouched by M3.2),
+including the UPDATED dashboard Section-2 spec (was "—", now the derived ₱16,920,000
+after import → override → clear → back to derived; dated comment in the spec).
+
+SCHEMA (§3.1/§3.2). public.plan_year_target — one row per (workspace, year): NIT
+numeric(14,2) nullable (null = year not plannable, rule 9), opex_pct/cos_pct
+numeric(6,4) nullable (null → 0.22/0.10 default, Rule P1), yield_override numeric(9,8) /
+avg_price_override numeric(14,2) nullable (null → all-time basis, Rule P5). CHECKs mirror
+§3.1 (NIT>0, opex/cos [0,1), yield (0,1), price>0); unique(workspace_id, year). RATES
+STORED AS EXACT DECIMALS (0.22, never 22, never float); every column selected ::text
+(PLAN_YEAR_TARGET_SELECT). public.funnel_rates — one row per workspace, seven rates
+numeric(6,4) each CHECK ∈ (0,1]; `year` column NULLABLE and RESERVED for the OQ-5 per-year
+upgrade (v1 GLOBAL = the year-IS-NULL row); a PARTIAL unique index (workspace_id) WHERE
+year IS NULL guarantees one global row (a plain UNIQUE would allow duplicate NULLs).
+
+WRITE PATH (one DB fn per mutation, SECURITY INVOKER, audit in-tx — m0_2 pattern).
+upsert_plan_year_target (per-field validation → typed reasons; the cross-field Rule P2
+"opex_eff + cos_eff < 1" is checked on EFFECTIVE values so AC5 opex 60%+cos 40% is
+refused as net_income_pct_nonpositive; audits create-on-first-set else update old→new),
+delete_plan_year_target (audited 'archive'), update_funnel_rates (each rate ∈ (0,1] or
+typed rate_out_of_range+field; seeds defaults first so the audit has a baseline; audits
+old→new), get_or_seed_funnel_rates (LAZY seed of the workbook defaults 25/70/30/20 /
+30/70/10 on first read — covers pre-migration workspaces; seeding a default is NOT
+audited). Server actions src/lib/planning/actions.ts are ConfirmGate-gated
+(checkConfirmation mode 'checked', rule 14 — target/rate edits restate the dashboard pace
+line) and map typed reasons → messages (AC5 verbatim "Opex % + Cost of Sales % must total
+less than 100%"). Rates arrive as DECIMALS ("0.25", not "22%") — M3.3's form converts.
+
+M6 FEED (FR-M3-11 — the m6_1Handoff seam RESOLVED). src/lib/dashboard/target-queries.ts
+getTargetTableRow no longer returns null: it reads the per-year plan_year_target row,
+maps it via planYearTargetToTargetTableRow (null when NIT is null → rule 9 "—"), and is
+CACHED per (workspace, year) via unstable_cache tagged planningTargetsTag(workspaceId),
+invalidated on every target write (§8). Tenant isolation under the cache = workspaceId
+from getWorkspaceContext ONLY (never user input), client built OUTSIDE the closure so a
+miss still reads through RLS (the @/lib/settings/cache doctrine). deriveAnnualTarget is
+UNCHANGED — M6 Section 2 now shows the DERIVED ₱16,920,000 for the 2026 workbook target,
+override still winning when set (M6.2 provenance logic untouched), clear → back to derived
+(not "—"). ZERO UI change in M6 — the section re-renders from the now-non-null value.
+Pure mappers src/lib/planning/map.ts (planYearTargetToInput for computePlan; the feed row)
+exported from @/lib/planning; queries.ts adds getPlanYearTarget/listPlanYearTargets/
+getFunnelRates for M3.3/M3.4.
+
+IMPORTER LEG (rule 10 / AC11). parse.ts parsePlanning reads the GCI Calculator TARGETS
+table (§10 named range B42:G48, rows 2026–2032) + PlanYear (D4) + the F8 working-goal
+cache; blank OR 0 → null (rule 10). build.ts reconciles the PLAN YEAR's derived working
+goal against F8 via reconcileTargets (deriveAnnualTarget = the M3 engine → 16,920,000 ties
+to the centavo; a drift is REPORTED + the import refused). run_workbook_import gained ONE
+additive leg (leg 8): inserts the 7 plan_year_target rows (2026 filled 11,500,000/0.22/
+0.10; 2027–2032 staged null-NIT per AC11), audited 'create', + seeds the global
+funnel_rates defaults (the sheet's rate cells EQUAL the seeded 25/70/30/20 / 30/70/10, so
+seeding == importing them; OQ-5 keeps them global). Idempotency/empty-workspace guards +
+every existing leg reproduced VERBATIM (CREATE OR REPLACE, same jsonb signature); summary
+gains targets_created; the wizard shows a "Planning-year targets" stat. NOTE: the importer
+does NOT parse the sheet's individual rate cells (their addresses are not in §10 and they
+equal the defaults) — it seeds the defaults; if a future workbook carries customised rates
+this would need a rate-cell parse leg (flagged, low risk for v30.20).
+
+AUDIT/TYPES. entity types plan_year_target/funnel_rates + labels added to
+AUDIT_ENTITY_TYPES/LABELS + the audit-viewer FIELD_LABELS (year/NIT/opex/cos/overrides +
+the 7 rates). database.ts money-safe overrides: plan_year_target Row (5 cols string|null),
+funnel_rates Row (7 rates string), upsert/update RPC arg overrides (string/string|null);
+entities.ts PlanYearTarget + FunnelRatesRow (Row alias renamed to avoid colliding with the
+engine's FunnelRates input type). Types regenerated via the Management API types endpoint
+(unwrap the {"types":...} JSON envelope — DO NOT `open('w')` before json.load in one expr,
+it truncates the file first).
+
+VERIFIED. scripts/live-m32-check.mts (node --import ./tests/alias-hooks.mjs): real v30.20
+import → 7 targets_created, 2026 row EXACT (11,500,000.00/0.2200/0.1000, yield&price null),
+2027 staged null-NIT; M6 feed derives 16,920,000.00; override 15,000,000 wins → clear →
+back to derived 16,920,000 (not "—"); funnel rates seeded to defaults + re-seed after
+delete; upsert audit create→update old→new + immediate read reflects (DB cache coherence;
+the Next unstable_cache invalidation is the dashboard-e2e's job); negative NIT / opex+cos≥1
+refused as typed reasons + the row never persists; AC6 rate 0.20→0.25 audited; rate 0 / >1
+refused, r=1 accepted (boundary); AC9 tenant B reads 0 of A's targets/rates + its own seed
+never touches A. Delta-residue ZERO (0 throwaway users, 0 orphan workspaces, 0
+plan_year_target/funnel_rates rows after cleanup; real account juliusbaliling25 untouched).
+
+NEXT: M3.3 (Planning screen over computePlan + these records — getPlanYearTarget/
+listPlanYearTargets/getFunnelRates + the upsert/delete/updateFunnelRates actions;
+percent↔decimal conversion is the FORM's job) then M3.4 (pace vs actual, supplies
+PlanYtdAggregate). See m3_2Handoff in pipeline-state.**
+
+--- prior: M3.1 ---
 **M3.1 COMPLETE — Planning engine library. PURE library only: src/lib/planning/
 (economics.ts + engine.ts + index.ts). NO UI, NO persistence, NO migration — those
 are M3.2–M3.4. Only runtime touched is a behaviour-preserving refactor of

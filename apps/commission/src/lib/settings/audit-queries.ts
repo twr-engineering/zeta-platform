@@ -32,6 +32,8 @@ export const AUDIT_ENTITY_TYPES = [
   "workspace",
   "profile",
   "account",
+  "plan_year_target",
+  "funnel_rates",
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
@@ -49,6 +51,9 @@ export const AUDIT_ENTITY_LABELS: Record<AuditEntityType, string> = {
   // auth-level events grouped under "Account".
   profile: "Account",
   account: "Account",
+  // M3.2 planning records.
+  plan_year_target: "Planning Targets",
+  funnel_rates: "Funnel Rates",
 };
 
 export type AuditFilters = {

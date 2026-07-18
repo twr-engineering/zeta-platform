@@ -1,8 +1,10 @@
 import { Money, withinTolerance } from "@/lib/money";
+import { deriveAnnualTarget } from "@/lib/planning";
 import type {
   CachedDealFigures,
   Mismatch,
   ParsedOverlay,
+  ParsedTarget,
   PayloadDealDerived,
   PayloadPaymentSplit,
   CachedPaymentSplit,
@@ -130,4 +132,40 @@ export function reconcileOverlay(
   if (bookedMismatch) out.push(bookedMismatch);
 
   return out;
+}
+
+/**
+ * The GCI Calculator's cached working GCI goal (F8) vs the goal RE-DERIVED from the
+ * plan year's TARGETS row via deriveAnnualTarget — the SAME M3 engine code M6's
+ * Section-2 feed runs. For 2026 the sheet's F8 is 16,920,000 and the derivation
+ * (11,500,000 ÷ 0.68, rounded up to ₱10,000) reproduces it to the centavo. A
+ * disagreement means the importer would seed a plan whose target differs from the
+ * workbook the agent trusts — reported, not imported (FR-M1-10). Skipped when there
+ * is no plan year, the F8 cache was lost, or the plan year is not plannable.
+ */
+export function reconcileTargets(
+  planYear: number | null,
+  targets: ParsedTarget[],
+  workingGoalCache: string | null
+): Mismatch[] {
+  if (planYear === null || workingGoalCache === null) return [];
+
+  const row = targets.find((t) => t.year === planYear);
+  if (!row || row.net_income_target === null) return [];
+
+  const derived = deriveAnnualTarget({
+    netIncomeTarget: row.net_income_target,
+    opexPct: row.opex_pct,
+    cosPct: row.cos_pct,
+  });
+  if (derived === null) return [];
+
+  const m = moneyMismatch(
+    "target",
+    `Year ${planYear}`,
+    "working_gci_goal",
+    derived,
+    workingGoalCache
+  );
+  return m ? [m] : [];
 }

@@ -39,3 +39,7 @@ export {
   roundUp10k,
   type TargetTableRow,
 } from "./economics";
+export {
+  planYearTargetToInput,
+  planYearTargetToTargetTableRow,
+} from "./map";

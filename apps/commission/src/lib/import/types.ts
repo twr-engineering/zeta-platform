@@ -124,6 +124,37 @@ export type ParsedOverlay = {
   cached_booked_net_gci?: string;
 };
 
+// --- GCI Calculator TARGETS table (M3.2 planning leg) -----------------------
+
+/**
+ * One parsed row of the GCI Calculator TARGETS table (WORKBOOK §10). Blank OR 0 in
+ * any of the five value cells maps to null (rule 10): a blank NIT year is staged but
+ * "not plannable"; a blank opex/cos/yield/price means "use default / all-time". Only
+ * 2026 is filled in v30.20 (NIT 11,500,000 / opex 0.22 / cos 0.10).
+ */
+export type ParsedTarget = {
+  year: number;
+  net_income_target: string | null;
+  opex_pct: string | null;
+  cos_pct: string | null;
+  yield_override: string | null;
+  avg_price_override: string | null;
+};
+
+/**
+ * The GCI Calculator planning block: the per-year TARGETS rows plus the two cells the
+ * importer reconciles the recomputed working goal against — PlanYear (D4) and the
+ * cached working GCI goal (F8). Either cache cell may be absent if the export dropped
+ * it (then reconciliation for the plan year is skipped with a notice).
+ */
+export type ParsedPlanning = {
+  targets: ParsedTarget[];
+  /** The active planning year (D4), or null when the cell is blank/non-numeric. */
+  planYear: number | null;
+  /** Cached working GCI goal F8 = ROUNDUP(raw, −4), for reconciliation; null if lost. */
+  workingGoalCache: string | null;
+};
+
 // --- The whole parsed workbook + the header mapping report ------------------
 
 /** One column's header-text check (v30.13+ layout validation). */
@@ -140,13 +171,14 @@ export type RawWorkbook = {
   deals: ParsedDeal[];
   payments: ParsedPayment[];
   overlays: ParsedOverlay[];
+  planning: ParsedPlanning;
   headerChecks: HeaderCheck[];
 };
 
 // --- Reconciliation ---------------------------------------------------------
 
 export type Mismatch = {
-  scope: "deal" | "payment" | "overlay";
+  scope: "deal" | "payment" | "overlay" | "target";
   code: string;
   field: string;
   expected: string; // engine-recomputed
@@ -226,6 +258,9 @@ export type PayloadOverlay = {
   legacy_note_missing: boolean;
 };
 
+/** One plan_year_target row to create (M3.2 leg) — the parsed TARGETS row verbatim. */
+export type PayloadTarget = ParsedTarget;
+
 /** The reconciled anchor totals — the Master PRD §9 acceptance figures. */
 export type ImportAnchors = {
   /** Σ Total Collectible = ₱6,763,497.25 (to the centavo). */
@@ -253,6 +288,7 @@ export type ImportPayload = {
   deals: PayloadDeal[];
   overlays: PayloadOverlay[];
   payments: PayloadPayment[];
+  targets: PayloadTarget[];
   anchors: ImportAnchors;
 };
 
@@ -267,6 +303,8 @@ export type ImportSummaryCounts = {
   lead_sources: number;
   closed_statuses: number;
   next_deal_code: string;
+  /** M3.2 leg — PlanYearTarget rows created (2026–2032 in v30.20). */
+  targets: number;
 };
 
 export type ImportPlan = {

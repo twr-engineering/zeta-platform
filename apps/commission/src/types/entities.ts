@@ -54,6 +54,19 @@ export type AnnualTargetOverride = Tables<"annual_target_override">;
 // layer in ./database — see YIELD_AGGREGATE_SELECT.
 export type YieldAggregate = Tables<"yield_aggregate">;
 
+// M3 §3.1. One planning-target row per (workspace, year): NIT + opex/cos + optional
+// yield/avg-price overrides. The money-safe Row (the five numeric columns re-typed
+// `string | null`) comes from the override layer in ./database — see
+// PLAN_YEAR_TARGET_SELECT. NULL fields carry the use-default / all-time / not-
+// plannable state (§3.1). The engine consumes this as PlanYearTargetInput.
+export type PlanYearTarget = Tables<"plan_year_target">;
+
+// M3 §3.2. The seven global conversion rates (one row per workspace; year NULL =
+// global). Named FunnelRatesRow so it does not collide with the engine's FunnelRates
+// input type (@/lib/planning). The money-safe Row (rates re-typed `string`) comes
+// from the override layer in ./database — see FUNNEL_RATES_SELECT.
+export type FunnelRatesRow = Tables<"funnel_rates">;
+
 export type MembershipRole = Enums<"membership_role">;
 export type AuditAction = Enums<"audit_action">;
 export type PropertyVatRule = Enums<"property_vat_rule">;

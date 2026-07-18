@@ -340,4 +340,18 @@ const FIELD_LABELS: Record<string, string> = {
   next_action_note: "Next Action",
   // M5.1 payment events — the full field set lives in the payments label module.
   ...PAYMENT_FIELD_LABELS,
+  // M3.2 planning targets + funnel rates.
+  year: "Year",
+  net_income_target: "Net Income Target",
+  opex_pct: "Operating Expenses %",
+  cos_pct: "Cost of Sales %",
+  yield_override: "Yield override",
+  avg_price_override: "Avg Price override",
+  listing_to_sold: "Listing → Sold",
+  listing_appointment_rate: "Listing Appointment rate",
+  seller_contact_to_appt: "Seller Contact → Appointment",
+  seller_lead_to_contact: "Seller Lead → Contact",
+  buyer_viewing_to_atp: "Buyer Viewing → ATP",
+  buyer_contact_to_viewing: "Buyer Contact → Viewing",
+  buyer_lead_to_contact: "Buyer Lead → Contact",
 };

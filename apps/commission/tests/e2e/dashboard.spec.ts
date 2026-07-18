@@ -455,19 +455,26 @@ test("Section 8 — 360px chase-first: jump link, card stack, thumb-edit a note,
   expect(errors, `console errors: ${errors.join("\n")}`).toEqual([]);
 });
 
-test("Section 2 — '—' with no target, then override 15,000,000 lights it up (AC2/AC3)", async ({
+// Updated: M3.2 landed the TargetTable feed, so an imported workspace's Section 2 now
+// shows the DERIVED ₱16,920,000 (11,500,000 ÷ 0.68, rounded up) instead of "—" — the
+// override still wins on top, and clearing reverts to the derived value, not "—".
+// [2026-07-18]
+test("Section 2 — derived ₱16,920,000 from the imported target, override wins, clear reverts to derived (AC2/AC3, FR-M3-11)", async ({
   page,
 }) => {
   test.skip(!HAVE_WORKBOOK, "real workbook not present");
   await signIn(page, email);
   await page.goto("/dashboard");
 
-  // No TargetTable row + no override → target "—" (rule 9, no error).
-  await expect(page.getByTestId("target-annual-value")).toHaveText("—");
-  await expect(page.getByTestId("tile-pct-of-target-value")).toHaveText("—");
+  // M3.2: the workbook import created the 2026 PlanYearTarget row, so the M6 feed
+  // derives the working GCI goal ₱16,920,000 (no override, no badge, derived provenance).
+  await expect(page.getByTestId("target-annual-value")).toHaveText("₱ 16,920,000.00");
   await expect(page.getByTestId("target-override-badge")).toHaveCount(0);
+  await expect(page.getByTestId("target-provenance")).toContainText("Derived from your 2026 planning targets");
+  // 1,908,192.86 collected ÷ 16,920,000 derived target = 11.28%.
+  await expect(page.getByTestId("tile-pct-of-target-value")).toHaveText("11.28%");
 
-  // Set the override behind the friction gate (checkbox + optional note).
+  // Set the override behind the friction gate (checkbox + optional note) → override wins.
   await page.getByTestId("target-override-edit").click();
   await expect(page.getByTestId("target-override-gate")).toBeVisible();
   await page.getByTestId("override-amount-input").fill("15000000");
@@ -475,20 +482,21 @@ test("Section 2 — '—' with no target, then override 15,000,000 lights it up 
   await page.getByTestId("target-override-gate-checkbox").click();
   await page.getByTestId("target-override-gate-confirm").click();
 
-  // Restated: target, override badge, provenance, % and the ahead/behind line.
+  // Restated: override target, badge, % and the ahead/behind line.
   await expect(page.getByTestId("target-annual-value")).toHaveText("₱ 15,000,000.00");
   await expect(page.getByTestId("target-override-badge")).toBeVisible();
   await expect(page.getByTestId("tile-pct-of-target-value")).toHaveText("12.72%");
   await expect(page.getByTestId("pace-line")).toHaveAttribute("data-pace", "behind");
   await expect(page.getByTestId("pace-bar")).toBeVisible();
 
-  // Clear the override → reverts to the derived "—".
+  // Clear the override → reverts to the DERIVED ₱16,920,000 (M3.2 — not "—").
   await page.getByTestId("target-override-clear").click();
   await expect(page.getByTestId("target-clear-gate")).toBeVisible();
   await page.getByTestId("target-clear-gate-checkbox").click();
   await page.getByTestId("target-clear-gate-confirm").click();
-  await expect(page.getByTestId("target-annual-value")).toHaveText("—");
+  await expect(page.getByTestId("target-annual-value")).toHaveText("₱ 16,920,000.00");
   await expect(page.getByTestId("target-override-badge")).toHaveCount(0);
+  await expect(page.getByTestId("tile-pct-of-target-value")).toHaveText("11.28%");
 });
 
 test("year filter restates Sections 2/6 ONLY — Section 1/3 byte-identical (AC13)", async ({

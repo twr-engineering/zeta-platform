@@ -396,6 +396,65 @@ export type Database = {
           },
         ]
       }
+      funnel_rates: {
+        Row: {
+          buyer_contact_to_viewing: number
+          buyer_lead_to_contact: number
+          buyer_viewing_to_atp: number
+          created_at: string
+          created_by: string | null
+          id: string
+          listing_appointment_rate: number
+          listing_to_sold: number
+          seller_contact_to_appt: number
+          seller_lead_to_contact: number
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+          year: number | null
+        }
+        Insert: {
+          buyer_contact_to_viewing: number
+          buyer_lead_to_contact: number
+          buyer_viewing_to_atp: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          listing_appointment_rate: number
+          listing_to_sold: number
+          seller_contact_to_appt: number
+          seller_lead_to_contact: number
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+          year?: number | null
+        }
+        Update: {
+          buyer_contact_to_viewing?: number
+          buyer_lead_to_contact?: number
+          buyer_viewing_to_atp?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          listing_appointment_rate?: number
+          listing_to_sold?: number
+          seller_contact_to_appt?: number
+          seller_lead_to_contact?: number
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_rates_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_batch: {
         Row: {
           created_at: string
@@ -664,6 +723,59 @@ export type Database = {
           },
           {
             foreignKeyName: "payment_event_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_year_target: {
+        Row: {
+          avg_price_override: number | null
+          cos_pct: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          net_income_target: number | null
+          opex_pct: number | null
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+          year: number
+          yield_override: number | null
+        }
+        Insert: {
+          avg_price_override?: number | null
+          cos_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          net_income_target?: number | null
+          opex_pct?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+          year: number
+          yield_override?: number | null
+        }
+        Update: {
+          avg_price_override?: number | null
+          cos_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          net_income_target?: number | null
+          opex_pct?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+          year?: number
+          yield_override?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_year_target_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
@@ -1360,11 +1472,13 @@ export type Database = {
         Args: { p_expected_version: number; p_id: string }
         Returns: Json
       }
+      delete_plan_year_target: { Args: { p_year: number }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
       fail_recompute_job: {
         Args: { p_error: string; p_job_id: string }
         Returns: Json
       }
+      get_or_seed_funnel_rates: { Args: never; Returns: Json }
       import_receivable_overlay: {
         Args: {
           p_confirmed: number
@@ -1506,6 +1620,18 @@ export type Database = {
         }
         Returns: Json
       }
+      update_funnel_rates: {
+        Args: {
+          p_buyer_contact_to_viewing: number
+          p_buyer_lead_to_contact: number
+          p_buyer_viewing_to_atp: number
+          p_listing_appointment_rate: number
+          p_listing_to_sold: number
+          p_seller_contact_to_appt: number
+          p_seller_lead_to_contact: number
+        }
+        Returns: Json
+      }
       update_lead_source: {
         Args: { p_id: string; p_name: string }
         Returns: Json
@@ -1548,6 +1674,17 @@ export type Database = {
           p_property_vat_threshold?: number
           p_vat_rate?: number
           p_vat_registered?: boolean
+        }
+        Returns: Json
+      }
+      upsert_plan_year_target: {
+        Args: {
+          p_avg_price_override: number
+          p_cos_pct: number
+          p_net_income_target: number
+          p_opex_pct: number
+          p_year: number
+          p_yield_override: number
         }
         Returns: Json
       }

@@ -2,13 +2,16 @@ import ExcelJS from "exceljs";
 import type { Workbook, Worksheet } from "exceljs";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 
+import { toMoney } from "@/lib/money";
 import type {
   CachedDealFigures,
   HeaderCheck,
   ParsedDeal,
   ParsedOverlay,
   ParsedPayment,
+  ParsedPlanning,
   ParsedSettings,
+  ParsedTarget,
   RawWorkbook,
 } from "./types";
 import {
@@ -19,6 +22,7 @@ import {
   PAYMENT_COLUMNS,
   SETTINGS_LABELS,
   SHEETS,
+  TARGET_TABLE,
   headerMatches,
   toCommBase,
   toCommissionBasis,
@@ -384,6 +388,55 @@ function parseOverlays(wb: Workbook, deals: ParsedDeal[]): ParsedOverlay[] {
   });
 }
 
+// --- GCI Calculator TARGETS table (M3.2 planning leg) -----------------------
+
+/**
+ * A TARGETS-table value cell as an exact decimal string, mapping BLANK or 0 to null
+ * (rule 10 — the sheet's "blank or 0 = use default / all-time / not plannable"). Only
+ * 2026's cells are filled in v30.20 (NIT 11,500,000 / opex 0.22 / cos 0.10).
+ */
+function blankOrZeroToNull(ws: Worksheet, addr: string): string | null {
+  const v = cellNumberString(ws, addr);
+  if (v === null) return null;
+  return toMoney(v).isZero() ? null : v;
+}
+
+/**
+ * Parse the GCI Calculator TARGETS table (§10) + the two reconciliation cells. The
+ * sheet is a SaaS-optional block: a workbook without it (or an older layout) yields
+ * an empty planning leg rather than a failure — the deals/payments import is the
+ * onboarding essential, the targets a bonus.
+ */
+function parsePlanning(wb: Workbook): ParsedPlanning {
+  const ws = wb.getWorksheet(SHEETS.gciCalculator);
+  if (!ws) return { targets: [], planYear: null, workingGoalCache: null };
+
+  const T = TARGET_TABLE;
+  const targets: ParsedTarget[] = [];
+  for (let r = T.firstRow; r <= T.lastRow; r += 1) {
+    const yearStr = cellNumberString(ws, `${T.cols.year}${r}`);
+    if (yearStr === null) continue;
+    const year = Math.round(Number(yearStr));
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) continue;
+
+    targets.push({
+      year,
+      net_income_target: blankOrZeroToNull(ws, `${T.cols.net_income_target}${r}`),
+      opex_pct: blankOrZeroToNull(ws, `${T.cols.opex_pct}${r}`),
+      cos_pct: blankOrZeroToNull(ws, `${T.cols.cos_pct}${r}`),
+      yield_override: blankOrZeroToNull(ws, `${T.cols.yield_override}${r}`),
+      avg_price_override: blankOrZeroToNull(ws, `${T.cols.avg_price_override}${r}`),
+    });
+  }
+
+  const planYearStr = cellNumberString(ws, T.planYearCell);
+  const planYearNum = planYearStr === null ? NaN : Math.round(Number(planYearStr));
+  const planYear = Number.isFinite(planYearNum) ? planYearNum : null;
+  const workingGoalCache = cellNumberString(ws, T.workingGoalCell);
+
+  return { targets, planYear, workingGoalCache };
+}
+
 // --- Entry point ------------------------------------------------------------
 
 export async function parseWorkbook(bytes: Uint8Array): Promise<RawWorkbook> {
@@ -396,6 +449,7 @@ export async function parseWorkbook(bytes: Uint8Array): Promise<RawWorkbook> {
   }
   const payments = parsePayments(wb);
   const overlays = parseOverlays(wb, deals);
+  const planning = parsePlanning(wb);
 
   const headerChecks: HeaderCheck[] = [
     ...checkHeaders(dealWs, SHEETS.dealLog, DEAL_COLUMNS),
@@ -403,5 +457,5 @@ export async function parseWorkbook(bytes: Uint8Array): Promise<RawWorkbook> {
     ...checkHeaders(sheet(wb, SHEETS.collectibles), SHEETS.collectibles, COLLECTIBLE_COLUMNS),
   ];
 
-  return { settings, deals, payments, overlays, headerChecks };
+  return { settings, deals, payments, overlays, planning, headerChecks };
 }
