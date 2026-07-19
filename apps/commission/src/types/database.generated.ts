@@ -102,6 +102,33 @@ export type Database = {
           },
         ]
       }
+      content_bundle: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["content_bundle_status"]
+          version: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["content_bundle_status"]
+          version: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["content_bundle_status"]
+          version?: string
+        }
+        Relationships: []
+      }
       deal: {
         Row: {
           archived_at: string | null
@@ -454,6 +481,82 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      glossary_entry: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          definition_md: string
+          id: string
+          key: string
+          related_keys: string[]
+          term: string
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          definition_md: string
+          id?: string
+          key: string
+          related_keys?: string[]
+          term: string
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          definition_md?: string
+          id?: string
+          key?: string
+          related_keys?: string[]
+          term?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glossary_entry_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "content_bundle"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_article: {
+        Row: {
+          body_md: string
+          bundle_id: string
+          created_at: string
+          id: string
+          key: string
+          placements: string[]
+          title: string
+        }
+        Insert: {
+          body_md: string
+          bundle_id: string
+          created_at?: string
+          id?: string
+          key: string
+          placements?: string[]
+          title: string
+        }
+        Update: {
+          body_md?: string
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          key?: string
+          placements?: string[]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_article_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "content_bundle"
             referencedColumns: ["id"]
           },
         ]
@@ -1484,6 +1587,7 @@ export type Database = {
         Args: { p_error: string; p_job_id: string }
         Returns: Json
       }
+      get_active_content_bundle: { Args: never; Returns: Json }
       get_or_seed_funnel_rates: { Args: never; Returns: Json }
       import_receivable_overlay: {
         Args: {
@@ -1784,6 +1888,7 @@ export type Database = {
         | "restore"
         | "delete_blocked"
         | "delete"
+      content_bundle_status: "draft" | "published" | "archived"
       deal_comm_base_display: "gross" | "net" | "n_a"
       deal_commission_basis: "percent" | "fixed"
       deal_event_type: "created" | "updated" | "archived" | "restored"
@@ -1941,6 +2046,7 @@ export const Constants = {
         "delete_blocked",
         "delete",
       ],
+      content_bundle_status: ["draft", "published", "archived"],
       deal_comm_base_display: ["gross", "net", "n_a"],
       deal_commission_basis: ["percent", "fixed"],
       deal_event_type: ["created", "updated", "archived", "restored"],

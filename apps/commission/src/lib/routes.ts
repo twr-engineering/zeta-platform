@@ -22,6 +22,7 @@ export const ROUTES = {
   sourcePerformance: "/source-performance",
   reports: "/reports",
   search: "/search",
+  glossary: "/glossary",
   settings: "/settings",
   settingsGeneral: "/settings/general",
   settingsTax: "/settings/tax",
@@ -207,6 +208,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.sourcePerformance, label: "Source Performance", module: "M7" },
   { href: ROUTES.reports, label: "Reports", module: "M8" },
   { href: ROUTES.search, label: "Search", module: "M9" },
+  { href: ROUTES.glossary, label: "Glossary", module: "M10" },
   { href: ROUTES.settings, label: "Settings", module: "M0" },
 ];
 

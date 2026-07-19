@@ -4,6 +4,7 @@ import { FileText, Plus, Upload } from "lucide-react";
 
 import { DealList, type DealListInitialFilters } from "@/components/deals/deal-list";
 import { EmptyState } from "@/components/common/empty-state";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import type { DealSegmentFilter } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { listDeals } from "@/lib/deals/queries";
@@ -97,7 +98,12 @@ export default async function DealsPage({
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Deals</h1>
+          <div className="flex items-center gap-1">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">Deals</h1>
+            {/* The legend "?" explainer belongs on every table/form header (rule 14);
+                the cross-module sweep is M10.4 — this is the M10.1 reference surface. */}
+            <LegendExplainer />
+          </div>
           <p className="text-sm text-muted-foreground">
             Your closed deals and what each one earns.
           </p>

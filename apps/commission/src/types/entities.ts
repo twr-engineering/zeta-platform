@@ -84,6 +84,14 @@ export type DealCommBaseDisplay = Enums<"deal_comm_base_display">;
 export type DealVatBasis = Enums<"deal_vat_basis">;
 export type DealEventType = Enums<"deal_event_type">;
 
+// M10.1 §3.3–3.4. Product-level help content (no workspace_id, no money columns,
+// so no override layer). The runtime shapes the app renders come from
+// @/lib/help/types (ContentBundle); these are the raw table rows.
+export type ContentBundleRow = Tables<"content_bundle">;
+export type HelpArticleRow = Tables<"help_article">;
+export type GlossaryEntryRow = Tables<"glossary_entry">;
+export type ContentBundleStatus = Enums<"content_bundle_status">;
+
 // Re-exported, not redeclared: the audit Row type is built from these, so a
 // second structurally-different definition here would quietly diverge.
 export type { FieldChange, FieldChanges } from "./database";
