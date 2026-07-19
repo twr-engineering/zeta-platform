@@ -14,7 +14,7 @@ import "./globals.css";
 // Inter's tabular figures keep ₱ columns aligned digit-to-digit (see the
 // `tabular-nums` in the affordance primitives).
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
@@ -42,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} ${inter.className} antialiased`}>
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
