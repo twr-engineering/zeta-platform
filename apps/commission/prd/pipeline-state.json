@@ -285,7 +285,7 @@
     "devUrl": "http://localhost:3000",
     "packageManager": "pnpm",
     "context7Available": true,
-    "supabaseProject": "sgerctvrcvlmortmhenh",
+    "supabaseProject": "dmwriewjebysgtetpnwo",
     "firebaseProject": null,
     "completedFeatures": [
       "M0.1",
@@ -429,7 +429,7 @@
     "githubUrl": "https://github.com/Illamapalooza/nurture-your-commission",
     "vercelUrl": "https://vercel.com/illamapaloozas-projects/nurture-your-commission",
     "liveUrl": "https://nurture-your-commission.vercel.app",
-    "lastFullDeploy": "2026-07-19 — complete build (42 milestones + design pass) deployed to production"
+    "lastFullDeploy": "2026-07-19 — complete build redeployed after database migration to dmwriewjebysgtetpnwo (old project sgerctvrcvlmortmhenh deleted by user)"
   },
   "designPassHandoff": {
     "status": "completed",
