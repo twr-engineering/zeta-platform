@@ -15,7 +15,16 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = safeNext(searchParams.get("next"));
+  // FR-M10-01: a signup confirmation is the one unambiguous "first login to a
+  // newly created workspace" — land the new owner in the first-run wizard.
+  // An explicit `next` (e.g. password recovery → update-password) still wins;
+  // everything else defaults to the dashboard.
+  const rawNext = searchParams.get("next");
+  const next = rawNext
+    ? safeNext(rawNext)
+    : type === "signup"
+      ? ROUTES.onboarding
+      : ROUTES.dashboard;
 
   if (!isSupabaseConfigured()) {
     return redirectTo(request, ROUTES.setupRequired);

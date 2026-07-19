@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-20T06:00:00+08:00 (M10.1 — Help-content system, legend spec & glossary)
+# Last Updated: 2026-07-20T12:00:00+08:00 (M10.2 — First-run wizard core, steps 1–4)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -50,7 +50,7 @@
 - [x] M9.3: Export & performance hardening
 - [x] M9.4: Unified "All" tab (OQ2 RESOLVED "BUILD IT" 2026-07-19)  ← ★ M9 FULLY COMPLETE ★
 - [x] M10.1: Help-content system, legend spec & glossary
-- [ ] M10.2: First-run wizard core, steps 1–4
+- [x] M10.2: First-run wizard core, steps 1–4
 - [ ] M10.3: First-deal walkthrough, sample lifecycle & checklist
 - [ ] M10.4: Contextual help placements & empty states across modules
 - [ ] M10.5: Mobile, end-to-end scripts & hardening
@@ -59,6 +59,56 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M10.2 COMPLETE — First-run wizard core, steps 1–4 (resumable, never-blocking; embeds the real
+M0/M1 flows — no forks).** M10 owns NO financial logic; the wizard ORCHESTRATES existing write paths
+(rename_workspace, update_tax_settings, seed_*, run_workbook_import), each keeping its own audit trail.
+
+DATA MODEL (migration 20260719230000_m102_onboarding_state, applied live + registered): onboarding_state
+(one per workspace: status not_started|in_progress|completed|dismissed, current_step
+basics|tax_review|seed_lists|migration_fork|first_deal, step_data jsonb, import_job_id→import_batch,
+sample_deal_id→deal [M10.3 wires it], completed_at/dismissed_at, created_by/updated_by; CHECK pairs
+status↔stamp; RLS select/insert/update member) + onboarding_event (append-only instrumentation, RLS
+select/insert; NO update/delete — FR-M10-18). Auto-created with the workspace by an AFTER-INSERT trigger
+on public.workspace (SECURITY DEFINER, like handle_new_user — fires during signup before membership
+exists); EXISTING workspaces backfilled. RPCs (all SECURITY INVOKER, search_path='', workspace via
+app.current_workspace_id(), NO app.write_audit_entry — UI state, not a financial change):
+ensure_onboarding_state (get-or-create read seam), advance_onboarding(from,to,step_data,skipped),
+open_onboarding (one-time not_started→in_progress), reopen_onboarding (Settings re-run), dismiss_onboarding,
+complete_onboarding. Each transition logs its event via app.log_onboarding_event. NO money columns → no
+override layer; entity aliases OnboardingState/OnboardingEvent + enums in entities.ts.
+
+VAT CONFIRMATION: the M0.2 update_tax_settings RPC ALREADY does once-only stamping of
+vat_registered_confirmed_at (p_confirm_vat_registration) — NO new RPC. The wizard's tax step embeds the
+real TaxSettingsForm, whose VAT question submits confirmVatRegistration; the "this is a default, not your
+answer" banner disappears after stamping because saveTaxSettings now revalidates /onboarding too.
+
+TRIGGER / ROUTING (never forced, rule 1): auto-open happens ONLY at SIGNUP — src/app/auth/confirm/route.ts
+lands a type=signup confirmation on /onboarding (an explicit ?next= still wins; password recovery
+unaffected). NO dashboard hard-redirect (it would break every e2e spec that signs a fresh user into an
+empty workspace and expects /dashboard). The dashboard shows a non-modal "Continue setup (step N of 5)"
+resume prompt for in_progress only (rule 2 / AC3). Settings → "Setup assistant" (SETTINGS_NAV_ITEMS +
+a General-page card) reopens at current_step. ROUTES.onboarding added.
+
+UI: /onboarding (in the (app) group → app shell + HelpContentProvider). src/components/onboarding/:
+onboarding-wizard.tsx (shell: stepper, Back/Skip/Continue, dismiss-with-confirmation, step router,
+mount open/reopen), doctrine-callout.tsx (renders a §6.3 article VERBATIM + its "?" — P0 philosophy,
+P11 EWT-5%), flow-map.tsx (FR-M10-02 spine), seed-lists-step.tsx (embeds the real M0.3 SeedOffer x3,
+offer shown only for empty lists = dedupe rule 7). Step 1 basics = RenameWorkspaceForm + FlowMap + P0
+verbatim; step 2 = P11 callout + TaxSettingsForm (VAT stamp inline); step 3 = seed offers; step 4 =
+philosophy-before-fork (rule 16) + Import/Start-fresh cards, ImportWizard embedded inline (new additive
+onImportComplete prop) with import-success → "skip the walkthrough" offer (FR-M10-05); step 5 = first_deal
+STUB ("coming in M10.3") + Finish. lib: src/lib/onboarding/{steps,queries,actions}.ts.
+
+VERIFICATION: test:unit 528/528; build:check + lint clean; live-m102-check.mts 22/22 (full state machine +
+events + vat stamp, throwaway user, delta-residue zero — 4 ws = 4 states, 0 orphans, 0 throwaway); e2e
+tests/e2e/onboarding-wizard.spec.ts 4/4 (signup→wizard via generateLink confirm; fresh-start path incl.
+rename + vat stamp + banner-gone + seed accept; dismiss→app-usable→Settings re-entry resumes; reload/dash
+prompt "step 3 of 5"; import-inside-wizard→skip offer). FULL e2e reseed run covers the global reseed M10.1
+skipped. NOTES: philosophy P0 rendered verbatim in BOTH step 1 (per this milestone's verification) AND
+before the fork (rule 16). Instrumentation is a dedicated onboarding_event table (append-only) — M10.5's
+<10-min timing report reads it. import_job_id/sample_deal_id columns exist but M10.3 wires them.
+
+## Prior Status
 **M10.1 COMPLETE — Help-content system, legend spec & glossary (M10's plumbing; every other M10
 feature renders through it).** M10 owns NO financial logic — this milestone is content + framework.
 PRODUCT-LEVEL versioned content bundle (help_article + glossary_entry grouped by content_bundle,

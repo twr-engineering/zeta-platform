@@ -84,6 +84,10 @@ const LIST_ROUTES: Record<ListEntity, string> = {
 function revalidateList(entity: ListEntity): void {
   revalidatePath(LIST_ROUTES[entity]);
   revalidatePath(ROUTES.settingsAuditLog);
+  // M10.2: the first-run wizard's seed-lists step embeds the same seed offer.
+  // Revalidating /onboarding re-renders the wizard so an accepted list's offer
+  // disappears (the list is no longer empty) without a manual reload.
+  revalidatePath(ROUTES.onboarding);
 }
 
 /**

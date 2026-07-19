@@ -92,6 +92,13 @@ export type HelpArticleRow = Tables<"help_article">;
 export type GlossaryEntryRow = Tables<"glossary_entry">;
 export type ContentBundleStatus = Enums<"content_bundle_status">;
 
+// M10.2 §3.1. The first-run wizard's per-workspace UI state + its append-only
+// instrumentation log. No money columns, so no override layer.
+export type OnboardingState = Tables<"onboarding_state">;
+export type OnboardingEvent = Tables<"onboarding_event">;
+export type OnboardingStatus = Enums<"onboarding_status">;
+export type OnboardingStep = Enums<"onboarding_step">;
+
 // Re-exported, not redeclared: the audit Row type is built from these, so a
 // second structurally-different definition here would quietly diverge.
 export type { FieldChange, FieldChanges } from "./database";

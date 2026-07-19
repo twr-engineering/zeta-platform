@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useId, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
 
@@ -17,6 +17,13 @@ import {
 import { importAction, type ImportActionState } from "@/lib/import/actions";
 import { ImportSummary } from "./import-summary";
 
+export type ImportResult = {
+  deals: number;
+  payments: number;
+  overlays: number;
+  next_deal_code: string;
+};
+
 export type ImportWizardProps = {
   /** The workspace already has deals / a prior import — the upload flow is hidden. */
   blocked: boolean;
@@ -24,6 +31,13 @@ export type ImportWizardProps = {
   blockedReason: "imported" | "has_deals";
   dealCount: number;
   lastImportName: string | null;
+  /**
+   * M10.2: fired once when the import commits successfully. The first-run wizard
+   * embeds this component in its migration-fork step and uses this to advance the
+   * wizard (import success → offer to skip the sample walkthrough, FR-M10-05).
+   * Omitted on the standalone /deals/import page — the component is unchanged there.
+   */
+  onImportComplete?: (result: ImportResult | undefined) => void;
 };
 
 /**
@@ -43,6 +57,7 @@ export function ImportWizard({
   blockedReason,
   dealCount,
   lastImportName,
+  onImportComplete,
 }: ImportWizardProps) {
   const [state, dispatch] = useActionState<ImportActionState, FormData>(
     importAction,
@@ -55,6 +70,14 @@ export function ImportWizard({
   const confirmId = useId();
 
   const done = state.done === true;
+
+  // M10.2: notify the embedding wizard exactly once when the import commits.
+  // Keyed on `done` so it fires on the transition, not on every render.
+  useEffect(() => {
+    if (done) onImportComplete?.(state.result);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
+
   const plan = state.plan;
   const canImport = plan !== undefined && plan.mismatches.length === 0 && !done;
   const confirmSatisfied = typed.trim() === IMPORT_CONFIRM_PHRASE;

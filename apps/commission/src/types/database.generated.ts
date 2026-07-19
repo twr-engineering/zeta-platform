@@ -679,6 +679,114 @@ export type Database = {
           },
         ]
       }
+      onboarding_event: {
+        Row: {
+          actor_user_id: string
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          step: Database["public"]["Enums"]["onboarding_step"] | null
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          step?: Database["public"]["Enums"]["onboarding_step"] | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          step?: Database["public"]["Enums"]["onboarding_step"] | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_event_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_state: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          current_step: Database["public"]["Enums"]["onboarding_step"]
+          dismissed_at: string | null
+          id: string
+          import_job_id: string | null
+          sample_deal_id: string | null
+          status: Database["public"]["Enums"]["onboarding_status"]
+          step_data: Json
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: Database["public"]["Enums"]["onboarding_step"]
+          dismissed_at?: string | null
+          id?: string
+          import_job_id?: string | null
+          sample_deal_id?: string | null
+          status?: Database["public"]["Enums"]["onboarding_status"]
+          step_data?: Json
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: Database["public"]["Enums"]["onboarding_step"]
+          dismissed_at?: string | null
+          id?: string
+          import_job_id?: string | null
+          sample_deal_id?: string | null
+          status?: Database["public"]["Enums"]["onboarding_status"]
+          step_data?: Json
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_state_import_job_id_fkey"
+            columns: ["import_job_id"]
+            isOneToOne: false
+            referencedRelation: "import_batch"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_state_sample_deal_id_fkey"
+            columns: ["sample_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deal"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_state_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment: {
         Row: {
           archived_at: string | null
@@ -1472,6 +1580,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_onboarding: {
+        Args: {
+          p_from_step: Database["public"]["Enums"]["onboarding_step"]
+          p_skipped?: boolean
+          p_step_data?: Json
+          p_to_step: Database["public"]["Enums"]["onboarding_step"]
+        }
+        Returns: Json
+      }
       apply_recompute_batch: {
         Args: { p_job_id: string; p_results: Json }
         Returns: Json
@@ -1493,6 +1610,7 @@ export type Database = {
         Args: { p_expected_version: number; p_receivable_id: string }
         Returns: Json
       }
+      complete_onboarding: { Args: { p_step_data?: Json }; Returns: Json }
       complete_recompute_job: { Args: { p_job_id: string }; Returns: Json }
       consume_deal_events: { Args: { p_limit?: number }; Returns: Json }
       consume_payment_events: { Args: { p_limit?: number }; Returns: Json }
@@ -1583,6 +1701,8 @@ export type Database = {
       }
       delete_plan_year_target: { Args: { p_year: number }; Returns: Json }
       delete_property_type: { Args: { p_id: string }; Returns: Json }
+      dismiss_onboarding: { Args: never; Returns: Json }
+      ensure_onboarding_state: { Args: never; Returns: Json }
       fail_recompute_job: {
         Args: { p_error: string; p_job_id: string }
         Returns: Json
@@ -1616,6 +1736,7 @@ export type Database = {
         Args: { p_job_id: string; p_limit: number }
         Returns: Json
       }
+      open_onboarding: { Args: never; Returns: Json }
       plan_ytd_actual_sales: {
         Args: { p_include_rentals?: boolean; p_year: number }
         Returns: string
@@ -1642,6 +1763,7 @@ export type Database = {
           }
       rename_profile: { Args: { p_display_name: string }; Returns: Json }
       rename_workspace: { Args: { p_name: string }; Returns: Json }
+      reopen_onboarding: { Args: never; Returns: Json }
       reopen_receivable: {
         Args: { p_expected_version: number; p_receivable_id: string }
         Returns: Json
@@ -1907,6 +2029,17 @@ export type Database = {
       deal_vat_basis: "inclusive" | "n_a"
       developer_comm_base: "gross" | "net"
       membership_role: "owner" | "admin" | "agent" | "readonly"
+      onboarding_status:
+        | "not_started"
+        | "in_progress"
+        | "completed"
+        | "dismissed"
+      onboarding_step:
+        | "basics"
+        | "tax_review"
+        | "seed_lists"
+        | "migration_fork"
+        | "first_deal"
       payment_event_type: "created" | "updated" | "deleted"
       payment_type: "commission" | "incentive"
       property_vat_rule: "threshold" | "always_vat" | "always_exempt"
@@ -2066,6 +2199,19 @@ export const Constants = {
       deal_vat_basis: ["inclusive", "n_a"],
       developer_comm_base: ["gross", "net"],
       membership_role: ["owner", "admin", "agent", "readonly"],
+      onboarding_status: [
+        "not_started",
+        "in_progress",
+        "completed",
+        "dismissed",
+      ],
+      onboarding_step: [
+        "basics",
+        "tax_review",
+        "seed_lists",
+        "migration_fork",
+        "first_deal",
+      ],
       payment_event_type: ["created", "updated", "deleted"],
       payment_type: ["commission", "incentive"],
       property_vat_rule: ["threshold", "always_vat", "always_exempt"],

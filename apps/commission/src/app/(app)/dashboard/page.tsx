@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/lib/dashboard/queries";
+import { getOnboardingState } from "@/lib/onboarding/queries";
+import {
+  ONBOARDING_STEP_COUNT,
+  ONBOARDING_STEP_LABELS,
+  stepNumber,
+} from "@/lib/onboarding/steps";
 import { manilaYear } from "@/lib/date/manila";
 import { ROUTES } from "@/lib/routes";
 import { DashboardYearFilter } from "@/components/dashboard/dashboard-year-filter";
@@ -48,6 +54,13 @@ export default async function DashboardPage({
   const dashboardYear =
     Number.isInteger(parsed) && parsed >= 2000 && parsed <= 2100 ? parsed : currentYear;
 
+  // FR-M10-01: the first-run wizard auto-opens once at SIGNUP (the confirmation
+  // link lands on /onboarding — see src/app/auth/confirm/route.ts), never by
+  // hijacking a later dashboard visit (rule 1: never forced). Here we only read
+  // the state to show the non-modal "Continue setup" resume prompt for a wizard
+  // left in progress (rule 2 / AC3) — the app was fully usable in between.
+  const onboarding = await getOnboardingState();
+
   const data = await getDashboardData({ dashboardYear });
 
   // Empty workspace = no receivables at all (one is created per deal), so nothing
@@ -61,6 +74,29 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-8">
+      {/* Resume prompt (rule 2 / AC3): non-modal, dismissable, the app was fully
+          usable in between. Shown only while the wizard is mid-flight. */}
+      {onboarding?.status === "in_progress" && (
+        <Link
+          href={ROUTES.onboarding}
+          className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+          data-testid="onboarding-resume-prompt"
+        >
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium">
+                Continue setup (step {stepNumber(onboarding.current_step)} of {ONBOARDING_STEP_COUNT})
+              </p>
+              <p className="text-sm text-muted-foreground">
+                You left off at {ONBOARDING_STEP_LABELS[onboarding.current_step]}. Pick up where you were — nothing was lost.
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        </Link>
+      )}
+
       {/* sticky header carrying the year filter (§6) */}
       <div className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

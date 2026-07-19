@@ -191,6 +191,11 @@ export async function saveTaxSettings(
   invalidateTaxSettings(context.workspace.id);
   revalidatePath(ROUTES.settingsTax);
   revalidatePath(ROUTES.settingsAuditLog);
+  // M10.2: the first-run wizard embeds this exact form in its tax-review step.
+  // Revalidating /onboarding refreshes the wizard's server props so the
+  // "this is a default, not your answer" banner disappears the moment the agent
+  // stamps vat_registered_confirmed_at inside the wizard.
+  revalidatePath(ROUTES.onboarding);
 
   if (!result.changed) {
     return { error: null, message: "Nothing changed — your settings are as they were." };

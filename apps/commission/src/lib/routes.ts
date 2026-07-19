@@ -23,6 +23,7 @@ export const ROUTES = {
   reports: "/reports",
   search: "/search",
   glossary: "/glossary",
+  onboarding: "/onboarding",
   settings: "/settings",
   settingsGeneral: "/settings/general",
   settingsTax: "/settings/tax",
@@ -224,4 +225,8 @@ export const SETTINGS_NAV_ITEMS: readonly NavItem[] = [
   { href: ROUTES.settingsDevelopers, label: "Developers", module: "M0.3" },
   { href: ROUTES.settingsLeadSources, label: "Lead Sources", module: "M0.3" },
   { href: ROUTES.settingsAuditLog, label: "Audit Log", module: "M0.2" },
+  // FR-M10-01 / rule 7: re-open the first-run wizard against current state. It
+  // lives outside /settings (it is the whole-workspace wizard, not a settings
+  // pane), but the PRD's re-entry point is Settings → "Setup assistant".
+  { href: ROUTES.onboarding, label: "Setup assistant", module: "M10" },
 ];

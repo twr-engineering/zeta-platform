@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, TriangleAlert } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/routes";
 import { EmptyState } from "@/components/common/empty-state";
 import { LockedValue } from "@/components/affordance/locked-value";
 import { RenameWorkspaceForm } from "@/components/settings/rename-workspace-form";
@@ -58,6 +61,29 @@ export default async function GeneralSettingsPage() {
         </CardHeader>
         <CardContent>
           <RenameWorkspaceForm currentName={workspace.name} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="size-4 text-muted-foreground" aria-hidden="true" />
+            Setup assistant
+          </CardTitle>
+          <CardDescription>
+            Re-run the first-run walkthrough any time — review your tax settings,
+            top up your lists, or import a workbook. It picks up right where you
+            left off and never touches anything you have already set.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            nativeButton={false}
+            render={<Link href={ROUTES.onboarding} />}
+            data-testid="settings-setup-assistant"
+          >
+            Open the setup assistant
+          </Button>
         </CardContent>
       </Card>
 
