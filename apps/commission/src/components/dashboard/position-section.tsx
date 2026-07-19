@@ -2,6 +2,8 @@ import { formatPHP, formatRateAsPercent, toMoney } from "@/lib/money";
 import { collectiblesPath, paymentsPath, ROUTES } from "@/lib/routes";
 import type { PositionSection as PositionData } from "@/lib/dashboard/sections";
 
+import { HelpPopover } from "@/components/help/help-popover";
+
 import { DashboardSection } from "./section";
 import { StatTile } from "./stat-tile";
 
@@ -23,6 +25,13 @@ export function PositionSection({ data }: { data: PositionData }) {
       title="Collection Position"
       description="Lifetime — every deal, all statuses. The year filter does not touch this."
       testId="section-position"
+      action={
+        <HelpPopover
+          placement="dashboard.position"
+          label="About the balance basis & taxes"
+          testId="help-dashboard-position"
+        />
+      }
     >
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile

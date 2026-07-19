@@ -46,3 +46,20 @@ For every module surface that shows money or rates, a reviewer confirms:
 
 Deviations are logged in the M10.4 legend-consistency audit and either fixed or ticketed;
 the M10.4 Definition of Done requires **zero unresolved deviations**.
+
+## M10.4 legend-consistency audit — outcome (2026-07-19)
+
+Walked every M1–M9 money surface against the checklist above. Result: **zero
+unresolved deviations.**
+
+| Checklist item | Finding |
+|---|---|
+| Editable money/rate fields use `<InputField>` / `<SelectField>` | ✅ No bare `<input>`/`<select>` on any money surface (only `type="hidden"` payload mirrors on the deal form). |
+| Computed figures use `<LockedValue variant="locked">` + formula tooltip | ✅ Deal computed-panel, receivable detail, dashboard tiles, yield/source tables all locked with formulas. |
+| Cross-module values use `<LockedValue variant="linked">` and navigate to source | ✅ M3 planning basis links back to M2 (`planning-basis-card.tsx`); M5 deal fields shown on payment rows. |
+| Affordance carried by icon/shape, not colour alone | ✅ Lock/link glyphs on `LockedValue`; blue-input tint paired with focus ring + border. |
+| Every table/form header exposes the legend `<LegendExplainer>` "?" | ⚠️→✅ **Deviation found and FIXED.** M10.1 wired the explainer only on Deals (M1) + Glossary. M10.4 swept it onto Yield (M2), Calculator (M3), Collectibles (M4), Payments (M5), Dashboard (M6), Source Performance (M7), Reports (M8, per-tab header), and Search (M9). |
+| Right-aligned, `tabular-nums` money | ✅ `InputField`/`LockedValue`/`StatTile` and every money table (`receivables-ledger`, `payments-list`, `search-results`, `source-performance-table`, `segment-table`) use `tabular-nums`. |
+
+**One deviation total** (the missing legend "?" on M2–M9 headers), fixed in this
+milestone by the cross-module sweep. No deviations ticketed / carried forward.

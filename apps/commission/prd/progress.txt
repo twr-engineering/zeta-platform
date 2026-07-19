@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-20T18:00:00+08:00 (M10.3 — First-deal walkthrough, sample lifecycle & checklist)
+# Last Updated: 2026-07-19T00:00:00+08:00 (M10.4 — Contextual help placements & empty states across modules)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -52,14 +52,88 @@
 - [x] M10.1: Help-content system, legend spec & glossary
 - [x] M10.2: First-run wizard core, steps 1–4
 - [x] M10.3: First-deal walkthrough, sample lifecycle & checklist
-- [ ] M10.4: Contextual help placements & empty states across modules
+- [x] M10.4: Contextual help placements & empty states across modules
 - [ ] M10.5: Mobile, end-to-end scripts & hardening
 - [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
 - [ ] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
 - [x] `pnpm run build` clean
 
 ## Current Status
-RESUMED 2026-07-19 — M10.4 in progress.
+**M10.4 COMPLETE — Contextual help placements, the M4 corrections mini-flow, the empty-state
+registry, the legend-consistency sweep + audit, and help-opened instrumentation.** M10 owns NO
+financial logic — this is placement/content wiring, empty-state copy, and one lightweight event.
+
+PLACEMENTS (all P0–P11 wired to their exact PRD §6.3 surfaces via HelpPopover "?"; the P0–P11
+article bodies were already SEEDED in M10.1, so this was placement work, not authoring — no
+content-bundle version bump was needed because every placement slug already existed in
+PLACEMENT_REGISTRY and in an article's placements[]):
+- P0 philosophy → dashboard header "?" (help-dashboard-header). P1 property-vat → the Property VAT
+  badge in the deal computed-panel (help-deal-property-vat) + force-vat → the Force VAT field
+  (help-deal-force-vat). P2 vat-inclusive-billing → commission-basis field (help-deal-commission-basis).
+  P3 representation → representation field. P4 client-counterparty → client field + rate field. P5
+  what-to-book → referral-out field. P10 mode-of-payment → mode field. All added via a `help` prop on
+  the deal-form `Field` helper (a "?" beside the label).
+- P6 corrections → the M4 receivable mini-flow header (help-receivable-corrections). P7
+  booked-vs-collectible → the receivable-detail card header (help-receivable-header). P8
+  closed-vs-cancelled → rendered VERBATIM inside BOTH the Close and Cancel dialogs (status-doctrine-p8)
+  + a "?" (help-receivable-status-dialog) — AC8 wants the doctrine shown in-flow, not one popover away.
+- P9 balance-basis-taxes → the dashboard Position section "?" + Cash & Tax section "?". P11
+  ewt-5-option → the EWT field on M0 tax settings (help-settings-tax, via a `help` prop on PercentField).
+
+M4 CORRECTIONS MINI-FLOW (FR-M10-13, AC7) — the M4.4 "Adjust…" router was UPGRADED (not duplicated)
+into the two-question flow "A number changed — which case am I in?": Q1 "did the contract/economics
+actually change?" Yes→case 1 (edit the deal, deep-link /deals/[code]/edit); No→Q2 "do you accept the
+different expected cash?" Yes→case 2 (reveals Confirmed Collectible + required note); No→case 3 (close
+short, let Variance tell the story). Each terminal case renders the P6 doctrine text VERBATIM, sliced
+byte-exact from the corrections-doctrine article by its **1./ **2./ **3. markers
+(src/lib/help/corrections.ts — proven a substring of the verbatim body). testids kept stable
+(adjust-toggle/adjust-panel/adjust-edit-deal/adjust-confirm-collectible) + new
+adjust-q1/q2(-yes/-no)/adjust-case-1..3/adjust-restart; collectibles.spec updated with a dated comment.
+
+EMPTY-STATE REGISTRY (§6.4, FR-M10-14, AC10) — src/lib/help/empty-states.ts catalogues all nine M1–M9
+surfaces (copy essence + owning source file + a stable testId). Surfaces aligned to the §6.4 essence
+additively: M4 "Receivables create themselves…", M5 now branches no-deals ("log a deal first") vs
+deals-exist ("VAT and EWT split automatically") off listActivePaymentDeals(), M6 "Your position appears
+after your first deal…", M2 keeps "No deals yet" + adds the segments/blended-yield line, M3 the
+planning-basis/manual-entry copy, M7/M8 aligned keeping their asserted titles, M9 now shows fresh
+"Nothing to search yet." (activeFilterCount===0) vs the sheet-verbatim "No matching records — adjust
+your filters above." Shared <EmptyState> gained a `testId` prop. Coverage test
+tests/unit/help/empty-state-registry.test.ts source-scans each surface file for its marker and fails
+the build if a surface loses its empty state.
+
+LEGEND-CONSISTENCY AUDIT (rule 14, FR-M10-10) — swept <LegendExplainer> "?" onto every M1–M9 header
+(M10.1 had only Deals + Glossary): added to Yield, Calculator, Collectibles, Payments, Dashboard,
+Source Performance, Reports (per-tab header) and Search. Full audit outcome recorded in
+docs/LEGEND-SPEC.md: ONE deviation found (the missing legend "?" on M2–M9 headers) — FIXED by the
+sweep; every other checklist item (InputField/SelectField for money inputs, LockedValue+formula for
+computed, variant="linked" cross-module, icon/shape not colour-alone, tabular-nums) already held. ZERO
+unresolved deviations carried forward.
+
+HELP-OPENED INSTRUMENTATION (FR-M10-18) — HelpPopover fires a fire-and-forget `help_opened` event
+(tagged with the placement slug) into the M10.2 onboarding_event log on the false→true open edge.
+Migration-free (event_type is free text; rides the existing member insert policy);
+src/lib/help/actions.ts:logHelpOpened resolves the workspace via getWorkspaceContext, swallows every
+error, never awaited on the popover hot path. No money, ever.
+
+VERIFICATION — test:unit 540/540 (+4 empty-state-registry); build:check + lint clean. Browser e2e:
+help-placements.spec 7/7 (P2/AC6 verbatim + glossary link, P3/P10, P0, P11, the 9-surface empty-state
+walk over a fresh workspace, 360px bottom-sheet, and the help_opened event landing in onboarding_event).
+FULL e2e clean reseed (seed:dev --delete && seed:dev, --workers=1) — this ALSO discharged M10.3's
+deferred canonical reseed: 162 passed on the first pass; the remaining tests all failed ONLY on
+transient environmental load (dev-server cold-route JIT compile exceeding the 30s nav timeout + hosted-
+Supabase workbook-import throughput under a 24-min sustained run — errors were "net::ERR_ABORTED / goto
+timeout / AuthRetryableFetchError: fetch failed", never a wrong value), and each was RE-RUN IN ISOLATION
+and passed: dashboard.spec 100%, calculator.spec 10/10 (incl. AC10 the deal-create→navigate test),
+payments-list AC7 flaky-recovered. The deal-form submit path my "?" edits touch is independently proven
+green by onboarding-wizard's walkthrough (books the sample deal → NET GCI ₱354,591.84) and deals.spec
+(D021 save+persist), both passing. Delta-residue ZERO — 0 throwaway users leaked; only the real dev
+account + the 3 seed books remain. Console: the 2 known-tolerated messages only.
+
+KNOWN NON-BLOCKING NOTE for M10.5/CI — running the full e2e against `next dev` (the user-owned server)
+makes the FIRST hit to each heavy route (workbook importer, payment-edit, calculator) JIT-compile past
+the 30s Playwright timeout, and the many throwaway-workspace workbook imports strain hosted Supabase;
+both surface as flakes that vanish on isolated re-run. M10.5 (CI hardening) should run e2e against a
+production build (`next build` + `next start`) and/or pre-warm routes so these don't reappear as flakes.
 
 ## Previous Status
 **M10.3 COMPLETE — First-deal walkthrough, sample lifecycle & getting-started checklist.** M10 owns

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Wallet } from "lucide-react";
 
 import { EmptyState } from "@/components/common/empty-state";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import { Button } from "@/components/ui/button";
 import {
   ReceivablesLedger,
@@ -81,12 +82,13 @@ export default async function CollectiblesPage({
     return (
       <div className="mx-auto max-w-2xl">
         <EmptyState
+          testId="empty-state-receivables"
           icon={<Wallet />}
-          title="Receivables appear here automatically — one per deal"
-          description="Each deal you log gets a receivable tracking the commission you're owed against the cash you collect. Log your first deal to start."
+          title="Receivables create themselves — one per deal, automatically"
+          description="Each deal you log gets a receivable tracking the commission you're owed against the cash you collect. Log a deal and it appears here."
           action={
-            <Button nativeButton={false} render={<Link href={ROUTES.deals} />}>
-              Go to Deals
+            <Button nativeButton={false} render={<Link href={ROUTES.dealNew} />}>
+              Log a deal
             </Button>
           }
         />
@@ -97,7 +99,10 @@ export default async function CollectiblesPage({
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Collectibles</h1>
+        <div className="flex items-center gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Collectibles</h1>
+          <LegendExplainer />
+        </div>
         <p className="text-sm text-muted-foreground">
           One receivable per deal: what each payor owes you.{" "}
           <span className="text-muted-foreground/80">

@@ -16,6 +16,8 @@ export type EmptyStateProps = {
   description?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
+  /** Stable marker for the M10.4 empty-state registry coverage check (§6.4). */
+  testId?: string;
 };
 
 export function EmptyState({
@@ -24,10 +26,12 @@ export function EmptyState({
   description,
   action,
   className,
+  testId,
 }: EmptyStateProps) {
   return (
     <div
       data-slot="empty-state"
+      data-testid={testId}
       className={cn(
         "flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center",
         className

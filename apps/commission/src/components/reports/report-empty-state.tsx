@@ -15,6 +15,7 @@ export function ReportEmptyState({ source = "payments" }: { source?: "payments" 
   if (source === "deals") {
     return (
       <EmptyState
+        testId="empty-state-reports"
         icon={<FileText />}
         title="No deals logged yet"
         description="The Booking-Year Summary fills in as you log deals — each booking year's earned GCI, cash collected, and outstanding balance."
@@ -29,9 +30,10 @@ export function ReportEmptyState({ source = "payments" }: { source?: "payments" 
 
   return (
     <EmptyState
+      testId="empty-state-reports"
       icon={<Receipt />}
       title="No payments logged yet"
-      description="Reports fill in as you log collections in the Payments Log — cash and tax by period, plus vintage analysis for your bookkeeper."
+      description="Reports aggregate payments — log your first release in the Payments Log and the periods fill in: cash and tax by period, plus vintage analysis for your bookkeeper."
       action={
         <Button nativeButton={false} render={<Link href={ROUTES.payments} />}>
           Go to the Payments Log

@@ -224,6 +224,12 @@ test("detail — Cancel requires a reason and writes off the remainder (AC6)", a
   // Attempt 1: tick the gate but leave the reason blank → rejected server-side.
   await page.getByTestId("cancel-trigger").click();
   await expect(page.getByTestId("cancel-gate-consequence")).toContainText("675,000.00");
+  // M10.4 (P8, AC8): the dialog shows the Closed-vs-Cancelled doctrine verbatim
+  // alongside the write-off amount, before confirm.
+  await expect(page.getByTestId("status-doctrine-p8")).toContainText(
+    "the uncollected balance is"
+  );
+  await expect(page.getByTestId("status-doctrine-p8")).toContainText("written off");
   const checkbox = page.getByTestId("cancel-gate-checkbox");
   await checkbox.click();
   await expect(checkbox).toHaveAttribute("data-checked", "");
@@ -247,7 +253,11 @@ test("detail — Cancel requires a reason and writes off the remainder (AC6)", a
   await expect(page.getByTestId("detail-written-off")).toContainText("675,000.00");
 });
 
-test("detail — Adjust… routes the three Corrections-doctrine cases (§3.3)", async ({ page }) => {
+// Updated: M10.4 upgraded the "Adjust…" panel into the FR-M10-13 two-question
+// mini-flow ("A number changed — which case am I in?"). The three cases are now
+// gated behind Q1/Q2 rather than shown at once, and each terminal case renders the
+// P6 doctrine verbatim. 2026-07-19.
+test("detail — the Corrections mini-flow routes all three cases (§3.3, FR-M10-13, AC7)", async ({ page }) => {
   test.skip(!HAVE_WORKBOOK, "real workbook not present");
   await signIn(page);
   await page.goto("/collectibles/D007");
@@ -255,11 +265,26 @@ test("detail — Adjust… routes the three Corrections-doctrine cases (§3.3)",
   await page.getByTestId("adjust-toggle").click();
   const panel = page.getByTestId("adjust-panel");
   await expect(panel).toBeVisible();
-  // Case 1 → edit the deal (deep link to M1 edit).
+  await expect(panel.getByTestId("adjust-q1")).toBeVisible();
+
+  // Q1 = Yes → case 1: edit the deal (deep link to M1 edit).
+  await panel.getByTestId("adjust-q1-yes").click();
+  await expect(panel.getByTestId("adjust-case-1")).toBeVisible();
   await expect(panel.getByTestId("adjust-edit-deal")).toHaveAttribute("href", "/deals/D007/edit");
-  // Case 3 → close short (its own Close dialog).
+
+  // Q1 = No, Q2 = No → case 3: close short (its own Close dialog).
+  await panel.getByTestId("adjust-restart").click();
+  await panel.getByTestId("adjust-q1-no").click();
+  await expect(panel.getByTestId("adjust-q2")).toBeVisible();
+  await panel.getByTestId("adjust-q2-no").click();
+  await expect(panel.getByTestId("adjust-case-3")).toBeVisible();
   await expect(panel.getByTestId("close-trigger")).toBeVisible();
-  // Case 2 → reveals the override form.
+
+  // Q1 = No, Q2 = Yes → case 2: reveals the Confirmed Collectible override (AC7).
+  await panel.getByTestId("adjust-restart").click();
+  await panel.getByTestId("adjust-q1-no").click();
+  await panel.getByTestId("adjust-q2-yes").click();
+  await expect(panel.getByTestId("adjust-case-2")).toBeVisible();
   await panel.getByTestId("adjust-confirm-collectible").click();
   await expect(page.getByTestId("override-panel")).toBeVisible();
 });

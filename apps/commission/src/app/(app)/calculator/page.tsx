@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import { DashboardSection } from "@/components/dashboard/section";
 import { PlanningScreen } from "@/components/planning/planning-screen";
 import { PlanningYearSelector } from "@/components/planning/planning-year-selector";
@@ -63,7 +64,10 @@ export default async function CalculatorPage({
       <div className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">GCI Calculator</h1>
+            <div className="flex items-center gap-1">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">GCI Calculator</h1>
+              <LegendExplainer />
+            </div>
             <p className="max-w-2xl text-sm text-pretty text-muted-foreground">
               Your annual GCI goal, deal count and prospecting funnels — linked live to your
               own realized yield and average sale price.

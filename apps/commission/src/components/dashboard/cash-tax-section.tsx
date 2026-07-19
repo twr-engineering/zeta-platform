@@ -4,6 +4,8 @@ import { formatPHP } from "@/lib/money";
 import { paymentsPath } from "@/lib/routes";
 import type { CashTaxSection as CashTaxData } from "@/lib/dashboard/sections";
 
+import { HelpPopover } from "@/components/help/help-popover";
+
 import { DashboardSection } from "./section";
 
 /**
@@ -50,13 +52,20 @@ export function CashTaxSection({ data }: { data: CashTaxData }) {
       description="All collected payments — how gross commission nets down to bank cash."
       testId="section-cash-tax"
       action={
-        <Link
-          href={paymentsPath()}
-          className="text-sm text-primary hover:underline"
-          data-testid="cash-tax-view-payments"
-        >
-          View payments
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            href={paymentsPath()}
+            className="text-sm text-primary hover:underline"
+            data-testid="cash-tax-view-payments"
+          >
+            View payments
+          </Link>
+          <HelpPopover
+            placement="dashboard.cash-tax"
+            label="About the balance basis & taxes"
+            testId="help-dashboard-cash-tax"
+          />
+        </div>
       }
     >
       <div className="rounded-xl border ring-1 ring-foreground/5">

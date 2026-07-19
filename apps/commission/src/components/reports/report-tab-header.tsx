@@ -1,3 +1,4 @@
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import { reportTabBySlug, type ReportTabSlug } from "@/lib/reports/tabs";
 
 /**
@@ -28,9 +29,12 @@ export function ReportTabHeader({
     // buttons) off the printed page — the print layout supplies its own header block.
     <div className="no-print flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold tracking-tight" data-testid="report-title">
-          {tab.title}
-        </h2>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold tracking-tight" data-testid="report-title">
+            {tab.title}
+          </h2>
+          <LegendExplainer />
+        </div>
         <p className="max-w-2xl text-sm text-pretty text-muted-foreground">
           {tab.description}
         </p>

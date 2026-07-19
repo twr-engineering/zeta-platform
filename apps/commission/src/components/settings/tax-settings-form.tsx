@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { InputField } from "@/components/affordance/input-field";
+import { HelpPopover } from "@/components/help/help-popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,11 @@ export function TaxSettingsForm({ settings, affectedDeals }: TaxSettingsFormProp
           onChange={(value) => set("ewtRatePercent", value)}
           error={errors.ewt_rate}
           testId="ewt-rate-input"
+          help={{
+            placement: "settings.tax",
+            label: "About the EWT 5% sworn-declaration option",
+            testId: "help-settings-tax",
+          }}
         />
 
         <div className="space-y-1.5">
@@ -282,6 +288,8 @@ type PercentFieldProps = {
   onChange: (value: string) => void;
   error?: string;
   testId: string;
+  /** M10.4 (FR-M10-12): an optional doctrine "?" on the field label. */
+  help?: { placement: string; label: string; testId?: string };
 };
 
 function PercentField({
@@ -292,10 +300,16 @@ function PercentField({
   onChange,
   error,
   testId,
+  help,
 }: PercentFieldProps) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-1">
+        <Label htmlFor={id}>{label}</Label>
+        {help && (
+          <HelpPopover placement={help.placement} label={help.label} testId={help.testId} />
+        )}
+      </div>
       <div className="flex items-center gap-2">
         <InputField
           id={id}

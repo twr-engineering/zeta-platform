@@ -4,6 +4,7 @@ import { AlertTriangle, Download, TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/empty-state";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import { getYieldSummaryView } from "@/lib/yield/report-queries";
 import { manilaYear } from "@/lib/date/manila";
 import { dealDetailPath, exportPath, ROUTES } from "@/lib/routes";
@@ -62,7 +63,10 @@ export default async function YieldSummaryPage({
       <div className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">Yield Summary</h1>
+            <div className="flex items-center gap-1">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">Yield Summary</h1>
+              <LegendExplainer />
+            </div>
             <p className="max-w-2xl text-sm text-pretty text-muted-foreground">
               Blended sales yield + blended avg sale price feed the GCI Calculator.
               Developer = pre-selling + RFO. Rental &amp; Referral separate.
@@ -128,9 +132,10 @@ export default async function YieldSummaryPage({
 
       {!hasAnyData ? (
         <EmptyState
+          testId="empty-state-yield"
           icon={<TrendingUp />}
           title="No deals yet — realized yields appear once deals are logged"
-          description="Group your closed deals into Resale, Developer, Rental and Referral, and read the realized yield and average price per segment. Log a deal in the Deal Log to light this up."
+          description="Segments, blended yield and average price appear after your first Sale deal — grouped into Resale, Developer, Rental and Referral. Log a deal in the Deal Log to light this up."
           action={
             <Button nativeButton={false} render={<Link href={ROUTES.deals} />}>
               Go to the Deal Log

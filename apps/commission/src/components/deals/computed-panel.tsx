@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { LockedValue } from "@/components/affordance/locked-value";
+import { HelpPopover } from "@/components/help/help-popover";
 import { Badge } from "@/components/ui/badge";
 import { formatPHP, formatYield } from "@/lib/money";
 import type { DealDerived } from "@/lib/engine";
@@ -60,9 +61,16 @@ export function ComputedPanel({
         </span>
         {derived && (
           <>
-            <Badge variant="secondary" data-testid="badge-property-vat">
-              Property VAT: {PROPERTY_VAT_TEXT[derived.property_vat]}
-            </Badge>
+            <span className="inline-flex items-center gap-0.5">
+              <Badge variant="secondary" data-testid="badge-property-vat">
+                Property VAT: {PROPERTY_VAT_TEXT[derived.property_vat]}
+              </Badge>
+              <HelpPopover
+                placement="deal-form.property-vat"
+                label="About Property VAT & Force VAT"
+                testId="help-deal-property-vat"
+              />
+            </span>
             <Badge variant="secondary" data-testid="badge-vat-basis">
               VAT Basis: {VAT_BASIS_TEXT[derived.vat_basis]}
             </Badge>

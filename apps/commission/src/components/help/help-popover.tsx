@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/lib/help/markdown";
+import { logHelpOpened } from "@/lib/help/actions";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useHelpContent } from "./help-content-provider";
@@ -131,6 +132,16 @@ export function HelpPopover({
     ? help.articleForPlacement(placement)
     : help.getArticle(articleKey ?? "");
 
+  // help-opened instrumentation (FR-M10-18): fire once on the false→true edge,
+  // tagged with the placement (or article key). Fire-and-forget — never awaited,
+  // never allowed to throw into the open path (popover open < 100 ms, NFR).
+  const handleOpenChange = (next: boolean) => {
+    if (next && !open) {
+      void logHelpOpened(placement ?? articleKey ?? "").catch(() => {});
+    }
+    setOpen(next);
+  };
+
   const trigger = (
     <HelpTrigger label={label} className={triggerClassName} testId={testId} />
   );
@@ -138,7 +149,7 @@ export function HelpPopover({
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger render={trigger} />
         <SheetContent
           side="bottom"
@@ -157,7 +168,7 @@ export function HelpPopover({
   }
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <PopoverPrimitive.Trigger render={trigger} />
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner side={side} sideOffset={6} className="z-50">

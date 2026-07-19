@@ -6,6 +6,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 
 import { InputField } from "@/components/affordance/input-field";
 import { SelectField } from "@/components/affordance/select-field";
+import { HelpPopover } from "@/components/help/help-popover";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -305,7 +306,15 @@ export function DealForm({
           </FieldRow>
 
           <FieldRow>
-            <Field label="Client / counterparty" htmlFor="clientName">
+            <Field
+              label="Client / counterparty"
+              htmlFor="clientName"
+              help={{
+                placement: "deal-form.client",
+                label: "About Client / Counterparty & Rate %",
+                testId: "help-deal-client",
+              }}
+            >
               <InputField
                 id="clientName"
                 value={values.clientName}
@@ -318,6 +327,11 @@ export function DealForm({
             <Field
               label="Representation"
               htmlFor="representation"
+              help={{
+                placement: "deal-form.representation",
+                label: "About Agent Representation",
+                testId: "help-deal-representation",
+              }}
               caption={
                 values.representation
                   ? REPRESENTATION_CAPTIONS[values.representation as keyof typeof REPRESENTATION_CAPTIONS]
@@ -375,7 +389,16 @@ export function DealForm({
                 data-testid="field-propertyDetails"
               />
             </Field>
-            <Field label="Mode of payment" htmlFor="modeOfPayment" caption={MODE_OF_PAYMENT_CAPTION}>
+            <Field
+              label="Mode of payment"
+              htmlFor="modeOfPayment"
+              help={{
+                placement: "deal-form.mode-of-payment",
+                label: "About Mode of Payment",
+                testId: "help-deal-mode-of-payment",
+              }}
+              caption={MODE_OF_PAYMENT_CAPTION}
+            >
               <SelectField
                 id="modeOfPayment"
                 value={values.modeOfPayment}
@@ -408,7 +431,15 @@ export function DealForm({
             </Field>
 
             {isDeveloper && (
-              <Field label="Force VAT" caption="Adjacent-property rule: 2+ adjacent units, same developer, same buyer within 12 months. One deliberate toggle.">
+              <Field
+                label="Force VAT"
+                help={{
+                  placement: "deal-form.force-vat",
+                  label: "About Property VAT & Force VAT",
+                  testId: "help-deal-force-vat",
+                }}
+                caption="Adjacent-property rule: 2+ adjacent units, same developer, same buyer within 12 months. One deliberate toggle."
+              >
                 <CheckboxRow
                   id="forceVat"
                   checked={values.forceVat}
@@ -421,7 +452,15 @@ export function DealForm({
           </FieldRow>
 
           <FieldRow>
-            <Field label="Commission basis" htmlFor="commissionBasis">
+            <Field
+              label="Commission basis"
+              htmlFor="commissionBasis"
+              help={{
+                placement: "deal-form.commission-basis",
+                label: "About VAT-inclusive billing & the Fixed-basis escape hatch",
+                testId: "help-deal-commission-basis",
+              }}
+            >
               <SelectField
                 id="commissionBasis"
                 value={values.commissionBasis}
@@ -438,6 +477,11 @@ export function DealForm({
               <Field
                 label="Rate %"
                 htmlFor="rate"
+                help={{
+                  placement: "deal-form.rate",
+                  label: "About Client / Counterparty & Rate %",
+                  testId: "help-deal-rate",
+                }}
                 caption="Your rate, already net of any co-broke split. Enter a % (5) or a fraction (1/12)."
               >
                 <div className="flex gap-2">
@@ -527,7 +571,16 @@ export function DealForm({
           </FieldRow>
 
           <FieldRow>
-            <Field label="Referral out % " htmlFor="referralOutPct" caption="A fee you disburse yourself to a 3rd party. Not for splits deducted at source.">
+            <Field
+              label="Referral out % "
+              htmlFor="referralOutPct"
+              help={{
+                placement: "deal-form.referral-out",
+                label: "About the What-to-Book doctrine",
+                testId: "help-deal-referral-out",
+              }}
+              caption="A fee you disburse yourself to a 3rd party. Not for splits deducted at source."
+            >
               <InputField
                 id="referralOutPct"
                 align="end"
@@ -627,16 +680,24 @@ function Field({
   label,
   htmlFor,
   caption,
+  help,
   children,
 }: {
   label: string;
   htmlFor?: string;
   caption?: string;
+  /** M10.4 (FR-M10-12): a doctrine "?" on the field label, wired by placement slug. */
+  help?: { placement: string; label: string; testId?: string };
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>{label}</Label>
+      <div className="flex items-center gap-1">
+        <Label htmlFor={htmlFor}>{label}</Label>
+        {help && (
+          <HelpPopover placement={help.placement} label={help.label} testId={help.testId} />
+        )}
+      </div>
       {children}
       {caption && <p className="text-xs text-pretty text-muted-foreground">{caption}</p>}
     </div>

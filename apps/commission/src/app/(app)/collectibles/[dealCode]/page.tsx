@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { HelpPopover } from "@/components/help/help-popover";
 import { ReceivableControls } from "@/components/receivables/receivable-controls";
 import { DealPaymentsPanel } from "@/components/payments/deal-payments-panel";
 import { ReceivableTimeline } from "@/components/receivables/receivable-timeline";
@@ -107,7 +108,14 @@ export default async function CollectibleDetailPage({ params }: PageProps) {
       {/* Booked vs collectible explainer — the module's most-misread rule */}
       <Card>
         <CardHeader>
-          <CardTitle>Booked NET GCI vs Total Collectible</CardTitle>
+          <div className="flex items-center gap-1">
+            <CardTitle>Booked NET GCI vs Total Collectible</CardTitle>
+            <HelpPopover
+              placement="receivable.header"
+              label="About Booked vs Collectible"
+              testId="help-receivable-header"
+            />
+          </div>
           <CardDescription>
             Booked NET GCI = earned after referral-outs; Total Collectible = full cash you expect in
             (you pay referrers separately — tracked on the Dashboard).

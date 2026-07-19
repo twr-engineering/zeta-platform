@@ -71,9 +71,10 @@ export default async function DealsPage({
     return (
       <div className="mx-auto max-w-2xl">
         <EmptyState
+          testId="empty-state-deals"
           icon={<FileText />}
           title="No deals yet — log your first closed deal"
-          description="Every closed deal booked here runs through the commission and VAT engine: GCI, NET GCI, tax memos and yield. Log one by hand, or import an existing ZETA workbook."
+          description="Every closed deal booked here runs through the commission and VAT engine: GCI, NET GCI, tax memos and yield. Log one by hand, or import your v30.x workbook."
           action={
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button nativeButton={false} render={<Link href={ROUTES.dealNew} />}>

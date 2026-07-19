@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label";
 import { InputField } from "@/components/affordance/input-field";
 import { FormStatus } from "@/components/forms/form-status";
 import { ConfirmGate } from "@/components/friction/confirm-gate";
+import { HelpPopover } from "@/components/help/help-popover";
+import { useHelpContent } from "@/components/help/help-content-provider";
+import { Markdown } from "@/lib/help/markdown";
+import { correctionsCases } from "@/lib/help/corrections";
 import {
   cancelReceivable,
   closeReceivable,
@@ -92,7 +96,7 @@ export function ReceivableControls(props: ReceivableControlsProps) {
               onClick={() => setShowAdjust((o) => !o)}
               data-testid="adjust-toggle"
             >
-              <SlidersHorizontal className="size-4" /> Adjust…
+              <SlidersHorizontal className="size-4" /> A number changed
             </Button>
             <CloseDialog {...props} />
             <CancelDialog {...props} />
@@ -102,52 +106,15 @@ export function ReceivableControls(props: ReceivableControlsProps) {
         )}
       </div>
 
-      {/* --- Adjust… : the three Corrections-doctrine cases (§3.3) ------- */}
+      {/* --- the Corrections-doctrine mini-flow (FR-M10-13, P6) ---------- */}
       {isOpen && showAdjust && (
-        <div
-          className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm"
-          data-testid="adjust-panel"
-        >
-          <p className="text-muted-foreground">
-            The number looks wrong — which is it? Pick the tool that matches what actually changed.
-          </p>
-          <AdjustCase
-            icon={<Pencil className="size-4" />}
-            title="The economics changed"
-            body="Price amended, rate renegotiated, or the wrong base — the earned GCI itself is different. Edit the deal; the receivable restates automatically."
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={<Link href={dealEditPath(dealCode)} />}
-              data-testid="adjust-edit-deal"
-            >
-              Edit the deal
-            </Button>
-          </AdjustCase>
-          <AdjustCase
-            icon={<Wallet className="size-4" />}
-            title="Earnings stand, expected cash differs — and you accept it"
-            body="A recomputed base you'll tolerate, part collected elsewhere, a netting arrangement. Confirm a different collectible, always with a note saying why."
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={revealOverride}
-              data-testid="adjust-confirm-collectible"
-            >
-              Confirm a different collectible
-            </Button>
-          </AdjustCase>
-          <AdjustCase
-            icon={<XCircle className="size-4" />}
-            title="You're eating a shortfall you don't agree with"
-            body="Touch nothing. Close the deal short and let Variance tell the story — it keeps short-paying developers visible in your %-collected stats."
-          >
+        <CorrectionsMiniFlow
+          dealCode={dealCode}
+          onConfirmCollectible={revealOverride}
+          closeShort={
             <CloseDialog {...props} triggerLabel="Close short" triggerVariant="outline" small />
-          </AdjustCase>
-        </div>
+          }
+        />
       )}
 
       {/* --- Confirmed Collectible override ------------------------------ */}
@@ -172,27 +139,194 @@ export function ReceivableControls(props: ReceivableControlsProps) {
   );
 }
 
-function AdjustCase({
-  icon,
-  title,
-  body,
+/**
+ * The Corrections-doctrine mini-flow (FR-M10-13, AC7): "A number changed — which
+ * case am I in?" Two yes/no questions route to exactly one of the doctrine's three
+ * cases; each terminal case renders the P6 doctrine text VERBATIM (sliced from the
+ * corrections-doctrine article, rule 12) beside the one action it prescribes:
+ *   Q1 "economics actually changed?"  Yes → case 1 (edit the deal)
+ *                                     No  → Q2
+ *   Q2 "accept the different cash?"   Yes → case 2 (Confirmed Collectible + note)
+ *                                     No  → case 3 (close short, let Variance tell it)
+ * The full doctrine stays one "?" away via the P6 popover in the header.
+ */
+function CorrectionsMiniFlow({
+  dealCode,
+  onConfirmCollectible,
+  closeShort,
+}: {
+  dealCode: string;
+  onConfirmCollectible: () => void;
+  closeShort: React.ReactNode;
+}) {
+  const help = useHelpContent();
+  const glossary = help.glossary;
+  const cases = correctionsCases(help.articleForPlacement("receivable.corrections"));
+
+  // null = at Q1; 'yes'/'no' = Q1 answered (Q2 shown when 'no'); terminal cases
+  // are derived from the pair of answers.
+  const [q1, setQ1] = useState<null | "yes" | "no">(null);
+  const [q2, setQ2] = useState<null | "yes" | "no">(null);
+
+  const reset = () => {
+    setQ1(null);
+    setQ2(null);
+  };
+
+  const outcome =
+    q1 === "yes" ? "case1" : q1 === "no" && q2 === "yes" ? "case2" : q1 === "no" && q2 === "no" ? "case3" : null;
+
+  return (
+    <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm" data-testid="adjust-panel">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium">A number changed — which case am I in?</p>
+        <HelpPopover
+          placement="receivable.corrections"
+          label="About the Collectible Corrections doctrine"
+          testId="help-receivable-corrections"
+        />
+      </div>
+
+      {/* Q1 */}
+      <div className="space-y-2" data-testid="adjust-q1">
+        <p className="text-muted-foreground">
+          Did the contract or economics actually change — price amended, rate renegotiated before
+          release, or the wrong base (and the contract backs the developer)?
+        </p>
+        <div className="flex gap-2">
+          <Button
+            variant={q1 === "yes" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setQ1("yes");
+              setQ2(null);
+            }}
+            data-testid="adjust-q1-yes"
+          >
+            Yes
+          </Button>
+          <Button
+            variant={q1 === "no" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setQ1("no")}
+            data-testid="adjust-q1-no"
+          >
+            No
+          </Button>
+        </div>
+      </div>
+
+      {/* Q2 — only once Q1 = No */}
+      {q1 === "no" && (
+        <div className="space-y-2 border-t pt-3" data-testid="adjust-q2">
+          <p className="text-muted-foreground">
+            The earnings stand, but the expected cash differs. Do you accept that different amount?
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant={q2 === "yes" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQ2("yes")}
+              data-testid="adjust-q2-yes"
+            >
+              Yes — I accept it
+            </Button>
+            <Button
+              variant={q2 === "no" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setQ2("no")}
+              data-testid="adjust-q2-no"
+            >
+              No — it&apos;s a shortfall I dispute
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Terminal case — verbatim doctrine + the one prescribed action */}
+      {outcome === "case1" && (
+        <CaseResult testId="adjust-case-1" doctrine={cases.case1} glossary={glossary}>
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<Link href={dealEditPath(dealCode)} />}
+            data-testid="adjust-edit-deal"
+          >
+            <Pencil className="size-4" /> Edit the deal
+          </Button>
+        </CaseResult>
+      )}
+      {outcome === "case2" && (
+        <CaseResult testId="adjust-case-2" doctrine={cases.case2} glossary={glossary}>
+          <Button variant="outline" size="sm" onClick={onConfirmCollectible} data-testid="adjust-confirm-collectible">
+            <Wallet className="size-4" /> Confirm a different collectible
+          </Button>
+        </CaseResult>
+      )}
+      {outcome === "case3" && (
+        <CaseResult testId="adjust-case-3" doctrine={cases.case3} glossary={glossary}>
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            <XCircle className="size-4" />
+            {closeShort}
+          </span>
+        </CaseResult>
+      )}
+
+      {outcome !== null && (
+        <button
+          type="button"
+          onClick={reset}
+          className="text-xs text-primary hover:underline"
+          data-testid="adjust-restart"
+        >
+          Start over
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** One terminal case: the verbatim doctrine text above its single prescribed action. */
+function CaseResult({
+  testId,
+  doctrine,
+  glossary,
   children,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
+  testId: string;
+  doctrine: string;
+  glossary: React.ComponentProps<typeof Markdown>["glossary"];
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex gap-2">
-        <span className="mt-0.5 text-muted-foreground">{icon}</span>
-        <div>
-          <p className="font-medium">{title}</p>
-          <p className="text-xs text-muted-foreground">{body}</p>
-        </div>
+    <div className="space-y-2 rounded-lg border bg-background p-3" data-testid={testId}>
+      <Markdown body={doctrine} glossary={glossary} />
+      <div>{children}</div>
+    </div>
+  );
+}
+
+/**
+ * The Closed-vs-Cancelled doctrine (P8, §6.3), rendered VERBATIM inside the
+ * status-change dialogs (AC8). The status dialog is P8's exact placement surface —
+ * the doctrine shows in-flow, not one popover away, because it is the rule the
+ * agent is about to act on. The "?" keeps it addressable for instrumentation.
+ */
+function StatusDoctrine() {
+  const help = useHelpContent();
+  const article = help.articleForPlacement("receivable.status-dialog");
+  return (
+    <div className="space-y-1.5 rounded-lg border bg-muted/40 p-3 text-sm" data-testid="status-doctrine-p8">
+      <div className="flex items-center gap-1">
+        <p className="font-medium">Closed vs Cancelled</p>
+        <HelpPopover
+          placement="receivable.status-dialog"
+          label="About Closed vs Cancelled"
+          testId="help-receivable-status-dialog"
+        />
       </div>
-      <div className="shrink-0">{children}</div>
+      <Markdown body={article.bodyMd} glossary={help.glossary} />
     </div>
   );
 }
@@ -244,6 +378,7 @@ function CloseDialog({
     >
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="expectedVersion" value={version} />
+      <StatusDoctrine />
     </ConfirmGate>
   );
 }
@@ -281,6 +416,7 @@ function CancelDialog({
     >
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="expectedVersion" value={version} />
+      <StatusDoctrine />
       <div className="space-y-1.5">
         <Label htmlFor="cancel-reason">Why are you cancelling?</Label>
         {/* Not HTML5-`required`: the server is the safeguard (§3.2) — an empty

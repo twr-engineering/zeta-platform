@@ -203,9 +203,10 @@ export function PlanningScreen({
       return (
         <div data-testid="plan-empty-basis">
           <EmptyState
+            testId="empty-state-calculator"
             icon={<TrendingUp />}
             title="No closed sales yet — enter a working yield and average price"
-            description={`Planning normally uses your all-time realized yield and average sale price, but this workspace has no closed sales. Set a yield and average price override for ${year} to plan with.`}
+            description={`Planning basis = your all-time realized yield and average price. Until you have deals, enter a manual Yield and Avg Price in the targets table for ${year} — the calculator runs either way.`}
             action={editGate("Enter yield & price", "empty-basis-edit")}
           />
         </div>

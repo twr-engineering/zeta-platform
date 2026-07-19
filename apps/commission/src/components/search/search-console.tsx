@@ -7,6 +7,7 @@ import { SlidersHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import {
   Sheet,
   SheetContent,
@@ -226,7 +227,10 @@ export function SearchConsole({
   return (
     <div className="space-y-5" data-testid="search-console" data-hydrated={hydrated ? "true" : "false"}>
       <header className="space-y-1">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Search</h1>
+        <div className="flex items-center gap-1">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Search</h1>
+          <LegendExplainer />
+        </div>
         {/* Read-only affordance — the sheet's own promise, preserved (§6). */}
         <p className="text-sm text-muted-foreground" data-testid="search-readonly-caption">
           Search is read-only — nothing here changes your data.
@@ -331,20 +335,30 @@ export function SearchConsole({
             className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center"
             data-testid="search-empty"
           >
-            {/* Verbatim — do not reword (Rule 8 / AC9). */}
-            <p className="text-sm text-muted-foreground" data-testid="search-empty-message">
-              {result?.emptyMessage}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              nativeButton={false}
-              render={<Link href={clearHref} scroll={false} />}
-              data-testid="search-clear-filters"
-            >
-              Clear filters
-            </Button>
+            {/* §6.4: a fresh, unfiltered view says "Nothing to search yet"; once any
+                filter is active the empty state is the sheet's verbatim message
+                (Rule 8 / AC9 — do not reword) with a way to clear the filters. */}
+            {activeFilterCount === 0 ? (
+              <p className="text-sm text-muted-foreground" data-testid="search-empty-message">
+                Nothing to search yet.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground" data-testid="search-empty-message">
+                  {result?.emptyMessage}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  nativeButton={false}
+                  render={<Link href={clearHref} scroll={false} />}
+                  data-testid="search-clear-filters"
+                >
+                  Clear filters
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           result && <SearchResults result={result} />

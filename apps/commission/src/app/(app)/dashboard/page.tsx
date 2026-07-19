@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { HelpPopover } from "@/components/help/help-popover";
+import { LegendExplainer } from "@/components/help/legend-explainer";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { getOnboardingState } from "@/lib/onboarding/queries";
 import {
@@ -115,7 +117,15 @@ export default async function DashboardPage({
       <div className="sticky top-14 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
+            <div className="flex items-center gap-1">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
+              <HelpPopover
+                placement="dashboard.header"
+                label="About this product's philosophy"
+                testId="help-dashboard-header"
+              />
+              <LegendExplainer />
+            </div>
             <p className="text-sm text-muted-foreground">
               How much you&rsquo;re owed, what&rsquo;s landed, and whether you&rsquo;re on pace.
             </p>
@@ -143,10 +153,12 @@ export default async function DashboardPage({
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <div>
-              <h2 className="text-base font-semibold">Log deals and payments to light this up</h2>
+              <h2 className="text-base font-semibold">
+                Your position appears after your first deal; pace after your first payment
+              </h2>
               <p className="mt-1 text-sm text-pretty text-muted-foreground">
-                Your position, pace, and cash breakdown fill in the moment you log your
-                first deal and record a release against it.
+                Log a deal and your collection position lights up; record a release and the
+                cash breakdown and pace fill in. The checklist below tracks both.
               </p>
             </div>
           </div>
