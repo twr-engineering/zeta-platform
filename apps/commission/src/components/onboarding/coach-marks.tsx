@@ -77,13 +77,21 @@ export function CoachMarks({
   const next = () => (isLast ? onFinish() : setIndex((i) => i + 1));
   const back = () => setIndex((i) => Math.max(0, i - 1));
 
-  // Desktop card position: below the anchor when there's room, else above.
+  // Desktop card position: below the anchor when there's room, else above — but
+  // ALWAYS clamped fully inside the viewport. Without the clamp, an anchor scrolled
+  // above the fold (rect.top negative) drove the fixed card off the top of the
+  // screen (top < 0), leaving Back/Next/Skip unreachable (M10.5 reachability fix).
   const cardStyle: React.CSSProperties = (() => {
     if (isMobile || !rect) return {};
+    // Generous upper bound on the card's own height; the real card is shorter, so
+    // this keeps the whole card on-screen with margin to spare.
+    const CARD_H = 240;
     const below = rect.top + rect.height + 12;
     const spaceBelow = window.innerHeight - (rect.top + rect.height);
     const placeBelow = spaceBelow > 220;
-    const top = placeBelow ? below : Math.max(12, rect.top - 12 - 200);
+    const desired = placeBelow ? below : rect.top - 12 - CARD_H;
+    const maxTop = Math.max(12, window.innerHeight - CARD_H - 12);
+    const top = Math.min(Math.max(12, desired), maxTop);
     const left = Math.min(Math.max(12, rect.left), window.innerWidth - 360 - 12);
     return { position: "fixed", top, left, width: 360, zIndex: 60 };
   })();
@@ -115,7 +123,17 @@ export function CoachMarks({
         role="dialog"
         aria-modal="false"
         aria-labelledby="coach-title"
+        aria-describedby="coach-body"
         tabIndex={-1}
+        // Escape dismisses the tour — the standard keyboard affordance for a
+        // dialog. Scoped to the card (it auto-focuses each step), so it never
+        // steals Escape from a native select open in the form beneath.
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.stopPropagation();
+            onSkip();
+          }
+        }}
         data-testid="coach-mark"
         className={cn(
           "z-[60] rounded-xl border bg-card p-4 shadow-lg outline-none",
@@ -141,7 +159,9 @@ export function CoachMarks({
         <h3 id="coach-title" className="font-heading text-base font-medium">
           {mark.title}
         </h3>
-        <p className="mt-1 text-sm text-pretty text-muted-foreground">{mark.body}</p>
+        <p id="coach-body" className="mt-1 text-sm text-pretty text-muted-foreground">
+          {mark.body}
+        </p>
         <div className="mt-4 flex items-center justify-between gap-2">
           <Button
             type="button"

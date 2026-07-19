@@ -101,3 +101,87 @@ jobs:
       # money-safe types (a float in a rate column fails to compile).
       - name: Build
         run: pnpm run build
+
+  # ---------------------------------------------------------------------------
+  # M10.5 CI hardening — the two §9 journey scripts (AC1 import, AC2 fresh-start)
+  # plus the AC12 mobile variant, run against a PRODUCTION build server, not
+  # `next dev`.
+  #
+  # WHY a prod server (the M10.4 recommendation): `next dev` recompiles a route on
+  # first hit, and a server-action POST that races that compile fails with "an
+  # unexpected response was received from the server" — a harness artifact, not a
+  # product bug. `next build` + `next start` serves prebuilt routes, so that flake
+  # class does not exist. The journeys assert the §9 acceptance anchor (dashboard
+  # ties to the sheet to the centavo) and the <10-min wizard NFR — they must not be
+  # muddied by dev-server noise. playwright.config.ts drives this via E2E_PROD=1
+  # (baseURL → :3100, its webServer runs `next start -p 3100` on the .next-build
+  # output, zero local retries because the race is gone).
+  #
+  # GATED: this job needs a REAL Supabase project (the journeys provision throwaway
+  # users via the admin API and import the workbook). It runs only when the repo
+  # sets the `RUN_E2E` variable to "true" AND provides the E2E_* secrets — so on a
+  # fork or a secret-less repo it is skipped and the `verify` job above remains the
+  # whole of CI. To enable: set repo variable RUN_E2E=true and secrets
+  # E2E_SUPABASE_URL / E2E_SUPABASE_ANON_KEY / E2E_SUPABASE_SERVICE_ROLE_KEY (a
+  # DISPOSABLE project — the journeys write real rows, then delete their own users;
+  # delta-residue is zero, but never point this at production data).
+  #
+  # To widen coverage to the WHOLE e2e suite against the prod server, change the
+  # journeys path below to `pnpm run test:e2e:prod` (runs every tests/e2e spec at
+  # :3100). We default to the journeys because they are the high-value acceptance
+  # proof and keep the gated job fast; the rest of the suite is exercised locally
+  # against the dev server (see tests/e2e/README.md and playwright.config.ts).
+  e2e-prod:
+    runs-on: ubuntu-latest
+    if: ${{ vars.RUN_E2E == 'true' }}
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser (chromium)
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The journey specs read .env.local for the admin (service-role) client they
+      # use to provision + delete throwaway users. Write it from the gated secrets.
+      - name: Write .env.local for the journey admin client
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.E2E_SUPABASE_URL }}"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.E2E_SUPABASE_ANON_KEY }}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3100"
+          } > .env.local
+
+      # Production build into .next-build — the exact dir the :3100 server reads.
+      - name: Production build
+        run: pnpm run build:check
+
+      # Run the journeys against the prod server (playwright.config's webServer
+      # starts `next start -p 3100` and waits for /login before the specs run — that
+      # readiness gate doubles as a route pre-warm).
+      - name: E2E journeys (AC1 import, AC2 fresh-start, AC12 mobile) — prod server
+        run: pnpm run test:journeys
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T00:00:00+08:00 (M10.4 — Contextual help placements & empty states across modules)
+# Last Updated: 2026-07-19T12:00:00+08:00 (M10.5 — Mobile, E2E journey scripts & hardening ← M10 COMPLETE — ALL 42 PRD MILESTONES COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -53,12 +53,101 @@
 - [x] M10.2: First-run wizard core, steps 1–4
 - [x] M10.3: First-deal walkthrough, sample lifecycle & checklist
 - [x] M10.4: Contextual help placements & empty states across modules
-- [ ] M10.5: Mobile, end-to-end scripts & hardening
+- [x] M10.5: Mobile, end-to-end scripts & hardening  ← ★ M10 COMPLETE — ALL 42 PRD MILESTONES COMPLETE ★
 - [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
-- [ ] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
+- [x] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
+      ↳ PROVEN LIVE by M10.5's E2E journeys against a REAL throwaway workspace on a prod build:
+        AC1 import journey asserts the three §9 dashboard tiles to the centavo + D021 detail
+        (Collected ₱44,642.86 / Balance ₱309,948.98) after importing the real v30.20 workbook in
+        the browser; AC2 fresh-start journey asserts the D021 walkthrough NET GCI ₱354,591.84 and
+        the ₱50,000 release split (…/Net Cash ₱45,535.71) live from M1/M5's engine. The calculator
+        (₱16,920,000 / ₱381,676.31 / 44.33) + fixture N1 non-VAT remain proven by M3.4 and the
+        engine unit tests (tests/unit/engine/**, 540 unit tests green) — M10 computes no money.
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M10.5 COMPLETE — Mobile pass, the two automated §9 E2E journeys in CI, the <10-min timing
+proof, and the accessibility pass. ★ M10 COMPLETE — ALL 42 PRD MILESTONES COMPLETE ★** M10 owns
+NO financial logic — the journeys assert M1/M5 engine responses rendered as-is.
+
+MOBILE (rule 13 / AC12): audited the full wizard steps 1–5 + the typed-along walkthrough at
+360×780 in a real browser — ZERO horizontal overflow at every step; help "?" popovers become
+bottom sheets (SheetContent side=bottom, with a close control); coach-marks become a bottom sheet
+pinned inset-x-2 bottom-2; the walkthrough reuses M1's real (mobile-stacked) deal form; computed
+rows carry a lock icon so the legend never reads by colour alone. The M10.2/M10.3 components were
+already built mobile-aware and held up — the mobile pass needed no layout fix. AC12 is now guarded
+by a 360px journey test (see below).
+
+E2E JOURNEYS (new, tests/e2e/journeys/, run against a PROD build — see CI posture):
+- AC1 import-journey.spec.ts: fresh signup → wizard (name "Zeta Group" → tax confirm → accept
+  Property Types, skip Developers → Import) → real v30.20 workbook dry-run (21 deals / 8 payments /
+  0 mismatches, §9 anchors in the summary) → commit → finish → DASHBOARD ties to the sheet to the
+  centavo (₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39) + checklist settings✓ importer✓
+  first_deal✓ first_payment✓ (imported records are real, rule 10 only spares samples) + D021
+  detail Balance ₱309,948.98 / history ₱44,642.86. Skips cleanly if the real workbook is absent.
+- AC2 fresh-start-journey.spec.ts: fresh signup → "Start fresh" → typed-along walkthrough
+  (computed NET GCI ₱354,591.84 live) → sample release (split Net Cash ₱45,535.71) → KEEP →
+  badges/banner across /deals + /dashboard, sample does NOT tick first_deal/first_payment (rule 10)
+  → Remove sample (one transaction) → dashboards read ₱0.00 → then a FIRST REAL deal that DOES tick
+  first_deal. Plus the AC12 mobile variant (viewport 360×780) completing the whole wizard +
+  walkthrough, asserting help → bottom sheet and coach → bottom sheet.
+- TIMING NFR (<10 min incl. import, PRD §8 / FR-M10-18): each journey captures wall-clock
+  wizard-open → anchor-on-screen and asserts < 10 min, reporting the number as a test annotation.
+  MEASURED (prod build, cold): AC1 import journey 13.3s; AC2 fresh-start 16.2s — both ~40× inside
+  budget. (The importer, not the wizard chrome, is the slow leg; well under the 2-min importer
+  budget on the 21-deal file.)
+
+BUG FOUND + FIXED by the journeys (real reachability defect, desktop): the coach-mark card is
+`position: fixed`; its top was computed from the anchor rect with NO viewport clamp on the
+place-below branch, so an anchor scrolled above the fold drove the card to a NEGATIVE top (measured
+top:-105) — Back/Next/Skip rendered off the top of the screen, unreachable (a fixed element can't
+be scrolled into view). Fixed in src/components/onboarding/coach-marks.tsx by clamping the card top
+to [12, innerHeight − CARD_H − 12]. Verified: coach-skip now inView top:29. Guarded by the AC2
+desktop journey (a regressed card hangs the coach-skip click). The existing M10.3 walkthrough
+e2e test shared this fragility and is now robust too.
+
+ACCESSIBILITY PASS (PRD §8):
+- Help popovers / bottom sheets — keyboard-navigable + SR-labeled, verified LIVE: the "?" trigger
+  is focusable and carries an aria-label ("About the product philosophy"), Enter opens, focus moves
+  into the popover, Escape closes, focus returns to the trigger (Base UI Popover/Dialog primitives).
+- Coach-marks — role="dialog" + aria-labelledby (coach-title) + NOW aria-describedby (coach-body);
+  auto-focuses the card each step; Back/Next/Skip are real buttons. FIX: added Escape-to-dismiss
+  (scoped to the card so it never steals Escape from a native select in the form beneath) — the
+  standard keyboard affordance the overlay was missing.
+- Legend never colour-alone (PRD §8, rule 14) — CONFIRMED: LockedValue renders a Lock (computed)
+  or Link2 (linked) icon carrying the meaning by shape; the tooltip trigger is keyboard-focusable
+  (tabIndex=0) so the formula is reachable without a mouse; the legend copy itself names "a lock
+  icon"/"a link" verbatim. No fix needed.
+
+CI HARDENING (the M10.4 recommendation — run E2E against a production build, not `next dev`):
+- playwright.config.ts: TWO postures. LOCAL (default) hits the user-owned `next dev` :3000 and
+  keeps the one-retry + 15s-expect crutches that absorb the dev-server route-recompile race. PROD
+  (E2E_PROD=1) hits `next build` + `next start -p 3100`: baseURL swaps to :3100, a `webServer`
+  block starts/reuses that server (reads .next-build), and retries drop to 0 — a prebuilt server
+  has no per-route compile, so the recompile-race flake class simply does not exist.
+- package.json: test:e2e:prod (whole suite on prod) + test:journeys (journeys on prod).
+- .github/workflows/ci.yml: NEW gated `e2e-prod` job (additive — the placeholder-only `verify`
+  job is untouched). It runs only when repo var RUN_E2E=true and the E2E_* secrets exist (a
+  DISPOSABLE Supabase project) — so secret-less repos/forks skip it and `verify` stays the whole of
+  CI. Steps: install → playwright chromium → write .env.local from secrets → build:check → run the
+  journeys at :3100 (the webServer's /login readiness gate doubles as a route pre-warm) → upload
+  the report. To widen to the whole suite on prod, swap `test:journeys` for `test:e2e:prod`.
+- FLAKE-CLASS COMPARISON (measured): 21 M10 e2e tests (the 3 journeys + the 18 existing M10 specs)
+  ran GREEN on the :3100 prod server with retries=0, first try, no flake. On `next dev` the same
+  class of server-action-vs-recompile race is why the config carries retries:1 + a 15s expect
+  window. POSTURE DECISION: the two §9 journeys are the high-value acceptance proof → they run on
+  the prod build in CI (gated). The full suite's canonical run stays dev:3000 locally (its existing
+  posture, per tests/e2e/README.md); it can be flipped to prod wholesale via test:e2e:prod when a
+  disposable project is wired. I did NOT run the entire mutating suite against the live shared DB
+  to avoid churning the real account; the M10 slice above is the representative prod-green evidence.
+
+VERIFICATION (M10.5): 540 unit tests green; build:check clean (tsc enforces money-safe types);
+lint clean; the 3 journeys + 18 existing M10 e2e specs green on the prod build (workers=1, 0
+retries); delta-residue ZERO (0 throwaway users left, 0 is_sample rows in deal/receivable/payment,
+the real account's 4 workspaces untouched). The remaining unchecked tracker item is the DESIGN PASS
+(user-requested, post-M10, deliberately separate — typography + deep-green/gold refresh).
+
+--------------------------------------------------------------------------------
 **M10.4 COMPLETE — Contextual help placements, the M4 corrections mini-flow, the empty-state
 registry, the legend-consistency sweep + audit, and help-opened instrumentation.** M10 owns NO
 financial logic — this is placement/content wiring, empty-state copy, and one lightweight event.
