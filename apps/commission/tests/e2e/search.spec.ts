@@ -433,3 +433,149 @@ test("the export route is read-only — a write verb returns 405 (FR-M9-14)", as
     expect(res.status(), `${verb.toUpperCase()} should be 405`).toBe(405);
   }
 });
+
+// === M9.4 — unified "All" tab ==============================================
+
+test("All tab renders three grouped sections; year label neutral, no sort/status (M9.4)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all");
+
+  await expect(page.getByTestId("search-tab-all")).toHaveAttribute("data-active", "true");
+  // Three sections, in §3.2 order, each with the Rule-3 basis annotation.
+  await expect(page.getByTestId("search-section-deals")).toBeVisible();
+  await expect(page.getByTestId("search-section-collectibles")).toBeVisible();
+  await expect(page.getByTestId("search-section-payments")).toBeVisible();
+  await expect(page.getByTestId("search-section-deals")).toHaveAttribute("data-year-basis", "booked");
+  await expect(page.getByTestId("search-section-collectibles")).toHaveAttribute("data-year-basis", "booked");
+  await expect(page.getByTestId("search-section-payments")).toHaveAttribute("data-year-basis", "paid");
+  await expect(page.getByTestId("search-section-payments-basis")).toHaveText("by year paid");
+
+  // On the combined tab the year control reads neutral "Year"; sort/status are hidden.
+  await expect(page.getByTestId("search-year")).toHaveAttribute("data-year-label", "Year");
+  await expect(page.getByTestId("search-sort")).toHaveCount(0);
+  await expect(page.getByTestId("search-status")).toHaveCount(0);
+});
+
+test("All + text 'lainie' → Deals 3, Collectibles 3, Payments empty state (M9.4 DoD)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all");
+
+  await page.getByTestId("search-text").fill("lainie");
+  await expect(page).toHaveURL(/source=all/);
+  await expect(page).toHaveURL(/text=lainie/);
+
+  await expect(page.getByTestId("search-section-deals-count")).toHaveText("3 matching records");
+  await expect(page.getByTestId("search-section-collectibles-count")).toHaveText("3 matching records");
+  await expect(page.getByTestId("search-section-payments-count")).toHaveText("0 matching records");
+
+  // Deals + Collectibles render 3 rows each; Payments shows the verbatim empty state.
+  await expect(
+    page.locator('[data-testid="search-section-deals"] [data-testid="search-row"]')
+  ).toHaveCount(3);
+  await expect(
+    page.locator('[data-testid="search-section-collectibles"] [data-testid="search-row"]')
+  ).toHaveCount(3);
+  await expect(page.getByTestId("search-section-payments-empty")).toHaveText(
+    "No matching records — adjust your filters above."
+  );
+  // Combined count readout across all sources.
+  await expect(page.getByTestId("search-count-all")).toHaveText("6");
+});
+
+test("All + Deal ID D021 → one row per section with the exact figures (M9.4)", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all&deal_code=D021");
+
+  const dealRow = page.locator('[data-testid="search-section-deals"] [data-testid="search-row"]');
+  await expect(dealRow).toHaveCount(1);
+  await expect(dealRow.first().getByTestId("search-net-gci")).toContainText("354,591.84");
+
+  const collRow = page.locator('[data-testid="search-section-collectibles"] [data-testid="search-row"]');
+  await expect(collRow).toHaveCount(1);
+  await expect(collRow.first().getByTestId("search-balance")).toContainText("309,948.98");
+
+  const payRow = page.locator('[data-testid="search-section-payments"] [data-testid="search-row"]');
+  await expect(payRow).toHaveCount(1);
+  await expect(payRow.first().getByTestId("search-gross")).toContainText("50,000.00");
+});
+
+test("All tab — 'view all in tab' carries the shared filters into the source tab", async ({
+  page,
+}) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all&text=ventura");
+
+  await page.getByTestId("search-section-collectibles-viewall").click();
+  await expect(page).toHaveURL(/source=collectibles/);
+  await expect(page).toHaveURL(/text=ventura/);
+  // Landed on the single-source Collectibles tab with the shared text preserved.
+  await expect(page.getByTestId("search-tab-collectibles")).toHaveAttribute("data-active", "true");
+  await expect(page.getByTestId("search-text")).toHaveValue("ventura");
+});
+
+test("tab switch All ↔ Deals preserves the text filter (§6)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=deals&text=ventura");
+
+  await page.getByTestId("search-tab-all").click();
+  await expect(page).toHaveURL(/source=all/);
+  await expect(page.getByTestId("search-text")).toHaveValue("ventura");
+  await expect(page.getByTestId("search-section-deals")).toBeVisible();
+
+  await page.getByTestId("search-tab-deals").click();
+  await expect(page).toHaveURL(/source=deals/);
+  await expect(page.getByTestId("search-text")).toHaveValue("ventura");
+});
+
+test("All tab export — multi-sheet XLSX + per-section CSV (M9.4)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all&deal_code=D021");
+
+  // Combined workbook (Deals · Collectibles · Payments sheets).
+  const [xlsx] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByTestId("export-search-xlsx").click(),
+  ]);
+  expect(xlsx.suggestedFilename()).toMatch(/^zeta-search-all-d021-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  const xbuf = readFileSync((await xlsx.path())!);
+  expect(xbuf.subarray(0, 2).toString("latin1")).toBe("PK"); // a valid zip/xlsx
+
+  // Per-section CSV (the Deals section) — one D021 row, §3.2 Deals columns.
+  const [csv] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByTestId("export-search-csv-deals").click(),
+  ]);
+  expect(csv.suggestedFilename()).toMatch(/^zeta-search-deals-d021-\d{4}-\d{2}-\d{2}\.csv$/);
+  const lines = readFileSync((await csv.path())!, "utf8").replace(/^﻿/, "").trimEnd().split("\r\n");
+  expect(lines[0]).toBe(
+    "Deal ID,Date,Transaction,Deal Type,Developer,Client,Property,NET GCI"
+  );
+  expect(lines.length).toBe(2); // header + the single D021 row
+  expect(lines[1]).toMatch(/^D021,/);
+  expect(lines[1]).toContain("354591.84");
+});
+
+test("All tab at 360px — sections stack, rows become cards (§6)", async ({ page }) => {
+  test.skip(!HAVE_WORKBOOK, "real workbook not present");
+  await page.setViewportSize({ width: 360, height: 780 });
+  await signIn(page, email);
+  await gotoSearch(page, "?source=all&deal_code=D021");
+
+  // Each section reflows to a card at 360px.
+  await expect(
+    page.locator('[data-testid="search-section-deals"] [data-testid="search-card"]').first()
+  ).toBeVisible();
+  await expect(page.getByTestId("search-section-deals-count")).toHaveText("1 matching record");
+});

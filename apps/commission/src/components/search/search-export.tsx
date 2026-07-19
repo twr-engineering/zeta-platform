@@ -10,74 +10,154 @@ import {
 } from "@/components/ui/tooltip";
 import { serializeSearchQuery } from "@/lib/search/params";
 import { searchExportPath } from "@/lib/routes";
-import { DEFAULT_PAGE_SIZE, type SearchQuery } from "@/lib/search/types";
+import { buildSectionQuery } from "@/lib/search/sections";
+import {
+  DEFAULT_PAGE_SIZE,
+  SEARCH_SECTIONS,
+  type SearchQuery,
+  type SearchSource,
+} from "@/lib/search/types";
 
 /**
- * M9.3 — the Search Console's CSV/XLSX export pair (FR-M9-11, §6 "Export button on
- * the table header, disabled at zero rows"). Two links, not a fetch: a download is
- * a navigation the browser performs, and the server route (/api/export/search)
- * streams the filtered/sorted set carrying the current SearchQuery — so the file is
- * exactly what is on screen across all pages (AC11), with zero client-side money
- * math or row assembly.
+ * M9.3/M9.4 — the Search Console's export controls (FR-M9-11, §6 "Export button on the
+ * table header, disabled at zero rows"). Downloads are navigations the browser
+ * performs, not fetches, so each control is a link (or a disabled button + tooltip);
+ * the server route (/api/export/search) streams the filtered/sorted set carrying the
+ * current SearchQuery — the file is exactly what's on screen across all pages (AC11),
+ * with zero client-side money math or row assembly. The href drops page/page_size so
+ * the file is every matching row, not the visible page.
  *
- * The href drops page/page_size (the export is every matching row, not the visible
- * page) and rides the same `serializeSearchQuery` the URL uses, so filename +
- * contents always match the active search.
- *
- * DISABLED AT ZERO ROWS (§6): the buttons render disabled with a tooltip rather than
- * vanishing, so the affordance stays discoverable — there is simply nothing to pull
- * until a filter matches.
+ * On the unified All tab the sources have three different §3.2 column sets, so a single
+ * CSV can't hold them (Rule 2 — never a merged column set). The export therefore is:
+ *   • one multi-sheet XLSX workbook (Deals · Collectibles · Payments sheets), and
+ *   • one CSV per section (three separate files, per the M9.4 deliverable),
+ * each disabled when its own section (or, for the workbook, all sections) is empty.
  */
+
+/** A single download affordance — a link when live, a tooltip'd disabled button at zero. */
+function DownloadButton({
+  href,
+  label,
+  testId,
+  ariaLabel,
+  disabled,
+  emptyHint,
+}: {
+  href: string;
+  label: string;
+  testId: string;
+  ariaLabel: string;
+  disabled: boolean;
+  emptyHint: string;
+}) {
+  if (disabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              data-testid={testId}
+              aria-label={`${ariaLabel} (nothing to export)`}
+            >
+              <Download className="size-4" /> {label}
+            </Button>
+          }
+        />
+        <TooltipContent>{emptyHint}</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      nativeButton={false}
+      render={<a href={href} />}
+      data-testid={testId}
+      aria-label={ariaLabel}
+    >
+      <Download className="size-4" /> {label}
+    </Button>
+  );
+}
+
+const SECTION_LABEL: Record<SearchSource, string> = {
+  deals: "Deals",
+  collectibles: "Collectibles",
+  payments: "Payments",
+};
+
 export function SearchExport({
   query,
   disabled,
+  sectionCounts,
 }: {
   query: SearchQuery;
+  /** Single-source: true at zero rows. Ignored on the All tab (per-section counts drive it). */
   disabled: boolean;
+  /** All-tab only — the per-section totals that gate each file. */
+  sectionCounts?: Record<SearchSource, number>;
 }) {
-  // Reset pagination so page/page_size never leak into the export URL — the file is
-  // all matching rows regardless of which page the screen is on.
-  const params = serializeSearchQuery({ ...query, page: 1, pageSize: DEFAULT_PAGE_SIZE });
+  // --- Unified All tab: multi-sheet workbook + one CSV per section ---
+  if (query.source === "all") {
+    const counts = sectionCounts ?? { deals: 0, collectibles: 0, payments: 0 };
+    const grandTotal = counts.deals + counts.collectibles + counts.payments;
+    // The workbook carries the whole All query (source=all) — the route fans it into
+    // three sheets. page/page_size reset so the file is every matching row.
+    const workbookParams = serializeSearchQuery({
+      ...query,
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
 
-  if (disabled) {
     return (
-      <div className="flex gap-2" data-testid="search-export">
-        {(["csv", "xlsx"] as const).map((format) => (
-          <Tooltip key={format}>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  data-testid={`export-search-${format}`}
-                  aria-label={`Export search results as ${format.toUpperCase()} (nothing to export)`}
-                >
-                  <Download className="size-4" /> {format.toUpperCase()}
-                </Button>
-              }
+      <div className="flex flex-wrap items-center gap-2" data-testid="search-export">
+        <DownloadButton
+          href={searchExportPath(workbookParams, "xlsx")}
+          label="XLSX (all)"
+          testId="export-search-xlsx"
+          ariaLabel="Export all sections as a multi-sheet XLSX workbook"
+          disabled={grandTotal === 0}
+          emptyHint="Nothing to export."
+        />
+        {SEARCH_SECTIONS.map((source) => {
+          const params = serializeSearchQuery(
+            buildSectionQuery(query, source, DEFAULT_PAGE_SIZE)
+          );
+          return (
+            <DownloadButton
+              key={source}
+              href={searchExportPath(params, "csv")}
+              label={`${SECTION_LABEL[source]} CSV`}
+              testId={`export-search-csv-${source}`}
+              ariaLabel={`Export the ${SECTION_LABEL[source]} section as CSV`}
+              disabled={counts[source] === 0}
+              emptyHint={`No ${SECTION_LABEL[source]} rows to export.`}
             />
-            <TooltipContent>Nothing to export.</TooltipContent>
-          </Tooltip>
-        ))}
+          );
+        })}
       </div>
     );
   }
 
+  // --- Single source: the CSV/XLSX pair for the one on-screen projection ---
+  const params = serializeSearchQuery({ ...query, page: 1, pageSize: DEFAULT_PAGE_SIZE });
+
   return (
     <div className="flex gap-2" data-testid="search-export">
       {(["csv", "xlsx"] as const).map((format) => (
-        <Button
+        <DownloadButton
           key={format}
-          variant="outline"
-          size="sm"
-          nativeButton={false}
-          render={<a href={searchExportPath(params, format)} />}
-          data-testid={`export-search-${format}`}
-          aria-label={`Export search results as ${format.toUpperCase()}`}
-        >
-          <Download className="size-4" /> {format.toUpperCase()}
-        </Button>
+          href={searchExportPath(params, format)}
+          label={format.toUpperCase()}
+          testId={`export-search-${format}`}
+          ariaLabel={`Export search results as ${format.toUpperCase()}`}
+          disabled={disabled}
+          emptyHint="Nothing to export."
+        />
       ))}
     </div>
   );

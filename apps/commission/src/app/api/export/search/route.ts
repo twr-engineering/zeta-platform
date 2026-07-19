@@ -17,8 +17,14 @@ import {
 } from "@/lib/export/format";
 import { parseSearchQuery } from "@/lib/search/params";
 import { runSearch } from "@/lib/search/queries";
+import { buildSectionQuery } from "@/lib/search/sections";
 import { searchExportName, searchExportSpec } from "@/lib/search/export-columns";
-import type { SearchQuery, SearchResultRow } from "@/lib/search/types";
+import {
+  SEARCH_SECTIONS,
+  type SearchQuery,
+  type SearchResultRow,
+  type SearchSource,
+} from "@/lib/search/types";
 
 /**
  * M9.3 — the Search Console's filtered-result export (FR-M9-11, AC11; §8).
@@ -110,7 +116,20 @@ export async function GET(request: Request) {
     );
   }
 
-  const { sheet, columns } = searchExportSpec(query.source);
+  // The unified "All" tab (M9.4) carries three different §3.2 column sets, so a single
+  // CSV can't represent it (Rule 2 — never a merged column set). The combined export is
+  // one multi-sheet XLSX workbook; each section's CSV is a separate request with a
+  // concrete source. A hand-crafted all+csv (the UI never issues it) is a clean 400.
+  if (query.source === "all" && format !== "xlsx") {
+    return NextResponse.json(
+      {
+        error:
+          "The All tab exports one CSV per section — request each section's CSV, or use XLSX for the combined workbook.",
+      },
+      { status: 400 }
+    );
+  }
+
   const filename = exportFilename(searchExportName(query), format, manilaToday());
 
   // A request-scoped client, revalidated above, reused across every batch so the
@@ -137,6 +156,34 @@ export async function GET(request: Request) {
     // An export is a snapshot of live data. A cached one is a wrong one.
     "Cache-Control": "no-store",
   };
+
+  // --- Unified "All" tab (M9.4): one XLSX workbook, three §3.2 sheets. -------
+  // Each sheet is fed from the SAME bounded pager as the single-source export, so no
+  // section is ever asked for an unbounded single result; the three run in sequence
+  // over the one RLS-bound client. XLSX only (the all+csv guard above rejects the rest).
+  if (query.source === "all") {
+    const sheetsData = [];
+    for (const source of SEARCH_SECTIONS) {
+      const spec = searchExportSpec(source);
+      const rows: SearchResultRow[] = [];
+      for await (const batch of pageSearchRows(buildSectionQuery(query, source), client)) {
+        rows.push(...batch);
+      }
+      const dataset = { name: spec.sheet, sheet: spec.sheet, columns: spec.columns, rows };
+      sheetsData.push({
+        data: toXlsxRows(dataset),
+        columns: xlsxColumnWidths(dataset),
+        sheet: spec.sheet,
+      });
+    }
+    // write-excel-file multi-sheet form: an array of { data, sheet, columns } objects.
+    const buffer = await writeXlsxFile(sheetsData).toBuffer();
+    return new NextResponse(buffer as BodyInit, { headers });
+  }
+
+  // --- Single source: the one on-screen §3.2 projection. --------------------
+  // `query.source` is concrete here (the all case returned above).
+  const { sheet, columns } = searchExportSpec(query.source as SearchSource);
 
   if (format === "csv") {
     // Stream: BOM + header first, then each batch's rows flushed as they arrive.

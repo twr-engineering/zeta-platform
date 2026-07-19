@@ -155,3 +155,13 @@ test("filename stem — status/balance never leak onto a non-collectibles source
     "search-deals"
   );
 });
+
+test("filename stem — All-tab workbook carries the shared filters (M9.4)", () => {
+  // The combined multi-sheet XLSX names itself `search-all-…`; only the shared filters
+  // (year, deal_code, text) appear — status/balance are Collectibles-scoped, never here.
+  assert.equal(searchExportName({ ...baseQuery, source: "all" }), "search-all");
+  assert.equal(
+    searchExportName({ ...baseQuery, source: "all", year: 2026, text: "Ventura" }),
+    "search-all-2026-ventura"
+  );
+});

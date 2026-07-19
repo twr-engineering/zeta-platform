@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { SearchDealOption } from "@/lib/search/filter-options";
 import {
   sortOptionsFor,
-  type SearchSource,
+  type QuerySource,
   type SearchStatus,
   type SortOption,
 } from "@/lib/search/types";
@@ -32,7 +32,7 @@ const STATUS_CHIPS: { value: SearchStatus; label: string }[] = [
 ];
 
 export type SearchFilterBarProps = {
-  source: SearchSource;
+  source: QuerySource;
   year: number | null;
   dealCode: string | null;
   status: SearchStatus | null;
@@ -83,7 +83,12 @@ export function SearchFilterBar({
 }: SearchFilterBarProps) {
   const tid = (name: string) => (withTestIds ? name : undefined);
   const isCollectibles = source === "collectibles";
-  const yearLabel = source === "payments" ? "Year paid" : "Year booked";
+  const isAll = source === "all";
+  // On the All tab the year filter applies per section (booked for Deals/Collectibles,
+  // paid for Payments — Rule 3), so no single booked/paid label fits: the control reads
+  // "Year" and each section header carries its own basis annotation. On a single-source
+  // tab the label makes the Rule-3 asymmetry visible.
+  const yearLabel = isAll ? "Year" : source === "payments" ? "Year paid" : "Year booked";
   const field = stacked ? "space-y-1.5" : "space-y-1.5";
 
   return (
@@ -149,21 +154,24 @@ export function SearchFilterBar({
         />
       </div>
 
-      {/* Sort — worded per source; the Collectibles quirk shows as two options. */}
-      <div className={field}>
-        <label className="text-sm font-medium" htmlFor={`${instanceId}-sort`}>
-          Sort
-        </label>
-        <SelectField
-          id={`${instanceId}-sort`}
-          affordance="plain"
-          className={stacked ? "w-full" : "w-44"}
-          value={sort}
-          onChange={(e) => onSort(e.target.value as SortOption)}
-          options={sortOptionsFor(source)}
-          data-testid={tid("search-sort")}
-        />
-      </div>
+      {/* Sort — worded per source; the Collectibles quirk shows as two options. Hidden
+          on the All tab, where each section renders in its own source default (Rule 7). */}
+      {!isAll && (
+        <div className={field}>
+          <label className="text-sm font-medium" htmlFor={`${instanceId}-sort`}>
+            Sort
+          </label>
+          <SelectField
+            id={`${instanceId}-sort`}
+            affordance="plain"
+            className={stacked ? "w-full" : "w-44"}
+            value={sort}
+            onChange={(e) => onSort(e.target.value as SortOption)}
+            options={sortOptionsFor(source)}
+            data-testid={tid("search-sort")}
+          />
+        </div>
+      )}
 
       {/* Status + Only-with-balance — Collectibles ONLY (Rule 6). */}
       {isCollectibles && (

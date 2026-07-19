@@ -11,6 +11,27 @@ import type { Deal, Receivable } from "@/types/entities";
 export const SEARCH_SOURCES = ["deals", "collectibles", "payments"] as const;
 export type SearchSource = (typeof SEARCH_SOURCES)[number];
 
+/**
+ * The unified "All" tab (M9.4 / Rule 2 / OQ2 — resolved BUILD IT 2026-07-19). It is
+ * NOT a fourth projection: it runs the three source queries and renders three grouped
+ * sections, never a merged column set. So `SearchSource` stays the three concrete
+ * projections (they drive runSearch, the §3.2 tables, and the export specs), and the
+ * URL/UI's source is the wider `QuerySource` that also admits "all".
+ */
+export const ALL_SOURCE = "all" as const;
+export type QuerySource = SearchSource | typeof ALL_SOURCE;
+
+/** The three sections on the All tab, in §3.2 order (Deals · Collectibles · Payments). */
+export const SEARCH_SECTIONS = SEARCH_SOURCES;
+
+/**
+ * Per-section row cap on the All tab. The unified tab is a scannable overview across
+ * all three record sets on one screen (Rule 2 / M9.4 demo), not a paginated list —
+ * each section shows the top rows in its own default order and a "view all N in <tab>"
+ * link carries the shared filters into the single-source tab for the full, paged set.
+ */
+export const ALL_TAB_SECTION_LIMIT = 5;
+
 /** The three sheet sort presets (PRD C10 / Rule 7). Per-column sort is a UI superset. */
 export const SORT_OPTIONS = ["default", "date_oldest", "amount_desc"] as const;
 export type SortOption = (typeof SORT_OPTIONS)[number];
@@ -29,7 +50,7 @@ export type SortOption = (typeof SORT_OPTIONS)[number];
  * balance-desc is the resting state, date-oldest the one deviation.
  */
 export function sortOptionsFor(
-  source: SearchSource
+  source: QuerySource
 ): { value: SortOption; label: string }[] {
   switch (source) {
     case "payments":
@@ -67,7 +88,8 @@ export const MAX_PAGE_SIZE = 200; // PRD §3.1
 
 /** The full query state (PRD §3.1). Not persisted server-side. */
 export type SearchQuery = {
-  source: SearchSource;
+  /** `all` is the unified tab (M9.4); the three concrete values are one-source-at-a-time (Rule 2). */
+  source: QuerySource;
   /** null = "all". Booked year for Deals/Collectibles, paid year for Payments (Rule 3). */
   year: number | null;
   /** Exact deal_code match; unknown codes yield the empty state, never an error (Rule 9). */
@@ -146,4 +168,16 @@ export type SearchResult<Row extends SearchResultRow = SearchResultRow> = {
   page: number;
   pageSize: number;
   emptyMessage: string;
+};
+
+/**
+ * The unified "All" tab's payload (M9.4): one capped result per section, each a
+ * standalone §3.2 projection with its own count and empty state. The three run in
+ * parallel server-side; the UI renders them as three grouped sections (Rule 2 —
+ * never a merged column set).
+ */
+export type AllSearchResult = {
+  deals: SearchResult<DealSearchRow>;
+  collectibles: SearchResult<CollectibleSearchRow>;
+  payments: SearchResult<PaymentSearchRow>;
 };

@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-20T02:10:00+08:00 (M9.3 — Export & performance hardening)
+# Last Updated: 2026-07-20T03:30:00+08:00 (M9.4 — Unified "All" search tab → M9 FULLY COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -47,8 +47,8 @@
 - [x] M8.4: Exports, print layout, performance & cache hardening  ← M8 COMPLETE
 - [x] M9.1: Search read layer & query API
 - [x] M9.2: Search Console UI
-- [x] M9.3: Export & performance hardening  ← M9 REQUIRED SCOPE COMPLETE (M9.4 optional, pending OQ2)
-- [ ] M9.4: Unified "All" tab (OPTIONAL — pending M9 Open Question 2)
+- [x] M9.3: Export & performance hardening
+- [x] M9.4: Unified "All" tab (OQ2 RESOLVED "BUILD IT" 2026-07-19)  ← ★ M9 FULLY COMPLETE ★
 - [ ] M10.1: Help-content system, legend spec & glossary
 - [ ] M10.2: First-run wizard core, steps 1–4
 - [ ] M10.3: First-deal walkthrough, sample lifecycle & checklist
@@ -59,9 +59,65 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-**M9.3 COMPLETE — Export & performance hardening → M9 REQUIRED SCOPE COMPLETE (M9.4 unified "All" tab
-remains OPTIONAL, pending OQ2). The Search Console's filtered/sorted result set now exports to CSV/XLSX, and
-the < 300 ms P95 + trigram NFRs are re-verified through the full route at 1,000+1,000 and proven at scale.**
+**M9.4 COMPLETE — Unified "All" search tab → 🎉 M9 FULLY COMPLETE (Search Console).** OQ2 was RESOLVED
+"BUILD IT" by the product owner (2026-07-19), so the optional unified tab is now shipped. One query fans
+across all three sources and renders as THREE GROUPED SECTIONS (Deals / Collectibles / Payments, each its own
+§3.2 projection) — never a merged column set (Rule 2). PURELY ADDITIVE — no migration, no schema/index change;
+reuses M9.1's three get*Search functions and the M9.3 export layer unchanged. test:unit 511/511 (+7);
+build:check + lint clean; search e2e 24/24 on the REAL v30.20 import (+7 M9.4); live-m94 25/25 incl. a
+multi-sheet workbook read back to the centavo + combined P95 157.8 ms (< the 450 ms DoD); full clean-reseed
+e2e green; delta-residue ZERO.
+
+ORCHESTRATION. The URL/UI source widens to `QuerySource = SearchSource | "all"` (SearchQuery.source), while
+`SearchSource` stays the THREE concrete projections that still drive runSearch / the §3.2 tables / the export
+specs. parseSearchQuery accepts `all` and keeps status/only_with_balance Collectibles-scoped (an All query
+arrives with them null/false — a hand-crafted URL can't set them globally); serialize→parse round-trips `all`.
+NEW PURE module src/lib/search/sections.ts (buildSectionQuery / allSectionQueries) derives the three concrete
+section queries carrying ONLY the shared filters (year, deal ID, text), clearing status/balance and forcing
+sort=default. queries.ts `runAllSearch` runs the three get*Search in PARALLEL over one RLS-bound client
+(Promise.all → AllSearchResult, each section capped at ALL_TAB_SECTION_LIMIT=5); `runSearch` THROWS on
+source=all so the all path can only go through runAllSearch. page.tsx branches: all → runAllSearch, else the
+single-source runSearch.
+
+UI. search-console.tsx gains an "All" tab TRAILING the three (so the default tab Deals and the §3.2 order are
+unchanged); on All it renders the new <SearchSections> inside the same keyboard-nav container so ↑/↓ walk rows
+ACROSS the three sections, the count readout becomes the combined grandTotal (data-testid search-count-all),
+and pagination is replaced by per-section "view all in tab" links. search-sections.tsx (NEW): three <section>s,
+each with a count (search-section-<src>-count), a "View all N in <Tab>" / "Open in <Tab> tab" link
+(search-section-<src>-viewall) that carries the shared filters into the single-source tab, and a per-section
+VERBATIM empty state (search-section-<src>-empty). The Rule-3 year asymmetry stays visible on the combined
+tab: each section carries data-year-basis booked (Deals/Collectibles) vs paid (Payments) + a "by year
+booked/paid" caption, so the neutral "Year" control (data-year-label) reads correctly per section.
+search-filter-bar.tsx hides Sort on All (each section = its own default, Rule 7); Status/balance were already
+Collectibles-only.
+
+EXPORT (Rule 2 — three different §3.2 column sets, so no single combined CSV). search-export.tsx on All shows
+one multi-sheet XLSX workbook button (export-search-xlsx, disabled when all sections are empty) + one CSV per
+section (export-search-csv-<src>, each disabled when that section is empty) = three separate files, per the
+M9.4 deliverable. The route /api/export/search, for source=all+xlsx, uses write-excel-file's MULTI-SHEET form
+(an array of {data,sheet,columns}) fed per-section from the SAME bounded pageSearchRows over buildSectionQuery
+— each sheet is Deals/Collectibles/Payments with its §3.2 columns; a no-match section is a header-only sheet.
+all+csv is a clean 400 (the UI never issues it). searchExportName("all") → `search-all[-year][-code][-text]`.
+
+VERIFIED (scripts/live-m94-check.mts, throwaway workspace, REAL import, real JWT): All "lainie" → Deals 3
+{D013,D014,D015} / Collectibles 3 / Payments 0 (empty); All D021 → 1/1/1 with deal NET GCI 354,591.84 /
+receivable balance 309,948.98 / payment gross 50,000.00 + Net of VAT 44,642.86 (exact strings, never
+re-derived); the combined workbook read back with ExcelJS has EXACTLY 3 sheets [Deals,Collectibles,Payments]
+with the D021 rows to the centavo, and a no-match section is header-only; combined parallel page-1 P95 157.8 ms
+< the 450 ms DoD at fixture scale. e2e (+7): three sections + neutral year label + no sort/status on All;
+"lainie" 3/3/0 with the Payments empty state + combined count 6; D021 1/1/1 with the figures; "view all"
+carries text into the source tab; tab switch All↔Deals preserves text; export multi-sheet XLSX (PK) +
+per-section Deals CSV (header + 1 D021 row); 360px sections→cards.
+
+FOR M10 / anyone extending search: the source dispatch is now QuerySource-wide but the three projections stay
+concrete — add a projection column in ONE place (search-results.tsx + export-columns.ts, field-for-field) and
+it flows to both the single-source tab and the All section. The M7 source drill-through note still stands
+(M9's SearchQuery carries no lead-source param). Nothing is pending for M9.
+
+## Prior Status
+**M9.3 COMPLETE — Export & performance hardening. The Search Console's filtered/sorted result set exports to
+CSV/XLSX, and the < 300 ms P95 + trigram NFRs are re-verified through the full route at 1,000+1,000 and proven
+at scale.**
 PURELY ADDITIVE — no migration, no schema/index change; reuses M9.1's `runSearch` (RLS-bound RPC) and the
 cross-cutting exporter's format layer. test:unit 504/504 (+12 export-columns: §3.2 header/order + exact-money
 cells + filename stem); build:check + lint clean; search e2e 17/17 on the REAL v30.20 import (+4 new: AC11 CSV

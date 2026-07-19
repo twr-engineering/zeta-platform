@@ -18,15 +18,17 @@ import { cn } from "@/lib/utils";
 import { serializeSearchQuery } from "@/lib/search/params";
 import {
   SEARCH_SOURCES,
+  type AllSearchResult,
+  type QuerySource,
   type SearchQuery,
   type SearchResult,
-  type SearchSource,
   type SearchStatus,
   type SortOption,
 } from "@/lib/search/types";
 import type { SearchDealOption } from "@/lib/search/filter-options";
 import { SearchFilterBar } from "./search-filter-bar";
 import { SearchResults } from "./search-results";
+import { SearchSections } from "./search-sections";
 import { SearchExport } from "./search-export";
 
 /**
@@ -42,17 +44,24 @@ import { SearchExport } from "./search-export";
  * the focused row's detail view (FR-M9-13).
  */
 
-const SOURCE_TABS: { source: SearchSource; label: string }[] = [
+// The three source tabs plus the unified "All" overview (M9.4). "All" trails the
+// concrete sources so the familiar §3.2 order stays first and the default tab (Deals)
+// is unchanged.
+const SOURCE_TABS: { source: QuerySource; label: string }[] = [
   { source: "deals", label: "Deals" },
   { source: "collectibles", label: "Collectibles" },
   { source: "payments", label: "Payments" },
+  { source: "all", label: "All" },
 ];
 
 const TEXT_DEBOUNCE_MS = 300; // ≥ 250 ms (FR-M9-06)
 
 export type SearchConsoleProps = {
   query: SearchQuery;
-  result: SearchResult;
+  /** Present for a single-source tab; absent on the All tab. */
+  result?: SearchResult;
+  /** Present on the All tab (Rule 2) — the three parallel section results. */
+  allResult?: AllSearchResult;
   textTruncated: boolean;
   years: number[];
   dealOptions: SearchDealOption[];
@@ -61,6 +70,7 @@ export type SearchConsoleProps = {
 export function SearchConsole({
   query,
   result,
+  allResult,
   textTruncated,
   years,
   dealOptions,
@@ -119,7 +129,7 @@ export function SearchConsole({
   // the inapplicable ones (status, balance) plus resets sort to the source default
   // and page to 1 (§6).
   const switchSource = React.useCallback(
-    (source: SearchSource) => {
+    (source: QuerySource) => {
       navigate({ source, status: null, onlyWithBalance: false, sort: "default", page: 1 });
     },
     [navigate]
@@ -160,8 +170,20 @@ export function SearchConsole({
     links[nextIdx]?.focus();
   };
 
-  const pageCount = Math.max(1, Math.ceil(result.total / result.pageSize));
-  const isEmpty = result.total === 0;
+  const isAll = query.source === "all";
+  const sectionCounts = allResult
+    ? {
+        deals: allResult.deals.total,
+        collectibles: allResult.collectibles.total,
+        payments: allResult.payments.total,
+      }
+    : undefined;
+  const grandTotal = sectionCounts
+    ? sectionCounts.deals + sectionCounts.collectibles + sectionCounts.payments
+    : 0;
+
+  const pageCount = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
+  const isEmpty = isAll ? grandTotal === 0 : (result?.total ?? 0) === 0;
 
   const activeFilterCount =
     (query.year !== null ? 1 : 0) +
@@ -276,31 +298,42 @@ export function SearchConsole({
         </p>
       )}
 
-      {/* Table header: count readout (§6, FR-M9-08) + export pair (FR-M9-11).
-          Export is disabled at zero rows (§6) — the whole filtered/sorted set, not
-          the visible page, streamed by /api/export/search. */}
+      {/* Table header: count readout (§6, FR-M9-08) + export (FR-M9-11). Export is
+          disabled at zero rows (§6) — the whole filtered/sorted set, not the visible
+          page, streamed by /api/export/search. On the All tab the count is the
+          combined summary and the export is the multi-sheet workbook + per-section CSV. */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground" data-testid="search-count">
-          {result.total} matching {result.total === 1 ? "record" : "records"}
-        </p>
-        <SearchExport query={query} disabled={isEmpty} />
+        {isAll ? (
+          <p className="text-sm text-muted-foreground" data-testid="search-count">
+            <span data-testid="search-count-all">{grandTotal}</span> matching{" "}
+            {grandTotal === 1 ? "record" : "records"} across all sources
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground" data-testid="search-count">
+            {result?.total ?? 0} matching {(result?.total ?? 0) === 1 ? "record" : "records"}
+          </p>
+        )}
+        <SearchExport query={query} disabled={isEmpty} sectionCounts={sectionCounts} />
       </div>
 
-      {/* Results / empty state. */}
+      {/* Results / empty state. The All tab renders three grouped sections (Rule 2),
+          each with its own count + empty state; keyboard nav walks rows across them. */}
       <div
         onKeyDown={onResultsKeyDown}
         aria-busy={isPending}
         className={cn("min-h-40 transition-opacity", isPending && "opacity-50")}
         data-testid="search-results"
       >
-        {isEmpty ? (
+        {isAll && allResult ? (
+          <SearchSections query={query} allResult={allResult} />
+        ) : isEmpty ? (
           <div
             className="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center"
             data-testid="search-empty"
           >
             {/* Verbatim — do not reword (Rule 8 / AC9). */}
             <p className="text-sm text-muted-foreground" data-testid="search-empty-message">
-              {result.emptyMessage}
+              {result?.emptyMessage}
             </p>
             <Button
               variant="outline"
@@ -314,12 +347,13 @@ export function SearchConsole({
             </Button>
           </div>
         ) : (
-          <SearchResults result={result} />
+          result && <SearchResults result={result} />
         )}
       </div>
 
-      {/* Pagination (§6, FR-M9-08). */}
-      {!isEmpty && pageCount > 1 && (
+      {/* Pagination (§6, FR-M9-08) — single-source only; the All tab uses per-section
+          "view all in tab" links instead. */}
+      {!isAll && result && !isEmpty && pageCount > 1 && (
         <div className="flex items-center justify-between gap-3">
           <Button
             variant="outline"

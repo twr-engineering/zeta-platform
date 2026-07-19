@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { parseSearchQuery } from "@/lib/search/params";
-import { runSearch } from "@/lib/search/queries";
+import { runAllSearch, runSearch } from "@/lib/search/queries";
 import { EMPTY_STATE_MESSAGE } from "@/lib/search/types";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,26 @@ export async function GET(request: Request) {
   const { query, textTruncated } = parseSearchQuery(
     new URL(request.url).searchParams
   );
+
+  // The unified "All" tab (M9.4) is three source queries, not one projection (Rule 2):
+  // return the three grouped sections rather than a merged column set. The UI page uses
+  // runAllSearch directly; this keeps a direct API hit on source=all from erroring.
+  if (query.source === "all") {
+    const all = await runAllSearch(query);
+    return NextResponse.json(
+      {
+        source: "all",
+        sections: {
+          deals: { rows: all.deals.rows, total: all.deals.total },
+          collectibles: { rows: all.collectibles.rows, total: all.collectibles.total },
+          payments: { rows: all.payments.rows, total: all.payments.total },
+        },
+        emptyMessage: EMPTY_STATE_MESSAGE,
+        textTruncated,
+      },
+      { headers: { "Cache-Control": "no-store" } }
+    );
+  }
 
   const result = await runSearch(query);
 

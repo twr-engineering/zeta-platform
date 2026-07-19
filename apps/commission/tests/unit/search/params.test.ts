@@ -21,10 +21,41 @@ test("defaults — empty query is Deals, all years, no filters, page 1/50", () =
   assert.equal(query.pageSize, 50);
 });
 
-test("source — unknown value falls back to deals", () => {
-  assert.equal(parse("source=all").query.source, "deals");
+test("source — the three sources + the All tab; garbage falls back to deals", () => {
+  // Updated: M9.4 added source=all (OQ2 resolved BUILD IT, 2026-07-19); `all` is now a
+  // first-class source, not a fallback-to-deals.
+  assert.equal(parse("source=all").query.source, "all");
   assert.equal(parse("source=collectibles").query.source, "collectibles");
   assert.equal(parse("source=payments").query.source, "payments");
+  assert.equal(parse("source=deals").query.source, "deals");
+  assert.equal(parse("source=nonsense").query.source, "deals");
+});
+
+test("All tab — status/only_with_balance never leak in (Collectibles-scoped, M9.4)", () => {
+  // The All tab's applicable filters are year/deal_code/text only; Collectibles-scoped
+  // filters stay within their section, so a hand-crafted URL can't set them globally.
+  const q = parse("source=all&status=open&only_with_balance=true&year=2026&text=ventura").query;
+  assert.equal(q.source, "all");
+  assert.equal(q.status, null);
+  assert.equal(q.onlyWithBalance, false);
+  assert.equal(q.year, 2026);
+  assert.equal(q.text, "ventura");
+});
+
+test("serialize → parse round-trips the All tab (shared filters only)", () => {
+  const q: SearchQuery = {
+    source: "all",
+    year: 2026,
+    dealCode: "D021",
+    status: null,
+    onlyWithBalance: false,
+    text: "ventura residences",
+    sort: "default",
+    page: 1,
+    pageSize: 50,
+  };
+  const { query } = parseSearchQuery(serializeSearchQuery(q));
+  assert.deepEqual(query, q);
 });
 
 test("year — 4-digit only; 'all'/garbage → null (Rule 3)", () => {

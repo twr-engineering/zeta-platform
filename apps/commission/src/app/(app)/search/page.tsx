@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { SearchConsole } from "@/components/search/search-console";
 import { getSearchFilterOptions } from "@/lib/search/filter-options";
 import { parseSearchQuery } from "@/lib/search/params";
-import { runSearch } from "@/lib/search/queries";
+import { runAllSearch, runSearch } from "@/lib/search/queries";
 
 export const metadata: Metadata = { title: "Search" };
 export const dynamic = "force-dynamic";
@@ -32,6 +32,24 @@ export default async function SearchPage({
   }
 
   const { query, textTruncated } = parseSearchQuery(urlParams);
+
+  // The unified "All" tab runs the three source queries in parallel (Rule 2 / M9.4);
+  // every other source runs its single indexed query.
+  if (query.source === "all") {
+    const [allResult, filterOptions] = await Promise.all([
+      runAllSearch(query),
+      getSearchFilterOptions(),
+    ]);
+    return (
+      <SearchConsole
+        query={query}
+        allResult={allResult}
+        textTruncated={textTruncated}
+        years={filterOptions.years}
+        dealOptions={filterOptions.deals}
+      />
+    );
+  }
 
   const [result, filterOptions] = await Promise.all([
     runSearch(query),

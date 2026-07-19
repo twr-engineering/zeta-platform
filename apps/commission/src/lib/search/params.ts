@@ -9,14 +9,15 @@
  * can show the "query trimmed" notice (Rule 12).
  */
 import {
+  ALL_SOURCE,
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
   MAX_TEXT_LENGTH,
   SEARCH_SOURCES,
   SEARCH_STATUSES,
   SORT_OPTIONS,
+  type QuerySource,
   type SearchQuery,
-  type SearchSource,
   type SearchStatus,
   type SortOption,
 } from "./types";
@@ -54,9 +55,11 @@ export type ParsedSearchQuery = {
   textTruncated: boolean;
 };
 
-function pickSource(raw: string | null): SearchSource {
+/** The three concrete sources plus the unified "All" tab (M9.4); garbage → deals. */
+function pickSource(raw: string | null): QuerySource {
+  if (raw === ALL_SOURCE) return ALL_SOURCE;
   return (SEARCH_SOURCES as readonly string[]).includes(raw ?? "")
-    ? (raw as SearchSource)
+    ? (raw as QuerySource)
     : "deals";
 }
 

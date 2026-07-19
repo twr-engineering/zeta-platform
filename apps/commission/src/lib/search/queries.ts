@@ -11,9 +11,12 @@ import "server-only";
  * Money arrives as exact `::text` strings; M9 never re-derives it.
  */
 import { createClient } from "@/lib/supabase/server";
+import { buildSectionQuery } from "./sections";
 import {
+  ALL_TAB_SECTION_LIMIT,
   DEFAULT_PAGE_SIZE,
   EMPTY_STATE_MESSAGE,
+  type AllSearchResult,
   type CollectibleSearchRow,
   type DealSearchRow,
   type PaymentSearchRow,
@@ -149,10 +152,43 @@ export async function runSearch(
       return getCollectibleSearch(query, client);
     case "payments":
       return getPaymentSearch(query, client);
+    case "all":
+      // The unified tab is three source queries, not one projection (Rule 2) — the
+      // caller must use runAllSearch. Guarding here keeps a stray all-query from
+      // silently resolving to Deals.
+      throw new Error("runSearch is per-source; use runAllSearch for source=all.");
     case "deals":
     default:
       return getDealSearch(query, client);
   }
+}
+
+/**
+ * M9.4 — the unified "All" tab (Rule 2): run the three source queries in parallel and
+ * return one capped result per section. Each section carries the SHARED filters (year,
+ * deal ID, text) applied with its own source semantics (the Rule-3 year asymmetry
+ * holds — booked year for Deals/Collectibles, paid year for Payments); Collectibles-
+ * scoped filters do not apply globally (buildSectionQuery clears them). One shared
+ * client so all three RPCs resolve the same workspace from the JWT (RLS is the
+ * boundary). Combined P95 target < 450 ms at fixture scale (M9.4 DoD).
+ */
+export async function runAllSearch(
+  query: SearchQuery,
+  client?: SupabaseClient
+): Promise<AllSearchResult> {
+  const supabase = client ?? (await createClient());
+  const [deals, collectibles, payments] = await Promise.all([
+    getDealSearch(buildSectionQuery(query, "deals", ALL_TAB_SECTION_LIMIT), supabase),
+    getCollectibleSearch(
+      buildSectionQuery(query, "collectibles", ALL_TAB_SECTION_LIMIT),
+      supabase
+    ),
+    getPaymentSearch(
+      buildSectionQuery(query, "payments", ALL_TAB_SECTION_LIMIT),
+      supabase
+    ),
+  ]);
+  return { deals, collectibles, payments };
 }
 
 export { DEFAULT_PAGE_SIZE };
