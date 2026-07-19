@@ -59,6 +59,9 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+PAUSED by user after M10.3 (2026-07-19). Remaining: M10.4 (help placements), M10.5 (mobile/E2E hardening), design pass (deep green + gold). Resume with /mvp --resume or 'continue'.
+
+## Previous Status
 **M10.3 COMPLETE — First-deal walkthrough, sample lifecycle & getting-started checklist.** M10 owns
 NO financial logic — the walkthrough ORCHESTRATES M1/M5's real create paths and RENDERS their engine
 responses (NET GCI ₱354,591.84 etc.); it computes nothing.
