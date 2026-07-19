@@ -30,12 +30,13 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Supplied by next/font in app/layout.tsx. --font-heading is Inter Tight;
-     keeping it a distinct token (rather than an alias of --font-sans) is what
-     lets headings differentiate at all. */
+  /* One family everywhere (product decision 2026-07-19): Inter supplies
+     --font-sans via next/font in app/layout.tsx, and the heading/mono tokens
+     alias it so every text role — body, headings, IDs — renders in Inter.
+     Hierarchy comes from size/weight, not family. */
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-heading);
+  --font-mono: var(--font-sans);
+  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -207,24 +208,21 @@
   html {
     @apply font-sans;
   }
-  /* Fraunces, the display serif. Card and sheet titles already opt in via
-     `font-heading`; this covers headings rendered as plain elements so a new
-     screen inherits the hierarchy instead of having to remember a class. A
-     serif wants gentler negative tracking than the old sans did — enough to
-     knit display sizes together without crowding the smaller h3s. */
+  /* Headings render in Inter like everything else (font-heading aliases
+     --font-sans); the slightly tighter tracking is what a geometric sans wants
+     at display sizes. */
   h1,
   h2,
   h3 {
     @apply font-heading;
-    letter-spacing: -0.011em;
+    letter-spacing: -0.02em;
   }
 
-  /* Hero money and section totals: the serif with lining tabular figures, so a
-     headline ₱ figure reads like a prestige ledger entry and still column-
-     aligns. Apply with `font-numeric` on large money display (never in dense
-     tables, which keep the body sans). */
+  /* Hero money and section totals: Inter with lining tabular figures so a
+     headline ₱ figure still column-aligns. Apply with `font-numeric` on large
+     money display. */
   .font-numeric {
-    font-family: var(--font-heading), ui-serif, serif;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "tnum" 1, "lnum" 1;
     font-variant-numeric: tabular-nums lining-nums;
     letter-spacing: 0;
