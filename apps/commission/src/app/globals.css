@@ -18,6 +18,16 @@
   --color-affordance-linked: var(--affordance-linked);
   --color-affordance-linked-foreground: var(--affordance-linked-foreground);
 
+  /* Gold — the brand's emphasis accent (prosperity, "premium money"). It is
+     deliberately NOT the warning colour: warnings stay amber (a more orange
+     hue, ~65) and gold sits warmer/yellower (~90) so the two never blur. Use
+     gold for brand moments (the wordmark, hero underscore, section eyebrows),
+     never for state. See design/brand-guidelines.md → "Gold vs amber". */
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-muted: var(--gold-muted);
+  --color-gold-border: var(--gold-border);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   /* Supplied by next/font in app/layout.tsx. --font-heading is Inter Tight;
@@ -65,96 +75,126 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Deep green + gold, light theme. Neutrals carry a faint green cast (chroma
+     ~0.006–0.02 at hue ~155) so the whole surface reads as one warm ledger
+     rather than grey chrome sitting next to green buttons. Values verified for
+     WCAG AA — see scripts/check-contrast.mjs. */
+  --background: oklch(0.985 0.006 145);
+  --foreground: oklch(0.22 0.018 165);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.22 0.018 165);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.22 0.018 165);
+  /* Dark emerald — the money/prosperity primary. */
+  --primary: oklch(0.37 0.072 162);
+  --primary-foreground: oklch(0.97 0.02 110);
+  --secondary: oklch(0.955 0.012 150);
+  --secondary-foreground: oklch(0.3 0.04 165);
+  --muted: oklch(0.96 0.009 150);
+  --muted-foreground: oklch(0.47 0.02 160);
+  /* shadcn "accent" = the neutral hover wash (menus, ghost buttons). It stays a
+     quiet green-grey — the gold accent lives in its own token set below. */
+  --accent: oklch(0.94 0.016 152);
+  --accent-foreground: oklch(0.3 0.045 165);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.9 0.011 150);
+  --input: oklch(0.9 0.011 150);
+  --ring: oklch(0.52 0.086 162);
+  /* Charts: brand green + gold + a teal bridge, so data visuals belong to the
+     same family instead of falling back to grey. */
+  --chart-1: oklch(0.52 0.088 162);
+  --chart-2: oklch(0.79 0.125 88);
+  --chart-3: oklch(0.6 0.07 195);
+  --chart-4: oklch(0.43 0.07 155);
+  --chart-5: oklch(0.68 0.05 130);
   --radius: 0.625rem;
 
-  /* Blue = the agent types here. Deliberately the only saturated blue in the
-     light theme, so "editable" is never ambiguous. */
-  --affordance-input: oklch(0.97 0.02 250);
-  --affordance-input-foreground: oklch(0.28 0.09 250);
-  --affordance-input-border: oklch(0.72 0.11 250);
-  --affordance-input-ring: oklch(0.62 0.16 250);
-  /* Locked = computed by the engine; read-only, lock icon, formula tooltip. */
-  --affordance-locked: oklch(0.97 0 0);
-  --affordance-locked-foreground: oklch(0.32 0 0);
-  /* Linked = sourced from another module (the workbook's green). */
-  --affordance-linked: oklch(0.96 0.03 150);
-  --affordance-linked-foreground: oklch(0.35 0.09 150);
+  /* Gold — brand emphasis only, never a state. Hue ~90 (yellow-warm) keeps it
+     clear of warning-amber (hue ~65). `gold` is the metal itself; `gold-muted`
+     a tint for fills; `gold-border` a hairline. Foreground is deep green so
+     text on a gold fill clears AA. */
+  --gold: oklch(0.79 0.125 89);
+  --gold-foreground: oklch(0.29 0.05 155);
+  --gold-muted: oklch(0.95 0.045 90);
+  --gold-border: oklch(0.82 0.11 88);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Blue = the agent types here. A refined azure, tuned to sit against the
+     green/gold theme but kept unmistakably blue (hue ~248) so the legend's
+     "Blue = input" stays literally true. */
+  --affordance-input: oklch(0.955 0.03 245);
+  --affordance-input-foreground: oklch(0.3 0.1 250);
+  --affordance-input-border: oklch(0.71 0.115 248);
+  --affordance-input-ring: oklch(0.6 0.16 250);
+  /* Locked = computed by the engine; read-only, lock icon, formula tooltip. */
+  --affordance-locked: oklch(0.955 0.008 150);
+  --affordance-locked-foreground: oklch(0.34 0.018 160);
+  /* Linked = sourced from another module (the workbook's green). Kept a clear
+     medium green, distinct from the darker brand emerald so "linked" still
+     reads as its own affordance. */
+  --affordance-linked: oklch(0.95 0.045 150);
+  --affordance-linked-foreground: oklch(0.36 0.09 150);
+
+  --sidebar: oklch(0.975 0.009 148);
+  --sidebar-foreground: oklch(0.3 0.02 162);
+  --sidebar-primary: oklch(0.37 0.072 162);
+  --sidebar-primary-foreground: oklch(0.97 0.02 110);
+  --sidebar-accent: oklch(0.93 0.028 155);
+  --sidebar-accent-foreground: oklch(0.3 0.06 162);
+  --sidebar-border: oklch(0.9 0.011 150);
+  --sidebar-ring: oklch(0.52 0.086 162);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* No theme toggle ships today (the app renders light); these keep a dark
+     surface cohesive with the brand should one ever mount, rather than falling
+     back to the stock neutral dark. Deep-forest ground, gold emphasis. */
+  --background: oklch(0.17 0.016 165);
+  --foreground: oklch(0.96 0.008 120);
+  --card: oklch(0.21 0.02 165);
+  --card-foreground: oklch(0.96 0.008 120);
+  --popover: oklch(0.21 0.02 165);
+  --popover-foreground: oklch(0.96 0.008 120);
+  /* On dark, primary reads as a luminous mint so it stays legible as a fill. */
+  --primary: oklch(0.72 0.11 158);
+  --primary-foreground: oklch(0.2 0.04 165);
+  --secondary: oklch(0.27 0.022 163);
+  --secondary-foreground: oklch(0.96 0.008 120);
+  --muted: oklch(0.27 0.022 163);
+  --muted-foreground: oklch(0.72 0.018 150);
+  --accent: oklch(0.29 0.03 160);
+  --accent-foreground: oklch(0.96 0.008 120);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --ring: oklch(0.62 0.1 158);
+  --chart-1: oklch(0.72 0.11 158);
+  --chart-2: oklch(0.82 0.13 90);
+  --chart-3: oklch(0.68 0.08 195);
+  --chart-4: oklch(0.55 0.09 155);
+  --chart-5: oklch(0.75 0.06 130);
 
-  --affordance-input: oklch(0.28 0.05 250);
+  --gold: oklch(0.83 0.13 90);
+  --gold-foreground: oklch(0.24 0.04 155);
+  --gold-muted: oklch(0.3 0.06 90);
+  --gold-border: oklch(0.5 0.09 88);
+
+  --affordance-input: oklch(0.3 0.055 250);
   --affordance-input-foreground: oklch(0.92 0.04 250);
   --affordance-input-border: oklch(0.52 0.11 250);
   --affordance-input-ring: oklch(0.62 0.16 250);
-  --affordance-locked: oklch(0.26 0 0);
-  --affordance-locked-foreground: oklch(0.78 0 0);
-  --affordance-linked: oklch(0.28 0.05 150);
-  --affordance-linked-foreground: oklch(0.88 0.06 150);
+  --affordance-locked: oklch(0.27 0.014 160);
+  --affordance-locked-foreground: oklch(0.8 0.014 150);
+  --affordance-linked: oklch(0.3 0.055 150);
+  --affordance-linked-foreground: oklch(0.88 0.07 150);
 
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.19 0.018 165);
+  --sidebar-foreground: oklch(0.96 0.008 120);
+  --sidebar-primary: oklch(0.72 0.11 158);
+  --sidebar-primary-foreground: oklch(0.2 0.04 165);
+  --sidebar-accent: oklch(0.29 0.035 160);
+  --sidebar-accent-foreground: oklch(0.96 0.008 120);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.62 0.1 158);
 }
 
 @layer base {
@@ -167,13 +207,27 @@
   html {
     @apply font-sans;
   }
-  /* Inter Tight, slightly tightened. Card and sheet titles already opt in via
+  /* Fraunces, the display serif. Card and sheet titles already opt in via
      `font-heading`; this covers headings rendered as plain elements so a new
-     screen inherits the hierarchy instead of having to remember a class. */
+     screen inherits the hierarchy instead of having to remember a class. A
+     serif wants gentler negative tracking than the old sans did — enough to
+     knit display sizes together without crowding the smaller h3s. */
   h1,
   h2,
   h3 {
-    @apply font-heading tracking-tight;
+    @apply font-heading;
+    letter-spacing: -0.011em;
+  }
+
+  /* Hero money and section totals: the serif with lining tabular figures, so a
+     headline ₱ figure reads like a prestige ledger entry and still column-
+     aligns. Apply with `font-numeric` on large money display (never in dense
+     tables, which keep the body sans). */
+  .font-numeric {
+    font-family: var(--font-heading), ui-serif, serif;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: 0;
   }
 }
 

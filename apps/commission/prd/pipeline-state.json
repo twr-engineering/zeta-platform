@@ -429,5 +429,31 @@
     "githubUrl": "https://github.com/Illamapalooza/nurture-your-commission",
     "vercelUrl": "https://vercel.com/illamapaloozas-projects/nurture-your-commission",
     "liveUrl": "https://nurture-your-commission.vercel.app"
+  },
+  "designPassHandoff": {
+    "status": "completed",
+    "completedAt": "2026-07-19T18:00:00+08:00",
+    "theme": "deep green + gold (light-mode only)",
+    "fonts": {
+      "display": "Fraunces (optical serif — headings + hero money)",
+      "body": "Libre Franklin (grotesque — UI + tabular ₱ figures)",
+      "mono": "Geist Mono (unchanged)"
+    },
+    "tokens": {
+      "primary": "oklch(0.37 0.072 162) dark emerald",
+      "accent": "--gold oklch(0.79 0.125 89) — brand-only, distinct from amber warning (hue ~65)",
+      "affordanceInput": "refined azure (hue ~248) — blue-input product law preserved"
+    },
+    "docs": "design/brand-guidelines.md (rewritten — palette, font roles, gold-vs-amber, gold-on-light rule)",
+    "verification": {
+      "buildCheck": "clean",
+      "lint": "clean",
+      "unit": "540 green (verbatim-content = zero doctrine drift)",
+      "contrast": "scripts/check-contrast.mjs — all pairs AA",
+      "screenshots": "every surface desktop + 360px, no overflow",
+      "e2e": "full clean-reseed against prod build",
+      "deltaResidue": "zero (throwaway design-shot workspace reaped)"
+    },
+    "constraints": "zero functional/testid/route/content change; component edits presentational only"
   }
 }

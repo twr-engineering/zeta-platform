@@ -37,10 +37,12 @@ export function AppHeader({
         className="flex min-w-0 items-center gap-2"
         data-testid="workspace-home-link"
       >
-        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary font-heading text-sm font-semibold text-primary-foreground ring-1 ring-gold/50 ring-inset">
           Z
         </span>
-        <span className="truncate text-sm font-semibold">{workspaceName}</span>
+        <span className="truncate font-heading text-sm font-semibold">
+          {workspaceName}
+        </span>
       </Link>
 
       <div className="ml-auto flex items-center gap-1">

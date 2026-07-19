@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-19T12:00:00+08:00 (M10.5 — Mobile, E2E journey scripts & hardening ← M10 COMPLETE — ALL 42 PRD MILESTONES COMPLETE)
+# Last Updated: 2026-07-19T18:00:00+08:00 (DESIGN PASS — deep green + gold theme + typography system ← ALL 42 MILESTONES + DESIGN PASS COMPLETE)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -54,7 +54,20 @@
 - [x] M10.3: First-deal walkthrough, sample lifecycle & checklist
 - [x] M10.4: Contextual help placements & empty states across modules
 - [x] M10.5: Mobile, end-to-end scripts & hardening  ← ★ M10 COMPLETE — ALL 42 PRD MILESTONES COMPLETE ★
-- [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
+- [x] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
+      ↳ SHIPPED 2026-07-19. Type: Fraunces (optical serif) for display/headings/hero money +
+        Libre Franklin (grotesque) for body — both self-hosted via next/font; tabular-nums on
+        every ₱ column. Theme: deep-emerald `--primary` (oklch 0.37 0.072 162) + gold accent
+        token set (`--gold*`), warm green-tinted neutrals, all via the globals.css token layer
+        (light-mode only — no toggle ships). Gold vs amber resolved by hue+job (gold hue ~89 =
+        brand accent only; amber ~65 = warning, untouched) — documented in design/brand-guidelines.md.
+        Blue-input affordance PRESERVED as a refined azure (still reads "blue" per the legend law).
+        Signature: Fraunces "Z" wordmark w/ gold ring, active-nav gold bar, dashboard section-number
+        badges in pale-gold w/ emerald numerals (real 1→8 sequence). ZERO functional/testid/content
+        change. VERIFIED: build:check + lint clean; 540 unit tests green (verbatim-content tests prove
+        no doctrine touched); WCAG AA on all token pairs (scripts/check-contrast.mjs); screenshot sweep
+        of every surface desktop + 360px (no overflow); full e2e clean-reseed against prod build;
+        delta-residue zero (throwaway design-shot workspace reaped).
 - [x] Acceptance anchor (Master PRD §9): workbook import reproduces ₱6,763,497.25 / ₱1,908,192.86 / ₱4,855,304.39; D021 → NET GCI ₱354,591.84; ₱50,000 Inclusive incentive splits 44,642.86/5,357.14/4,464.29/45,535.71; calculator ₱16,920,000 goal, ₱381,676.31 fees/deal, 44.33 deals; fixture N1 on non-VAT workspace — all to the centavo
       ↳ PROVEN LIVE by M10.5's E2E journeys against a REAL throwaway workspace on a prod build:
         AC1 import journey asserts the three §9 dashboard tiles to the centavo + D021 detail

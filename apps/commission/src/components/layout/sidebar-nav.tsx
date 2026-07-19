@@ -43,9 +43,12 @@ export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
             aria-current={isActive ? "page" : undefined}
             data-testid={`nav-${item.href.slice(1)}`}
             className={cn(
-              "rounded-lg px-3 py-2 text-sm transition-colors",
+              "relative rounded-lg px-3 py-2 text-sm transition-colors",
               // 44px min touch target — the nav is used one-handed on a phone.
               "min-h-11 flex items-center",
+              // A thin gold bar marks the active section — the brand accent used
+              // once, where it reads as "you are here" rather than decoration.
+              "before:absolute before:top-2 before:bottom-2 before:left-0 before:w-0.5 before:rounded-full before:bg-gold before:opacity-0 before:transition-opacity aria-[current=page]:before:opacity-100",
               isActive
                 ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"

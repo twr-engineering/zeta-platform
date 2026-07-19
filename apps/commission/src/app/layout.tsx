@@ -1,26 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight, Geist_Mono } from "next/font/google";
+import { Libre_Franklin, Fraunces, Geist_Mono } from "next/font/google";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 // globals.css maps --font-sans / --font-heading / --font-mono into the Tailwind
-// theme, so these must supply those exact variable names.
+// theme, so these must supply those exact variable names. All three self-host
+// through next/font (zero layout shift, no runtime request to Google).
 
-// Inter carries the product because this is a money app read on a phone: it
-// holds up at 360px, and its `tnum` figures let ₱ columns align digit-to-digit
-// (see the `tabular-nums` in the affordance primitives). `display: swap` keeps
-// first paint honest on a slow mobile connection rather than blocking on fonts.
-const inter = Inter({
+// Body/UI: Libre Franklin, a Franklin-Gothic revival. It reads "established
+// institution" — the register of a passbook or a land title, which is the tone
+// a Philippine agent's money deserves — while staying a workhorse UI sans that
+// holds up at 360px. Its tabular figures are what let ₱ columns align
+// digit-to-digit (see the `tabular-nums` in the affordance primitives).
+// `display: swap` keeps first paint honest on a slow mobile connection.
+const libreFranklin = Libre_Franklin({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-// Inter Tight only for headings — same skeleton as Inter, tighter fit. It gives
-// the hierarchy a voice without introducing a second typeface's quirks into
-// figures the agent has to read carefully.
-const interTight = Inter_Tight({
+// Display/money-hero: Fraunces, an optical-size serif. Headings and large money
+// figures are set in it so the numbers carry the gravity of a prestige ledger
+// rather than another admin-panel sans — the one deliberate risk of this system.
+// Tabular figures keep hero money aligned; italic axis is loaded for emphasis.
+const fraunces = Fraunces({
   variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
@@ -56,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${interTight.variable} ${geistMono.variable} antialiased`}
+        className={`${libreFranklin.variable} ${fraunces.variable} ${geistMono.variable} antialiased`}
       >
         <TooltipProvider>{children}</TooltipProvider>
       </body>

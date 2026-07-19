@@ -33,10 +33,13 @@ export function DashboardSection({
     <section id={id} data-testid={testId} className={cn("space-y-3", className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="space-y-0.5">
-          <h2 className="flex items-baseline gap-2 font-heading text-lg font-semibold tracking-tight">
+          <h2 className="flex items-center gap-2.5 font-heading text-lg font-semibold tracking-tight">
+            {/* The workbook's own section number (its 1→8 order) as a small
+                gold-marked badge — the brand accent where a real sequence lives.
+                Emerald numeral on pale gold clears AA (8.7:1). */}
             <span
               aria-hidden="true"
-              className="text-sm font-medium tabular-nums text-muted-foreground"
+              className="grid size-6 shrink-0 place-items-center rounded-full bg-gold-muted font-sans text-xs font-semibold tabular-nums text-primary ring-1 ring-gold-border/60 ring-inset"
             >
               {index}
             </span>
