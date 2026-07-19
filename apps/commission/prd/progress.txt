@@ -59,7 +59,7 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
-PAUSED by user after M10.3 (2026-07-19). Remaining: M10.4 (help placements), M10.5 (mobile/E2E hardening), design pass (deep green + gold). Resume with /mvp --resume or 'continue'.
+RESUMED 2026-07-19 — M10.4 in progress.
 
 ## Previous Status
 **M10.3 COMPLETE — First-deal walkthrough, sample lifecycle & getting-started checklist.** M10 owns
