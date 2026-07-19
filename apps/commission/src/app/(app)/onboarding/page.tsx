@@ -11,6 +11,9 @@ import {
   listPropertyTypes,
 } from "@/lib/settings/list-queries";
 import { getImportStatus } from "@/lib/import/queries";
+import { getDealFormOptions } from "@/lib/deals/form-options";
+import { resolveSampleReferences } from "@/lib/onboarding/sample";
+import { manilaToday } from "@/lib/date/manila";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = { title: "Setup assistant" };
@@ -37,14 +40,23 @@ export default async function OnboardingPage() {
   const taxSettings = context.taxSettings;
   if (!taxSettings) redirect(ROUTES.dashboard);
 
-  const [affectedDeals, propertyTypes, developers, leadSources, importStatus] =
-    await Promise.all([
-      taxAffectedCounts(),
-      listPropertyTypes(),
-      listDevelopers(),
-      listLeadSources(),
-      getImportStatus(),
-    ]);
+  const [
+    affectedDeals,
+    propertyTypes,
+    developers,
+    leadSources,
+    importStatus,
+    dealFormOptions,
+    sampleRefs,
+  ] = await Promise.all([
+    taxAffectedCounts(),
+    listPropertyTypes(),
+    listDevelopers(),
+    listLeadSources(),
+    getImportStatus(),
+    getDealFormOptions(),
+    resolveSampleReferences(),
+  ]);
 
   const blocked = importStatus.dealCount > 0 || importStatus.lastImport !== null;
 
@@ -73,6 +85,13 @@ export default async function OnboardingPage() {
         blockedReason: importStatus.lastImport !== null ? "imported" : "has_deals",
         dealCount: importStatus.dealCount,
         lastImportName: importStatus.lastImport?.file_name ?? null,
+      }}
+      firstDeal={{
+        propertyTypes: dealFormOptions.propertyTypes,
+        developers: dealFormOptions.developers,
+        leadSources: dealFormOptions.leadSources,
+        sampleRefs,
+        today: manilaToday(),
       }}
     />
   );

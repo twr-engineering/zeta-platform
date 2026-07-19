@@ -102,6 +102,41 @@ export type Database = {
           },
         ]
       }
+      checklist_state: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dismissed_at: string | null
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dismissed_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dismissed_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_state_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_bundle: {
         Row: {
           changelog: string | null
@@ -155,6 +190,7 @@ export type Database = {
           incentive_taxable:
             | Database["public"]["Enums"]["deal_incentive_taxable"]
             | null
+          is_sample: boolean
           lead_source_id: string
           list_price: number
           mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
@@ -206,6 +242,7 @@ export type Database = {
           incentive_taxable?:
             | Database["public"]["Enums"]["deal_incentive_taxable"]
             | null
+          is_sample?: boolean
           lead_source_id: string
           list_price: number
           mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
@@ -257,6 +294,7 @@ export type Database = {
           incentive_taxable?:
             | Database["public"]["Enums"]["deal_incentive_taxable"]
             | null
+          is_sample?: boolean
           lead_source_id?: string
           list_price?: number
           mode_of_payment?: Database["public"]["Enums"]["deal_mode_of_payment"]
@@ -797,6 +835,7 @@ export type Database = {
           ewt_rate_used: number
           gross_amount: number
           id: string
+          is_sample: boolean
           month_paid: number | null
           net_cash: number
           net_of_vat: number
@@ -822,6 +861,7 @@ export type Database = {
           ewt_rate_used: number
           gross_amount: number
           id?: string
+          is_sample?: boolean
           month_paid?: number | null
           net_cash: number
           net_of_vat: number
@@ -847,6 +887,7 @@ export type Database = {
           ewt_rate_used?: number
           gross_amount?: number
           id?: string
+          is_sample?: boolean
           month_paid?: number | null
           net_cash?: number
           net_of_vat?: number
@@ -1091,6 +1132,7 @@ export type Database = {
           developer_id: string | null
           first_payment_date: string | null
           id: string
+          is_sample: boolean
           last_payment_date: string | null
           lead_source_id: string
           months_idle: number | null
@@ -1129,6 +1171,7 @@ export type Database = {
           developer_id?: string | null
           first_payment_date?: string | null
           id?: string
+          is_sample?: boolean
           last_payment_date?: string | null
           lead_source_id: string
           months_idle?: number | null
@@ -1167,6 +1210,7 @@ export type Database = {
           developer_id?: string | null
           first_payment_date?: string | null
           id?: string
+          is_sample?: boolean
           last_payment_date?: string | null
           lead_source_id?: string
           months_idle?: number | null
@@ -1601,6 +1645,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_sample_data: { Args: never; Returns: Json }
       clear_annual_target_override: { Args: { p_year: number }; Returns: Json }
       clear_override_review_flag: {
         Args: { p_receivable_id: string }
@@ -1636,6 +1681,7 @@ export type Database = {
           p_incentive_billed: number
           p_incentive_net: number
           p_incentive_taxable: Database["public"]["Enums"]["deal_incentive_taxable"]
+          p_is_sample?: boolean
           p_lead_source_id: string
           p_list_price: number
           p_mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
@@ -1708,6 +1754,7 @@ export type Database = {
         Returns: Json
       }
       get_active_content_bundle: { Args: never; Returns: Json }
+      get_checklist_state: { Args: never; Returns: Json }
       get_or_seed_funnel_rates: { Args: never; Returns: Json }
       import_receivable_overlay: {
         Args: {
@@ -1719,6 +1766,7 @@ export type Database = {
         }
         Returns: Json
       }
+      link_sample_deal: { Args: { p_deal_id: string }; Returns: Json }
       log_deal_warning_override: {
         Args: { p_deal_id: string; p_warnings: string[] }
         Returns: Json
@@ -1855,6 +1903,7 @@ export type Database = {
         Args: { p_amount: number; p_note: string; p_year: number }
         Returns: Json
       }
+      set_checklist_dismissed: { Args: { p_dismissed: boolean }; Returns: Json }
       set_confirmed_collectible: {
         Args: { p_note: string; p_receivable_id: string; p_value: number }
         Returns: Json

@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown, Download, Plus, Search } from "luci
 import { InputField } from "@/components/affordance/input-field";
 import { SelectField } from "@/components/affordance/select-field";
 import { Badge } from "@/components/ui/badge";
+import { SampleBadge } from "@/components/sample/sample-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -388,13 +389,16 @@ export function DealList({
                     className={`px-3 py-2.5 whitespace-nowrap ${c.align === "end" ? "text-right tabular-nums" : "text-left"} ${c.computed ? "text-foreground" : ""}`}
                   >
                     {c.key === "deal_code" ? (
-                      <Link
-                        href={dealDetailPath(deal.deal_code)}
-                        className="font-medium text-primary hover:underline"
-                        data-testid="deal-link"
-                      >
-                        {deal.deal_code}
-                      </Link>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Link
+                          href={dealDetailPath(deal.deal_code)}
+                          className="font-medium text-primary hover:underline"
+                          data-testid="deal-link"
+                        >
+                          {deal.deal_code}
+                        </Link>
+                        {deal.is_sample && <SampleBadge />}
+                      </span>
                     ) : (
                       c.render(deal)
                     )}
@@ -418,7 +422,10 @@ export function DealList({
               data-code={deal.deal_code}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">{deal.deal_code}</span>
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  {deal.deal_code}
+                  {deal.is_sample && <SampleBadge />}
+                </span>
                 <span className="tabular-nums font-medium">{formatPHP(deal.net_gci)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 text-sm text-muted-foreground">

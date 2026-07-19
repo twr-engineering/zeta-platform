@@ -5,6 +5,7 @@ import { Banknote, FileText } from "lucide-react";
 
 import { LockedValue } from "@/components/affordance/locked-value";
 import { Badge } from "@/components/ui/badge";
+import { SampleBadge } from "@/components/sample/sample-badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -67,6 +68,7 @@ export default async function CollectibleDetailPage({ params }: PageProps) {
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {receivable.deal_code}
             </h1>
+            {receivable.is_sample && <SampleBadge />}
             <Badge variant="outline">{STATUS_LABEL[receivable.status]}</Badge>
             {receivable.archived_at && <Badge variant="secondary">Archived</Badge>}
           </div>

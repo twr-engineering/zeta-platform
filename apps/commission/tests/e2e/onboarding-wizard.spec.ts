@@ -123,9 +123,9 @@ test("fresh signup lands in the wizard; the fresh-start path completes", async (
   await expect(page.getByTestId("fork-import")).toBeVisible();
   await page.getByTestId("fork-fresh-button").click();
 
-  // Step 5 — the M10.3 seam, then finish.
-  await expect(page.getByTestId("first-deal-stub")).toBeVisible();
-  await page.getByTestId("onboarding-finish").click();
+  // Step 5 — the M10.3 walkthrough intro; skipping it finishes setup.
+  await expect(page.getByTestId("walkthrough-intro")).toBeVisible();
+  await page.getByTestId("walkthrough-skip").click();
   await expect(page.getByTestId("onboarding-complete")).toBeVisible();
 });
 
@@ -203,4 +203,107 @@ test("import path inside the wizard commits and offers to skip the walkthrough",
   await expect(page.getByTestId("import-skip-offer")).toBeVisible();
   await page.getByTestId("import-skip-finish").click();
   await expect(page.getByTestId("onboarding-complete")).toBeVisible();
+});
+
+/** Advance basics → tax → seed → fork, then take the fresh-start walkthrough. */
+async function reachWalkthrough(page: Page): Promise<void> {
+  await continueStep(page); // basics → tax
+  await continueStep(page); // tax → seed
+  await continueStep(page); // seed → fork
+  await expect(page.getByTestId("onboarding-step-fork")).toBeVisible();
+  await page.getByTestId("fork-fresh-button").click();
+  await expect(page.getByTestId("walkthrough-intro")).toBeVisible();
+}
+
+test("M10.3 — typed-along walkthrough books the badged sample (NET GCI ₱354,591.84), logs the release, then cleanup zeroes it", async ({
+  page,
+}) => {
+  await signUpToWizard(page, "Walkthrough Owner");
+  await reachWalkthrough(page);
+
+  // Start the guided sample — ensures the D021 reference items, mounts the REAL
+  // deal form prefilled with D021 + the coach-marks overlay.
+  await page.getByTestId("walkthrough-start").click();
+  await expect(page.getByTestId("walkthrough-form")).toBeVisible();
+  // The coach-mark card (the wrapper is a zero-box overlay host, so assert the card).
+  await expect(page.getByTestId("coach-mark")).toBeVisible();
+
+  // The live computed panel (M1's engine) shows D021's NET GCI (AC2).
+  await expect(page.getByTestId("computed-net-gci")).toContainText("354,591.84");
+
+  // Dismiss the coach-marks and save the sample deal.
+  await page.getByTestId("coach-skip").click();
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page.getByTestId("deal-submit").click(),
+  ]);
+
+  // The sample saved — the walkthrough moves to the optional payment leg, badged.
+  await expect(page.getByTestId("walkthrough-payment")).toBeVisible();
+  await expect(page.getByTestId("walkthrough-saved-note").getByTestId("sample-badge")).toBeVisible();
+
+  // The live split (M5's engine) — Net Cash ₱45,535.71 — then log it.
+  await expect(page.getByTestId("sample-split-net-cash")).toContainText("45,535.71");
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page.getByTestId("sample-payment-submit").click(),
+  ]);
+
+  // Keep the sample and finish → the SAMPLE badge + persistent banner show across
+  // surfaces (rule 4).
+  await expect(page.getByTestId("walkthrough-cleanup")).toBeVisible();
+  await page.getByTestId("cleanup-keep").click();
+  await expect(page.getByTestId("onboarding-complete")).toBeVisible();
+
+  await page.goto("/deals");
+  await expect(page.getByTestId("sample-banner")).toBeVisible();
+  await expect(page.getByTestId("deal-row").first().getByTestId("sample-badge")).toBeVisible();
+
+  await page.goto("/collectibles");
+  await expect(page.getByTestId("sample-banner")).toBeVisible();
+  await expect(page.getByTestId("receivable-row").first().getByTestId("sample-badge")).toBeVisible();
+
+  // The checklist card: settings/first-deal/first-payment are NOT ticked by sample
+  // records (rule 10) — the sample deal and its release don't count.
+  await page.goto("/dashboard");
+  await expect(page.getByTestId("checklist-card")).toBeVisible();
+  await expect(page.getByTestId("checklist-item-first_deal")).toHaveAttribute("data-done", "false");
+  await expect(page.getByTestId("checklist-item-first_payment")).toHaveAttribute("data-done", "false");
+
+  // Remove sample data from the banner → one-transaction cascade; badge + banner
+  // gone, dashboards back to zero (AC2).
+  await page.getByTestId("sample-banner-remove").click();
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page.getByTestId("sample-banner-confirm").click(),
+  ]);
+  await expect(page.getByTestId("sample-banner")).toHaveCount(0);
+
+  await page.goto("/deals");
+  await expect(page.getByTestId("sample-banner")).toHaveCount(0);
+  await expect(page.getByTestId("sample-badge")).toHaveCount(0);
+});
+
+test("M10.3 — the checklist is event-driven and dismissible; a dismissal sticks", async ({
+  page,
+}) => {
+  await signUpToWizard(page, "Checklist Owner");
+  // Dismiss the wizard so we're on a plain dashboard with the checklist card.
+  await page.getByTestId("onboarding-dismiss").click();
+  await page.getByTestId("onboarding-dismiss-confirm-button").click();
+  await expect(page).toHaveURL(/\/dashboard/);
+
+  const card = page.getByTestId("checklist-card");
+  await expect(card).toBeVisible();
+  // Nothing done yet on a fresh, wizard-dismissed workspace.
+  await expect(page.getByTestId("checklist-item-first_deal")).toHaveAttribute("data-done", "false");
+
+  // Dismiss it — hidden immediately, and it STAYS hidden across a reload (persisted).
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === "POST"),
+    page.getByTestId("checklist-dismiss").click(),
+  ]);
+  await expect(card).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByTestId("checklist-card")).toHaveCount(0);
 });

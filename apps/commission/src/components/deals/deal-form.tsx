@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { FormStatus } from "@/components/forms/form-status";
 import { ComputedPanel } from "@/components/deals/computed-panel";
 import { WarningBanners } from "@/components/deals/warning-banners";
-import { createDeal, updateDeal } from "@/lib/deals/actions";
+import { createDeal, updateDeal, type DealCreateState } from "@/lib/deals/actions";
 import { previewDeal } from "@/lib/deals/preview";
 import { IDLE } from "@/lib/forms/action-state";
 import { dealDetailPath, ROUTES } from "@/lib/routes";
@@ -66,6 +66,13 @@ export type DealFormProps = {
   initialValues: DealFormValues;
   /** Edit only: the deal's id, code and version (optimistic lock). */
   edit?: { id: string; code: string; version: number };
+  /**
+   * M10.3 walkthrough (FR-M10-07). When set, this create form books the deal as
+   * the sample (is_sample=true) and, instead of navigating away on save, hands the
+   * created deal back to the walkthrough so it can offer the sample payment.
+   */
+  sample?: boolean;
+  onSampleSaved?: (deal: { id: string; code: string }) => void;
 };
 
 const REPRESENTATION_OPTIONS = (
@@ -125,6 +132,8 @@ export function DealForm({
   leadSources,
   initialValues,
   edit,
+  sample = false,
+  onSampleSaved,
 }: DealFormProps) {
   const router = useRouter();
   const action = mode === "create" ? createDeal : updateDeal;
@@ -176,12 +185,19 @@ export function DealForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawKey, edit?.id]);
 
-  // A successful save navigates: to the list on create, to the deal on edit.
+  // A successful save navigates: to the list on create, to the deal on edit. In the
+  // M10.3 walkthrough (sample mode) it does NOT navigate — it hands the created
+  // sample deal back so the walkthrough can continue to the sample payment.
   useEffect(() => {
     if (!state.message || state.error) return;
+    if (sample) {
+      const s = state as DealCreateState;
+      if (s.dealId && s.dealCode) onSampleSaved?.({ id: s.dealId, code: s.dealCode });
+      return;
+    }
     router.push(mode === "edit" && edit ? dealDetailPath(edit.code) : ROUTES.deals);
     router.refresh();
-  }, [state.message, state.error, mode, edit, router]);
+  }, [state, sample, onSampleSaved, mode, edit, router]);
 
   const set = <K extends keyof DealFormValues>(key: K, value: DealFormValues[K]) =>
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -215,6 +231,7 @@ export function DealForm({
             <input type="hidden" name="expectedVersion" value={String(edit.version)} />
           </>
         )}
+        {sample && <input type="hidden" name="is_sample" value="true" />}
 
         {/* GROUP 1 — What closed */}
         <Group title="What closed" caption="The deal, the parties, and how it was sourced.">

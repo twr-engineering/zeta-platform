@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { HelpContentProvider } from "@/components/help/help-content-provider";
+import { SampleBanner } from "@/components/sample/sample-banner";
 import { getWorkspaceContext } from "@/lib/workspace/queries";
 import { getActiveContentBundle } from "@/lib/help/loader";
+import { getSampleStatus } from "@/lib/onboarding/queries";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -30,7 +32,10 @@ export default async function AppLayout({
   // The active help-content bundle (M10.1) — resolved server-side and cached, then
   // handed to the client provider so every "?" popover renders from memory (< 100 ms)
   // and a republished bundle propagates within the cache TTL (< 5 min).
-  const helpBundle = await getActiveContentBundle();
+  const [helpBundle, sample] = await Promise.all([
+    getActiveContentBundle(),
+    getSampleStatus(),
+  ]);
 
   return (
     <HelpContentProvider initial={helpBundle}>
@@ -40,6 +45,8 @@ export default async function AppLayout({
           email={email}
           displayName={profile?.display_name ?? null}
         />
+        {/* M10.3 rule 4 — persistent while sample data is on the books (M1/M4/M5/M6). */}
+        {sample.exists && <SampleBanner sampleDealCode={sample.sampleDealCode} />}
 
         <div className="mx-auto flex w-full max-w-screen-2xl">
           <aside className="no-print sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r bg-sidebar p-3 lg:block">

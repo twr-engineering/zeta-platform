@@ -11,6 +11,8 @@ import { DisplayNameForm } from "@/components/account/display-name-form";
 import { ChangeEmailForm } from "@/components/account/change-email-form";
 import { ChangePasswordForm } from "@/components/account/change-password-form";
 import { DataOwnership } from "@/components/account/data-ownership";
+import { ChecklistRestore } from "@/components/dashboard/checklist-restore";
+import { getChecklistState } from "@/lib/onboarding/checklist";
 import {
   Card,
   CardContent,
@@ -47,6 +49,9 @@ export default async function GeneralSettingsPage() {
   }
 
   const { workspace, profile, email } = context;
+
+  const checklist = await getChecklistState();
+  const checklistDismissed = checklist?.dismissedAt != null;
 
   return (
     <div className="space-y-6">
@@ -86,6 +91,22 @@ export default async function GeneralSettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {checklistDismissed && (
+        <Card data-testid="checklist-restore-card">
+          <CardHeader>
+            <CardTitle>Getting-started checklist</CardTitle>
+            <CardDescription>
+              You dismissed the getting-started checklist. It never gates anything —
+              bring it back to your dashboard whenever you want a nudge on what&apos;s
+              left to set up.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChecklistRestore />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

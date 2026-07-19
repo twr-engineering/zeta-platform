@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { getDashboardData } from "@/lib/dashboard/queries";
 import { getOnboardingState } from "@/lib/onboarding/queries";
 import {
+  getChecklistState,
+  checklistItems,
+  isChecklistVisible,
+} from "@/lib/onboarding/checklist";
+import { ChecklistCard } from "@/components/dashboard/checklist-card";
+import {
   ONBOARDING_STEP_COUNT,
   ONBOARDING_STEP_LABELS,
   stepNumber,
@@ -61,6 +67,10 @@ export default async function DashboardPage({
   // left in progress (rule 2 / AC3) — the app was fully usable in between.
   const onboarding = await getOnboardingState();
 
+  // FR-M10-15: the getting-started checklist (event-derived, never gates). Shown
+  // until dismissed; sample records never tick first-deal/first-payment (rule 10).
+  const checklist = await getChecklistState();
+
   const data = await getDashboardData({ dashboardYear });
 
   // Empty workspace = no receivables at all (one is created per deal), so nothing
@@ -95,6 +105,10 @@ export default async function DashboardPage({
           </div>
           <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
         </Link>
+      )}
+
+      {checklist && isChecklistVisible(checklist) && (
+        <ChecklistCard items={checklistItems(checklist)} />
       )}
 
       {/* sticky header carrying the year filter (§6) */}

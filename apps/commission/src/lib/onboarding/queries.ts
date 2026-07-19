@@ -26,3 +26,26 @@ export async function getOnboardingState(): Promise<OnboardingStateView | null> 
 
   return data as unknown as OnboardingStateView;
 }
+
+/**
+ * M10.3 — whether the workspace has sample data on its books, and its code (for the
+ * persistent banner + badges, rule 4). Reads the deal table directly (RLS-scoped)
+ * so it reflects the real rows, not just the wizard's sample_deal_id pointer — the
+ * banner disappears the moment the sample deal is gone (cleanup). Cheap: the
+ * partial index deal_sample_idx backs the lookup.
+ */
+export type SampleStatus = { exists: boolean; sampleDealCode: string | null };
+
+export async function getSampleStatus(): Promise<SampleStatus> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("deal")
+    .select("deal_code")
+    .eq("is_sample", true)
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return { exists: false, sampleDealCode: null };
+  }
+  return { exists: true, sampleDealCode: data[0].deal_code };
+}

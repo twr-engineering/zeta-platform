@@ -5,6 +5,7 @@ import { Banknote, Receipt } from "lucide-react";
 
 import { LockedValue } from "@/components/affordance/locked-value";
 import { Badge } from "@/components/ui/badge";
+import { SampleBadge } from "@/components/sample/sample-badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -84,6 +85,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {deal.deal_code}
             </h1>
+            {deal.is_sample && <SampleBadge />}
             {deal.archived_at && <Badge variant="secondary">Archived</Badge>}
           </div>
           <p className="text-sm text-muted-foreground">

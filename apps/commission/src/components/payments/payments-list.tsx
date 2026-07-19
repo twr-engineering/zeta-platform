@@ -6,6 +6,7 @@ import { Download, Pencil, Search, TriangleAlert } from "lucide-react";
 
 import { InputField } from "@/components/affordance/input-field";
 import { SelectField } from "@/components/affordance/select-field";
+import { SampleBadge } from "@/components/sample/sample-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -419,13 +420,16 @@ function PaymentTableRow({
       <td className="px-3 py-2.5 whitespace-nowrap">{formatManilaDate(p.payment_date)}</td>
       <td className="px-3 py-2.5">
         {p.deal ? (
-          <Link
-            href={dealDetailPath(p.deal.deal_code)}
-            className="font-medium text-primary hover:underline"
-            data-testid="payment-deal-link"
-          >
-            {p.deal.deal_code}
-          </Link>
+          <span className="inline-flex items-center gap-1.5">
+            <Link
+              href={dealDetailPath(p.deal.deal_code)}
+              className="font-medium text-primary hover:underline"
+              data-testid="payment-deal-link"
+            >
+              {p.deal.deal_code}
+            </Link>
+            {p.is_sample && <SampleBadge />}
+          </span>
         ) : (
           <span className="text-muted-foreground">—</span>
         )}
@@ -481,7 +485,10 @@ function PaymentCard({
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="font-medium text-primary">{p.deal?.deal_code ?? "—"}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="font-medium text-primary">{p.deal?.deal_code ?? "—"}</span>
+            {p.is_sample && <SampleBadge />}
+          </span>
           <span className="ml-2 truncate text-sm text-muted-foreground">{p.deal?.client_name ?? ""}</span>
         </div>
         <div className="flex items-center gap-1.5">

@@ -17,8 +17,21 @@ import { computeDealWarnings } from "./deal-warnings";
 import { dealPaymentCount, findPossibleDuplicates, resolveDealRefs } from "./queries";
 import { consumeReceivableEvents } from "@/lib/receivables/consume";
 import { consumeYieldEvents } from "@/lib/yield/consume";
+import { linkSampleDeal } from "@/lib/onboarding/sample";
 
 type DealClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * createDeal's result. Extends ActionState with the created deal's identity so the
+ * M10.3 walkthrough (which books its sample through the REAL form) can pin the
+ * sample_deal_id and move on to the sample payment. Undefined on a normal create —
+ * the form navigates on `message` as before.
+ */
+export type DealCreateState = ActionState & {
+  dealId?: string;
+  dealCode?: string;
+  isSample?: boolean;
+};
 
 /**
  * Project the deal event(s) this mutation just emitted onto their receivables
@@ -180,9 +193,9 @@ function describeError(message: string): string {
 // --- create (FR-M1-01) ------------------------------------------------------
 
 export async function createDeal(
-  _prev: ActionState,
+  _prev: DealCreateState,
   formData: FormData
-): Promise<ActionState> {
+): Promise<DealCreateState> {
   const g = await guard();
   if (!g.ok) return g.state;
 
@@ -194,15 +207,21 @@ export async function createDeal(
 
   const derived = deriveDeal(parsed.value, refs.refs, g.taxSettings);
 
+  // M10.3 §3.5: the walkthrough books its sample through this same path with a
+  // hidden is_sample flag. Read server-side (never trusted from a normal form,
+  // which never sends it) — a sample deal is born sample so its created-event
+  // snapshot carries the flag and the checklist correctly excludes it (rule 10).
+  const isSample = formData.get("is_sample") === "true";
+
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc(
-    "create_deal",
-    dealRpcArgs(parsed.value, derived)
-  );
+  const { data, error } = await supabase.rpc("create_deal", {
+    ...dealRpcArgs(parsed.value, derived),
+    p_is_sample: isSample,
+  });
 
   if (error) return { error: describeError(error.message) };
 
-  const result = data as unknown as DealResult;
+  const result = data as unknown as DealResult & { is_sample?: boolean };
   if (!result?.ok) return { error: "Could not save the deal. Reload and try again." };
 
   if (result.id) {
@@ -215,10 +234,18 @@ export async function createDeal(
   // deal becomes visible.
   await syncReceivables();
 
+  // FR-M10-09: pin the sample to the wizard state so the banner + cleanup see it.
+  if (isSample && result.id) {
+    await linkSampleDeal(result.id);
+  }
+
   revalidateDeals();
   return {
     error: null,
     message: `Logged ${result.deal_code} — NET GCI ${formatPHP(result.net_gci ?? "0")}.`,
+    dealId: result.id,
+    dealCode: result.deal_code,
+    isSample,
   };
 }
 

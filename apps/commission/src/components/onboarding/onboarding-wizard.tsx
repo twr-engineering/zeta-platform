@@ -28,13 +28,18 @@ import { ImportWizard, type ImportResult } from "@/components/import/import-wiza
 import { DoctrineCallout } from "./doctrine-callout";
 import { FlowMap } from "./flow-map";
 import { SeedListsStep, type SeedListsEmptiness } from "./seed-lists-step";
+import { FirstDealWalkthrough } from "./first-deal-walkthrough";
+import type {
+  DeveloperOption,
+  LeadSourceOption,
+  PropertyTypeOption,
+} from "@/components/deals/deal-form";
+import type { SampleReferenceIds } from "@/lib/onboarding/sample";
 import {
   ONBOARDING_STEPS,
-  ONBOARDING_STEP_COUNT,
   ONBOARDING_STEP_LABELS,
   nextStep,
   previousStep,
-  stepNumber,
   type OnboardingStateView,
 } from "@/lib/onboarding/steps";
 import {
@@ -57,6 +62,14 @@ export type OnboardingWizardProps = {
     blockedReason: "imported" | "has_deals";
     dealCount: number;
     lastImportName: string | null;
+  };
+  /** M10.3 — everything the step-5 typed-along walkthrough needs. */
+  firstDeal: {
+    propertyTypes: readonly PropertyTypeOption[];
+    developers: readonly DeveloperOption[];
+    leadSources: readonly LeadSourceOption[];
+    sampleRefs: SampleReferenceIds;
+    today: string;
   };
 };
 
@@ -87,6 +100,7 @@ export function OnboardingWizard({
   tax,
   seedEmpty,
   importStatus,
+  firstDeal,
 }: OnboardingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>(initialState.current_step);
@@ -279,7 +293,14 @@ export function OnboardingWizard({
 
         {step === "first_deal" && (
           <div data-testid="onboarding-step-first-deal">
-            <FirstDealStub />
+            <FirstDealWalkthrough
+              propertyTypes={firstDeal.propertyTypes}
+              developers={firstDeal.developers}
+              leadSources={firstDeal.leadSources}
+              sampleRefs={firstDeal.sampleRefs}
+              today={firstDeal.today}
+              onFinish={() => finish({ walkthrough: "done" })}
+            />
           </div>
         )}
       </div>
@@ -289,7 +310,6 @@ export function OnboardingWizard({
         onBack={() => goTo(previousStep(step))}
         onSkip={() => goTo(nextStep(step), { skipped: true })}
         onContinue={() => goTo(nextStep(step))}
-        onFinish={() => finish()}
       />
 
       <DismissBar
@@ -417,16 +437,16 @@ function Footer({
   onBack,
   onSkip,
   onContinue,
-  onFinish,
 }: {
   step: OnboardingStep;
   onBack: () => void;
   onSkip: () => void;
   onContinue: () => void;
-  onFinish: () => void;
 }) {
   const isFirst = step === "basics";
   const isFork = step === "migration_fork";
+  // The step-5 walkthrough owns its own completion (Finish / Keep / Remove), so the
+  // footer only offers Back there — no duplicate Finish button.
   const isLast = step === "first_deal";
 
   return (
@@ -447,15 +467,11 @@ function Footer({
             Skip
           </Button>
         )}
-        {isLast ? (
-          <Button onClick={onFinish} data-testid="onboarding-finish">
-            Finish setup
-          </Button>
-        ) : isFork ? (
+        {isFork ? (
           <Button variant="outline" onClick={onSkip} data-testid="onboarding-skip-fork">
             Skip for now
           </Button>
-        ) : (
+        ) : isLast ? null : (
           <Button onClick={onContinue} data-testid="onboarding-continue">
             Continue
           </Button>
@@ -554,31 +570,9 @@ function CompletionScreen() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        The getting-started checklist and the guided first-deal walkthrough arrive
-        with the next update. You can re-open this assistant any time from
-        Settings → Setup assistant.
+        Your getting-started checklist is on the dashboard, tracking these as you go.
+        You can re-open this assistant any time from Settings → Setup assistant.
       </p>
-    </div>
-  );
-}
-
-function FirstDealStub() {
-  return (
-    <div className="space-y-4 rounded-xl border border-dashed p-6 text-center" data-testid="first-deal-stub">
-      <p className="text-sm font-medium">
-        Step {stepNumber("first_deal")} of {ONBOARDING_STEP_COUNT} — the guided
-        first-deal walkthrough
-      </p>
-      <p className="mx-auto max-w-md text-sm text-pretty text-muted-foreground">
-        The typed-along sample deal — with coach-marks explaining each computed
-        figure as it appears — is coming in the next update. For now you can log a
-        real deal directly, or finish setup and explore.
-      </p>
-      <div className="flex flex-wrap justify-center gap-2">
-        <Button nativeButton={false} render={<Link href={ROUTES.dealNew} />} data-testid="first-deal-log">
-          Log a deal now
-        </Button>
-      </div>
     </div>
   );
 }

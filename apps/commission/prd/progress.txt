@@ -1,6 +1,6 @@
 # Project: ZETA GCI + Collections
 # Started: 2026-07-17
-# Last Updated: 2026-07-20T12:00:00+08:00 (M10.2 — First-run wizard core, steps 1–4)
+# Last Updated: 2026-07-20T18:00:00+08:00 (M10.3 — First-deal walkthrough, sample lifecycle & checklist)
 
 ## Completion Criteria
 # Source of truth: discovery/prd.md (Master PRD) + module PRDs in discovery/source/.
@@ -51,7 +51,7 @@
 - [x] M9.4: Unified "All" tab (OQ2 RESOLVED "BUILD IT" 2026-07-19)  ← ★ M9 FULLY COMPLETE ★
 - [x] M10.1: Help-content system, legend spec & glossary
 - [x] M10.2: First-run wizard core, steps 1–4
-- [ ] M10.3: First-deal walkthrough, sample lifecycle & checklist
+- [x] M10.3: First-deal walkthrough, sample lifecycle & checklist
 - [ ] M10.4: Contextual help placements & empty states across modules
 - [ ] M10.5: Mobile, end-to-end scripts & hardening
 - [ ] DESIGN PASS (user-requested 2026-07-19, runs AFTER M10): typography — replace default HTML body text with an intentional font system (display + body + tabular-numerals for ₱ columns); modern visual refresh on the USER-CHOSEN theme: DEEP GREEN + GOLD (dark emerald primary, warm gold accents — premium financial feel); applies across all surfaces; must not alter any computed value or testid contract
@@ -59,6 +59,98 @@
 - [x] `pnpm run build` clean
 
 ## Current Status
+**M10.3 COMPLETE — First-deal walkthrough, sample lifecycle & getting-started checklist.** M10 owns
+NO financial logic — the walkthrough ORCHESTRATES M1/M5's real create paths and RENDERS their engine
+responses (NET GCI ₱354,591.84 etc.); it computes nothing.
+
+Q29/OQ5 DECISION (sample-deal ID) — **consume the real sequence** (sample = D001; first real deal
+becomes D002 after cleanup). Rationale: the PRD's tentative recommendation (reserved `SMPL-1`) is
+explicitly contingent on M1 sign-off AND requires loosening M1's `deal_code_format` CHECK (`^D[0-9]{3,}$`)
++ a code-reuse exception — i.e. the very "code-format exception to M1 rule 1" rule 6 warns about. Neither
+sign-off nor a rule-1 exception is in hand, so consuming the sequence (the PRD calls it "harmless") is the
+option that keeps M1 rule 1 fully inviolate (D-nnn format, immutable, never reused) with ZERO change to the
+permanent-code allocation. Marked here as the resolution; revisit only if product later ratifies SMPL-1.
+
+MIGRATION 20260720000000_m103_sample_lifecycle_checklist (applied live via Management API + registered):
+- `is_sample` boolean default false on deal (source of truth) + MIRRORED onto receivable + payment,
+  inherited at write time by BEFORE-INSERT/UPDATE trigger app.inherit_is_sample_from_deal (reads the
+  parent deal — no rewrite of create_payment/consume_deal_events; can't drift). Partial indexes
+  deal/receivable/payment_sample_idx. "Derived via deal reference" (PRD rule 5) = this write-time mirror,
+  consistent with M4's existing deal→receivable mirroring.
+- app.deal_snapshot gains 'is_sample' (append-only key). ⚠️ GOTCHA HIT + FIXED: the FIRST apply of this
+  migration reproduced the OLD (m12) deal_snapshot body and DROPPED M4.1's 'default_total_collectible'
+  key → receivable inserts failed NOT-NULL. Fix: snapshot now carries BOTH default_total_collectible
+  (M4.1) AND is_sample. LESSON for future DROP+CREATE of deal_snapshot/create_deal: fetch the LIVE
+  definition (pg_get_functiondef), don't copy from the original migration — later milestones extend them.
+- create_deal DROP+CREATE with trailing `p_is_sample boolean default false` (M4.1's DROP+CREATE precedent;
+  live signature already had p_default_total_collectible at position 31). Every existing caller (deal form,
+  importer) books a normal deal unchanged. Body = live def verbatim + the is_sample column.
+- link_sample_deal(p_deal_id) — pins onboarding_state.sample_deal_id (guarded: must be is_sample in the
+  caller's workspace). cleanup clears it.
+- RULE-5 CLEANUP: deal DELETE policy relaxed to `member AND (payment_count=0 OR is_sample)` — THE documented
+  exception to M1's delete protection, permitted ONLY where is_sample (RLS is the real guard, per the
+  delete_deal comment). New is_sample-scoped DELETE policies on payment + receivable (a forged non-sample
+  DELETE matches 0 rows). cleanup_sample_data() (SECURITY INVOKER, one transaction): audit-logs each sample
+  deal ('delete' action + sample_cleanup marker), deletes payments → receivable → deal in that order
+  (payment RESTRICT FK forces payments-first; payment_event/deal_event cascade), then rebuilds each touched
+  yield cell via app.recompute_yield_cell (the deleted sample leaves no event, so the cursor consumer would
+  never re-project it — the absolute per-cell recompute deletes the emptied cell → dashboards return to
+  pre-sample exactly, AC2). Mid-failure = one function body = one tx → NOTHING deleted. The dashboard reads
+  LIVE (no materialized cache) so deleting the rows fixes it instantly; yield is the only materialized
+  deal-consumer, handled by the per-cell rebuild.
+- CHECKLIST: checklist_state table stores ONLY the user-set dismissed_at (per workspace, RLS member).
+  get_checklist_state() DERIVES the four items live from durable rows: settings_reviewed = least(onboarding
+  tax_review step_completed, tax_settings.vat_registered_confirmed_at); first_deal = min(deal.created_at
+  WHERE is_sample=false); first_payment = min(payment.created_at WHERE is_sample=false AND archived_at
+  null); importer_run = min(import_batch.created_at). Sample rows EXCLUDED (rule 10). set_checklist_dismissed
+  (dismiss/restore). NEVER gates anything (rule 9) — no policy/fn reads it to allow/deny.
+
+APP LAYER: is_sample threaded into DEAL/RECEIVABLE/PAYMENT_SELECT (boolean, no money override needed).
+createDeal action reads hidden `is_sample` (never from a normal form), passes p_is_sample, links the sample,
+returns DealCreateState{dealId,dealCode,isSample}. DealForm gains optional {sample, onSampleSaved} — in
+sample mode it adds hidden is_sample=true, suppresses navigation, and hands the saved deal to the walkthrough.
+
+UI (src/components/): onboarding/first-deal-walkthrough.tsx (phases intro→form→payment→cleanup; ensures the
+D021 refs via ensureSampleReferences, mounts the REAL DealForm prefilled with D021 + coach-marks, then the
+sample payment, then keep/remove); onboarding/coach-marks.tsx (native overlay OQ2, no tour lib — scrolls to
++ rings each anchor by data-testid, floating card desktop / bottom sheet ≤640px rule 13, pointer-events-none
+backdrop so the typed-along form stays interactive); onboarding/sample-payment-step.tsx (real previewPayment
+live split + real createPayment — ₱50,000 Incentive → 45,535.71); sample/sample-badge.tsx (amber SAMPLE)
++ sample/sample-banner.tsx (persistent, rule 4, in the (app) layout while getSampleStatus().exists → shows
+on M1/M4/M5/M6; "Remove sample data" → cleanup cascade); dashboard/checklist-card.tsx (4 event-derived
+items + dismiss, on the dashboard) + dashboard/checklist-restore.tsx (Settings→General, when dismissed).
+SAMPLE badges wired on: deal list (table+cards) + detail header, collectibles ledger (table+cards) + detail
+header, payments list (table+cards). lib: onboarding/sample.ts (resolve/ensureSampleReferences, cleanup,
+linkSampleDeal), onboarding/checklist.ts (server read, re-exports the pure) + onboarding/checklist-derive.ts
+(PURE items/visibility — split out because checklist.ts is server-only), onboarding/checklist-actions.ts,
+onboarding/sample-fixture.ts (D021 inputs + figures + the coach-mark script — all authored copy, no compute).
+
+GOTCHA (payment raw keys): parsePayment/rawFromForm read CAMELCASE (dealId/paymentDate/grossAmount/
+paymentType/referenceNote), NOT snake_case — the sample payment step's preview raw must match or the split
+stays "—". (Caught in e2e, fixed.)
+
+VERIFICATION: test:unit 536/536 (+8: sample fixture/coach-mark integrity + checklist derivation). build:check
++ lint clean. live-m103-check.mts 34/34 (throwaway user, real engine): sample D001 is_sample + NET GCI
+354,591.84; receivable inherits is_sample + total_collectible 354,591.84; link_sample_deal; sample payment
+44,642.86 net / 45,535.71 net cash / balance 309,948.98; checklist EXCLUDES sample (first_deal/first_payment
+null) then ticks on a REAL deal+payment; M1 delete protection blocks a real deal w/ payments; cleanup = 1/1/1
+deleted in one tx, ZERO sample rows, audit written, sample_deal_id cleared, REAL data untouched, sample's
+yield cell rebuilt away, delete protection still holds; delta-residue zero (no leftover m103 users). e2e:
+onboarding-wizard.spec.ts 6/6 (4 existing incl. the fresh-start step-5 now reaching the walkthrough intro,
++2 new: the full typed-along walkthrough → coach-marks → 354,591.84 live → save → SAMPLE badge → 45,535.71
+split → keep → badges+banner on /deals + /collectibles → checklist not ticked by sample → banner "Remove"
+cascade → badge+banner gone; and checklist dismiss-persists-across-reload). No regressions: dashboard/deals/
+collectibles/payments-list specs 48/48 (self-provisioning throwaway users — badges only render when
+is_sample, banner only when a sample exists, so non-sample rows unaffected). Atomicity of the cascade is
+structural (one plpgsql body = one tx); the live check proves the happy-path integrity + zero residue.
+
+FOR M10.4/M10.5: is_sample is on every deal/receivable/payment row + snapshot; the SAMPLE badge (<SampleBadge>)
++ <SampleBanner> + getSampleStatus() are reusable; the coach-mark overlay (CoachMarks) can drive mobile
+bottom-sheets for M10.5. The checklist is event-derived + never gates — M10.5's timing report can read
+onboarding_event + the checklist state. The sample cleanup is the ONLY path that hard-deletes a deal with
+payments.
+
+## Prior Status
 **M10.2 COMPLETE — First-run wizard core, steps 1–4 (resumable, never-blocking; embeds the real
 M0/M1 flows — no forks).** M10 owns NO financial logic; the wizard ORCHESTRATES existing write paths
 (rename_workspace, update_tax_settings, seed_*, run_workbook_import), each keeping its own audit trail.

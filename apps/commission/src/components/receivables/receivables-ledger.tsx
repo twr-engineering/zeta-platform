@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Download, Search, TriangleAlert } from "lucide-reac
 
 import { InputField } from "@/components/affordance/input-field";
 import { SelectField } from "@/components/affordance/select-field";
+import { SampleBadge } from "@/components/sample/sample-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -592,13 +593,16 @@ function LedgerRow({ r, chaseIdleMonths }: { r: ReceivableRow; chaseIdleMonths: 
   return (
     <tr className="border-t hover:bg-muted/40" data-testid="receivable-row" data-code={r.deal_code}>
       <td className="px-3 py-2.5">
-        <Link
-          href={collectibleDetailPath(r.deal_code)}
-          className="font-medium text-primary hover:underline"
-          data-testid="receivable-link"
-        >
-          {r.deal_code}
-        </Link>
+        <span className="inline-flex items-center gap-1.5">
+          <Link
+            href={collectibleDetailPath(r.deal_code)}
+            className="font-medium text-primary hover:underline"
+            data-testid="receivable-link"
+          >
+            {r.deal_code}
+          </Link>
+          {r.is_sample && <SampleBadge />}
+        </span>
         <span className="block text-xs text-muted-foreground">{r.client_name}</span>
       </td>
       <td className="px-3 py-2.5">{payorOf(r)}</td>
@@ -648,7 +652,10 @@ function LedgerCard({ r, chaseIdleMonths }: { r: ReceivableRow; chaseIdleMonths:
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="font-medium text-primary">{r.deal_code}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="font-medium text-primary">{r.deal_code}</span>
+            {r.is_sample && <SampleBadge />}
+          </span>
           <span className="ml-2 truncate text-sm text-muted-foreground">{r.client_name}</span>
         </div>
         <StatusChip status={r.status} />
