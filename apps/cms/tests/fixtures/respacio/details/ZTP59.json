@@ -1,0 +1,2017 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1674087495",
+  "PHP": "72.1111653308"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "59",
+    "property_type_id": "2",
+    "reference_no": "ZTP59",
+    "infocasa_reference_no": "spn_59_infocasa_vR62WgFT_920230",
+    "address": "92, 1, B7 L2",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.4574669",
+    "longitude": "124.6164168",
+    "complex_lat": "8.4827292",
+    "complex_long": "124.6242366",
+    "bedrooms": "5",
+    "bathrooms": "55",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50393",
+    "complex_id": "92",
+    "complex_name": "Golden Village",
+    "storeys": "3",
+    "floor_number": "",
+    "built_size": "438",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "1",
+    "is_private": "0",
+    "dining_rooms": "1",
+    "living_rooms": "1",
+    "is_featured": "0",
+    "available_from": "2026-08-20",
+    "plot_size": "538",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Carmen",
+    "property_for_id": "1",
+    "price": "27500000",
+    "default_price": "27500000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "9",
+    "property_sub_sub_type_id": "44",
+    "property_name": "Residential",
+    "property_sub_name": "House",
+    "property_sub_sub_name": "Single Detached",
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Spacious House and Lot in Golden Village",
+    "short_description": "Property Details: \r\nAddress: Golden Village Subdivision, Carmen, Cagayan de Oro City\r\nfloor: 438 sqm\r\nlot: 538 sqm \r\n3 storeys \r\n5 + 1 bedrooms \r\n5.5 toilet & bath\r\n2 car parks\r\nselling price : 27.5M",
+    "description": "Introducing House Golden Village, located in Carmen, a prime residential area near the city center. This magnificent property boasts a generous lot area, providing ample space for various purposes.\r\nWith a spacious floor area of 438 square meters, House Golden Village offers three levels of luxurious living. It features five bedrooms, each thoughtfully designed to offer comfort and privacy. Additionally, there is an extra room that can be utilized as a guest room or home office. The house is equipped with 5.5 modern and well-appointed bathrooms to cater to the needs of its occupants.\r\nProperty Details: \r\nAddress: Golden Village Subdivision, Carmen, Cagayan de Oro City\r\nfloor: 438 sqm\r\nlot: 538 sqm \r\n3 storeys \r\n5 + 1 bedrooms \r\n5.5 toilet & bath\r\n2 car parks\r\nselling price 27,500,000",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-20",
+    "max_date": "2028-08-20",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2026-02-17 10:38:23",
+    "agent": "Alessandra Victoria Zeta Guingao",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "4",
+    "attribute": {
+     "condition": {
+      "in good condition": "In Good Condition"
+     },
+     "exterior features": {
+      "terrace": "Terrace",
+      "fully fenced": "Fully Fenced"
+     },
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "corner": "Corner"
+     },
+     "pool": {
+      "no pool": "No Pool"
+     },
+     "rooms": {
+      "store room": "Store Room",
+      "office": "Office",
+      "first floor bedroom": "First Floor Bedroom"
+     },
+     "telecoms & security": {
+      "cctv": "Cctv"
+     },
+     "views": {
+      "city": "City"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": {
+     "3": "No Pool"
+    }
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": {
+     "18": "CCTV"
+    }
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": {
+     "112": "Fully Fenced",
+     "38": "Terrace"
+    }
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": {
+     "93": "First Floor Bedroom",
+     "79": "Office",
+     "73": "Store Room"
+    }
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": {
+     "124": "In Good Condition"
+    }
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "120": "Corner"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "135": "City"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "104": "Accessible  To Public Transportation",
+     "102": "Good Road Access",
+     "103": "Near Motorway"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "112": "Privately Gated"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "125": "Near Schools",
+     "119": "Village"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02906",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1wyh76i5aa_20230910032921.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1wyh76i5aa_20230910032921.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1wyh76i5aa_20230910032921.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02890",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1pq2mpdxnx_20230910032906.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1pq2mpdxnx_20230910032906.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1pq2mpdxnx_20230910032906.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02883",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1hmwbav4ta_20230910032855.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1hmwbav4ta_20230910032855.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1hmwbav4ta_20230910032855.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02894",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1m6cog2jyi_20230910032907.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1m6cog2jyi_20230910032907.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1m6cog2jyi_20230910032907.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02907",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_154fxv8uhb_20230910032922.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_154fxv8uhb_20230910032922.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_154fxv8uhb_20230910032922.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02899",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1a0wtiebhg_20230910032916.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1a0wtiebhg_20230910032916.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1a0wtiebhg_20230910032916.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02897",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1p5tbhlu6a_20230910032914.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1p5tbhlu6a_20230910032914.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1p5tbhlu6a_20230910032914.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02892",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1vobtmks0w_20230910032909.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1vobtmks0w_20230910032909.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1vobtmks0w_20230910032909.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02888",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_10f7firzfv_20230910032905.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_10f7firzfv_20230910032905.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_10f7firzfv_20230910032905.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02889",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_14stttbb08_20230910032904.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_14stttbb08_20230910032904.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_14stttbb08_20230910032904.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02887",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1d8tekefj3_20230910032857.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1d8tekefj3_20230910032857.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1d8tekefj3_20230910032857.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02896",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ffxf89zqc_20230910032915.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ffxf89zqc_20230910032915.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ffxf89zqc_20230910032915.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02885",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_16mv89kspm_20230910032856.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_16mv89kspm_20230910032856.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_16mv89kspm_20230910032856.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02886",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gzumm8jxh_20230910032853.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gzumm8jxh_20230910032853.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gzumm8jxh_20230910032853.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02884",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_184vxly56v_20230910032852.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_184vxly56v_20230910032852.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_184vxly56v_20230910032852.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02882",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_120kb0r4hq_20230910032851.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_120kb0r4hq_20230910032851.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_120kb0r4hq_20230910032851.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02881",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1dvi4mrgi0_20230910032848.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1dvi4mrgi0_20230910032848.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1dvi4mrgi0_20230910032848.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02880",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1z6gkyb3ab_20230910032846.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1z6gkyb3ab_20230910032846.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1z6gkyb3ab_20230910032846.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02895",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1bnnxjmhqb_20230910032912.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1bnnxjmhqb_20230910032912.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1bnnxjmhqb_20230910032912.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02900",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zphvfgvwh_20230910032923.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zphvfgvwh_20230910032923.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zphvfgvwh_20230910032923.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02875",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_16dqc3fllx_20230910032841.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_16dqc3fllx_20230910032841.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_16dqc3fllx_20230910032841.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02877",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tyxtcswji_20230910032840.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tyxtcswji_20230910032840.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tyxtcswji_20230910032840.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02873",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xyl0vy7mx_20230910032839.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xyl0vy7mx_20230910032839.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xyl0vy7mx_20230910032839.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02871",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jway2ygxx_20230910032836.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jway2ygxx_20230910032836.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jway2ygxx_20230910032836.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02872",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yxif3s29l_20230910032835.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yxif3s29l_20230910032835.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yxif3s29l_20230910032835.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02870",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1q8npmio6q_20230910032833.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1q8npmio6q_20230910032833.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1q8npmio6q_20230910032833.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02867",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yfg6q8fnh_20230910032830.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yfg6q8fnh_20230910032830.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yfg6q8fnh_20230910032830.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02862",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jn6yfkkta_20230910032829.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jn6yfkkta_20230910032829.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jn6yfkkta_20230910032829.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02866",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1mrypa7y9c_20230910032828.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1mrypa7y9c_20230910032828.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1mrypa7y9c_20230910032828.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02864",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1i0iuudy9z_20230910032827.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1i0iuudy9z_20230910032827.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1i0iuudy9z_20230910032827.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02865",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xmj75wbtd_20230910032826.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xmj75wbtd_20230910032826.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xmj75wbtd_20230910032826.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02863",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gcbdfsybb_20230910032820.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gcbdfsybb_20230910032820.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gcbdfsybb_20230910032820.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02860",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_17k3qw8o84_20230910032818.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_17k3qw8o84_20230910032818.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_17k3qw8o84_20230910032818.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02861",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kguent98n_20230910032817.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kguent98n_20230910032817.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kguent98n_20230910032817.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02857",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_11iwhchyuo_20230910032814.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_11iwhchyuo_20230910032814.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_11iwhchyuo_20230910032814.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02852",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_17jis34xp7_20230910032808.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_17jis34xp7_20230910032808.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_17jis34xp7_20230910032808.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02853",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1csshdi1u7_20230910032807.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1csshdi1u7_20230910032807.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1csshdi1u7_20230910032807.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02845",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tevtqmcpo_20230910032800.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tevtqmcpo_20230910032800.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tevtqmcpo_20230910032800.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02843",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1wxj9geb6m_20230910032758.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1wxj9geb6m_20230910032758.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1wxj9geb6m_20230910032758.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02842",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xp95okanj_20230910032756.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xp95okanj_20230910032756.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xp95okanj_20230910032756.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02840",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rnvwsjqar_20230910032755.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rnvwsjqar_20230910032755.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rnvwsjqar_20230910032755.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02837",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1v70ilvfpy_20230910032753.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1v70ilvfpy_20230910032753.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1v70ilvfpy_20230910032753.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02839",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_15wxm2ox6x_20230910032752.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_15wxm2ox6x_20230910032752.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_15wxm2ox6x_20230910032752.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02826",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1of3azhrnt_20230910032746.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1of3azhrnt_20230910032746.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1of3azhrnt_20230910032746.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02825",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1c1fvrwxjq_20230910032744.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1c1fvrwxjq_20230910032744.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1c1fvrwxjq_20230910032744.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02821-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ashgumijk_20230910032739.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ashgumijk_20230910032739.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ashgumijk_20230910032739.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02818-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1suqzxuta5_20230910032737.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1suqzxuta5_20230910032737.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1suqzxuta5_20230910032737.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02813-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1m3ikunq3s_20230910032732.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1m3ikunq3s_20230910032732.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1m3ikunq3s_20230910032732.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02811-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jmrlbjjsg_20230910032731.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jmrlbjjsg_20230910032731.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jmrlbjjsg_20230910032731.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02809-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1myjeuglud_20230910032727.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1myjeuglud_20230910032727.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1myjeuglud_20230910032727.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02803",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_11tg8zfsu9_20230910032725.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_11tg8zfsu9_20230910032725.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_11tg8zfsu9_20230910032725.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02808-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xe2hzp34l_20230910032725.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xe2hzp34l_20230910032725.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xe2hzp34l_20230910032725.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02802",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1czwd0o1qx_20230910032723.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1czwd0o1qx_20230910032723.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1czwd0o1qx_20230910032723.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02805",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_17mbwi9u7e_20230910032719.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_17mbwi9u7e_20230910032719.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_17mbwi9u7e_20230910032719.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02801",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gcxhqd6rk_20230910032718.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gcxhqd6rk_20230910032718.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gcxhqd6rk_20230910032718.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02800",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1vgwgjhxpr_20230910032714.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1vgwgjhxpr_20230910032714.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1vgwgjhxpr_20230910032714.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02798",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1reim1e9k2_20230910032712.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1reim1e9k2_20230910032712.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1reim1e9k2_20230910032712.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02795",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gj1bydo4s_20230910032711.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gj1bydo4s_20230910032711.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gj1bydo4s_20230910032711.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02794",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yspyq3swh_20230910032710.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yspyq3swh_20230910032710.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yspyq3swh_20230910032710.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02797",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1csr7kbv0q_20230910032708.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1csr7kbv0q_20230910032708.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1csr7kbv0q_20230910032708.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02793",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ixqnra6uc_20230910032705.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ixqnra6uc_20230910032705.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ixqnra6uc_20230910032705.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02786",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1aostaqcrp_20230910032704.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1aostaqcrp_20230910032704.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1aostaqcrp_20230910032704.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02790",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xiko4hc7m_20230910032702.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xiko4hc7m_20230910032702.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xiko4hc7m_20230910032702.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02787",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1bh8jfwhwa_20230910032701.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1bh8jfwhwa_20230910032701.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1bh8jfwhwa_20230910032701.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02785",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gvt3own8w_20230910032700.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gvt3own8w_20230910032700.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gvt3own8w_20230910032700.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02781",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1r6cry29g5_20230910032656.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1r6cry29g5_20230910032656.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1r6cry29g5_20230910032656.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02777-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ivohhfpva_20230910032655.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ivohhfpva_20230910032655.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ivohhfpva_20230910032655.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02780",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rmdmb3g5l_20230910032654.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rmdmb3g5l_20230910032654.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rmdmb3g5l_20230910032654.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02775",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1bi9mupqge_20230910032652.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1bi9mupqge_20230910032652.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1bi9mupqge_20230910032652.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02773",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_18mtp59p8g_20230910032651.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_18mtp59p8g_20230910032651.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_18mtp59p8g_20230910032651.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02776",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1awyawf4ok_20230910032650.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1awyawf4ok_20230910032650.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1awyawf4ok_20230910032650.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02774",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1lamgqfjak_20230910032649.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1lamgqfjak_20230910032649.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1lamgqfjak_20230910032649.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02771",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yk80petug_20230910032646.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yk80petug_20230910032646.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yk80petug_20230910032646.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02767",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_13mgno0ksv_20230910032645.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_13mgno0ksv_20230910032645.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_13mgno0ksv_20230910032645.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02772",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rm9eyy1x9_20230910032644.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rm9eyy1x9_20230910032644.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rm9eyy1x9_20230910032644.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02769",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jg3bdsakt_20230910032642.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jg3bdsakt_20230910032642.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jg3bdsakt_20230910032642.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02770",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rrowst5tn_20230910032641.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rrowst5tn_20230910032641.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rrowst5tn_20230910032641.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02768",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1wcms5esyj_20230910032640.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1wcms5esyj_20230910032640.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1wcms5esyj_20230910032640.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02765",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1fjm8eqicn_20230910032637.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1fjm8eqicn_20230910032637.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1fjm8eqicn_20230910032637.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02755",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rvxj1very_20230910032636.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rvxj1very_20230910032636.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rvxj1very_20230910032636.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02766",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xbs6tszze_20230910032635.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xbs6tszze_20230910032635.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xbs6tszze_20230910032635.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02764",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_18svs1hmmr_20230910032634.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_18svs1hmmr_20230910032634.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_18svs1hmmr_20230910032634.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02763",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_18hzom12li_20230910032633.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_18hzom12li_20230910032633.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_18hzom12li_20230910032633.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02756",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1m0hfs02bj_20230910032632.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1m0hfs02bj_20230910032632.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1m0hfs02bj_20230910032632.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02762",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1enwztjvqg_20230910032631.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1enwztjvqg_20230910032631.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1enwztjvqg_20230910032631.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02761-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kqvzkiprc_20230910032629.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kqvzkiprc_20230910032629.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kqvzkiprc_20230910032629.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02757",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yiauqqeh1_20230910032628.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yiauqqeh1_20230910032628.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yiauqqeh1_20230910032628.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02758-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1swyvwreok_20230910032628.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1swyvwreok_20230910032628.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1swyvwreok_20230910032628.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02754",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yizfm1yv5_20230910032627.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yizfm1yv5_20230910032627.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yizfm1yv5_20230910032627.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02753",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1fb6n7socs_20230910032625.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1fb6n7socs_20230910032625.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1fb6n7socs_20230910032625.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02752-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1vxc3zepik_20230910032624.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1vxc3zepik_20230910032624.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1vxc3zepik_20230910032624.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02751-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xcfxybnig_20230910032623.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xcfxybnig_20230910032623.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xcfxybnig_20230910032623.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02749-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1vqcioxhu5_20230910032622.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1vqcioxhu5_20230910032622.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1vqcioxhu5_20230910032622.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02750-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1dvzkm9jwz_20230910032621.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1dvzkm9jwz_20230910032621.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1dvzkm9jwz_20230910032621.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02748-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1pepyoaynf_20230910032620.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1pepyoaynf_20230910032620.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1pepyoaynf_20230910032620.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02747-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1urzzkw8oo_20230910032619.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1urzzkw8oo_20230910032619.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1urzzkw8oo_20230910032619.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02740",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1mjli681vi_20230910032618.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1mjli681vi_20230910032618.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1mjli681vi_20230910032618.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02746-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kfwn8gbjt_20230910032617.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kfwn8gbjt_20230910032617.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kfwn8gbjt_20230910032617.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02745-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1fxqvctdse_20230910032616.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1fxqvctdse_20230910032616.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1fxqvctdse_20230910032616.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02738",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ukbbyd4y5_20230910032615.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ukbbyd4y5_20230910032615.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ukbbyd4y5_20230910032615.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02739",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1uun3rf6vy_20230910032615.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1uun3rf6vy_20230910032615.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1uun3rf6vy_20230910032615.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02737",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tuuh50cdl_20230910032613.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tuuh50cdl_20230910032613.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tuuh50cdl_20230910032613.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02736",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1cplsizdit_20230910032613.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1cplsizdit_20230910032613.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1cplsizdit_20230910032613.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02735",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1qxd3yliaj_20230910032612.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1qxd3yliaj_20230910032612.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1qxd3yliaj_20230910032612.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02734",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1mk36qkbiw_20230910032611.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1mk36qkbiw_20230910032611.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1mk36qkbiw_20230910032611.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02730",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1uceyiqlss_20230910032607.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1uceyiqlss_20230910032607.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1uceyiqlss_20230910032607.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02727",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1hpu22e55d_20230910032606.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1hpu22e55d_20230910032606.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1hpu22e55d_20230910032606.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02719",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1snpw8g47f_20230910032606.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1snpw8g47f_20230910032606.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1snpw8g47f_20230910032606.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02718",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tvoeeqhxm_20230910032605.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tvoeeqhxm_20230910032605.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tvoeeqhxm_20230910032605.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02706",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1nzj3rvq9x_20230910032604.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1nzj3rvq9x_20230910032604.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1nzj3rvq9x_20230910032604.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02705",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ourf9idha_20230910032603.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ourf9idha_20230910032603.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ourf9idha_20230910032603.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02703",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1afd5fdaqv_20230910032602.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1afd5fdaqv_20230910032602.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1afd5fdaqv_20230910032602.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02701",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1qxoamcflk_20230910032601.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1qxoamcflk_20230910032601.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1qxoamcflk_20230910032601.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02699",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ihwrvvxpd_20230910032600.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ihwrvvxpd_20230910032600.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ihwrvvxpd_20230910032600.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02698",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kvw9tqkph_20230910032559.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kvw9tqkph_20230910032559.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kvw9tqkph_20230910032559.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02697",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1a2hn3lpe0_20230910032558.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1a2hn3lpe0_20230910032558.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1a2hn3lpe0_20230910032558.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02695",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1u0qiyhkck_20230910032557.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1u0qiyhkck_20230910032557.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1u0qiyhkck_20230910032557.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02692",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tcufrpyln_20230910032556.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tcufrpyln_20230910032556.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tcufrpyln_20230910032556.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02690",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xtmbl2thx_20230910032555.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xtmbl2thx_20230910032555.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xtmbl2thx_20230910032555.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02688",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1etliqemya_20230910032554.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1etliqemya_20230910032554.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1etliqemya_20230910032554.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02685",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1gyqetsuc0_20230910032553.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1gyqetsuc0_20230910032553.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1gyqetsuc0_20230910032553.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02683",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xucqraayu_20230910032552.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xucqraayu_20230910032552.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xucqraayu_20230910032552.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02680",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ymxrlm2rp_20230910032551.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ymxrlm2rp_20230910032551.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ymxrlm2rp_20230910032551.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "facade 2",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_12apwky7ou_20230910032550.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_12apwky7ou_20230910032550.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_12apwky7ou_20230910032550.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "facade",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_125je0oqxn_20230910032549.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_125je0oqxn_20230910032549.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_125je0oqxn_20230910032549.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02673",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1s9w73gm6f_20230910032548.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1s9w73gm6f_20230910032548.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1s9w73gm6f_20230910032548.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02676",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rrcnhfejw_20230910032547.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rrcnhfejw_20230910032547.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rrcnhfejw_20230910032547.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB02675",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ckapcy2vg_20230910032546.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ckapcy2vg_20230910032546.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ckapcy2vg_20230910032546.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [],
+  "custom_property_fields": {
+   "garage & parking": [
+    {
+     "name": "Car Park(s)",
+     "value": "2"
+    }
+   ],
+   "pool": [
+    {
+     "name": "Pool(s)",
+     "value": "0"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "3.38",
+    "latitude": "8.428276",
+    "longitude": "124.624985",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/airport-71.png",
+    "location_name": "ABCI Helipad"
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "6.86",
+    "latitude": "8.5186813",
+    "longitude": "124.6089279",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Seven Seas Waterpark and Resort"
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "0.81",
+    "latitude": "8.4555098",
+    "longitude": "124.6234863",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/atm-71.png",
+    "location_name": "Security Bank ATM"
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "1.25",
+    "latitude": "8.4567701",
+    "longitude": "124.6050673",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Calaanan antipolo ponce bakery"
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "2.97",
+    "latitude": "8.4766745",
+    "longitude": "124.6351536",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bank-71.png",
+    "location_name": "RURAL BANK OF MEDINA (MIS. OR.), INC."
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "0.66",
+    "latitude": "8.4573463",
+    "longitude": "124.6223977",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bar-71.png",
+    "location_name": "80 Degrees KTV Bar"
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "5.74",
+    "latitude": "8.5040642",
+    "longitude": "124.5938776",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Beauty Salon"
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "0.85",
+    "latitude": "8.4565961",
+    "longitude": "124.6241075",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bus-71.png",
+    "location_name": "SM TRANSPORT TERMINAL"
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "0.31",
+    "latitude": "8.4588556",
+    "longitude": "124.6188709",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/cafe-71.png",
+    "location_name": "Caffé Le Mari"
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "2.42",
+    "latitude": "8.4368525",
+    "longitude": "124.6233663",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/worship_general-71.png",
+    "location_name": "CHRISTIAN CITY CHURCH"
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "2.51",
+    "latitude": "8.4775807",
+    "longitude": "124.6267842",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Convenience Store"
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "3.20",
+    "latitude": "8.4767739",
+    "longitude": "124.6379853",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "GAISANO Department Store"
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "0.69",
+    "latitude": "8.4561147",
+    "longitude": "124.6225226",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Century Chinese Drugstore"
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "1.01",
+    "latitude": "8.4507528",
+    "longitude": "124.622625",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Pueblo Security and Fire Station"
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "1.82",
+    "latitude": "8.4636734",
+    "longitude": "124.6317068",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Good Morning Fitness Gym"
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "1.49",
+    "latitude": "8.4450528",
+    "longitude": "124.6214652",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png",
+    "location_name": "Saint Francis Doctors' Hospital and Medical Center"
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "3.88",
+    "latitude": "8.4763784",
+    "longitude": "124.6460274",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Xavier University New Library"
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "0.97",
+    "latitude": "8.4598498",
+    "longitude": "124.6248663",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Local Governance Resource Center 10"
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "3.39",
+    "latitude": "8.4658235",
+    "longitude": "124.6460597",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/museum-71.png",
+    "location_name": "enders fund"
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "0.54",
+    "latitude": "8.4554067",
+    "longitude": "124.6209096",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png",
+    "location_name": "SM PARK"
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "2.11",
+    "latitude": "8.4758061",
+    "longitude": "124.6116426",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png",
+    "location_name": "Ana's Pharmacy"
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "1.96",
+    "latitude": "8.4702025",
+    "longitude": "124.6287634",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Barangay Police Outpost"
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "3.55",
+    "latitude": "8.4676609",
+    "longitude": "124.6469975",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Xavier University Grade School - Ateneo de Cagayan Macasandig Campus"
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "0.72",
+    "latitude": "8.456734",
+    "longitude": "124.622883",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Panagatan Restaurant"
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "1.31",
+    "latitude": "8.4511885",
+    "longitude": "124.6265248",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Father Williams Masterson Elementary School"
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "1.84",
+    "latitude": "8.4527772",
+    "longitude": "124.6324617",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "BNHS"
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "0.43",
+    "latitude": "8.4537345",
+    "longitude": "124.6172688",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Fremlin walk"
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "0.74",
+    "latitude": "8.45597",
+    "longitude": "124.622966",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM Supermarket - CDO Uptown"
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "0.94",
+    "latitude": "8.4567616",
+    "longitude": "124.6248903",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "XUCA Crop Science Unit"
+   }
+  ],
+  "price_history": [
+   {
+    "id": "778",
+    "old_price": "₱19000000.00",
+    "new_price": "₱27500000.00",
+    "price_change_date": "2026-02-17"
+   }
+  ]
+ }
+}

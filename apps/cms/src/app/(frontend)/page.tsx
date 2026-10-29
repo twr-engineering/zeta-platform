@@ -1,62 +1,28 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Image from 'next/image'
-import { getPayload } from 'payload'
-import React from 'react'
-import { fileURLToPath } from 'url'
+import Link from 'next/link'
 
-import config from '@/payload.config'
-import './styles.css'
+import { ListingCard } from '@/components/ListingCard'
+import { parseSearch } from '@/lib/search/params'
+import { searchListings } from '@/lib/search/query'
+import { resolveDisplayCurrency } from '@/lib/site/currency'
+import { getRates, payload } from '@/lib/site/payload'
 
+export const dynamic = 'force-dynamic'
+
+/** Placeholder home. The real home template is WP-03; this exercises the listing pipeline. */
 export default async function HomePage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
-
+  const q = parseSearch(new URLSearchParams('property_for=1&property_per_page=8'), { sortby: 'priority_desc' })
+  const [result, rates, currency] = await Promise.all([searchListings(await payload(), q), getRates(), resolveDisplayCurrency()])
   return (
-    <div className="home">
-      <div className="content">
-        <picture>
-          <source srcSet="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg" />
-          <Image
-            alt="Payload Logo"
-            height={65}
-            src="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg"
-            width={65}
-          />
-        </picture>
-        {!user || !('email' in user) ? (
-          <h1>Welcome to your new project.</h1>
-        ) : (
-          <h1>Welcome back, {user.email}</h1>
-        )}
-        <div className="links">
-          <a
-            className="admin"
-            href={payloadConfig.routes.admin}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Go to admin panel
-          </a>
-          <a
-            className="docs"
-            href="https://payloadcms.com/docs"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Documentation
-          </a>
-        </div>
+    <section>
+      <h1>Find your property</h1>
+      <p>
+        <Link href="/search_results/?property_for=1">Browse all {result.totalDocs} properties for sale →</Link>
+      </p>
+      <div className="grid">
+        {result.docs.map((l) => (
+          <ListingCard key={l.id} listing={l} rates={rates} currency={currency} />
+        ))}
       </div>
-      <div className="footer">
-        <p>Update this page by editing</p>
-        <a className="codeLink" href={fileURL}>
-          <code>app/(frontend)/page.tsx</code>
-        </a>
-      </div>
-    </div>
+    </section>
   )
 }

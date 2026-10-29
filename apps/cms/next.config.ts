@@ -7,6 +7,9 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  // WordPress URLs end in '/', and the URL space is frozen (FR-SE01..SE13): /r/ZTP345/,
+  // /search_results/, /buy/. Without this every legacy link 308s to a slashless form.
+  trailingSlash: true,
   images: {
     localPatterns: [
       {

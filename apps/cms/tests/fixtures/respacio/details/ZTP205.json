@@ -1,0 +1,671 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "205",
+    "property_type_id": "2",
+    "reference_no": "ZTP205",
+    "infocasa_reference_no": "spn_205_infocasa_TqE0UN5K_520243",
+    "address": "25, 1, Lot 12, Block 28C",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.4486656095348",
+    "longitude": "124.62361336215",
+    "complex_lat": "8.4486656095348",
+    "complex_long": "124.62361336215",
+    "bedrooms": "0",
+    "bathrooms": "0",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50354",
+    "complex_id": "25",
+    "complex_name": "Xavier Estates ",
+    "storeys": "0",
+    "floor_number": "",
+    "built_size": "",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "294",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Balulang",
+    "property_for_id": "1",
+    "price": "8673000",
+    "default_price": "8673000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "8",
+    "property_sub_sub_type_id": null,
+    "property_name": "Residential",
+    "property_sub_name": "Residential Land",
+    "property_sub_sub_name": null,
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Xavier Estates Phase 1 Lot For Sale",
+    "short_description": "Address: Lot 12, Block 28C Xavier Estates Uptown CDO City\r\nLot: 294 sqm\r\nTitle Status: Clean\r\nCash basis\r\n\r\nselling price: 29,500/sqm",
+    "description": "Address: Lot 12, Block 28C Xavier Estates Uptown CDO City\r\nLot: 294 sqm\r\nTitle Status: Clean\r\nCash basis\r\n\r\nselling price: 29,500/sqm",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2025-11-29 23:37:50",
+    "agent": "Alessandra Victoria Zeta Guingao",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "4",
+    "attribute": {
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "inner": "Inner"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": []
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "119": "Inner"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": []
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "102": "Good Road Access",
+     "103": "Near Motorway"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "114": "Basketball Court",
+     "110": "CCTV in Common Areas",
+     "138": "Chapel",
+     "117": "Clubhouse",
+     "147": "Gym",
+     "116": "Playground",
+     "112": "Privately Gated",
+     "141": "Spacious Driveways",
+     "109": "Swimming Pool"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "125": "Near Schools"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [
+   "Direct Listing"
+  ],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "441292538_942455017890021_7214118540536365157_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1oqiprhx2n_20240515103816.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1oqiprhx2n_20240515103816.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1oqiprhx2n_20240515103816.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "440876936_942455007890022_4860419150931344478_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1yf6zsoies_20240515103818.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1yf6zsoies_20240515103818.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1yf6zsoies_20240515103818.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "441339895_942455994556590_2343498178912387150_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1o5wboq4pa_20240515103912.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1o5wboq4pa_20240515103912.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1o5wboq4pa_20240515103912.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "441280044_942455924556597_4244889723698065559_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1oswbaadn4_20240515103903.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1oswbaadn4_20240515103903.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1oswbaadn4_20240515103903.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "441288067_942455814556608_56756747[phone]_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1q5h6uh67h_20240515103844.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1q5h6uh67h_20240515103844.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1q5h6uh67h_20240515103844.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "441340196_942455881223268_4885196958165214641_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1g77nn0mvs_20240515103836.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1g77nn0mvs_20240515103836.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1g77nn0mvs_20240515103836.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [
+   "Direct Listing"
+  ],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Bank Financing"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Clean"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "7.69",
+    "latitude": "8.4900796",
+    "longitude": "124.5675692",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/airport-71.png",
+    "location_name": "crew ship landing center"
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "3.63",
+    "latitude": "8.475783",
+    "longitude": "124.6419703",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Brgy 1 Cathedral Park, Gov Ysalina Bridge, Cagayan de Oro City Misamis Oriental, Mindanao"
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "0.78",
+    "latitude": "8.4556677",
+    "longitude": "124.6239883",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/atm-71.png",
+    "location_name": "BPI ATM - SM City CDO Uptown"
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "2.23",
+    "latitude": "8.4567701",
+    "longitude": "124.6050673",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Calaanan antipolo ponce bakery"
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "1.10",
+    "latitude": "8.4542363",
+    "longitude": "124.6318977",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bank-71.png",
+    "location_name": "ANTRECCO KIBUNGSOD BRANCH"
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "0.69",
+    "latitude": "8.4547758",
+    "longitude": "124.6225821",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bar-71.png",
+    "location_name": "De Kalsada Restobar Uptown"
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "1.22",
+    "latitude": "8.4588076",
+    "longitude": "124.6192691",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Beauty Luxe Salon Uptown"
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "0.88",
+    "latitude": "8.4565961",
+    "longitude": "124.6241075",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bus-71.png",
+    "location_name": "SM TRANSPORT TERMINAL"
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "0.10",
+    "latitude": "8.4490238",
+    "longitude": "124.622763",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/cafe-71.png",
+    "location_name": "Aroma Cafe"
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "1.84",
+    "latitude": "8.4527441",
+    "longitude": "124.6397868",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/worship_general-71.png",
+    "location_name": "Sta. Cruz Church"
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "3.67",
+    "latitude": "8.4763701",
+    "longitude": "124.6416723",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "The Executive Building (Old City Hall)"
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "0.64",
+    "latitude": "8.4543759",
+    "longitude": "124.6229453",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "7-Eleven"
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "0.76",
+    "latitude": "8.4555245",
+    "longitude": "124.623528",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM Store CDO Uptown - Fashion Wing"
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "0.19",
+    "latitude": "8.4480101",
+    "longitude": "124.622026",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "RIKA DRUGSTORE"
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "0.26",
+    "latitude": "8.4507528",
+    "longitude": "124.622625",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Pueblo Security and Fire Station"
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "0.18",
+    "latitude": "8.4499059",
+    "longitude": "124.6225375",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/gas_station-71.png",
+    "location_name": "Caltex"
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "0.10",
+    "latitude": "8.4488203",
+    "longitude": "124.6227161",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "CDO Boxing Gym - Uptown"
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "0.47",
+    "latitude": "8.4450528",
+    "longitude": "124.6214652",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png",
+    "location_name": "Saint Francis Doctors' Hospital and Medical Center"
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "3.95",
+    "latitude": "8.4763784",
+    "longitude": "124.6460274",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Xavier University New Library"
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "1.25",
+    "latitude": "8.4598498",
+    "longitude": "124.6248663",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Local Governance Resource Center 10"
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "3.12",
+    "latitude": "8.4658235",
+    "longitude": "124.6460597",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/museum-71.png",
+    "location_name": "enders fund"
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "0.75",
+    "latitude": "8.4539026",
+    "longitude": "124.6192702",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png",
+    "location_name": "Balubal public Cemetery"
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "0.94",
+    "latitude": "8.4459039",
+    "longitude": "124.6316791",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png",
+    "location_name": "HONEY PHARMA"
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "0.19",
+    "latitude": "8.4498555",
+    "longitude": "124.6223148",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Uptown PNP Police Precinct"
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "2.25",
+    "latitude": "8.4604672",
+    "longitude": "124.6070239",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "PEDRO 'OLOY' N.ROA SR. ELEMENTARY SCHOOL"
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "0.16",
+    "latitude": "8.4484926",
+    "longitude": "124.6221373",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Marajaw Seafood Restaurant Uptown"
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "1.52",
+    "latitude": "8.4380445",
+    "longitude": "124.6323613",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "CAGAYAN DE ORO NATIONAL HIGHSCHOOL(BALULANG ANNEX"
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "1.08",
+    "latitude": "8.4527772",
+    "longitude": "124.6324617",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "BNHS"
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "0.80",
+    "latitude": "8.4558491",
+    "longitude": "124.6234008",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM City CDO Uptown"
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "0.82",
+    "latitude": "8.45597",
+    "longitude": "124.622966",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM Supermarket - CDO Uptown"
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "1.14",
+    "latitude": "8.4587726",
+    "longitude": "124.6255024",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "XAVIER UNIVERSITY MANRESA FARM COLLEGE OF AGRICULTURE"
+   }
+  ],
+  "price_history": [
+   {
+    "id": "407",
+    "old_price": "₱7938000.00",
+    "new_price": "₱8526000.00",
+    "price_change_date": "2025-02-13"
+   },
+   {
+    "id": "429",
+    "old_price": "₱8526000.00",
+    "new_price": "₱8673000.00",
+    "price_change_date": "2025-03-18"
+   },
+   {
+    "id": "522",
+    "old_price": "₱8673000.00",
+    "new_price": "₱8820000.00",
+    "price_change_date": "2025-07-22"
+   },
+   {
+    "id": "687",
+    "old_price": "₱8820000.00",
+    "new_price": "₱8673000.00",
+    "price_change_date": "2025-10-02"
+   }
+  ]
+ }
+}

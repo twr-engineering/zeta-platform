@@ -83,6 +83,7 @@ export interface Config {
     users: User;
     redirects: Redirect;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -105,6 +106,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -116,10 +118,14 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     'calculator-defaults': CalculatorDefault;
+    'crm-state': CrmState;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'calculator-defaults': CalculatorDefaultsSelect<false> | CalculatorDefaultsSelect<true>;
+    'crm-state': CrmStateSelect<false> | CrmStateSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'en';
   widgets: {
@@ -127,7 +133,13 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      respacioSync: TaskRespacioSync;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -430,28 +442,84 @@ export interface Listing {
   referenceNo?: string | null;
   propertyTitle?: string | null;
   description?: string | null;
+  shortDescription?: string | null;
   /**
    * CRM default_price, in the stored currency. Conversion is display-time only (BPM-008).
    */
   price?: number | null;
   currencyCode?: string | null;
-  propertyFor?: ('1' | '2') | null;
-  saleDetailType?: ('1' | '2') | null;
+  /**
+   * 1 Sale · 2 Rent · 3 unlabelled
+   */
+  propertyForId?: string | null;
+  propertyFor?: string | null;
+  typeName?: string | null;
   /**
    * property_sub_type_id — the target of type[]=_st_{n} filters.
    */
   subTypeId?: string | null;
+  subTypeName?: string | null;
+  /**
+   * 1 Resale · 2 New Development (Preselling)
+   */
+  saleDetailTypeId?: string | null;
+  saleDetailType?: string | null;
+  /**
+   * Selects the view page together with propertyForId (BPM-007).
+   */
+  rentAmountPeriod?: string | null;
+  /**
+   * Drives the operative default sort, priority desc (BPM-002).
+   */
+  priority?: number | null;
+  isFeatured?: boolean | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   builtSize?: number | null;
   plotSize?: number | null;
+  areaUnit?: string | null;
+  /**
+   * CRM geography. The ids bind to Locations.crmGeography.
+   */
+  geo?: {
+    latitude?: number | null;
+    longitude?: number | null;
+    provinceId?: string | null;
+    municipalityId?: string | null;
+    townId?: string | null;
+    complexId?: string | null;
+    provinceName?: string | null;
+    municipalityName?: string | null;
+    cityName?: string | null;
+    complexName?: string | null;
+  };
   /**
    * Resolved from CRM geography IDs by the sync.
    */
   location?: (number | null) | Location;
-  gallery?:
+  /**
+   * CRM image URLs (Respacio S3). Rebinding to Media from the recovered image cache is WP-10.
+   */
+  images?:
     | {
-        image?: (number | null) | Media;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * CRM attribute values. fa[]=a{crmId} filters require ALL selected (BPM-004).
+   */
+  attributes?:
+    | {
+        crmId: string;
+        name: string;
+        group?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  features?:
+    | {
+        name: string;
         id?: string | null;
       }[]
     | null;
@@ -471,6 +539,11 @@ export interface Listing {
    * Records absent from two consecutive syncs are marked withdrawn, never deleted (FR-C01). What the live site does to a withdrawn URL is FR-P11 — still uncaptured, blocked on OQ-23.
    */
   syncStatus?: ('active' | 'withdrawn') | null;
+  /**
+   * Consecutive full syncs this record was absent from. 2 => withdrawn.
+   */
+  missedSyncs?: number | null;
+  crmModifiedAt?: string | null;
   lastSyncedAt?: string | null;
   /**
    * Migrated from Yoast. Empty fields fall back to the record title and excerpt.
@@ -910,6 +983,107 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'respacioSync';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'respacioSync') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -1088,24 +1262,63 @@ export interface ListingsSelect<T extends boolean = true> {
   referenceNo?: T;
   propertyTitle?: T;
   description?: T;
+  shortDescription?: T;
   price?: T;
   currencyCode?: T;
+  propertyForId?: T;
   propertyFor?: T;
-  saleDetailType?: T;
+  typeName?: T;
   subTypeId?: T;
+  subTypeName?: T;
+  saleDetailTypeId?: T;
+  saleDetailType?: T;
+  rentAmountPeriod?: T;
+  priority?: T;
+  isFeatured?: T;
   bedrooms?: T;
   bathrooms?: T;
   builtSize?: T;
   plotSize?: T;
-  location?: T;
-  gallery?:
+  areaUnit?: T;
+  geo?:
     | T
     | {
-        image?: T;
+        latitude?: T;
+        longitude?: T;
+        provinceId?: T;
+        municipalityId?: T;
+        townId?: T;
+        complexId?: T;
+        provinceName?: T;
+        municipalityName?: T;
+        cityName?: T;
+        complexName?: T;
+      };
+  location?: T;
+  images?:
+    | T
+    | {
+        url?: T;
+        id?: T;
+      };
+  attributes?:
+    | T
+    | {
+        crmId?: T;
+        name?: T;
+        group?: T;
+        id?: T;
+      };
+  features?:
+    | T
+    | {
+        name?: T;
         id?: T;
       };
   crmPayload?: T;
   syncStatus?: T;
+  missedSyncs?: T;
+  crmModifiedAt?: T;
   lastSyncedAt?: T;
   seo?:
     | T
@@ -1486,6 +1699,38 @@ export interface PayloadKvSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents_select".
  */
 export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
@@ -1569,6 +1814,58 @@ export interface CalculatorDefault {
   createdAt?: string | null;
 }
 /**
+ * Written by the Respacio sync. Read-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-state".
+ */
+export interface CrmState {
+  id: number;
+  currencyConverter?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lastSyncAt?: string | null;
+  /**
+   * live or fixtures
+   */
+  lastSyncMode?: string | null;
+  lastSyncResult?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -1612,6 +1909,29 @@ export interface CalculatorDefaultsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-state_select".
+ */
+export interface CrmStateSelect<T extends boolean = true> {
+  currencyConverter?: T;
+  lastSyncAt?: T;
+  lastSyncMode?: T;
+  lastSyncResult?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -1619,6 +1939,24 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskRespacioSync".
+ */
+export interface TaskRespacioSync {
+  input?: unknown;
+  output: {
+    result?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

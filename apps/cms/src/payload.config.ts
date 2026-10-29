@@ -20,7 +20,9 @@ import { Shorts } from './collections/Shorts'
 import { Tags } from './collections/Tags'
 import { TestimonialCategories, Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
+import { syncRespacio } from './crm/respacio/sync'
 import { CalculatorDefaults } from './globals/CalculatorDefaults'
+import { CrmState } from './globals/CrmState'
 import { SiteSettings } from './globals/SiteSettings'
 
 const filename = fileURLToPath(import.meta.url)
@@ -51,12 +53,32 @@ export default buildConfig({
     Media,
     Users,
   ],
-  globals: [SiteSettings, CalculatorDefaults],
+  globals: [SiteSettings, CalculatorDefaults, CrmState],
+  /**
+   * The Respacio mirror sync (FR-C01, FR-C07). Hourly in production; run on demand with
+   * `pnpm sync:crm`. Without RESPACIO_API_KEY it replays the golden-master fixtures.
+   */
+  jobs: {
+    tasks: [
+      {
+        slug: 'respacioSync',
+        retries: 2,
+        schedule: [{ cron: '0 * * * *', queue: 'crm' }],
+        outputSchema: [{ name: 'result', type: 'json' }],
+        handler: async ({ req }) => ({ output: { result: await syncRespacio(req.payload) } }),
+      },
+    ],
+    autoRun: process.env.ENABLE_JOB_AUTORUN === 'true' ? [{ cron: '*/5 * * * *', queue: 'crm' }] : [],
+  },
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URI || '' },
+    // Schema changes go through committed migrations (PRD §14.5), never dev auto-push: push
+    // stops on an interactive rename prompt, which hangs unattended (cloud agent) sessions.
+    push: false,
+    migrationDir: path.resolve(dirname, 'migrations'),
   }),
   sharp,
   /**

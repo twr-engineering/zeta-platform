@@ -1,0 +1,558 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "737",
+    "property_type_id": "2",
+    "reference_no": "ZTP737",
+    "infocasa_reference_no": "spn_737_infocasa_dfTck4PL_520264",
+    "address": "4",
+    "property_for": "Rent",
+    "zipcode": "9000",
+    "latitude": "8.4502781",
+    "longitude": "124.6149362",
+    "complex_lat": "8.4502781",
+    "complex_long": "124.6149362",
+    "bedrooms": "4",
+    "bathrooms": "4",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50393",
+    "complex_id": "4",
+    "complex_name": "Hillsborough Pointe",
+    "storeys": "2",
+    "floor_number": "",
+    "built_size": "240",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "360",
+    "community_fees_monthly": null,
+    "local_tax_yearly": null,
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Carmen",
+    "property_for_id": "2",
+    "price": "50000",
+    "default_price": "50000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "9",
+    "property_sub_sub_type_id": "44",
+    "property_name": "Residential",
+    "property_sub_name": "House",
+    "property_sub_sub_name": "Single Detached",
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "FOR RENT | Hillsborough, CDO",
+    "short_description": "",
+    "description": "Looking for a spacious home in a prime location? This property might be perfect for you!\r\nLot Area: 360 sqm\r\nFloor Area: 240 sqm\r\n4 Bedrooms with own T&B (1 GF, 3 2F)\r\n1 Maid’s Room with own T&B\r\nNear gate & perimeter fence\r\nWell-maintained (needs light cleaning only)\r\n₱50,000/month\r\nBook your private viewing today:\r\nWhatsApp: +63 917 851 2752\r\nEmail: [[email]](mailto:[email])\r\nMessage me for more details or to schedule a viewing!",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": "0",
+    "other_montly_expense": "",
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": "50000",
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2026-05-23 17:54:29",
+    "agent": "",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": null,
+    "attribute": {
+     "is foreclosed?": {
+      "no": "No"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": []
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": []
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": []
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "140": "Hospitals",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": []
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "114": "Basketball Court",
+     "110": "CCTV in Common Areas",
+     "117": "Clubhouse",
+     "116": "Playground",
+     "112": "Privately Gated",
+     "109": "Swimming Pool"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "150": "Business District",
+     "125": "Near Schools",
+     "123": "Peaceful area"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "7 (1)",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1xius6g5ow_20260523055427.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1xius6g5ow_20260523055427.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1xius6g5ow_20260523055427.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [],
+  "custom_property_fields": [],
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   }
+  ],
+  "price_history": []
+ }
+}

@@ -1,0 +1,961 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1674087495",
+  "PHP": "72.1111653308"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "432",
+    "property_type_id": "2",
+    "reference_no": "ZTP432",
+    "infocasa_reference_no": "spn_432_infocasa_7DaVsWt9_620255",
+    "address": "25",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.430671",
+    "longitude": "124.6193643",
+    "complex_lat": "8.4486656095348",
+    "complex_long": "124.62361336215",
+    "bedrooms": "4",
+    "bathrooms": "3",
+    "priority": "0",
+    "toilet": "1",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50354",
+    "complex_id": "25",
+    "complex_name": "Xavier Estates ",
+    "storeys": "3",
+    "floor_number": "",
+    "built_size": "200+",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "3",
+    "built_year": "2025",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-20",
+    "plot_size": "150",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Balulang",
+    "property_for_id": "1",
+    "price": "17000000",
+    "default_price": "17000000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "9",
+    "property_sub_sub_type_id": "44",
+    "property_name": "Residential",
+    "property_sub_name": "House",
+    "property_sub_sub_name": "Single Detached",
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Property for Sale: Xavier Estates Phase 4, Cagayan de Oro City",
+    "short_description": "",
+    "description": "Discover your future home in one of the city’s most sought-after estates! This newly built 3-storey residence is ready to move in and features:\r\n\r\n• Floor Area: 200+ sqm (est)\r\n• Lot Size: 150 sqm\r\n• 4 bedroom\r\n3 toilet & bath\r\n1 powder room\r\n\r\n• Selling Price: 23M\r\n\r\nOther details:\r\n• Parking: 3-car capacity\r\n• Entertainment Area: Located on the 3rd floor\r\n• Year Built: 2025\r\n• Title: Clean\r\n• Furnished with Smart Door Locks: For the main door and master bedroom\r\nModular cabinetry for the kitchen and bedrooms\r\n• Payment Terms: Cash & Bank Financing\r\n4-channel CCTV",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-20",
+    "max_date": "2028-08-20",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2026-05-04 02:53:53",
+    "agent": "",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": null,
+    "attribute": {
+     "condition": {
+      "newly constructed": "Newly Constructed"
+     },
+     "exterior features": {
+      "fully fenced": "Fully Fenced"
+     },
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "inner": "Inner"
+     },
+     "pool": {
+      "community pool": "Community Pool"
+     },
+     "rooms": {
+      "tv room": "Tv Room",
+      "store room": "Store Room",
+      "first floor bedroom": "First Floor Bedroom"
+     },
+     "telecoms & security": {
+      "cctv": "Cctv",
+      "smart devices": "Smart Devices"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": {
+     "4": "Community Pool"
+    }
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": {
+     "18": "CCTV",
+     "23": "Smart Devices"
+    }
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": {
+     "112": "Fully Fenced"
+    }
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": {
+     "93": "First Floor Bedroom",
+     "73": "Store Room",
+     "71": "TV Room"
+    }
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": {
+     "113": "Newly Constructed"
+    }
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "119": "Inner"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": []
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "102": "Good Road Access"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "114": "Basketball Court",
+     "110": "CCTV in Common Areas",
+     "138": "Chapel",
+     "117": "Clubhouse",
+     "116": "Playground",
+     "112": "Privately Gated",
+     "109": "Swimming Pool"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "125": "Near Schools"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [
+   "Direct Listing"
+  ],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "495965616_1239356861533167_7216153877193274601_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_13abyunvc8_20250627011829.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_13abyunvc8_20250627011829.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_13abyunvc8_20250627011829.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496674912_1239354328200087_2507281041317263267_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1fbrniqlqm_20250627011843.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1fbrniqlqm_20250627011843.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1fbrniqlqm_20250627011843.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496151048_1239358441533009_1948168755721953442_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rzqcf6zsl_20250627011837.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rzqcf6zsl_20250627011837.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rzqcf6zsl_20250627011837.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496299594_1239356691533184_6165702555641328761_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rajtkscsr_20250627011839.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rajtkscsr_20250627011839.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rajtkscsr_20250627011839.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496148681_1239356848199835_160897652228441897_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1scn7g5iy0_20250627011836.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1scn7g5iy0_20250627011836.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1scn7g5iy0_20250627011836.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496208187_1239357528199767_3675250115872528946_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1lfifqr2mo_20250627011838.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1lfifqr2mo_20250627011838.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1lfifqr2mo_20250627011838.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496318208_1239359281532925_9075990567405925300_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1rrzmyqa6y_20250627011840.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1rrzmyqa6y_20250627011840.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1rrzmyqa6y_20250627011840.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496927743_1239357001533153_8800087063245832958_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kegbrdilu_20250627011845.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kegbrdilu_20250627011845.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kegbrdilu_20250627011845.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496003947_1239353784866808_1127669854431005582_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ihjpc8xci_20250627011830.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ihjpc8xci_20250627011830.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ihjpc8xci_20250627011830.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496127394_1239355814866605_169204816949330699_n (1)",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1lbsqxv5jj_20250627011834.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1lbsqxv5jj_20250627011834.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1lbsqxv5jj_20250627011834.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "497499304_1239359461532907_7657372101475043026_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1u5nshvop6_20250627011847.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1u5nshvop6_20250627011847.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1u5nshvop6_20250627011847.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496004420_1239359868199533_2539902165203947881_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_18ts3guydt_20250627011831.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_18ts3guydt_20250627011831.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_18ts3guydt_20250627011831.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "497541947_1239360584866128_2467759563907470112_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_13dqtweonf_20250627011848.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_13dqtweonf_20250627011848.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_13dqtweonf_20250627011848.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496533285_1239355594866627_2252585936779366994_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1d1vh6cvxh_20250627011842.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1d1vh6cvxh_20250627011842.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1d1vh6cvxh_20250627011842.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496127394_1239355814866605_169204816949330699_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1wltanaly0_20250627011835.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1wltanaly0_20250627011835.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1wltanaly0_20250627011835.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "497495714_1239355414866645_616588698246756112_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jpwcxcip5_20250627011846.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jpwcxcip5_20250627011846.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jpwcxcip5_20250627011846.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496326752_1239358894866297_804939930218085393_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1txuip7o6d_20250627011841.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1txuip7o6d_20250627011841.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1txuip7o6d_20250627011841.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496397729_1239356924866494_3937392938911083829_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1cksmllpjd_20250627011841.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1cksmllpjd_20250627011841.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1cksmllpjd_20250627011841.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496297412_1239359628199557_556669736997849886_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1wxb150v80_20250627011838.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1wxb150v80_20250627011838.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1wxb150v80_20250627011838.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496124321_1239362298199290_2165492274821667747_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zfx7nrpdx_20250627011834.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zfx7nrpdx_20250627011834.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zfx7nrpdx_20250627011834.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496036590_1239362088199311_7731859990397172318_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1op41ywffy_20250627011833.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1op41ywffy_20250627011833.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1op41ywffy_20250627011833.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496007136_1239359624866224_8439295926869909829_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1iyvcn1gr6_20250627011832.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1iyvcn1gr6_20250627011832.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1iyvcn1gr6_20250627011832.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496956758_1239359798199540_4298454239983936222_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jpxhjxkms_20250627011845.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jpxhjxkms_20250627011845.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jpxhjxkms_20250627011845.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "496923590_1239355181533335_2637683761133446596_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1dztf8ui9d_20250627011844.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1dztf8ui9d_20250627011844.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1dztf8ui9d_20250627011844.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495895068_1239360324866154_6171915730654259990_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1kpyikwsgo_20250627011828.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1kpyikwsgo_20250627011828.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1kpyikwsgo_20250627011828.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495916820_1239360164866170_5144355148250233578_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jvsbadzvj_20250627011828.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jvsbadzvj_20250627011828.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jvsbadzvj_20250627011828.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495797211_1239360774866109_6280595816282150130_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1qb8nhylwc_20250627011827.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1qb8nhylwc_20250627011827.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1qb8nhylwc_20250627011827.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495725415_1239363411532512_5255901925925487780_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ggcf7ohkg_20250627011826.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ggcf7ohkg_20250627011826.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ggcf7ohkg_20250627011826.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495545723_1239360658199454_1022465940064321940_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1x76kxy4fp_20250627011825.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1x76kxy4fp_20250627011825.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1x76kxy4fp_20250627011825.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "495453237_1239362541532599_147867301612564636_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ki6rjtcll_20250627011824.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ki6rjtcll_20250627011824.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ki6rjtcll_20250627011824.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [
+   {
+    "attachment_type": "Video",
+    "file_name": "Move-In Ready! Tour This 4-Bedroom Xavier Estates Cagayan de Oro City",
+    "file_type": "video",
+    "video_link": "https://www.youtube.com/watch?v=85b5gY8PAWs",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [
+   "Direct Listing"
+  ],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Bank Financing"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Clean"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   }
+  ],
+  "price_history": [
+   {
+    "id": "811",
+    "old_price": "₱23000000.00",
+    "new_price": "₱19500000.00",
+    "price_change_date": "2026-03-28"
+   },
+   {
+    "id": "842",
+    "old_price": "₱19500000.00",
+    "new_price": "₱17000000.00",
+    "price_change_date": "2026-05-04"
+   }
+  ]
+ }
+}

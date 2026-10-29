@@ -43,6 +43,7 @@ export const Listings: CollectionConfig = {
     },
     { name: 'propertyTitle', type: 'text', admin: { readOnly: true } },
     { name: 'description', type: 'textarea', admin: { readOnly: true } },
+    { name: 'shortDescription', type: 'textarea', admin: { readOnly: true } },
     {
       name: 'price',
       type: 'number',
@@ -50,33 +51,82 @@ export const Listings: CollectionConfig = {
       admin: { readOnly: true, description: 'CRM default_price, in the stored currency. Conversion is display-time only (BPM-008).' },
     },
     { name: 'currencyCode', type: 'text', defaultValue: 'PHP', admin: { readOnly: true } },
+    /**
+     * CRM ids are mirrored as text, not selects: the corpus contains a property_for_id of "3"
+     * that no label maps to, and a select would reject it. Labels ride alongside for the admin.
+     */
     {
-      name: 'propertyFor',
-      type: 'select',
-      index: true,
-      options: [
-        { label: 'Sale', value: '1' },
-        { label: 'Rent', value: '2' },
+      type: 'row',
+      fields: [
+        { name: 'propertyForId', type: 'text', index: true, admin: { readOnly: true, description: '1 Sale · 2 Rent · 3 unlabelled' } },
+        { name: 'propertyFor', type: 'text', admin: { readOnly: true } },
       ],
-      admin: { readOnly: true },
+    },
+    { name: 'typeName', type: 'text', admin: { readOnly: true } },
+    {
+      type: 'row',
+      fields: [
+        { name: 'subTypeId', type: 'text', index: true, admin: { readOnly: true, description: 'property_sub_type_id — the target of type[]=_st_{n} filters.' } },
+        { name: 'subTypeName', type: 'text', admin: { readOnly: true } },
+      ],
     },
     {
-      name: 'saleDetailType',
-      type: 'select',
-      index: true,
-      options: [
-        { label: 'Resale', value: '1' },
-        { label: 'Preselling', value: '2' },
+      type: 'row',
+      fields: [
+        { name: 'saleDetailTypeId', type: 'text', index: true, admin: { readOnly: true, description: '1 Resale · 2 New Development (Preselling)' } },
+        { name: 'saleDetailType', type: 'text', admin: { readOnly: true } },
       ],
-      admin: { readOnly: true },
     },
-    { name: 'subTypeId', type: 'text', index: true, admin: { readOnly: true, description: 'property_sub_type_id — the target of type[]=_st_{n} filters.' } },
-    { name: 'bedrooms', type: 'number', admin: { readOnly: true } },
-    { name: 'bathrooms', type: 'number', admin: { readOnly: true } },
+    {
+      name: 'rentAmountPeriod',
+      type: 'text',
+      admin: { readOnly: true, description: 'Selects the view page together with propertyForId (BPM-007).' },
+    },
+    { name: 'priority', type: 'number', index: true, defaultValue: 0, admin: { readOnly: true, description: 'Drives the operative default sort, priority desc (BPM-002).' } },
+    { name: 'isFeatured', type: 'checkbox', admin: { readOnly: true } },
+    { name: 'bedrooms', type: 'number', index: true, admin: { readOnly: true } },
+    { name: 'bathrooms', type: 'number', index: true, admin: { readOnly: true } },
     { name: 'builtSize', type: 'number', admin: { readOnly: true } },
     { name: 'plotSize', type: 'number', admin: { readOnly: true } },
+    { name: 'areaUnit', type: 'text', admin: { readOnly: true } },
+    {
+      name: 'geo',
+      type: 'group',
+      admin: { description: 'CRM geography. The ids bind to Locations.crmGeography.' },
+      fields: [
+        { name: 'latitude', type: 'number', admin: { readOnly: true } },
+        { name: 'longitude', type: 'number', admin: { readOnly: true } },
+        { name: 'provinceId', type: 'text', index: true, admin: { readOnly: true } },
+        { name: 'municipalityId', type: 'text', index: true, admin: { readOnly: true } },
+        { name: 'townId', type: 'text', index: true, admin: { readOnly: true } },
+        { name: 'complexId', type: 'text', index: true, admin: { readOnly: true } },
+        { name: 'provinceName', type: 'text', admin: { readOnly: true } },
+        { name: 'municipalityName', type: 'text', admin: { readOnly: true } },
+        { name: 'cityName', type: 'text', admin: { readOnly: true } },
+        { name: 'complexName', type: 'text', admin: { readOnly: true } },
+      ],
+    },
     { name: 'location', type: 'relationship', relationTo: 'locations', admin: { description: 'Resolved from CRM geography IDs by the sync.' } },
-    { name: 'gallery', type: 'array', admin: { readOnly: true }, fields: [{ name: 'image', type: 'upload', relationTo: 'media' }] },
+    {
+      name: 'images',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description: 'CRM image URLs (Respacio S3). Rebinding to Media from the recovered image cache is WP-10.',
+      },
+      fields: [{ name: 'url', type: 'text', required: true }],
+    },
+    {
+      name: 'attributes',
+      type: 'array',
+      admin: { readOnly: true, description: 'CRM attribute values. fa[]=a{crmId} filters require ALL selected (BPM-004).' },
+      fields: [
+        { name: 'crmId', type: 'text', required: true, index: true },
+        { name: 'name', type: 'text', required: true },
+        { name: 'group', type: 'text' },
+      ],
+    },
+    { name: 'features', type: 'array', admin: { readOnly: true }, fields: [{ name: 'name', type: 'text', required: true }] },
     {
       name: 'crmPayload',
       type: 'json',
@@ -100,6 +150,13 @@ export const Listings: CollectionConfig = {
           'Records absent from two consecutive syncs are marked withdrawn, never deleted (FR-C01). What the live site does to a withdrawn URL is FR-P11 — still uncaptured, blocked on OQ-23.',
       },
     },
+    {
+      name: 'missedSyncs',
+      type: 'number',
+      defaultValue: 0,
+      admin: { readOnly: true, position: 'sidebar', description: 'Consecutive full syncs this record was absent from. 2 => withdrawn.' },
+    },
+    { name: 'crmModifiedAt', type: 'date', admin: { readOnly: true, position: 'sidebar' } },
     { name: 'lastSyncedAt', type: 'date', admin: { readOnly: true, position: 'sidebar' } },
     seoGroup,
   ],
