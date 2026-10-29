@@ -1,0 +1,593 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "471",
+    "property_type_id": "1",
+    "reference_no": "ZTP471",
+    "infocasa_reference_no": "spn_471_infocasa_vGYqTcAw_720256",
+    "address": "0",
+    "property_for": "Sale",
+    "zipcode": "9004",
+    "latitude": "8.4822",
+    "longitude": "124.6472",
+    "complex_lat": null,
+    "complex_long": null,
+    "bedrooms": "0",
+    "bathrooms": "0",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25955",
+    "town_id": "50438",
+    "complex_id": null,
+    "complex_name": null,
+    "storeys": "0",
+    "floor_number": "",
+    "built_size": "",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "220000",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Claveria",
+    "city_name": "Lanise",
+    "property_for_id": "1",
+    "price": "7500",
+    "default_price": "7500",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "7",
+    "property_sub_sub_type_id": "97",
+    "property_name": "Commercial",
+    "property_sub_name": "Commercial",
+    "property_sub_sub_name": "Commercial Lot",
+    "sale_detail_type_id": "2",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Hiraya – Your Serene Mountain Escape in Claveria! ",
+    "short_description": "",
+    "description": "Hiraya – Your Serene Mountain Escape in Claveria! \r\n\r\nDiscover Hiraya, an exclusive residential community nestled in the cool, misty highlands of Claveria, Misamis Oriental. \r\nIt is a 22-hectare master planned farm estate envisioned to be a weekend breather that offers farm lots and other activities for those who love a country lifestyle. 14 hectares is allocated to residential farm lots at 1,000 sqm cuts and 7.8 hectares is allocated for commercial and tourism activities. What makes this project unique is that it is the first of its kind in Northern Mindanao. It combines the tourism and residential concept. Meaning if you buy lot and build either a vacation home or retirement home here, you will still be able to entertain yourself with the activities that you can do at Hiraya.\r\n\r\nPremium Farm Lots Now Available starting at 1,000 sqm\r\nLocation: Claveria, Misamis Orienta\r\nLush Greenery & Scenic Mountain Views\r\nCool Climate Perfect for Relaxatio\r\nIdeal for Vacation Homes & Nature Retreats\r\nSecured & Peaceful Community\r\n\r\nThe amenities include:\r\n✓ Mega function hall – you can book this for special events such birthdays or weddings\r\n✓ Dine pods and fish ponds – so you’ll be able to go fishing with your kids and maybe even cook your own  catch\r\n✓ AJC Tower – its basically a really tall tower that can be used as a view deck for those who want to check out the amazing view of the entire project\r\n✓ Commercial shops – so currently we have Skye 88 Café and Demetrios Pizza. The unabia family got a franchise of Demetrios and they are actually the first franchisee of this popular pizza brand from cdo. So congratulations Aaron and Candy for opening the first Demetrios Franchise. And of course congratulations to Dan for opening your first franchise, I know how hard you all worked to make it happen.\r\n✓ Camping and Glamping – so if you want luxury, comfortable camping then you can rent out glamping tents. But you also have the option to bring your own tents and set it up at the camp site.\r\n✓ Camp fire circle – its this huge area where people can sit around, tell stories and enjoy the heat of the camp fire\r\nLake – there will also be a man-made lake with flowers cabanas. Perhaps in the future we can do water activities as well as the like.\r\nHorseback riding\r\nEnjoy a tranquil lifestyle while staying close to nature, just a short drive from Cagayan de Oro! \r\n? Reserve Your Lot Today!\r\n? WhatsApp: +63 917 851 2752\r\n? Email: [email]\r\n",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "New Development",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2025-07-19 05:54:24",
+    "agent": "Jose Dulaca Guingao III",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "1",
+    "attribute": {
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "views": {
+      "mountain": "Mountain",
+      "amenity": "Amenity"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": []
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": []
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "134": "Amenity",
+     "129": "Mountain"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": []
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "104": "Accessible  To Public Transportation"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": []
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "121": "Tourist area",
+     "119": "Village"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [
+   "Direct Listing",
+   "Zeta Exclusive"
+  ],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "481994524_10162304943054931_6270019678895633560_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1golkuqt45_20250719055354.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1golkuqt45_20250719055354.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1golkuqt45_20250719055354.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "481899915_10162304943079931_6350086810794116909_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jltwdasmv_20250719055403.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jltwdasmv_20250719055403.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jltwdasmv_20250719055403.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "482024902_10162304943119931_4226153545817089659_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1hyrk0v0tb_20250719055333.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1hyrk0v0tb_20250719055333.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1hyrk0v0tb_20250719055333.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [
+   "Direct Listing",
+   "Zeta Exclusive"
+  ],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Under Developer"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   }
+  ],
+  "price_history": []
+ }
+}

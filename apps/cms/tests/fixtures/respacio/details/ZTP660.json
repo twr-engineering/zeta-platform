@@ -1,0 +1,848 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1674087495",
+  "PHP": "72.1111653308"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "660",
+    "property_type_id": "2",
+    "reference_no": "ZTP660",
+    "infocasa_reference_no": "spn_660_infocasa_F1De8bMY_1220256",
+    "address": "44",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.4370906790332",
+    "longitude": "124.61234469787",
+    "complex_lat": "8.4370906790332",
+    "complex_long": "124.61234469787",
+    "bedrooms": "5",
+    "bathrooms": "3",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50403",
+    "complex_id": "44",
+    "complex_name": "Pueblo Golf Estates",
+    "storeys": "2",
+    "floor_number": "",
+    "built_size": "600",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "2",
+    "built_year": "2021",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-20",
+    "plot_size": "701",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Lumbia",
+    "property_for_id": "1",
+    "price": "49500000",
+    "default_price": "49500000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "9",
+    "property_sub_sub_type_id": "44",
+    "property_name": "Residential",
+    "property_sub_name": "House",
+    "property_sub_sub_name": "Single Detached",
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": " Luxury Home in Pueblo Golf Estates, Uptown CDO City",
+    "short_description": "",
+    "description": "Experience exclusive living in one of Uptown CDO’s most prestigious villages — Pueblo Golf Estates. This stunning 2-storey furnished home sits on two adjacent titles with a combined lot area of 701 sqm, offering unmatched space, privacy, and comfort.\r\n\r\nAddress: Pueblo Golf Estates, Uptown CDO City\r\nLot Area: 701 sqm (2 titles: 350+351 sqm)\r\nFloor Area: 600 sqm\r\nRooms: 5 (4 Bedrooms + 1 Family Room)\r\nToilet & Bath: 2 + 1 Powder Room\r\n\r\nPrevious Selling Price: ₱55,000,000\r\nNew Price: ₱49,500,000\r\n\r\nParking: 2\r\nOrientation: East\r\nWith backyard and gazebo\r\nFurnished\r\nYear Built: 2021\r\nTitle Status: Mortgaged\r\nPayment Terms: Cash\r\n\r\nKey Features:\r\n– Master bedroom with walk-in closet and toilet & bath\r\n– Spacious layout with high ceilings\r\n– Beautifully designed interiors\r\n– Located in a secured, premium golf community\r\n\r\nmahogany double doors\r\n\r\nA rare opportunity to own a prime residence in one of CDO’s most desirable neighborhoods. Message me to schedule a private viewing.",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-20",
+    "max_date": "2028-08-20",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2026-02-22 13:07:13",
+    "agent": "",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": null,
+    "attribute": {
+     "condition": {
+      "in good condition": "In Good Condition"
+     },
+     "exterior features": {
+      "big lawn": "Big Lawn",
+      "fully fenced": "Fully Fenced"
+     },
+     "furnishing": {
+      "fully furnished": "Fully Furnished"
+     },
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "fairway": "Fairway"
+     },
+     "rooms": {
+      "first floor bedroom": "First Floor Bedroom"
+     },
+     "views": {
+      "golf course": "Golf Course"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": {
+     "33": "Big Lawn",
+     "112": "Fully Fenced"
+    }
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": {
+     "93": "First Floor Bedroom"
+    }
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": {
+     "103": "Fully Furnished"
+    }
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": {
+     "124": "In Good Condition"
+    }
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "121": "Fairway"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "131": "Golf Course"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "102": "Good Road Access"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "110": "CCTV in Common Areas",
+     "117": "Clubhouse",
+     "116": "Playground",
+     "112": "Privately Gated",
+     "141": "Spacious Driveways"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "123": "Peaceful area"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [
+   "Direct Listing",
+   "Zeta Exclusive"
+  ],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "598934936_1431553905646794_6445928259119466721_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1c1w6m8pjk_20251220125320.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1c1w6m8pjk_20251220125320.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1c1w6m8pjk_20251220125320.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600194154_1431555102313341_4951836863060488425_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zyd4ftqln_20251220125323.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zyd4ftqln_20251220125323.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zyd4ftqln_20251220125323.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600136910_1431553622313489_1230359689308253435_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1lrpd9dfc9_20251220125321.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1lrpd9dfc9_20251220125321.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1lrpd9dfc9_20251220125321.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "601897209_1431553608980157_3182011106731824756_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1tkqcldrry_20251220125331.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1tkqcldrry_20251220125331.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1tkqcldrry_20251220125331.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600251492_1431555892313262_7418545486976583129_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_15q3jqvwp1_20251220125324.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_15q3jqvwp1_20251220125324.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_15q3jqvwp1_20251220125324.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600263552_1431553508980167_7693907340092000241_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1y2s3duzfw_20251220125325.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1y2s3duzfw_20251220125325.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1y2s3duzfw_20251220125325.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600236028_1431555505646634_1447144260870869113_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_11bisihrkz_20251220125324.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_11bisihrkz_20251220125324.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_11bisihrkz_20251220125324.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600458064_1431555758979942_6624897402141005269_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1txvzl81z6_20251220125330.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1txvzl81z6_20251220125330.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1txvzl81z6_20251220125330.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600183974_1431556082313243_5766939341109960090_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1td2dbehvg_20251220125322.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1td2dbehvg_20251220125322.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1td2dbehvg_20251220125322.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600343540_1431556352313216_2816170556069324580_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1mjhw65yht_20251220125329.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1mjhw65yht_20251220125329.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1mjhw65yht_20251220125329.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600287788_1431554905646694_3748996737329877788_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_194sbtrkhi_20251220125327.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_194sbtrkhi_20251220125327.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_194sbtrkhi_20251220125327.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600270001_1431556278979890_319[phone]29037_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1c5fknpbt2_20251220125326.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1c5fknpbt2_20251220125326.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1c5fknpbt2_20251220125326.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600073389_1431553245646860_258774048348337743_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1qpecwsyns_20251220125320.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1qpecwsyns_20251220125320.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1qpecwsyns_20251220125320.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "598791829_1431553298980188_1052419697365452610_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_14thysvuc6_20251220125319.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_14thysvuc6_20251220125319.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_14thysvuc6_20251220125319.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "599692301_1431556265646558_3900545287060375710_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_18p1aredwc_20251220125318.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_18p1aredwc_20251220125318.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_18p1aredwc_20251220125318.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "597794961_1431555652313286_2445019792785759999_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1fqkijyqrw_20251220125317.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1fqkijyqrw_20251220125317.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1fqkijyqrw_20251220125317.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "599603003_1431553242313527_3936358881576614003_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1oqjviic10_20251220125316.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1oqjviic10_20251220125316.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1oqjviic10_20251220125316.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "599536250_1431554165646768_9[phone]3890129_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_19lzkg4nkv_20251220125316.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_19lzkg4nkv_20251220125316.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_19lzkg4nkv_20251220125316.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600305101_1431553322313519_3671485789873767771_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_16jz9eb4mv_20251220125327.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_16jz9eb4mv_20251220125327.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_16jz9eb4mv_20251220125327.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600924700_1431554188980099_1371673772471226499_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zk5mr7ize_20251220125331.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zk5mr7ize_20251220125331.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zk5mr7ize_20251220125331.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "600332191_1431553585646826_543285851128448563_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1dib0ph0f6_20251220125328.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1dib0ph0f6_20251220125328.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1dib0ph0f6_20251220125328.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [
+   {
+    "attachment_type": "Video",
+    "file_name": "FOR SALE |  Luxury Home in Pueblo Golf Estates, Uptown CDO City",
+    "file_type": "video",
+    "video_link": "https://www.youtube.com/watch?v=e7_qTGdfXbU",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [
+   "Direct Listing",
+   "Zeta Exclusive"
+  ],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Mortgage"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   }
+  ],
+  "price_history": [
+   {
+    "id": "770",
+    "old_price": "₱55000000.00",
+    "new_price": "₱49500000.00",
+    "price_change_date": "2026-02-06"
+   }
+  ]
+ }
+}

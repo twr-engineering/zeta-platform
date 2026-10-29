@@ -1,0 +1,619 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1674087495",
+  "PHP": "72.1111653308"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "606",
+    "property_type_id": "2",
+    "reference_no": "ZTP606",
+    "infocasa_reference_no": "spn_606_infocasa_Lzp8H3ml_920253",
+    "address": "0",
+    "property_for": "Sale",
+    "zipcode": "8703",
+    "latitude": "8.2159306",
+    "longitude": "124.8503591",
+    "complex_lat": null,
+    "complex_long": null,
+    "bedrooms": "0",
+    "bathrooms": "0",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4685",
+    "municipality_id": "25875",
+    "town_id": "49050",
+    "complex_id": null,
+    "complex_name": null,
+    "storeys": "0",
+    "floor_number": "",
+    "built_size": "",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-20",
+    "plot_size": "",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Bukidnon",
+    "municipality_name": "Manolo Fortich",
+    "city_name": "Dahilayan",
+    "property_for_id": "1",
+    "price": "9000000",
+    "default_price": "9000000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "8",
+    "property_sub_sub_type_id": null,
+    "property_name": "Residential",
+    "property_sub_name": "Residential Land",
+    "property_sub_sub_name": null,
+    "sale_detail_type_id": "2",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Mt. Pines Farm Subdivision in Dahilayan",
+    "short_description": "",
+    "description": "Why Mt. Pines Farm Subdivision in Dahilayan Is the Perfect Retirement Option in Northern Mindanao\r\n\r\nWhen we think of retirement, we imagine a life that’s slower, quieter, and filled with meaning—morning walks in nature, fresh air, and time to do what truly matters. If this resonates with you, then Mt. Pines Farm Subdivision in Dahilayan, Bukidnon could be your perfect retirement destination. Perched 4,000 feet above sea level, Mt. Pines Farm is set amidst a thriving pine forest and enjoys year-round cool temperatures. Here, you get to breathe clean mountain air every day, far from the heat and congestion of the city. Whether you're looking to stay active, garden, or simply relax, this climate is therapeutic—ideal for retirees who value both physical and mental well-being.\r\n\r\nTucked in Northern Mindanao’s most scenic mountain town, Mt. Pines Farm offers not just breathtaking views and crisp cool weather—but also a promising future, with wellness-focused developments, leisure, and comfort all in one place. It is fast becoming a popular eco-tourism destination, known for its adventure parks, lush scenery, and laid-back atmosphere. Yet, despite the tourist attractions nearby, Mt. Pines Farm remains serene and private—tucked away from the noise yet close enough for convenience.\r\n\r\nYou’re just 1.5 to 2 hours from Cagayan de Oro City, a short drive from Camp Philips, Manolo Fortich,andDel Monte Golf Courseandsurrounded bypine trees, flower farms, and organic produce sellers.\r\n\r\nA Brown’s Vision: A Therapeutic Golf Course Next Door\r\n\r\nWhat makes Mt. Pines Farm Phase 2B even more attractive is what’s coming next door: A Brown Company’s planned Therapeutic Golf Course—a one-of-a-kind development designed with seniors, beginners, and wellness seekers in mind.\r\n\r\nThis won’t be your typical competitive course. It’s designed to be inclusive, walkable, and healing, allowing residents to enjoy the health benefits of golf without the pressure of pro-level play.\r\n\r\nImagine… A short morning round of golf with mountain views Nature paths and low-impact physical activity An environment that encourages movement, connection, and rejuvenation\r\n\r\nThis golf course will soon become a centerpiece of retirement life in Dahilayan—blending leisure and wellness in a way that’s rarely seen in Mindanao.\r\n\r\nUpscale Amenities: Two New Hotels Rising in the Area\r\n\r\nAs Dahilayan evolves into a lifestyle and leisure destination, hospitality infrastructure is quickly catching up.Just minutes from Mt. Pines Farm are two major hotel developments set to rise:\r\n\r\nGrun Hotel\r\n\r\nA boutique mountain resort concept that embraces eco-conscious luxury. Perfect for family visits, wellness retreats, and even short-term stays while building your home in Mt. Pines.\r\n\r\nDusit Princess Moena\r\n\r\nAn international hotel brand under Dusit Thani’s portfolio, this upscale hotel is expected to elevate the entire area’s tourism and investment value. With its Thai-inspired hospitality and wellness-centered services, it’s poised to attract both local and foreign retirees, investors, and weekenders.\r\n\r\nThese hotel developments signal a strong appreciation trajectory for properties in Mt. Pines—and a higher quality of life for its future residents.",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "New Development",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-20",
+    "max_date": "2028-08-20",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2025-09-10 07:23:50",
+    "agent": "Jose Dulaca Guingao III",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "1",
+    "attribute": {
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "inner": "Inner",
+      "corner": "Corner",
+      "fairway": "Fairway",
+      "ridge": "Ridge",
+      "end": "End",
+      "through": "Through"
+     },
+     "telecoms & security": {
+      "fire detection system": "Fire Detection System",
+      "smart devices": "Smart Devices"
+     },
+     "views": {
+      "mountain": "Mountain",
+      "golf course": "Golf Course",
+      "garden": "Garden",
+      "amenity": "Amenity",
+      "sunset": "Sunset"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": {
+     "19": "Fire Detection System",
+     "23": "Smart Devices"
+    }
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": []
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "120": "Corner",
+     "123": "End",
+     "121": "Fairway",
+     "119": "Inner",
+     "122": "Ridge",
+     "144": "Through"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "134": "Amenity",
+     "133": "Garden",
+     "131": "Golf Course",
+     "129": "Mountain",
+     "137": "Sunset"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "100": "Local shops"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "102": "Good Road Access"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "117": "Clubhouse",
+     "112": "Privately Gated",
+     "109": "Swimming Pool"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "123": "Peaceful area",
+     "122": "Suburbs",
+     "121": "Tourist area",
+     "119": "Village"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [
+   "Direct Listing",
+   "Preselling"
+  ],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "Mt",
+    "file_type": "png",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1cmdtc9m7i_20250910010429.png",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1cmdtc9m7i_20250910010429.png",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1cmdtc9m7i_20250910010429.png",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [
+   "Direct Listing",
+   "Preselling"
+  ],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Bank Financing"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Under Developer"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "",
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   }
+  ],
+  "price_history": [
+   {
+    "id": "677",
+    "old_price": "₱9000.00",
+    "new_price": "₱9000000.00",
+    "price_change_date": "2025-09-10"
+   }
+  ]
+ }
+}

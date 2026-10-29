@@ -1,0 +1,595 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "73",
+    "property_type_id": "2",
+    "reference_no": "ZTP73",
+    "infocasa_reference_no": "spn_73_infocasa_tHTjFpcx_920233",
+    "address": "0",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.4822",
+    "longitude": "124.6472",
+    "complex_lat": null,
+    "complex_long": null,
+    "bedrooms": "0",
+    "bathrooms": "0",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50398",
+    "complex_id": null,
+    "complex_name": null,
+    "storeys": "0",
+    "floor_number": "",
+    "built_size": "",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "0",
+    "kitchens": "0",
+    "is_private": "0",
+    "dining_rooms": "0",
+    "living_rooms": "0",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "338",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Gusa",
+    "property_for_id": "1",
+    "price": "3380000",
+    "default_price": "3380000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "8",
+    "property_sub_sub_type_id": null,
+    "property_name": "Residential",
+    "property_sub_name": "Residential Land",
+    "property_sub_sub_name": null,
+    "sale_detail_type_id": "1",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Mega Heights Phase 3, Gusa corner lot",
+    "short_description": "Lot: 338 sqm\r\nClean title\r\nCash basis\r\nSelling price: 10,000/sqm",
+    "description": "",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "Resale",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2025-03-26 07:53:21",
+    "agent": "Alessandra Victoria Zeta Guingao",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "4",
+    "attribute": {
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "lot type": {
+      "corner": "Corner"
+     },
+     "views": {
+      "mountain": "Mountain"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": []
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": []
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": {
+     "120": "Corner"
+    }
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "129": "Mountain"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "102": "Good Road Access",
+     "103": "Near Motorway"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "112": "Privately Gated"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "119": "Village"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "photo_2023-05-30_12-06-42",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ijq4dsaum_20230913013930.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ijq4dsaum_20230913013930.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ijq4dsaum_20230913013930.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "photo_2023-05-30_11-25-59",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zcrdvtgpl_20230913013929.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zcrdvtgpl_20230913013929.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zcrdvtgpl_20230913013929.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Clean"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "6.47",
+    "latitude": "8.428276",
+    "longitude": "124.624985",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/airport-71.png",
+    "location_name": "ABCI Helipad"
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "5.85",
+    "latitude": "8.5186813",
+    "longitude": "124.6089279",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Seven Seas Waterpark and Resort"
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "0.55",
+    "latitude": "8.484758",
+    "longitude": "124.65143",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/atm-71.png",
+    "location_name": "Security Bank ATM"
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "0.48",
+    "latitude": "8.4864939",
+    "longitude": "124.6470436",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Baes Bakery"
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "0.45",
+    "latitude": "8.4862441",
+    "longitude": "124.6475577",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bank-71.png",
+    "location_name": "FICCO Tiano"
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "0.17",
+    "latitude": "8.4824856",
+    "longitude": "124.6486996",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bar-71.png",
+    "location_name": "G-Bistro"
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "4.03",
+    "latitude": "8.4745731",
+    "longitude": "124.683059",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Beauty Salon"
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "0.36",
+    "latitude": "8.4853594",
+    "longitude": "124.6477617",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bus-71.png",
+    "location_name": "Rotary Club of Cagayan de Oro"
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "0.21",
+    "latitude": "8.4822813",
+    "longitude": "124.6453373",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/cafe-71.png",
+    "location_name": "The Fort Cafe"
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "0.83",
+    "latitude": "8.4798518",
+    "longitude": "124.6543535",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/worship_general-71.png",
+    "location_name": "Sto. Niño Church"
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "2.30",
+    "latitude": "8.4775807",
+    "longitude": "124.6267842",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Convenience Store"
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "1.18",
+    "latitude": "8.4767739",
+    "longitude": "124.6379853",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "GAISANO Department Store"
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "0.38",
+    "latitude": "8.4847328",
+    "longitude": "124.6495843",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Rika Drugstore"
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "0.55",
+    "latitude": "8.4792172",
+    "longitude": "124.6512195",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Cagayan de Oro City Fire District"
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "0.52",
+    "latitude": "8.4776088",
+    "longitude": "124.6462629",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Xavier University Gymnasium"
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "0.36",
+    "latitude": "8.480201",
+    "longitude": "124.6497662",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png",
+    "location_name": "Provincial Hospital Cagayan de Oro city"
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "0.22",
+    "latitude": "8.4812351",
+    "longitude": "124.6454605",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Cagayan de Oro City Public Library"
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "0.25",
+    "latitude": "8.4837523",
+    "longitude": "124.6488386",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Procurement Service - LGU Depot Misamis Oriental"
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "0.71",
+    "latitude": "8.4758995",
+    "longitude": "124.6459555",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/museum-71.png",
+    "location_name": "Museo de Oro"
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "0.35",
+    "latitude": "8.4852347",
+    "longitude": "124.6481452",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png",
+    "location_name": "Vicente de Lara Park"
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "0.38",
+    "latitude": "8.4849528",
+    "longitude": "124.6493152",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png",
+    "location_name": "MARGARET PHARMACY"
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "0.42",
+    "latitude": "8.4853675",
+    "longitude": "124.6492827",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Police Outpost"
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "1.62",
+    "latitude": "8.4676609",
+    "longitude": "124.6469975",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Xavier University Grade School - Ateneo de Cagayan Macasandig Campus"
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "0.22",
+    "latitude": "8.4807115",
+    "longitude": "124.6484566",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Restaurant Modo"
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "0.93",
+    "latitude": "8.4741017",
+    "longitude": "124.6492622",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Cagayan de Oro National High School - Senior High"
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "0.11",
+    "latitude": "8.4829565",
+    "longitude": "124.6464988",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Besra C BLDG"
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "0.53",
+    "latitude": "8.4862589",
+    "longitude": "124.649811",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Gaisano City Mall"
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "0.31",
+    "latitude": "8.4820044",
+    "longitude": "124.6500404",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Atan's Store"
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "0.29",
+    "latitude": "8.4840384",
+    "longitude": "124.6453471",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Pilgrim Christian College"
+   }
+  ],
+  "price_history": [
+   {
+    "id": "434",
+    "old_price": "₱3042000.00",
+    "new_price": "₱3380000.00",
+    "price_change_date": "2025-03-26"
+   }
+  ]
+ }
+}
