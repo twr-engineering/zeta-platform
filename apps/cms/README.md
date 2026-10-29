@@ -10,6 +10,7 @@ Governed by two documents in `docs/`:
 - **`docs/PENDING.md`** — every placeholder standing in for a rule not yet captured.
 
 Working with Claude Code? `CLAUDE.md` is the agent brief, and it applies to people too.
+Picking the project up? Start with **`HANDOVER.md`** — current state, access, open risks and next work.
 
 ## The one rule that matters
 
@@ -38,10 +39,10 @@ pnpm dev                  # http://localhost:3000, admin at /admin/
 
 ## Claude Code in the cloud (claude.ai/code or Claude Desktop)
 
-One-time, per collaborator:
+One-time setup:
 
-1. Get access to this GitHub repo, and connect GitHub in Claude Code on the web (install the Claude GitHub App
-   on the repo's owner account).
+1. Get access to this GitHub repo, and connect GitHub in Claude Code on the web (the Claude GitHub App must be
+   allowed on the `twr-engineering` org for this repo).
 2. Create a cloud environment for the repo:
    - **Setup script:** `bash scripts/cloud/setup.sh`
    - **Network access:** *Trusted* (the default) is enough while the CRM runs on fixtures. When live access exists,
@@ -64,6 +65,12 @@ a cloud session back with `claude --teleport`.
 | `pnpm sync:crm` | Mirror Respacio into Payload (fixtures until `RESPACIO_API_KEY` is set) |
 | `pnpm pending` | List placeholders; `--md` regenerates `docs/PENDING.md` |
 | `pnpm payload migrate:create <name>` | After any schema change. Dev auto-push is off |
+
+## CI
+
+`.github/workflows/ci.yml` runs on every PR and on `main`: typecheck, lint, tests, migrate against Postgres 16,
+a schema-drift check (fails if a collection changed without a committed migration), seed, and `next build`.
+`main` is not protected, so a red check does not block a merge. Read it before merging.
 
 ## Parity suite
 

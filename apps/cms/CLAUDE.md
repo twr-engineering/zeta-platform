@@ -41,6 +41,7 @@ from the registry with `pnpm pending --md` — regenerate it whenever you touch 
 | `pnpm dev` | http://localhost:3000, admin at `/admin/` (create the first user there) |
 | `pnpm test` / `pnpm test:parity` | Vitest. Parity failures are launch blockers |
 | `pnpm typecheck` | Run before calling any change done |
+| `pnpm build` | CI runs it. Dev mode hides route-config errors that only `next build` rejects |
 | `pnpm sync:crm` | Mirror the CRM (fixtures without a key). Idempotent |
 | `pnpm pending` | List placeholders |
 | `pnpm generate:types` | After any collection/global change, then commit `src/payload-types.ts` |
