@@ -88,7 +88,7 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       eslint-config-next:
         specifier: 16.3.0
-        version: 16.3.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+        version: 16.3.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       prettier:
         specifier: ^3.4.2
         version: 3.9.6
@@ -223,6 +223,9 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
+      '@playwright/test':
+        specifier: 1.61.1
+        version: 1.61.1
       '@types/node':
         specifier: 24.12.3
         version: 24.12.3
@@ -237,7 +240,10 @@ importers:
         version: 9.39.5(jiti@2.7.0)
       eslint-config-next:
         specifier: 16.3.0
-        version: 16.3.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+        version: 16.3.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      tsx:
+        specifier: 4.22.4
+        version: 4.22.4
       typescript:
         specifier: 5.9.3
         version: 5.9.3
