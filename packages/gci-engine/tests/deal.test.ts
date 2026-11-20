@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { computeDeal } from "../../../src/lib/engine/index.ts";
+import { computeDeal } from "../src/engine/index.ts";
 import type {
   DealComputeInput,
   EngineSettings,
-} from "../../../src/lib/engine/index.ts";
+} from "../src/engine/index.ts";
 import {
   NON_VAT_SETTINGS,
   VAT_REGISTERED_SETTINGS,

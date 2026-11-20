@@ -2,7 +2,7 @@ import type { YieldDeal } from "@/lib/yield";
 // Extensionless on purpose: this is a non-test `.ts` file (Next type-checks it,
 // unlike the `.test.ts` consumers), so a `.ts` value import would trip TS5097.
 // The node --test alias hook resolves the extensionless path to fixtures.ts.
-import { WORKBOOK_DEALS } from "../engine/fixtures";
+import { WORKBOOK_DEALS } from "@zeta/gci-engine/test-fixtures";
 
 /**
  * The 21 workbook deals as M2 `YieldDeal` projections, derived from the SAME

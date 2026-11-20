@@ -1,4 +1,4 @@
-import { toMoney } from "@/lib/money";
+import { toMoney } from "../money";
 import type { DealComputeInput } from "./types";
 
 /**

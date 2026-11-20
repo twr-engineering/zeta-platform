@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { isSplitAtSourceRisk } from "../../../src/lib/engine/index.ts";
-import type { DealComputeInput } from "../../../src/lib/engine/index.ts";
+import { isSplitAtSourceRisk } from "../src/engine/index.ts";
+import type { DealComputeInput } from "../src/engine/index.ts";
 
 /**
  * M1.1 — soft-warning predicates (edge case 16, §3.3 What-to-Book doctrine).

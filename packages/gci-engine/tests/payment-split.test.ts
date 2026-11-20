@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { computePaymentSplit } from "../../../src/lib/engine/index.ts";
-import type { PaymentSplit } from "../../../src/lib/engine/index.ts";
+import { computePaymentSplit } from "../src/engine/index.ts";
+import type { PaymentSplit } from "../src/engine/index.ts";
 import { NON_VAT_SETTINGS, VAT_REGISTERED_SETTINGS } from "./fixtures.ts";
 
 /**

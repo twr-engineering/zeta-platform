@@ -5,7 +5,7 @@ import {
   bookedNetGci,
   defaultTotalCollectible,
   totalCollectible,
-} from "../../../src/lib/engine/index.ts";
+} from "../src/engine/index.ts";
 
 /**
  * M4 Rule K helpers — the mirror (K.1) and the override precedence (K.2). The

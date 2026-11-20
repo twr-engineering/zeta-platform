@@ -1,0 +1,22 @@
+{
+  "name": "@zeta/gci-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ZETA GCI commission money engine: decimal money helpers, deal/receivable/payment-split rules, warnings. Consumed as TypeScript source.",
+  "exports": {
+    "./engine": "./src/engine/index.ts",
+    "./money": "./src/money/index.ts",
+    "./test-fixtures": "./tests/fixtures.ts"
+  },
+  "scripts": {
+    "test": "node --import ./tests/resolve-hooks.mjs --test \"tests/**/*.test.ts\"",
+    "test:coverage": "node --import ./tests/resolve-hooks.mjs --experimental-test-coverage --test-coverage-include='src/**' --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0"
+  },
+  "devDependencies": {
+    "fast-check": "^4.9.0"
+  }
+}

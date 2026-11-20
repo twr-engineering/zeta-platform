@@ -2,7 +2,7 @@ import type {
   DealComputeInput,
   DealDerived,
   EngineSettings,
-} from "../../../src/lib/engine/index.ts";
+} from "../src/engine/index.ts";
 
 /**
  * The workbook's verified numbers, as engine fixtures (M1 PRD §9, WORKBOOK §3).
