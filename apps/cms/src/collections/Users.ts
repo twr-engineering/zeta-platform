@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { adminFieldOnly, adminOrSelf, isAdmin } from '../access'
 
 /**
  * Staff accounts. WordPress had 13 users total — 2 administrators, 1 author,
@@ -15,7 +16,8 @@ export const Users: CollectionConfig = {
   slug: 'users',
   admin: { useAsTitle: 'email', group: 'System' },
   auth: true,
-  access: { read: () => true },
+  // Was read: () => true, which exposed every staff email and role through the public API.
+  access: { read: adminOrSelf, create: isAdmin, update: adminOrSelf, delete: isAdmin },
   fields: [
     { name: 'name', type: 'text' },
     {
@@ -23,6 +25,8 @@ export const Users: CollectionConfig = {
       type: 'select',
       hasMany: true,
       defaultValue: ['editor'],
+      // Without this, any user could PATCH their own roles to ['admin'].
+      access: { create: adminFieldOnly, update: adminFieldOnly },
       options: [
         { label: 'Administrator', value: 'admin' },
         { label: 'Editor', value: 'editor' },

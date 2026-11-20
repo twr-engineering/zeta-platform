@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isStaff, publishedOrStaff } from '../access'
 
 import { slugField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
@@ -23,7 +24,7 @@ export const Locations: CollectionConfig = {
     defaultColumns: ['name', 'type', 'parent', 'updatedAt'],
     group: 'Property',
   },
-  access: { read: () => true },
+  access: { read: publishedOrStaff, create: isStaff, update: isStaff, delete: isAdmin },
   versions: { drafts: true },
   fields: [
     { name: 'name', type: 'text', required: true },

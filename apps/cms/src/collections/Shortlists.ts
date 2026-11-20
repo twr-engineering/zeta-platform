@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isStaff, publishedOrStaff } from '../access'
 
 import { slugField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
@@ -40,7 +41,7 @@ export const Shortlists: CollectionConfig = {
     defaultColumns: ['title', 'savedQuery', 'updatedAt'],
     group: 'Property',
   },
-  access: { read: () => true },
+  access: { read: publishedOrStaff, create: isStaff, update: isStaff, delete: isAdmin },
   versions: { drafts: true },
   fields: [
     { name: 'title', type: 'text', required: true },
