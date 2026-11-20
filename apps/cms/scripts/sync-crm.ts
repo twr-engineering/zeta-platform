@@ -6,7 +6,7 @@ import 'dotenv/config'
 import { getPayload } from 'payload'
 
 import config from '../src/payload.config'
-import { syncRespacio } from '../src/crm/respacio/sync'
+import { syncRespacio } from '@zeta/cms-config/respacio/sync'
 
 const payload = await getPayload({ config })
 const result = await syncRespacio(payload)

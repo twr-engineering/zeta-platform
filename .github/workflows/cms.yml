@@ -59,9 +59,9 @@ jobs:
       - name: Schema matches committed migrations
         run: |
           pnpm payload migrate:create drift-check --skip-empty
-          if [ -n "$(git status --porcelain src/migrations)" ]; then
+          if [ -n "$(git status --porcelain ../../packages/cms-config/src/migrations)" ]; then
             echo "::error::Collections changed without a migration. Run: pnpm payload migrate:create <name>"
-            git status --porcelain src/migrations
+            git status --porcelain ../../packages/cms-config/src/migrations
             exit 1
           fi
       - name: Seed from fixtures

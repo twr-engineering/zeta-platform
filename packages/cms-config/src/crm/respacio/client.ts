@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { pending } from '@/lib/parity/pending'
+import { pending } from '@zeta/parity/pending'
 
 import type { CrmListItem, CrmListResponse, CrmParams, CrmViewResponse } from './types'
 
