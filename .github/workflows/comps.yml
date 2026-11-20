@@ -17,7 +17,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -58,3 +58,15 @@ jobs:
         run: pnpm test:db
       - name: Build
         run: pnpm build
+      # E2E (app PRD §17.2): Chromium + WebKit, light + dark, against `next start`.
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium webkit
+      - name: E2E
+        run: pnpm test:e2e
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: comps-playwright-report
+          path: apps/comps/playwright-report/
+          retention-days: 7
