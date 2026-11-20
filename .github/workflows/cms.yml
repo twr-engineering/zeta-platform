@@ -3,6 +3,7 @@ name: cms
 # Runs on every PR and on main. main has no branch protection, so a red check does not block a
 # merge — read it before merging. A failing tests/parity case is a finding, never a re-baseline.
 on:
+  workflow_dispatch:
   pull_request:
     paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/cms.yml']
   push:

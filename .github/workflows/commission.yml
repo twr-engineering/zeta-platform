@@ -9,6 +9,7 @@ name: commission
 # makes an authenticated route static, this job is what catches it.
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ['apps/commission/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/commission.yml']
