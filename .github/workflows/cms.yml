@@ -5,10 +5,10 @@ name: cms
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/cms.yml']
+    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', '.github/workflows/cms.yml']
   push:
     branches: [main]
-    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/cms.yml']
+    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', '.github/workflows/cms.yml']
 
 concurrency:
   group: cms-${{ github.ref }}
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: apps/cms/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
 
       - name: Typecheck

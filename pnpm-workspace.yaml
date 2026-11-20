@@ -2,10 +2,6 @@ packages:
   - apps/*
   - packages/*
 
-# Phase 1-2: each app keeps the lockfile it was imported with, so every dependency
-# resolves exactly as it did in the old repo ("moved in unchanged"). Switch to one
-# shared lockfile in Phase 3, in its own PR with a full test pass. See ADR-19.
-sharedWorkspaceLockfile: false
 
 # pnpm only honours this at the workspace root (was in apps/cms/package.json).
 onlyBuiltDependencies:
