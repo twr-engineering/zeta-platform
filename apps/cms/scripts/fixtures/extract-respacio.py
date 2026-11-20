@@ -142,7 +142,8 @@ def main(dump: str) -> None:
     dump_json(OUT / "listings.json", sorted(listings.values(), key=lambda p: int(p["id"])))
     for ref, res in details.items():
         dump_json(OUT / "details" / f"{ref}.json", res)
-    dump_json(OUT / "search-calls.json", search_calls)
+    # The search golden master lives with the parity tests (packages/parity, Phase 3).
+    dump_json(OUT.parents[4] / "packages" / "parity" / "tests" / "fixtures" / "search-calls.json", search_calls)
     dump_json(OUT / "filter-calls.json", filter_calls)
     print(f"{len(calls)} calls -> {len(listings)} listings, {len(details)} details, "
           f"{len(search_calls)} search calls, {len(filter_calls)} filter calls")

@@ -8,7 +8,7 @@ import {
   formatPeso,
   guard,
   qualifiedPropertiesUrl,
-} from '../../src/lib/calculator'
+} from '../src/calculator'
 
 /**
  * GOLDEN MASTER — FR-T01 / BPM-001.  PRD FR-PY03, FR-PY04.

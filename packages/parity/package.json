@@ -1,0 +1,19 @@
+{
+  "name": "@zeta/parity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CAPTURED zetagroup.ph behaviour (price, loan calculator, search params) and the pending-rule registry, with their golden-master parity tests. Consumed as TypeScript source.",
+  "exports": {
+    "./price": "./src/price.ts",
+    "./calculator": "./src/calculator.ts",
+    "./pending": "./src/pending.ts",
+    "./search/params": "./src/search/params.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "4.1.6"
+  }
+}
