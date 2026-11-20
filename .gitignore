@@ -3,3 +3,9 @@ node_modules/
 .env
 .env.local
 *.log
+
+# Kept local only (never commit): these describe an open exposure on the client's
+# production site. Canonical copies live in the Personal OS vault, Projects/Zeta/Platform/.
+apps/cms/docs/PRD.md
+docs/platform/Architecture.md
+docs/platform/PRD.md

@@ -8,7 +8,7 @@ Monorepo for Zeta Group / TWR client apps. Payload CMS is the shared backend; cl
 | `apps/commission` | ZETA GCI + Collections. Next.js 15 + Supabase | `Illamapalooza/nurture-your-commission` (history kept) |
 | `packages/*` | Shared packages, extracted in Phase 3 | — |
 
-Architecture, PRD and the client-app PRD template live in [`docs/platform/`](docs/platform/).
+The client-app PRD template is in [`docs/platform/client-apps/`](docs/platform/client-apps/). The platform Architecture and PRD, and the portal PRD (`apps/cms/docs/PRD.md`), are kept out of git on purpose; ask Julius for copies.
 
 ## Commands
 
