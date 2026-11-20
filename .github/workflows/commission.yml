@@ -52,6 +52,11 @@ jobs:
       - name: Unit tests
         run: pnpm run test:unit
 
+      # The money engine moved to packages/gci-engine (Phase 3). Its fixtures and the
+      # rounding tripwire are the contract; a failure here is a finding, not a re-baseline.
+      - name: Engine tests (packages/gci-engine)
+        run: pnpm run test:engine
+
       # M1.5 perf budget (FR-M1-07). The DB-bound targets (deal-list P95,
       # full bulk recompute) run live via `pnpm run perf:recompute` against a
       # real project; here — with no database — test:unit already proved the

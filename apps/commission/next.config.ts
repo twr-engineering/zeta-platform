@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
    */
   distDir: process.env.NEXT_DIST_DIR || ".next",
 
+  /** Workspace packages ship TypeScript source, not built JS (Phase 3, ADR-12). */
+  transpilePackages: ["@zeta/gci-engine"],
+
   /**
    * The M1.4 workbook importer uploads an .xlsx through a Server Action, and
    * Server Actions cap the request body at 1 MB by default. A v30.x ZETA workbook

@@ -1,4 +1,4 @@
-import { Money, ZERO, toCentavoString, toMoney } from "@/lib/money";
+import { Money, ZERO, toCentavoString, toMoney } from "../money";
 import type { EngineSettings, PaymentSplit, PaymentSplitInput } from "./types";
 
 /**

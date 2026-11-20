@@ -4,7 +4,7 @@ import {
   toCentavoString,
   toMoney,
   type MoneyValue,
-} from "@/lib/money";
+} from "../money";
 import type {
   CommBaseDisplay,
   DealComputeInput,

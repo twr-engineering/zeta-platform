@@ -1,4 +1,4 @@
-import { toCentavoString } from "@/lib/money";
+import { toCentavoString } from "../money";
 import type { DealDerived } from "./types";
 
 /**

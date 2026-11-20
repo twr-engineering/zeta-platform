@@ -5,14 +5,14 @@ import fc from "fast-check";
 import {
   computeDeal,
   computePaymentSplit,
-} from "../../../src/lib/engine/index.ts";
+} from "../src/engine/index.ts";
 import type {
   CommBase,
   DealComputeInput,
   EngineSettings,
   VatBasis,
-} from "../../../src/lib/engine/index.ts";
-import { Money, toMoney, withinTolerance } from "../../../src/lib/money/index.ts";
+} from "../src/engine/index.ts";
+import { Money, toMoney, withinTolerance } from "../src/money/index.ts";
 import { VAT_REGISTERED_SETTINGS } from "./fixtures.ts";
 
 /**
