@@ -1,14 +1,16 @@
-name: CI
+name: cms
 
 # Runs on every PR and on main. main has no branch protection, so a red check does not block a
 # merge — read it before merging. A failing tests/parity case is a finding, never a re-baseline.
 on:
   pull_request:
+    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/cms.yml']
   push:
     branches: [main]
+    paths: ['apps/cms/**', 'packages/**', 'pnpm-workspace.yaml', '.github/workflows/cms.yml']
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: cms-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,19 +27,21 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U zeta" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/cms
     env:
       DATABASE_URI: postgres://zeta:zeta@127.0.0.1:5432/zeta_ci
       PAYLOAD_SECRET: ci-only-not-a-secret
       NEXT_PUBLIC_SERVER_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - uses: pnpm/action-setup@v4   # version from root package.json "packageManager"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: apps/cms/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
 
       - name: Typecheck
