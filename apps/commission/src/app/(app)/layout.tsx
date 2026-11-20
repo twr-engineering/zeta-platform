@@ -18,6 +18,12 @@ import { ROUTES } from "@/lib/routes";
  * every page in the group dynamic, which is what keeps `next build` from
  * prerendering a Supabase client into existence with placeholder credentials.
  */
+// Belt and braces for the intent above: awaiting cookies() in this layout does not stop
+// Next 15 from prerendering a *page* in parallel, and pages that query Supabase
+// directly (the /reports tabs) then fail the build on placeholder credentials. Every
+// page in this group is per-user, so none should ever be static.
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {
