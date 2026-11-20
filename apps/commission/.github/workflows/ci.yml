@@ -1,0 +1,187 @@
+name: CI
+
+# M0.1 deliverable: "CI + migrations + seed script for dev fixtures".
+#
+# Lint, typecheck/build, and unit tests on every push and PR. No secrets are
+# used: the build runs on PLACEHOLDER credentials, which the foundation made
+# safe by keeping every authenticated route dynamic (a prerendered route would
+# construct a Supabase client at build time and fail). If someone accidentally
+# makes an authenticated route static, this job is what catches it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: PLACEHOLDER_PENDING_CREDENTIALS
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: PLACEHOLDER_PENDING_CREDENTIALS
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22, not 20: the unit tests are TypeScript run directly by
+          # `node --test`, and type stripping only became on-by-default in
+          # 22.18. On 20 they do not run at all.
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Unit tests
+        run: pnpm run test:unit
+
+      # M1.5 perf budget (FR-M1-07). The DB-bound targets (deal-list P95,
+      # full bulk recompute) run live via `pnpm run perf:recompute` against a
+      # real project; here — with no database — test:unit already proved the
+      # engine budget over 1,000 synthetic deals (tests/unit/perf.test.ts:
+      # single compute < 10 ms, 1,000-deal engine recompute a fraction of 30 s).
+      # This step calls the live harness too, which self-skips on the placeholder
+      # credentials CI runs with, so it is green here and real when creds exist.
+      - name: Recompute perf harness (self-skips without live credentials)
+        run: pnpm run perf:recompute
+
+      # M5.4 perf budget (M5 PRD §8, DoD): the 1,000-payment load fixture and the
+      # four payment targets (list P95 < 500 ms, create round-trip < 300 ms, split
+      # preview < 100 ms, picker < 150 ms). Same self-skipping contract as the
+      # recompute harness — on the placeholder credentials CI runs with it prints
+      # "skipped" and exits 0; against a real project it seeds 1,000 deals+payments,
+      # measures server time (WAN round-trips subtracted), and fails the build if any
+      # target is missed.
+      - name: Payments perf harness (self-skips without live credentials)
+        run: pnpm run perf:payments
+
+      # M6 dashboard perf budget (M6 PRD §8): the full eight-section read < 1.5 s and
+      # the year-filter switch < 500 ms at 1,000 deals + 1,000 payments. Same
+      # self-skipping contract — "skipped" on the placeholder credentials CI runs
+      # with; against a real project it seeds 1,000×3 rows, measures the true server
+      # execution (EXPLAIN ANALYZE, machine-independent) plus the pure compose CPU,
+      # and fails the build if either target is missed.
+      - name: Dashboard perf harness (self-skips without live credentials)
+        run: pnpm run perf:dashboard
+
+      # M2 Yield Summary perf budget (M2 PRD §8 / criterion 13): the report read
+      # < 500 ms P95 at 1,000 deals. Same self-skipping contract — "skipped" on the
+      # placeholder credentials CI runs with; against a real project it seeds 1,000
+      # deals, rebuilds the materialized aggregate, and measures the three parallel
+      # reads' true server execution (EXPLAIN ANALYZE), failing the build if missed.
+      - name: Yield perf harness (self-skips without live credentials)
+        run: pnpm run perf:yield
+
+      # M3 pace budget (M3 PRD §8): Rule P12's YTD aggregate over ≥ 1,000 deals
+      # < 300 ms P95. Same self-skipping contract — seeds 1,000 deals across three
+      # booked years and measures plan_ytd_actual_sales' true server execution
+      # (EXPLAIN ANALYZE) both OQ-1 flag ways, failing the build if the budget is missed.
+      - name: Plan-YTD perf harness (self-skips without live credentials)
+        run: pnpm run perf:plan-ytd
+
+      # M7 Source Performance perf budget (M7 PRD §8 / criterion 10): the report and
+      # each year-filter change < 500 ms P95 at 1,000 deals / 1,000 payments / 60
+      # sources. Same self-skipping contract — "skipped" on the placeholder credentials
+      # CI runs with; against a real project it seeds 1,000 deals across 60 sources and
+      # measures the two parallel reads' true server execution (EXPLAIN ANALYZE) plus
+      # the pure sourcePerformance() compose, failing the build if the budget is missed.
+      - name: Source Performance perf harness (self-skips without live credentials)
+        run: pnpm run perf:source-performance
+
+      # Also typechecks — `next build` runs tsc, which is what enforces the
+      # money-safe types (a float in a rate column fails to compile).
+      - name: Build
+        run: pnpm run build
+
+  # ---------------------------------------------------------------------------
+  # M10.5 CI hardening — the two §9 journey scripts (AC1 import, AC2 fresh-start)
+  # plus the AC12 mobile variant, run against a PRODUCTION build server, not
+  # `next dev`.
+  #
+  # WHY a prod server (the M10.4 recommendation): `next dev` recompiles a route on
+  # first hit, and a server-action POST that races that compile fails with "an
+  # unexpected response was received from the server" — a harness artifact, not a
+  # product bug. `next build` + `next start` serves prebuilt routes, so that flake
+  # class does not exist. The journeys assert the §9 acceptance anchor (dashboard
+  # ties to the sheet to the centavo) and the <10-min wizard NFR — they must not be
+  # muddied by dev-server noise. playwright.config.ts drives this via E2E_PROD=1
+  # (baseURL → :3100, its webServer runs `next start -p 3100` on the .next-build
+  # output, zero local retries because the race is gone).
+  #
+  # GATED: this job needs a REAL Supabase project (the journeys provision throwaway
+  # users via the admin API and import the workbook). It runs only when the repo
+  # sets the `RUN_E2E` variable to "true" AND provides the E2E_* secrets — so on a
+  # fork or a secret-less repo it is skipped and the `verify` job above remains the
+  # whole of CI. To enable: set repo variable RUN_E2E=true and secrets
+  # E2E_SUPABASE_URL / E2E_SUPABASE_ANON_KEY / E2E_SUPABASE_SERVICE_ROLE_KEY (a
+  # DISPOSABLE project — the journeys write real rows, then delete their own users;
+  # delta-residue is zero, but never point this at production data).
+  #
+  # To widen coverage to the WHOLE e2e suite against the prod server, change the
+  # journeys path below to `pnpm run test:e2e:prod` (runs every tests/e2e spec at
+  # :3100). We default to the journeys because they are the high-value acceptance
+  # proof and keep the gated job fast; the rest of the suite is exercised locally
+  # against the dev server (see tests/e2e/README.md and playwright.config.ts).
+  e2e-prod:
+    runs-on: ubuntu-latest
+    if: ${{ vars.RUN_E2E == 'true' }}
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser (chromium)
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The journey specs read .env.local for the admin (service-role) client they
+      # use to provision + delete throwaway users. Write it from the gated secrets.
+      - name: Write .env.local for the journey admin client
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.E2E_SUPABASE_URL }}"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.E2E_SUPABASE_ANON_KEY }}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3100"
+          } > .env.local
+
+      # Production build into .next-build — the exact dir the :3100 server reads.
+      - name: Production build
+        run: pnpm run build:check
+
+      # Run the journeys against the prod server (playwright.config's webServer
+      # starts `next start -p 3100` and waits for /login before the specs run — that
+      # readiness gate doubles as a route pre-warm).
+      - name: E2E journeys (AC1 import, AC2 fresh-start, AC12 mobile) — prod server
+        run: pnpm run test:journeys
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

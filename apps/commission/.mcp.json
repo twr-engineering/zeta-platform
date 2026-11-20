@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--access-token", "${SUPABASE_ACCESS_TOKEN}"]
+    },
+    "vercel": {
+      "command": "npx",
+      "args": ["-y", "mcp-vercel"],
+      "env": {
+        "VERCEL_TOKEN": "${VERCEL_TOKEN}"
+      }
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-tools@latest", "mcp"]
+    }
+  }
+}

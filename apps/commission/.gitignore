@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+# Scratch dir for `pnpm run build:check` — a verification build that must not
+# clobber a running dev server's .next. See next.config.ts.
+.next-build/
+out/
+build/
+dist/
+
+# Environment variables (keep .env.local — needed for disaster recovery in private repos)
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+
+# Service account keys - NEVER COMMIT
+*-service-account.json
+service-account*.json
+*-firebase-adminsdk-*.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+# Playwright MCP scratch — a page snapshot + console log per browser tool call.
+# Also excluded from the dev watcher in next.config.ts: these are rewritten on
+# every browser step, and watching them makes the dev server recompile in a loop.
+.playwright-mcp/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# Supabase CLI scratch — local link state and cached version info, never shared.
+# Migrations under supabase/migrations/ ARE tracked.
+supabase/.temp/
+supabase/.branches/
+
+# Misc
+*.pem
+*.log
+Thumbs.db
+
+# Worktree state (managed by ARIA)
+.worktree-state.json
+worktrees/
+ZETA_GCI_SaaS_Handoff_Package_v4_solo/
+
+# Real secrets live here — untracked (template's tracked-env convention overridden 2026-07-17)
+.env.local

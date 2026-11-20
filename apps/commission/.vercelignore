@@ -1,0 +1,22 @@
+# Local build outputs (Vercel builds fresh)
+.next
+.next-build
+tsconfig.tsbuildinfo
+
+# Test/QA artifacts
+.playwright-mcp
+playwright-report
+test-results
+tests
+
+# Source material & pipeline docs (not app code)
+discovery
+design
+prd
+docs
+ZETA_GCI_SaaS_Handoff_Package_v4_solo
+
+# Local tooling
+.claude
+scripts
+supabase/.temp
