@@ -27,7 +27,9 @@ const nextConfig: NextConfig = {
     return webpackConfig
   },
   turbopack: {
-    root: path.resolve(dirname),
+    // Monorepo root, not this app: pnpm's store (node_modules/.pnpm) and packages/* live
+    // there, and Turbopack resolves nothing outside its root.
+    root: path.resolve(dirname, '../..'),
   },
 }
 

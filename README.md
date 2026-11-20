@@ -13,7 +13,7 @@ The client-app PRD template is in [`docs/platform/client-apps/`](docs/platform/c
 ## Commands
 
 ```sh
-pnpm install            # all apps (each app keeps its own lockfile for now, see docs/platform/Architecture.md ADR-19)
+pnpm install            # all apps, one shared lockfile at the root
 pnpm cms dev            # runs `dev` in apps/cms
 pnpm commission dev     # runs `dev` in apps/commission
 ```
