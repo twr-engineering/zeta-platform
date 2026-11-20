@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/cloud/session-start.sh\"",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm pending)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm sync:crm)",
+      "Bash(pnpm generate:types)",
+      "Bash(pnpm generate:importmap)",
+      "Bash(pnpm payload migrate)",
+      "Bash(pnpm payload migrate:status)",
+      "Bash(pnpm payload migrate:create:*)"
+    ],
+    "deny": [
+      "Bash(pnpm payload migrate:fresh:*)",
+      "Bash(pnpm payload migrate:reset:*)",
+      "Read(./.env)"
+    ]
+  }
+}

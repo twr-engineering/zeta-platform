@@ -1,0 +1,707 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "185",
+    "property_type_id": "2",
+    "reference_no": "ZTP185",
+    "infocasa_reference_no": "spn_185_infocasa_fLZXhT06_520243",
+    "address": "125",
+    "property_for": "Sale",
+    "zipcode": "6015",
+    "latitude": "10.3079907",
+    "longitude": "124.0128793",
+    "complex_lat": "10.3079907",
+    "complex_long": "124.0128793",
+    "bedrooms": "2",
+    "bathrooms": "2",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "482",
+    "province_id": "4673",
+    "municipality_id": "25597",
+    "town_id": "43154",
+    "complex_id": "125",
+    "complex_name": "La Victoria Global Residences",
+    "storeys": "0",
+    "floor_number": "",
+    "built_size": "79.50",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "2024",
+    "kitchens": "1",
+    "is_private": "0",
+    "dining_rooms": "1",
+    "living_rooms": "1",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Central Visayas",
+    "provience_name": "Cebu",
+    "municipality_name": "Lapu-Lapu City",
+    "city_name": "Mactan",
+    "property_for_id": "1",
+    "price": "18100000",
+    "default_price": "18100000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "38",
+    "property_sub_sub_type_id": null,
+    "property_name": "Residential",
+    "property_sub_name": "Condominium",
+    "property_sub_sub_name": null,
+    "sale_detail_type_id": "2",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "LaVictoria Global Residences in Mactan Newtown",
+    "short_description": "",
+    "description": "La Victoria Global Residences is a project that pays homage to history with designs inspired from pre-colonial Mactan and traditional Spanish architecture. With its collection of 181 luxury condo units, ranging from 37 sqm to 117 square meters. It is a low density project with only 12 units per floor. The principal architect and interior design consultant is Design Alliance and it will be Mactan Newtown's hallmark of timeless elegance.\r\n\r\nThe project is located in Newtown Boulevard, The Mactan Newtown, Lapu-Lapu City, Cebu with a total land area of 2,829 sqm. La Victoria Global Residences will have 1 building at 20 storeys – 16 floors for residential, 2 floors for parking space, the ground floor for commercial and the 2nd floor for its amenities area. Target turn over is 2024. Quick disclaimer, Turn over dates may change since delays can happen and is actually quite common in construction.\r\n\r\nBuilding Facilities and Services\r\nResidential lobby with reception counter and lounge area\r\nTwo passenger elevators\r\nSecurity command center for 24-hour monitoring of all building facilities\r\nVideo-phone security system connecting reception / security counter to all units\r\nCentralized mail room\r\nClosed Circuit TV (CCTV) monitoring for selected areas\r\nRetail Spaces\r\nAutomatic heat/ smoke detection and fire sprinkler system to all units\r\nOverhead tank and underground cistern for ample water supply\r\nStandby power generator for selected common areas and residential units' specified areas\r\n\r\nExecutive 2 Bedroom w/ Balcony (10th Floor) – Tower 1\r\n\r\nUnit size: 79.50 sqm\r\nTotal contract Price: 18.1M\r\nReservation fee: 25,000\r\nEquity 5%: 75k for 12 months\r\nEquity 10%: 150k for 12 months\r\nEquity 20%: 301k for 12 months\r\nBank 65%: 112k/mo for 15 years (8%)\r\nAmenities and Leisure Facilities\r\n\r\nShip Playground\r\nCovered Pool\r\nWood Sunbathing Deck\r\nGym\r\nTrellis\r\nFunction Room\r\nUrn Fountain\r\nDaycare Center\r\n3rd Floor Amenity Deck\r\n*Disclaimer: Prices may change without prior notice. Contact me for an updated inventory and computation",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "New Development",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2024-07-19 04:34:02",
+    "agent": "",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": null,
+    "attribute": {
+     "condition": {
+      "newly constructed": "Newly Constructed"
+     },
+     "furnishing": {
+      "fully finished": "Fully Finished"
+     },
+     "is foreclosed?": {
+      "no": "No"
+     },
+     "pool": {
+      "community pool": "Community Pool"
+     },
+     "views": {
+      "sea": "Sea",
+      "amenity": "Amenity",
+      "city": "City"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": {
+     "4": "Community Pool"
+    }
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": {
+     "100": "Fully Finished"
+    }
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": {
+     "113": "Newly Constructed"
+    }
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": []
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": {
+     "134": "Amenity",
+     "135": "City",
+     "132": "Sea"
+    }
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "95": "Beaches",
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "96": "Nightclubs",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "104": "Accessible  To Public Transportation",
+     "102": "Good Road Access",
+     "101": "Near Airport",
+     "103": "Near Motorway"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "114": "Basketball Court",
+     "110": "CCTV in Common Areas",
+     "117": "Clubhouse",
+     "147": "Gym",
+     "116": "Playground",
+     "112": "Privately Gated",
+     "141": "Spacious Driveways",
+     "109": "Swimming Pool"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "150": "Business District",
+     "127": "City Centre",
+     "121": "Tourist area"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06266-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zbhlwshdn_20240515042720.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zbhlwshdn_20240515042720.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zbhlwshdn_20240515042720.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06272-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_13kcenepty_20240515042723.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_13kcenepty_20240515042723.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_13kcenepty_20240515042723.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06284-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1vgqqcxprs_20240515042725.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1vgqqcxprs_20240515042725.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1vgqqcxprs_20240515042725.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06279-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1sifkgv1qf_20240515042724.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1sifkgv1qf_20240515042724.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1sifkgv1qf_20240515042724.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06261",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1csrwtzbby_20240515042722.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1csrwtzbby_20240515042722.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1csrwtzbby_20240515042722.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06270-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1hhyayem0m_20240515042721.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1hhyayem0m_20240515042721.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1hhyayem0m_20240515042721.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06268-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ipaah7lfj_20240515042719.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ipaah7lfj_20240515042719.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ipaah7lfj_20240515042719.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06258-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_19o00nkfgu_20240515042718.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_19o00nkfgu_20240515042718.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_19o00nkfgu_20240515042718.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "KRB06255-Enhanced-NR",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1zbmewv3km_20240515042717.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1zbmewv3km_20240515042717.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1zbmewv3km_20240515042717.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Deferred Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Bank Financing"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Clean"
+    },
+    {
+     "name": "Title Status",
+     "value": "Under Developer"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "4.03",
+    "latitude": "10.3131063",
+    "longitude": "123.976449",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/airport-71.png",
+    "location_name": "Mactan-Cebu International Airport"
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "2.03",
+    "latitude": "10.2899758",
+    "longitude": "124.0097217",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Inflatable Island - Cebu"
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "0.74",
+    "latitude": "10.3080803",
+    "longitude": "124.0196657",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/atm-71.png",
+    "location_name": "BDO ATM"
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "2.31",
+    "latitude": "10.2901162",
+    "longitude": "124.0021314",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "JANELLE'S BAKESHOP"
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "3.22",
+    "latitude": "10.2845574",
+    "longitude": "123.9956155",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bank-71.png",
+    "location_name": "Philippine National Bank"
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "0.44",
+    "latitude": "10.3106662",
+    "longitude": "124.0099321",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bar-71.png",
+    "location_name": "Holland Heineken Lounge & Sport Bar by Café Cappuccino"
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "2.02",
+    "latitude": "10.293877",
+    "longitude": "124.0012279",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Balay ni Manicurista"
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "3.87",
+    "latitude": "10.316577",
+    "longitude": "123.978638",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bus-71.png",
+    "location_name": "Mactan Cebu International Airport Terminal"
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "2.24",
+    "latitude": "10.29384",
+    "longitude": "123.9982566",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/cafe-71.png",
+    "location_name": "Cafe Soom"
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "0.32",
+    "latitude": "10.3085381",
+    "longitude": "124.0100402",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/worship_general-71.png",
+    "location_name": "Sto. Niño De Cebu-Mactan Parish"
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "5.32",
+    "latitude": "10.3166903",
+    "longitude": "123.9650708",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Lapu-Lapu City Hall"
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "0.43",
+    "latitude": "10.3107234",
+    "longitude": "124.0100698",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "258 Convenience Store - Mactan"
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "5.34",
+    "latitude": "10.2902321",
+    "longitude": "123.9675527",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "Department Store"
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "4.95",
+    "latitude": "10.2661822",
+    "longitude": "123.997295",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "GENERIKA DRUGSTORE"
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "0.23",
+    "latitude": "10.309042",
+    "longitude": "124.0110926",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Bureau Of Fire Protection"
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "1.46",
+    "latitude": "10.3147902",
+    "longitude": "124.0014827",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/gas_station-71.png",
+    "location_name": "Shell"
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "0.07",
+    "latitude": "10.3078109",
+    "longitude": "124.0135097",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Nast Fitness Center"
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "0.22",
+    "latitude": "10.3099252",
+    "longitude": "124.0123561",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png",
+    "location_name": "Estardo's Birthing Home"
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "4.33",
+    "latitude": "10.2928787",
+    "longitude": "123.9763516",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "IAU Library"
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "1.84",
+    "latitude": "10.2964901",
+    "longitude": "124.0007309",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Barangay Mactan Waiting Shed Soong I"
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "0.10",
+    "latitude": "10.3081488",
+    "longitude": "124.0138237",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/museum-71.png",
+    "location_name": "Mactan World Museum (Soon)"
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "1.58",
+    "latitude": "10.3116006",
+    "longitude": "123.9989059",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png",
+    "location_name": "Balay ni Brolyo"
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "0.49",
+    "latitude": "10.3107269",
+    "longitude": "124.0093547",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png",
+    "location_name": "Luisito Pharmacy"
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "0.26",
+    "latitude": "10.307794",
+    "longitude": "124.0105027",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Police Assistance Center - Tourist"
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "2.10",
+    "latitude": "10.317894",
+    "longitude": "123.9965351",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Buaya Elementary School"
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "0.47",
+    "latitude": "10.3063702",
+    "longitude": "124.0089079",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Layover Restobar"
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "2.62",
+    "latitude": "10.3065978",
+    "longitude": "123.988926",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Bankal Elementary School"
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "1.05",
+    "latitude": "10.3095653",
+    "longitude": "124.0033898",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Mactan National High School"
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "0.25",
+    "latitude": "10.3073855",
+    "longitude": "124.0150462",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "One Pacific Square"
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "2.59",
+    "latitude": "10.290321",
+    "longitude": "123.9974123",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "THE MART CEBU"
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "1.83",
+    "latitude": "10.3172227",
+    "longitude": "124.0267473",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "University of the Visayas Practicum Training Site"
+   }
+  ],
+  "price_history": []
+ }
+}

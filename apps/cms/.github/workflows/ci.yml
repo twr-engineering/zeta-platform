@@ -1,0 +1,66 @@
+name: CI
+
+# Runs on every PR and on main. main has no branch protection, so a red check does not block a
+# merge — read it before merging. A failing tests/parity case is a finding, never a re-baseline.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: zeta
+          POSTGRES_PASSWORD: zeta
+          POSTGRES_DB: zeta_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U zeta" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URI: postgres://zeta:zeta@127.0.0.1:5432/zeta_ci
+      PAYLOAD_SECRET: ci-only-not-a-secret
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Tests (parity + unit)
+        run: pnpm test
+
+      - name: Migrate
+        run: pnpm payload migrate
+      # Dev auto-push is off, so a collection change without a committed migration would ship a
+      # schema the database never gets. --skip-empty writes a file only when the schema drifted.
+      - name: Schema matches committed migrations
+        run: |
+          pnpm payload migrate:create drift-check --skip-empty
+          if [ -n "$(git status --porcelain src/migrations)" ]; then
+            echo "::error::Collections changed without a migration. Run: pnpm payload migrate:create <name>"
+            git status --porcelain src/migrations
+            exit 1
+          fi
+      - name: Seed from fixtures
+        run: pnpm sync:crm
+      # Dev mode hides route-config errors that only next build rejects.
+      - name: Build
+        run: pnpm build

@@ -1,0 +1,10 @@
+import type { CollectionConfig } from 'payload'
+import { slugField } from '../fields/slug'
+
+/** 50 terms, flat (PRD §2.3). */
+export const Tags: CollectionConfig = {
+  slug: 'tags',
+  admin: { useAsTitle: 'name', group: 'Editorial' },
+  access: { read: () => true },
+  fields: [{ name: 'name', type: 'text', required: true }, ...slugField()],
+}

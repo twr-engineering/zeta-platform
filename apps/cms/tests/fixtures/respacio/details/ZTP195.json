@@ -1,0 +1,638 @@
+{
+ "status": "success",
+ "currency_converter": {
+  "EUR": "1.0000000000",
+  "USD": "1.1687567934",
+  "PHP": "72.1823096972"
+ },
+ "is_record": 1,
+ "message": "Get property details successful",
+ "default_currency_code": "PHP",
+ "default_currency_symbol": "₱",
+ "currency_code": "PHP",
+ "currency": "₱",
+ "data": {
+  "property_details": [
+   {
+    "id": "195",
+    "property_type_id": "2",
+    "reference_no": "ZTP195",
+    "infocasa_reference_no": "spn_195_infocasa_1gQMqvy6_520243",
+    "address": "42",
+    "property_for": "Sale",
+    "zipcode": "9000",
+    "latitude": "8.4546363961253",
+    "longitude": "124.62603703387",
+    "complex_lat": "8.4546363961253",
+    "complex_long": "124.62603703387",
+    "bedrooms": "1",
+    "bathrooms": "1",
+    "priority": "0",
+    "toilet": "0",
+    "country_id": "113",
+    "state_id": "485",
+    "province_id": "4689",
+    "municipality_id": "25956",
+    "town_id": "50354",
+    "complex_id": "42",
+    "complex_name": "Verona Apartments",
+    "storeys": "4",
+    "floor_number": "",
+    "built_size": "24",
+    "living_area": "0",
+    "terrance_size": "0",
+    "storage_area": "0",
+    "basement_area": "0",
+    "parking_area": "0",
+    "built_year": "2024",
+    "kitchens": "1",
+    "is_private": "0",
+    "dining_rooms": "1",
+    "living_rooms": "1",
+    "is_featured": "0",
+    "available_from": "2026-08-21",
+    "plot_size": "",
+    "community_fees_monthly": "",
+    "local_tax_yearly": "",
+    "country_name": "Philippines",
+    "state_name": "Northern Mindanao",
+    "provience_name": "Misamis Oriental",
+    "municipality_name": "Cagayan de Oro City",
+    "city_name": "Balulang",
+    "property_for_id": "1",
+    "price": "2300000",
+    "default_price": "2300000",
+    "currency_symbol": "₱",
+    "currency_name": "Peso",
+    "currency_code": "PHP",
+    "property_sub_type_id": "10",
+    "property_sub_sub_type_id": "90",
+    "property_name": "Residential",
+    "property_sub_name": "Apartment",
+    "property_sub_sub_name": "Multi Unit",
+    "sale_detail_type_id": "2",
+    "net_price_currency": "₱",
+    "marketing_channel_array": null,
+    "property_title": "Verona Walk-up Apartment in Cagayan de Oro City",
+    "short_description": "",
+    "description": "Verona Green Apartments is IDC’s first economic housing project in Cagayan de Oro City. This is a mixed-use, four-storey, low-rise, walk-up apartment located in Uptown CDO, just across SM City Mall and Pueblo Business Park. It is also right beside upcoming Manresa Township which is going to be one of the biggest projects to be launched in the Uptown area. This would be an ideal investment for those who have kids going to school in Xavier University and at a more affordable price point.\r\n\r\nThe project is composed of 2 phases.  Phase 1 is targeted to be turned over in 2024. While phase 2 target turn over is 2026. As you can see, Italpinas opted for a more lively look with their buildings sporting a variety of colors – orange, yellow, green and maroon. The buildings will also be utilizing innovative green technology similar to their previous projects.\r\n\r\nTotal Package Price:      2.3M\r\nReservation fee:            10,000 \r\nRequired income:          40,000 – 50,000\r\n\r\nEquity is at 10% - 5% payable in 14 months and the other 5% payable in balloon payment\r\n5% Equity:                    7,385.71 for 14 months\r\n5% Balloon Payment:    113,400.00\r\n90% Bank Financing:      15,903.00/mo for 20 years 7%\r\n90% HDMF Financing:    12,797.00/mo for 30 years for 6.375%\r\n\r\n*Disclaimer: Prices may change without prior notice. Contact me for an updated inventory and computation",
+    "feature_list": "",
+    "meta_descriptions": "",
+    "seo_title": "",
+    "friendly_url": "",
+    "rent_payment_name": null,
+    "rent_gap_name": null,
+    "energy_consumptions": "",
+    "energy_grade": "",
+    "energy_co2_emissions": "",
+    "co2_grade": "",
+    "sale_detail_type": "New Development",
+    "rental_period_month": null,
+    "other_montly_expense": null,
+    "payment": null,
+    "admin_fees": "",
+    "peak": null,
+    "medium": null,
+    "high": null,
+    "low": null,
+    "rent_amount_period": null,
+    "max_adult": "0",
+    "max_children": "0",
+    "max_infants": "0",
+    "min_nights": "0",
+    "min_date": "2026-08-21",
+    "max_date": "2028-08-21",
+    "energy_creation_date": "0000-00-00",
+    "energy_exipry_date": "0000-00-00",
+    "commission_paid_by_buyer": "[redacted]",
+    "buyer_commission_amount": "[redacted]",
+    "buyer_commission_percentage": "[redacted]",
+    "buyer_tax_type": "[redacted]",
+    "buyer_tax_percentage": "[redacted]",
+    "buyer_tax_amount": "[redacted]",
+    "buyer_final_commission": "[redacted]",
+    "commission_paid_by_seller": "[redacted]",
+    "seller_commission_amount": "[redacted]",
+    "seller_commission_percentage": "[redacted]",
+    "seller_tax_type": "[redacted]",
+    "seller_tax_percentage": "[redacted]",
+    "seller_tax_amount": "[redacted]",
+    "seller_final_commission": "[redacted]",
+    "modified_date": "2024-07-18 07:42:35",
+    "agent": "Alessandra Victoria Zeta Guingao",
+    "agent_phone": "[redacted]",
+    "agent_image": "[redacted]",
+    "agent_email": "[redacted]",
+    "landline_number": "[redacted]",
+    "agent_short_description": "[redacted]",
+    "agent_id": "4",
+    "attribute": {
+     "condition": {
+      "newly constructed": "Newly Constructed"
+     },
+     "furnishing": {
+      "fully finished": "Fully Finished"
+     },
+     "is foreclosed?": {
+      "no": "No"
+     }
+    }
+   }
+  ],
+  "attributes": [
+   {
+    "name": "Pool",
+    "is_multiple": "1",
+    "Pool": []
+   },
+   {
+    "name": "Telecoms & Security",
+    "is_multiple": "1",
+    "Telecoms & Security": []
+   },
+   {
+    "name": "Orientation",
+    "is_multiple": "1",
+    "Orientation": []
+   },
+   {
+    "name": "Exterior Features",
+    "is_multiple": "1",
+    "Exterior Features": []
+   },
+   {
+    "name": "Rooms",
+    "is_multiple": "1",
+    "Rooms": []
+   },
+   {
+    "name": "Furnishing",
+    "is_multiple": "1",
+    "Furnishing": {
+     "100": "Fully Finished"
+    }
+   },
+   {
+    "name": "Condition",
+    "is_multiple": "",
+    "Condition": {
+     "113": "Newly Constructed"
+    }
+   },
+   {
+    "name": "Lot Type",
+    "is_multiple": "1",
+    "Lot Type": []
+   },
+   {
+    "name": "Views",
+    "is_multiple": "1",
+    "Views": []
+   },
+   {
+    "name": "Is Foreclosed?",
+    "is_multiple": "",
+    "Is Foreclosed?": {
+     "142": "No"
+    }
+   }
+  ],
+  "features": [
+   {
+    "name": "Nearby Amenities",
+    "Nearby Amenities": {
+     "149": "Government Offices",
+     "140": "Hospitals",
+     "94": "Landmarks",
+     "100": "Local shops",
+     "154": "Parks and Greenery",
+     "153": "Restaurants",
+     "97": "Schools",
+     "99": "Shopping Malls"
+    }
+   },
+   {
+    "name": "Transport",
+    "Transport": {
+     "104": "Accessible  To Public Transportation",
+     "102": "Good Road Access",
+     "103": "Near Motorway"
+    }
+   },
+   {
+    "name": "Community",
+    "Community": {
+     "151": "24/7 Security",
+     "110": "CCTV in Common Areas",
+     "112": "Privately Gated"
+    }
+   },
+   {
+    "name": "Location",
+    "Location": {
+     "125": "Near Schools"
+    }
+   }
+  ],
+  "marketing_channels": [],
+  "marketing_features": [],
+  "photos": [
+   {
+    "attachment_type": "Photos",
+    "file_name": "436449998_761382462543913_5165044305137188531_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1oymgusm2x_20240515071315.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1oymgusm2x_20240515071315.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1oymgusm2x_20240515071315.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "348356551_642252824012214_1410107727441631347_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1qmtqt4ve2_20240515071319.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1qmtqt4ve2_20240515071319.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1qmtqt4ve2_20240515071319.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "434140750_1506534086937435_6984131625430010156_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1dbfrtzj9k_20240515071318.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1dbfrtzj9k_20240515071318.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1dbfrtzj9k_20240515071318.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "436618578_423432383880229_6110330273712190683_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1ttmvgkvy7_20240515071317.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1ttmvgkvy7_20240515071317.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1ttmvgkvy7_20240515071317.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   },
+   {
+    "attachment_type": "Photos",
+    "file_name": "436486182_1780740435670331_6922619955620843221_n",
+    "file_type": "jpg",
+    "big_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/detail_image/property_attachment_1jctzoaala_20240515071316.jpg",
+    "full_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/big_image/property_attachment_1jctzoaala_20240515071316.jpg",
+    "small_image_path": "https://s3.eu-west-3.amazonaws.com/respacio-b6f2533a04ad44064505dafc89e3aa54/property_attachment/medium_image/property_attachment_1jctzoaala_20240515071316.jpg",
+    "title": null,
+    "alt_text": null,
+    "description": null
+   }
+  ],
+  "documents": [],
+  "logo": [],
+  "video": [],
+  "panoramic": [],
+  "floor_plans": [],
+  "iframe_url": [],
+  "vimeo_url": [],
+  "property_custom_fields": [],
+  "additional_services": [],
+  "contract_period": [],
+  "assign_user": "[redacted]",
+  "property_sizes": [],
+  "unique_selling_point": [],
+  "marketing_feature_en": [],
+  "custom_property_fields": {
+   "payment terms": [
+    {
+     "name": "Payment Terms",
+     "value": "Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Deferred Cash"
+    },
+    {
+     "name": "Payment Terms",
+     "value": "Bank Financing"
+    }
+   ],
+   "title status": [
+    {
+     "name": "Title Status",
+     "value": "Clean"
+    },
+    {
+     "name": "Title Status",
+     "value": "Under Developer"
+    }
+   ]
+  },
+  "rental_rates": [],
+  "nearest_location": [
+   {
+    "id": "2",
+    "label": "Airport",
+    "value": "7.54",
+    "latitude": "8.4900796",
+    "longitude": "124.5675692",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/airport-71.png",
+    "location_name": "crew ship landing center"
+   },
+   {
+    "id": "3",
+    "label": "Amusement Park",
+    "value": "2.93",
+    "latitude": "8.475783",
+    "longitude": "124.6419703",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Brgy 1 Cathedral Park, Gov Ysalina Bridge, Cagayan de Oro City Misamis Oriental, Mindanao"
+   },
+   {
+    "id": "6",
+    "label": "Atm",
+    "value": "0.25",
+    "latitude": "8.4556677",
+    "longitude": "124.6239883",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/atm-71.png",
+    "location_name": "BPI ATM - SM City CDO Uptown"
+   },
+   {
+    "id": "7",
+    "label": "Bakery",
+    "value": "1.67",
+    "latitude": "8.4681005",
+    "longitude": "124.6327",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "FREMART & JIMCHING BAKERY"
+   },
+   {
+    "id": "8",
+    "label": "Bank",
+    "value": "0.65",
+    "latitude": "8.4542363",
+    "longitude": "124.6318977",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bank-71.png",
+    "location_name": "ANTRECCO KIBUNGSOD BRANCH"
+   },
+   {
+    "id": "9",
+    "label": "Bar",
+    "value": "0.38",
+    "latitude": "8.4547758",
+    "longitude": "124.6225821",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bar-71.png",
+    "location_name": "De Kalsada Restobar Uptown"
+   },
+   {
+    "id": "10",
+    "label": "Beauty Salon",
+    "value": "0.88",
+    "latitude": "8.4588076",
+    "longitude": "124.6192691",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Beauty Luxe Salon Uptown"
+   },
+   {
+    "id": "14",
+    "label": "Bus Station",
+    "value": "0.30",
+    "latitude": "8.4565961",
+    "longitude": "124.6241075",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/bus-71.png",
+    "location_name": "SM TRANSPORT TERMINAL"
+   },
+   {
+    "id": "15",
+    "label": "Cafe",
+    "value": "0.46",
+    "latitude": "8.4525853",
+    "longitude": "124.6296816",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/cafe-71.png",
+    "location_name": "Café Corner"
+   },
+   {
+    "id": "23",
+    "label": "Church",
+    "value": "0.79",
+    "latitude": "8.4553127",
+    "longitude": "124.6189028",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/worship_general-71.png",
+    "location_name": "St. Francis Xavier Parish Church"
+   },
+   {
+    "id": "24",
+    "label": "City Hall",
+    "value": "2.97",
+    "latitude": "8.4763701",
+    "longitude": "124.6416723",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "The Executive Building (Old City Hall)"
+   },
+   {
+    "id": "26",
+    "label": "Convenience Store",
+    "value": "0.34",
+    "latitude": "8.4543759",
+    "longitude": "124.6229453",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "7-Eleven"
+   },
+   {
+    "id": "29",
+    "label": "Department Store",
+    "value": "0.29",
+    "latitude": "8.4555245",
+    "longitude": "124.623528",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM Store CDO Uptown - Fashion Wing"
+   },
+   {
+    "id": "31",
+    "label": "Drugstore",
+    "value": "0.40",
+    "latitude": "8.4561426",
+    "longitude": "124.6226902",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "Oro Theraputic Center"
+   },
+   {
+    "id": "35",
+    "label": "Fire Station",
+    "value": "0.57",
+    "latitude": "8.4507528",
+    "longitude": "124.622625",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Pueblo Security and Fire Station"
+   },
+   {
+    "id": "39",
+    "label": "Gas Station",
+    "value": "0.54",
+    "latitude": "8.4507391",
+    "longitude": "124.6231631",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/gas_station-71.png",
+    "location_name": "Shell"
+   },
+   {
+    "id": "40",
+    "label": "Gym",
+    "value": "0.74",
+    "latitude": "8.4488203",
+    "longitude": "124.6227161",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+    "location_name": "CDO Boxing Gym - Uptown"
+   },
+   {
+    "id": "45",
+    "label": "Hospital",
+    "value": "1.18",
+    "latitude": "8.4450528",
+    "longitude": "124.6214652",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png",
+    "location_name": "Saint Francis Doctors' Hospital and Medical Center"
+   },
+   {
+    "id": "50",
+    "label": "Library",
+    "value": "1.51",
+    "latitude": "8.4676217",
+    "longitude": "124.622057",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Books of Wisdom"
+   },
+   {
+    "id": "51",
+    "label": "Light Rail Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "53",
+    "label": "Local Government Office",
+    "value": "0.59",
+    "latitude": "8.4598498",
+    "longitude": "124.6248663",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/civic_building-71.png",
+    "location_name": "Local Governance Resource Center 10"
+   },
+   {
+    "id": "62",
+    "label": "Museum",
+    "value": "2.53",
+    "latitude": "8.4658235",
+    "longitude": "124.6460597",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/museum-71.png",
+    "location_name": "enders fund"
+   },
+   {
+    "id": "65",
+    "label": "Park",
+    "value": "0.75",
+    "latitude": "8.4539026",
+    "longitude": "124.6192702",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/park-71.png",
+    "location_name": "Balubal public Cemetery"
+   },
+   {
+    "id": "68",
+    "label": "Pharmacy",
+    "value": "1.63",
+    "latitude": "8.4677057",
+    "longitude": "124.6327985",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png",
+    "location_name": "savewise pharmacy"
+   },
+   {
+    "id": "71",
+    "label": "Police",
+    "value": "0.67",
+    "latitude": "8.4498555",
+    "longitude": "124.6223148",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Uptown PNP Police Precinct"
+   },
+   {
+    "id": "73",
+    "label": "Primary School",
+    "value": "2.19",
+    "latitude": "8.4604672",
+    "longitude": "124.6070239",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "PEDRO 'OLOY' N.ROA SR. ELEMENTARY SCHOOL"
+   },
+   {
+    "id": "75",
+    "label": "Restaurant",
+    "value": "0.49",
+    "latitude": "8.4580736",
+    "longitude": "124.6231883",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/restaurant-71.png",
+    "location_name": "Arturo´s Filipino Restaurant & Bar"
+   },
+   {
+    "id": "78",
+    "label": "School",
+    "value": "1.32",
+    "latitude": "8.4456702",
+    "longitude": "124.6338948",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "Assumption Montessori School - Balulang"
+   },
+   {
+    "id": "79",
+    "label": "Secondary School",
+    "value": "1.97",
+    "latitude": "8.4380445",
+    "longitude": "124.6323613",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "CAGAYAN DE ORO NATIONAL HIGHSCHOOL(BALULANG ANNEX"
+   },
+   {
+    "id": "81",
+    "label": "Shopping Mall",
+    "value": "0.32",
+    "latitude": "8.4558491",
+    "longitude": "124.6234008",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM City CDO Uptown"
+   },
+   {
+    "id": "87",
+    "label": "Supermarket",
+    "value": "0.37",
+    "latitude": "8.45597",
+    "longitude": "124.622966",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/shopping-71.png",
+    "location_name": "SM Supermarket - CDO Uptown"
+   },
+   {
+    "id": "91",
+    "label": "Train Station",
+    "value": null,
+    "latitude": null,
+    "longitude": null,
+    "location_icon": null,
+    "location_name": null
+   },
+   {
+    "id": "94",
+    "label": "University",
+    "value": "0.46",
+    "latitude": "8.4587726",
+    "longitude": "124.6255024",
+    "location_icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/school-71.png",
+    "location_name": "XAVIER UNIVERSITY MANRESA FARM COLLEGE OF AGRICULTURE"
+   }
+  ],
+  "price_history": []
+ }
+}
