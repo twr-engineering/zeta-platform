@@ -14,7 +14,7 @@ const GROUPS = [
 const rows = Object.entries(PENDING)
 
 if (process.argv.includes('--md')) {
-  let md = `# Pending rules\n\nGenerated from \`src/lib/parity/pending.ts\` by \`pnpm pending --md\`. Do not edit by hand.\n\nEach entry is a placeholder: the code runs an interim behaviour at the marked point and logs\n\`[parity:pending]\` once. When a rule is captured and signed in the matrix, implement it, delete\nthe entry, and let the type checker show the remaining call sites.\n`
+  let md = `# Pending rules\n\nGenerated from \`packages/parity/src/pending.ts\` by \`pnpm pending --md\`. Do not edit by hand.\n\nEach entry is a placeholder: the code runs an interim behaviour at the marked point and logs\n\`[parity:pending]\` once. When a rule is captured and signed in the matrix, implement it, delete\nthe entry, and let the type checker show the remaining call sites.\n`
   for (const [key, title] of GROUPS) {
     const group = rows.filter(([, r]) => r.blockedOn === key)
     md += `\n## ${title} (${group.length})\n\n| Id | Refs | Needed | Unblocks when | Interim |\n|---|---|---|---|---|\n`

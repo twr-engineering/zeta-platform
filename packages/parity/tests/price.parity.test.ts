@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatPrice } from '../../src/lib/price'
+import { formatPrice } from '../src/price'
 
 /**
  * BPM-008 price display. These are regression guards derived from format_price's source,

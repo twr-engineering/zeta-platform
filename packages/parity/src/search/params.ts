@@ -1,4 +1,4 @@
-import { pending } from '@/lib/parity/pending'
+import { pending } from '../pending'
 
 /**
  * Search URL contract — FR-SR01..SR05. The query string of /search_results/ is FROZEN:

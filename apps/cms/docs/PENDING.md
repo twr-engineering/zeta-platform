@@ -1,6 +1,6 @@
 # Pending rules
 
-Generated from `src/lib/parity/pending.ts` by `pnpm pending --md`. Do not edit by hand.
+Generated from `packages/parity/src/pending.ts` by `pnpm pending --md`. Do not edit by hand.
 
 Each entry is a placeholder: the code runs an interim behaviour at the marked point and logs
 `[parity:pending]` once. When a rule is captured and signed in the matrix, implement it, delete

@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   // WordPress URLs end in '/', and the URL space is frozen (FR-SE01..SE13): /r/ZTP345/,
   // /search_results/, /buy/. Without this every legacy link 308s to a slashless form.
   trailingSlash: true,
+  // Workspace packages ship TypeScript source (Phase 3).
+  transpilePackages: ['@zeta/parity'],
   images: {
     localPatterns: [
       {

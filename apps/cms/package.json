@@ -1,7 +1,7 @@
 {
   "name": "zeta-payload",
   "version": "0.1.0",
-  "description": "Zeta Group property portal \u2014 Payload CMS 3 + Next.js rebuild of zetagroup.ph",
+  "description": "Zeta Group property portal — Payload CMS 3 + Next.js rebuild of zetagroup.ph",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
@@ -15,8 +15,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
-    "test:parity": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/parity",
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts && pnpm --filter @zeta/parity test",
+    "test:parity": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/parity && pnpm --filter @zeta/parity test",
     "sync:crm": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/sync-crm.ts",
     "pending": "tsx scripts/pending.ts",
     "typecheck": "tsc --noEmit"
@@ -32,6 +32,7 @@
     "@payloadcms/richtext-lexical": "3.88.0",
     "@payloadcms/storage-s3": "3.88.0",
     "@payloadcms/ui": "3.88.0",
+    "@zeta/parity": "workspace:*",
     "cross-env": "10.1.0",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",

@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { bandHull, getAll, parseSearch, resolvePerPage, resolveSort, toCrmParams } from '../../src/lib/search/params'
+import { bandHull, getAll, parseSearch, resolvePerPage, resolveSort, toCrmParams } from '../src/search/params'
 
 /**
  * GOLDEN MASTER — search URL contract. BPM-002..006, BPM-012.
@@ -15,7 +15,7 @@ import { bandHull, getAll, parseSearch, resolvePerPage, resolveSort, toCrmParams
 
 type Call = { id: number; params: Record<string, string | string[]>; total: number | null; ids: string[] }
 const CALLS: Call[] = JSON.parse(
-  readFileSync(path.resolve(__dirname, '../fixtures/respacio/search-calls.json'), 'utf8'),
+  readFileSync(path.resolve(__dirname, 'fixtures/search-calls.json'), 'utf8'),
 )
 
 describe('BPM-005 band hull', () => {
