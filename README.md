@@ -14,8 +14,8 @@ Architecture, PRD and the client-app PRD template live in [`docs/platform/`](doc
 
 ```sh
 pnpm install            # all apps (each app keeps its own lockfile for now, see docs/platform/Architecture.md ADR-19)
-pnpm cms dev            # = pnpm --filter cms dev
-pnpm commission dev     # = pnpm --filter commission dev
+pnpm cms dev            # runs `dev` in apps/cms
+pnpm commission dev     # runs `dev` in apps/commission
 ```
 
 Each app's own README / CLAUDE.md still governs that app. The Parity Doctrine (`apps/cms`) and the money-engine rules (`apps/commission`) apply unchanged.
