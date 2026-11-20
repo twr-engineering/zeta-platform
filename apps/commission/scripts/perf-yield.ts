@@ -19,7 +19,7 @@
  * The fixtures are never committed: a throwaway user, rows inserted with the service
  * role, then the user is deleted (orphan reaper takes the workspace).
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { createClient } from "@supabase/supabase-js";
 
@@ -38,7 +38,11 @@ const TARGET_MS = 500; // M2 §8 / criterion 13
 function loadEnv(): Record<string, string> {
   const env: Record<string, string> = { ...(process.env as Record<string, string>) };
   try {
-    const raw = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
+    // No .env.local (CI, fresh clone) means no live credentials: return nothing so the
+  // caller's "skipped" branch runs instead of crashing on ENOENT.
+  const envFile = new URL("../.env.local", import.meta.url);
+  if (!existsSync(envFile)) return {};
+  const raw = readFileSync(envFile, "utf8");
     for (const line of raw.split("\n")) {
       const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
       if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");

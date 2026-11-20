@@ -22,7 +22,7 @@
  * workflow can call it unconditionally (the engine-side budget is proven by
  * tests/unit/perf.test.ts, which runs with no database at all).
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { createClient } from "@supabase/supabase-js";
 
@@ -40,7 +40,11 @@ const SINGLE_COMPUTE_MS = 10;
 const BULK_MS = 30_000;
 
 function loadEnv(): Record<string, string> {
-  const raw = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
+  // No .env.local (CI, fresh clone) means no live credentials: return nothing so the
+  // caller's "skipped" branch runs instead of crashing on ENOENT.
+  const envFile = new URL("../.env.local", import.meta.url);
+  if (!existsSync(envFile)) return {};
+  const raw = readFileSync(envFile, "utf8");
   const env: Record<string, string> = {};
   for (const line of raw.split("\n")) {
     const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
