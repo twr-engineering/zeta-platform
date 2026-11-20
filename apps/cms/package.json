@@ -16,6 +16,7 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts && pnpm --filter @zeta/parity test",
+    "test:db": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.db.config.mts",
     "test:parity": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/parity && pnpm --filter @zeta/parity test",
     "sync:crm": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/sync-crm.ts",
     "pending": "tsx scripts/pending.ts",
