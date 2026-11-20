@@ -1,9 +1,10 @@
 import type { GlobalConfig } from 'payload'
+import { anyone, isAdmin } from '../access'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   admin: { group: 'Settings' },
-  access: { read: () => true },
+  access: { read: anyone, update: isAdmin },
   fields: [
     { name: 'siteName', type: 'text', defaultValue: 'Zeta Group' },
     { name: 'logo', type: 'upload', relationTo: 'media' },

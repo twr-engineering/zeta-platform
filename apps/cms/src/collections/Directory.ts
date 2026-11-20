@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { anyone, isAdmin, isStaff, publishedOrStaff } from '../access'
 import { slugField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
 
@@ -9,7 +10,7 @@ import { seoGroup } from '../fields/seo'
 export const DirectoryEntries: CollectionConfig = {
   slug: 'directory',
   admin: { useAsTitle: 'name', group: 'Content' },
-  access: { read: () => true },
+  access: { read: publishedOrStaff, create: isStaff, update: isStaff, delete: isAdmin },
   versions: { drafts: true },
   fields: [
     { name: 'name', type: 'text', required: true },
@@ -26,6 +27,6 @@ export const DirectoryEntries: CollectionConfig = {
 export const DirectoryCategories: CollectionConfig = {
   slug: 'directory-categories',
   admin: { useAsTitle: 'name', group: 'Content' },
-  access: { read: () => true },
+  access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
   fields: [{ name: 'name', type: 'text', required: true }, ...slugField()],
 }

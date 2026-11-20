@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload'
+import { anyone, isAdmin } from '../access'
 
 /**
  * FR-T03 — calculator defaults become editor-configurable.
@@ -11,7 +12,7 @@ import type { GlobalConfig } from 'payload'
 export const CalculatorDefaults: GlobalConfig = {
   slug: 'calculator-defaults',
   admin: { group: 'Settings' },
-  access: { read: () => true },
+  access: { read: anyone, update: isAdmin },
   fields: [
     {
       name: 'incomeMultiple',

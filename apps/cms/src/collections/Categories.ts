@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { anyone, isAdmin, isStaff } from '../access'
 import { slugField } from '../fields/slug'
 
 /**
@@ -10,7 +11,7 @@ import { slugField } from '../fields/slug'
 export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: { useAsTitle: 'name', group: 'Editorial' },
-  access: { read: () => true },
+  access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
   fields: [
     { name: 'name', type: 'text', required: true },
     ...slugField(),

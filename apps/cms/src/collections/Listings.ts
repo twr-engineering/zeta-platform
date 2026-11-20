@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { anyone, isAdmin, isStaff } from '../access'
 import { crmOwnedField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
 
@@ -31,7 +32,9 @@ export const Listings: CollectionConfig = {
     group: 'Property',
     description: 'Mirrored from Respacio CRM. CRM-owned fields are read-only — edits here are overwritten by the next sync.',
   },
-  access: { read: () => true },
+  // Public, CRM-owned. The sync writes through the Local API; through the API editors may
+  // touch editorial fields, only admins create or delete.
+  access: { read: anyone, create: isAdmin, update: isStaff, delete: isAdmin },
   fields: [
     crmOwnedField('CRM property id. Idempotency key for the sync (FR-C01).'),
     {
