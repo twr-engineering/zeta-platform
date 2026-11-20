@@ -1,0 +1,25 @@
+{
+  "name": "@zeta/cms-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The platform Payload config: collections, globals, access rules, hooks, jobs, Respacio sync, migrations and generated types. Consumed as TypeScript source.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/payload-types.ts",
+    "./access": "./src/access/index.ts",
+    "./respacio/sync": "./src/crm/respacio/sync.ts",
+    "./respacio/mapper": "./src/crm/respacio/mapper.ts",
+    "./respacio/types": "./src/crm/respacio/types.ts"
+  },
+  "dependencies": {
+    "payload": "3.88.0",
+    "@payloadcms/db-postgres": "3.88.0",
+    "@payloadcms/plugin-nested-docs": "3.88.0",
+    "@payloadcms/plugin-redirects": "3.88.0",
+    "@payloadcms/plugin-seo": "3.88.0",
+    "@payloadcms/richtext-lexical": "3.88.0",
+    "sharp": "0.34.2",
+    "@zeta/parity": "workspace:*"
+  }
+}

@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   // /search_results/, /buy/. Without this every legacy link 308s to a slashless form.
   trailingSlash: true,
   // Workspace packages ship TypeScript source (Phase 3).
-  transpilePackages: ['@zeta/parity'],
+  transpilePackages: ['@zeta/parity', '@zeta/cms-config'],
   images: {
     localPatterns: [
       {

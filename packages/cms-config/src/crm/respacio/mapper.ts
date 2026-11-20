@@ -1,4 +1,4 @@
-import type { Listing } from '@/payload-types'
+import type { Listing } from '../../payload-types'
 
 import type { CrmListItem, CrmPhoto, CrmPropertyDetail, CrmViewResponse } from './types'
 

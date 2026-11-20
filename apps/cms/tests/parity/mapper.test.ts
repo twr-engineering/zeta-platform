@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { fromListItem, withDetail } from '../../src/crm/respacio/mapper'
+import { fromListItem, withDetail } from '@zeta/cms-config/respacio/mapper'
 
 const fx = (p: string) => JSON.parse(readFileSync(path.resolve(__dirname, '../fixtures/respacio', p), 'utf8'))
 
