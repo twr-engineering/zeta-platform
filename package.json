@@ -8,6 +8,7 @@
   "scripts": {
     "cms": "pnpm --filter ./apps/cms",
     "commission": "pnpm --filter ./apps/commission",
+    "comps": "pnpm --filter ./apps/comps",
     "lint": "pnpm -r --parallel lint",
     "typecheck": "pnpm --filter ./apps/cms typecheck",
     "test": "pnpm --filter ./apps/cms test && pnpm --filter ./apps/commission test:unit"

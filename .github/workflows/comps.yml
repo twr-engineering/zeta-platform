@@ -1,0 +1,59 @@
+name: comps
+
+# Zeta Comps (apps/comps). Uses the platform Payload config from packages/cms-config, so the
+# CMS migrations run first against the CI Postgres; then the Comps Local API tests run.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['apps/comps/**', 'packages/**', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', '.github/workflows/comps.yml']
+  push:
+    branches: [main]
+    paths: ['apps/comps/**', 'packages/**', 'pnpm-workspace.yaml', 'pnpm-lock.yaml', '.github/workflows/comps.yml']
+
+concurrency:
+  group: comps-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: zeta
+          POSTGRES_PASSWORD: zeta
+          POSTGRES_DB: zeta_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U zeta" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/comps
+    env:
+      DATABASE_URI: postgres://zeta:zeta@127.0.0.1:5432/zeta_ci
+      PAYLOAD_SECRET: ci-only-not-a-secret
+      APP_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4   # version from root package.json "packageManager"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Unit tests
+        run: pnpm test
+      - name: Migrate (CMS owns the schema)
+        run: pnpm --filter ./apps/cms payload migrate
+      - name: Local API tests
+        run: pnpm test:db
+      - name: Build
+        run: pnpm build

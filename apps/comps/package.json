@@ -1,0 +1,35 @@
+{
+  "name": "comps",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Zeta Comps: closed deals and CMA (client-apps/comps.md). Next.js on the platform Payload backend via the Local API.",
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:db": "vitest run --config ./vitest.db.config.mts"
+  },
+  "dependencies": {
+    "@payloadcms/next": "3.88.0",
+    "@zeta/cms-config": "workspace:*",
+    "next": "16.3.2",
+    "payload": "3.88.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "16.3.0",
+    "typescript": "5.9.3",
+    "vite-tsconfig-paths": "6.0.5",
+    "vitest": "4.1.6"
+  }
+}
