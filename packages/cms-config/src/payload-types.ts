@@ -81,6 +81,9 @@ export interface Config {
     'directory-categories': DirectoryCategory;
     media: Media;
     users: User;
+    'comps-locations': CompsLocation;
+    'comps-property-types': CompsPropertyType;
+    'comps-deals': CompsDeal;
     redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
@@ -104,6 +107,9 @@ export interface Config {
     'directory-categories': DirectoryCategoriesSelect<false> | DirectoryCategoriesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    'comps-locations': CompsLocationsSelect<false> | CompsLocationsSelect<true>;
+    'comps-property-types': CompsPropertyTypesSelect<false> | CompsPropertyTypesSelect<true>;
+    'comps-deals': CompsDealsSelect<false> | CompsDealsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
@@ -135,6 +141,7 @@ export interface Config {
   jobs: {
     tasks: {
       respacioSync: TaskRespacioSync;
+      compsPurgeTrash: TaskCompsPurgeTrash;
       inline: {
         input: unknown;
         output: unknown;
@@ -913,7 +920,7 @@ export interface DirectoryCategory {
 export interface User {
   id: number;
   name?: string | null;
-  roles?: ('admin' | 'editor')[] | null;
+  roles?: ('admin' | 'editor' | 'comps-admin')[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -932,6 +939,85 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-locations".
+ */
+export interface CompsLocation {
+  id: number;
+  name: string;
+  kind: 'Subdivision' | 'Zone';
+  lat: number;
+  lng: number;
+  hidden: boolean;
+  sortOrder: number;
+  createdBy?: (number | null) | User;
+  editedBy?: (number | null) | User;
+  editedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-property-types".
+ */
+export interface CompsPropertyType {
+  id: number;
+  name: string;
+  form: 'lot' | 'house' | 'condo';
+  category: 'Residential' | 'Commercial' | 'Industrial' | 'Agricultural';
+  hidden: boolean;
+  sortOrder: number;
+  createdBy?: (number | null) | User;
+  editedBy?: (number | null) | User;
+  editedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-deals".
+ */
+export interface CompsDeal {
+  id: number;
+  location?: (number | null) | CompsLocation;
+  legacyLocationName?: string | null;
+  propertyType?: (number | null) | CompsPropertyType;
+  legacyTypeName?: string | null;
+  area: number;
+  lotArea?: number | null;
+  price: number;
+  dateSold: string;
+  lat: number;
+  lng: number;
+  details?: string | null;
+  code?: string | null;
+  link?: string | null;
+  note?: string | null;
+  frontage?: number | null;
+  corner: boolean;
+  view?: 'Ridge view' | null;
+  terrain?: ('Flat' | 'Sloped' | 'Irregular') | null;
+  cond?: ('Brand new' | 'Good' | 'Needs repair') | null;
+  yearBuilt?: number | null;
+  storeys?: number | null;
+  floor?: number | null;
+  furn?: ('Furnished' | 'Semi-furnished' | 'Unfurnished') | null;
+  parkIncl?: ('Included' | 'Separate') | null;
+  beds?: number | null;
+  baths?: number | null;
+  parking?: number | null;
+  fin?: ('Cash' | 'Bank loan' | 'Pag-IBIG' | 'In-house or developer financing' | 'Other') | null;
+  asking?: number | null;
+  dom?: number | null;
+  createdBy?: (number | null) | User;
+  editedBy?: (number | null) | User;
+  editedAt?: string | null;
+  deletedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1033,7 +1119,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'respacioSync';
+        taskSlug: 'inline' | 'respacioSync' | 'compsPurgeTrash';
         taskID: string;
         input?:
           | {
@@ -1066,7 +1152,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'respacioSync') | null;
+  taskSlug?: ('inline' | 'respacioSync' | 'compsPurgeTrash') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1144,6 +1230,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'comps-locations';
+        value: number | CompsLocation;
+      } | null)
+    | ({
+        relationTo: 'comps-property-types';
+        value: number | CompsPropertyType;
+      } | null)
+    | ({
+        relationTo: 'comps-deals';
+        value: number | CompsDeal;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1675,6 +1773,82 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-locations_select".
+ */
+export interface CompsLocationsSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  lat?: T;
+  lng?: T;
+  hidden?: T;
+  sortOrder?: T;
+  createdBy?: T;
+  editedBy?: T;
+  editedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-property-types_select".
+ */
+export interface CompsPropertyTypesSelect<T extends boolean = true> {
+  name?: T;
+  form?: T;
+  category?: T;
+  hidden?: T;
+  sortOrder?: T;
+  createdBy?: T;
+  editedBy?: T;
+  editedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comps-deals_select".
+ */
+export interface CompsDealsSelect<T extends boolean = true> {
+  location?: T;
+  legacyLocationName?: T;
+  propertyType?: T;
+  legacyTypeName?: T;
+  area?: T;
+  lotArea?: T;
+  price?: T;
+  dateSold?: T;
+  lat?: T;
+  lng?: T;
+  details?: T;
+  code?: T;
+  link?: T;
+  note?: T;
+  frontage?: T;
+  corner?: T;
+  view?: T;
+  terrain?: T;
+  cond?: T;
+  yearBuilt?: T;
+  storeys?: T;
+  floor?: T;
+  furn?: T;
+  parkIncl?: T;
+  beds?: T;
+  baths?: T;
+  parking?: T;
+  fin?: T;
+  asking?: T;
+  dom?: T;
+  createdBy?: T;
+  editedBy?: T;
+  editedAt?: T;
+  deletedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -1956,6 +2130,16 @@ export interface TaskRespacioSync {
       | number
       | boolean
       | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCompsPurgeTrash".
+ */
+export interface TaskCompsPurgeTrash {
+  input?: unknown;
+  output: {
+    purged?: number | null;
   };
 }
 /**

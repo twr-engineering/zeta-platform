@@ -11,16 +11,25 @@ import { beforeAll, describe, expect, it } from 'vitest'
  *   'self' = only the user's own record
  */
 type Outcome = 'all' | 'none' | 'published' | 'self'
-type Actor = 'anon' | 'editor' | 'admin'
-type Row = Record<'read' | 'create' | 'update' | 'delete', Record<Actor, Outcome>>
+type Actor = 'anon' | 'editor' | 'comps' | 'admin'
+type Op = 'read' | 'create' | 'update' | 'delete'
+type Row = Record<Op, Record<Actor, Outcome>>
 
+// `comps` = a comps-admin user: full access to Zeta Comps, treated like a member of the public
+// everywhere else (it can still read and update its own user record).
 const PUBLIC_DRAFTED: Row = {
-  read: { anon: 'published', editor: 'all', admin: 'all' },
-  create: { anon: 'none', editor: 'all', admin: 'all' },
-  update: { anon: 'none', editor: 'all', admin: 'all' },
-  delete: { anon: 'none', editor: 'none', admin: 'all' },
+  read: { anon: 'published', editor: 'all', comps: 'published', admin: 'all' },
+  create: { anon: 'none', editor: 'all', comps: 'none', admin: 'all' },
+  update: { anon: 'none', editor: 'all', comps: 'none', admin: 'all' },
+  delete: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' },
 }
-const PUBLIC_STAFF_EDITED: Row = { ...PUBLIC_DRAFTED, read: { anon: 'all', editor: 'all', admin: 'all' } }
+const PUBLIC_STAFF_EDITED: Row = { ...PUBLIC_DRAFTED, read: { anon: 'all', editor: 'all', comps: 'all', admin: 'all' } }
+const COMPS_ONLY: Row = {
+  read: { anon: 'none', editor: 'none', comps: 'all', admin: 'all' },
+  create: { anon: 'none', editor: 'none', comps: 'all', admin: 'all' },
+  update: { anon: 'none', editor: 'none', comps: 'all', admin: 'all' },
+  delete: { anon: 'none', editor: 'none', comps: 'all', admin: 'all' },
+}
 
 const COLLECTIONS: Record<string, Row> = {
   locations: PUBLIC_DRAFTED,
@@ -37,28 +46,33 @@ const COLLECTIONS: Record<string, Row> = {
   'testimonial-categories': PUBLIC_STAFF_EDITED,
   redirects: PUBLIC_STAFF_EDITED,
   listings: {
-    read: { anon: 'all', editor: 'all', admin: 'all' },
-    create: { anon: 'none', editor: 'none', admin: 'all' },
-    update: { anon: 'none', editor: 'all', admin: 'all' },
-    delete: { anon: 'none', editor: 'none', admin: 'all' },
+    read: { anon: 'all', editor: 'all', comps: 'all', admin: 'all' },
+    create: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' },
+    update: { anon: 'none', editor: 'all', comps: 'none', admin: 'all' },
+    delete: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' },
   },
   users: {
-    read: { anon: 'none', editor: 'self', admin: 'all' },
-    create: { anon: 'none', editor: 'none', admin: 'all' },
-    update: { anon: 'none', editor: 'self', admin: 'all' },
-    delete: { anon: 'none', editor: 'none', admin: 'all' },
+    read: { anon: 'none', editor: 'self', comps: 'self', admin: 'all' },
+    create: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' },
+    update: { anon: 'none', editor: 'self', comps: 'self', admin: 'all' },
+    delete: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' },
   },
+  'comps-locations': COMPS_ONLY,
+  'comps-property-types': COMPS_ONLY,
+  // delete without data = permanent delete (admin only); trash is covered in its own test below.
+  'comps-deals': { ...COMPS_ONLY, delete: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' } },
 }
 
 const GLOBALS: Record<string, Record<'read' | 'update', Record<Actor, Outcome>>> = {
-  'site-settings': { read: { anon: 'all', editor: 'all', admin: 'all' }, update: { anon: 'none', editor: 'none', admin: 'all' } },
-  'calculator-defaults': { read: { anon: 'all', editor: 'all', admin: 'all' }, update: { anon: 'none', editor: 'none', admin: 'all' } },
-  'crm-state': { read: { anon: 'none', editor: 'all', admin: 'all' }, update: { anon: 'none', editor: 'none', admin: 'none' } },
+  'site-settings': { read: { anon: 'all', editor: 'all', comps: 'all', admin: 'all' }, update: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' } },
+  'calculator-defaults': { read: { anon: 'all', editor: 'all', comps: 'all', admin: 'all' }, update: { anon: 'none', editor: 'none', comps: 'none', admin: 'all' } },
+  'crm-state': { read: { anon: 'none', editor: 'all', comps: 'none', admin: 'all' }, update: { anon: 'none', editor: 'none', comps: 'none', admin: 'none' } },
 }
 
 const USERS: Record<Actor, PayloadRequest['user']> = {
   anon: null,
   editor: { id: 7, roles: ['editor'], collection: 'users' } as unknown as PayloadRequest['user'],
+  comps: { id: 9, roles: ['comps-admin'], collection: 'users' } as unknown as PayloadRequest['user'],
   admin: { id: 1, roles: ['admin'], collection: 'users' } as unknown as PayloadRequest['user'],
 }
 
@@ -97,7 +111,7 @@ describe('collections', () => {
       for (const [actor, expected] of Object.entries(byActor)) {
         it(`${slug}.${op} as ${actor} → ${expected}`, async () => {
           const c = config.collections.find((x) => x.slug === slug)!
-          expect(await outcome(c.access[op as keyof Row] as Access, actor as Actor)).toBe(expected)
+          expect(await outcome(c.access[op as Op] as Access, actor as Actor)).toBe(expected)
         })
       }
     }
@@ -139,5 +153,33 @@ describe('job runner', () => {
     expect(await run({ req: reqFor('admin') })).toBe(true)
     delete process.env.CRON_SECRET
     expect(await run({ req: reqFor('anon', { authorization: 'Bearer undefined' }) })).toBe(false)
+  })
+})
+
+describe('zeta comps specifics', () => {
+  it('comps staff may trash a deal (update setting deletedAt) but not permanently delete', async () => {
+    const deals = config.collections.find((c) => c.slug === 'comps-deals')!
+    const del = deals.access.delete as Access
+    const trash = (actor: Actor) => del({ req: reqFor(actor), data: { deletedAt: new Date().toISOString() } } as Parameters<Access>[0])
+    expect(await trash('comps')).toBe(true)
+    expect(await trash('editor')).toBe(false)
+    expect(await trash('anon')).toBe(false)
+    expect(await trash('admin')).toBe(true)
+  })
+
+  it('only platform staff can open the CMS admin panel (comps-admin cannot)', async () => {
+    const users = config.collections.find((c) => c.slug === 'users')!
+    const panel = users.access.admin as (args: { req: PayloadRequest }) => boolean | Promise<boolean>
+    expect(await panel({ req: reqFor('admin') })).toBe(true)
+    expect(await panel({ req: reqFor('editor') })).toBe(true)
+    expect(await panel({ req: reqFor('comps') })).toBe(false)
+    expect(await panel({ req: reqFor('anon') })).toBe(false)
+  })
+
+  it('staff logins lock after 5 failures for 15 minutes and last 30 days (Comps AUTH-003/004)', () => {
+    const auth = config.collections.find((c) => c.slug === 'users')!.auth
+    expect(auth.maxLoginAttempts).toBe(5)
+    expect(auth.lockTime).toBe(15 * 60 * 1000)
+    expect(auth.tokenExpiration).toBe(30 * 24 * 60 * 60)
   })
 })

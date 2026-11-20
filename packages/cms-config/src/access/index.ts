@@ -8,7 +8,7 @@ import type { Access, FieldAccess } from 'payload'
  * (overrideAccess), so they govern the REST/GraphQL APIs and the admin panel.
  */
 
-type Role = 'admin' | 'editor'
+type Role = 'admin' | 'editor' | 'comps-admin'
 type RoleUser = { roles?: Role[] | null } | null | undefined
 
 const hasRole = (user: RoleUser, ...roles: Role[]): boolean =>
@@ -38,3 +38,20 @@ export const adminOrSelf: Access = ({ req: { user } }) => {
 
 /** Field-level: only admins may set or change it (blocks role self-escalation). */
 export const adminFieldOnly: FieldAccess = ({ req: { user } }) => hasRole(user as RoleUser, 'admin')
+
+/** CMS admin panel: platform staff only. App-only roles (comps-admin) cannot open it. */
+export const canUseAdminPanel = ({ req: { user } }: { req: { user: unknown } }): boolean =>
+  hasRole(user as RoleUser, 'admin', 'editor')
+
+/** Zeta Comps: comps-admin, or a platform admin (client-apps/comps.md C4, C6). */
+export const isCompsStaff: Access = ({ req: { user } }) => hasRole(user as RoleUser, 'admin', 'comps-admin')
+
+/**
+ * Comps deals use trash (soft delete). Comps staff may move a deal to the trash (the app's
+ * Undo restores it); permanently deleting is admin-only (the nightly purge runs via the
+ * Local API). A trash is an update that sets deletedAt.
+ */
+export const compsTrashOrAdminDelete: Access = ({ req: { user }, data }) => {
+  if (hasRole(user as RoleUser, 'admin')) return true
+  return hasRole(user as RoleUser, 'comps-admin') && Boolean((data as { deletedAt?: unknown } | undefined)?.deletedAt)
+}

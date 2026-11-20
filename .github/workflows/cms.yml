@@ -64,6 +64,10 @@ jobs:
             git status --porcelain ../../packages/cms-config/src/migrations
             exit 1
           fi
+      # Integration tests against the migrated database (Zeta Comps data layer: DB checks,
+      # audit stamps, trash, access through the Local API).
+      - name: Database integration tests
+        run: pnpm test:db
       - name: Seed from fixtures
         run: pnpm sync:crm
       # Dev mode hides route-config errors that only next build rejects.

@@ -21,6 +21,9 @@ import { Shorts } from './collections/Shorts'
 import { Tags } from './collections/Tags'
 import { TestimonialCategories, Testimonials } from './collections/Testimonials'
 import { Users } from './collections/Users'
+import { CompsDeals } from './collections/comps/CompsDeals'
+import { CompsLocations } from './collections/comps/CompsLocations'
+import { CompsPropertyTypes } from './collections/comps/CompsPropertyTypes'
 import { anyone, isAdmin, isStaff } from './access'
 import { syncRespacio } from './crm/respacio/sync'
 import { CalculatorDefaults } from './globals/CalculatorDefaults'
@@ -68,6 +71,10 @@ export function createConfig(options: CreateConfigOptions = {}): Promise<import(
       // System
       Media,
       Users,
+      // Zeta Comps (apps/comps, client-apps/comps.md)
+      CompsLocations,
+      CompsPropertyTypes,
+      CompsDeals,
     ],
     globals: [SiteSettings, CalculatorDefaults, CrmState],
     /**
@@ -93,6 +100,26 @@ export function createConfig(options: CreateConfigOptions = {}): Promise<import(
           schedule: [{ cron: '0 * * * *', queue: 'crm' }],
           outputSchema: [{ name: 'result', type: 'json' }],
           handler: async ({ req }) => ({ output: { result: await syncRespacio(req.payload) } }),
+        },
+        {
+          /**
+           * Zeta Comps: permanently delete closed deals trashed more than 30 days ago
+           * (app PRD §13.2, Q5). 19:00 UTC = 03:00 Asia/Manila.
+           */
+          slug: 'compsPurgeTrash',
+          schedule: [{ cron: '0 19 * * *', queue: 'comps' }],
+          outputSchema: [{ name: 'purged', type: 'number' }],
+          handler: async ({ req }) => {
+            const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+            const result = await req.payload.delete({
+              collection: 'comps-deals',
+              trash: true,
+              where: { deletedAt: { less_than: cutoff } },
+              overrideAccess: true,
+              req,
+            })
+            return { output: { purged: result.docs.length } }
+          },
         },
       ],
       autoRun: process.env.ENABLE_JOB_AUTORUN === 'true' ? [{ cron: '*/5 * * * *', queue: 'crm' }] : [],
