@@ -52,7 +52,8 @@ jobs:
       - name: Unit tests
         run: pnpm test
       - name: Migrate (CMS owns the schema)
-        run: pnpm --filter ./apps/cms payload migrate
+        working-directory: apps/cms
+        run: pnpm payload migrate
       - name: Local API tests
         run: pnpm test:db
       - name: Build
