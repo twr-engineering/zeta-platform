@@ -9,3 +9,6 @@ node_modules/
 apps/cms/docs/PRD.md
 docs/platform/Architecture.md
 docs/platform/PRD.md
+
+# Client app specs and handover packs (internal product specs, prototypes, seed data): local + vault only.
+docs/apps/
