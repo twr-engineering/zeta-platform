@@ -3,6 +3,7 @@
  * Appendix A.7). Pure functions only: the server runs the same checks, in the same order,
  * with the same messages, as the browser (ADD-002), and builds the same record (§8.6.4).
  */
+import type { TypeJSON } from './data'
 import { peso } from './format'
 import { zetaCode } from './listing'
 import { median, MIN_DEALS } from './stats'
@@ -401,3 +402,9 @@ export function nearName(pin: { lat: number; lng: number }, places: PlaceLike[],
   const best = nearestPlace(pin, candidates, dist)
   return best && best.dist <= 1500 ? best.key : null
 }
+
+/** Types in select order: category groups, Settings order inside each. */
+const CATEGORY_ORDER = ['Residential', 'Commercial', 'Industrial', 'Agricultural'] as const
+export const typeOrder = (types: TypeJSON[]) => CATEGORY_ORDER.flatMap((c) => types.filter((t) => t.category === c))
+/** The first shown type in select order (the add form's and the CMA's starting type). */
+export const firstShownType = (types: TypeJSON[]) => typeOrder(types).find((t) => !t.hidden) ?? typeOrder(types)[0]

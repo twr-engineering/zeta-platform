@@ -5,6 +5,7 @@ import { create } from 'zustand'
 import type { BootstrapJSON, DealJSON, LocationJSON, TypeJSON } from './data'
 import { DEFAULT_BAR, type BarState, type Fx, type SortDir, type SortKey } from './filters'
 import type { TrendBy } from './rates'
+import { DEFAULT_CMA_SETTINGS, type CmaSettings } from './cma'
 
 /**
  * The one client store for the browser tab (app PRD §5.1). M2 holds the bootstrap data
@@ -74,6 +75,41 @@ type DataState = {
   /** The deal hovered on the map or in the list: the other side shows it too (§9.2.1). */
   hovDeal: number | null
   setHovDeal: (id: number | null) => void
+  /** The CMA subject as typed and its search settings, kept across screens (§5.1). */
+  cma: CmaForm | null
+  setCma: (f: CmaForm | null) => void
+  cmaSettings: CmaSettings
+  setCmaSettings: (s: CmaSettings) => void
+}
+
+/** The CMA property card as typed (§7.3.2). Place and type are `id:N`; sizes and numbers as typed. */
+export type CmaForm = {
+  loc: string
+  type: string
+  area: string
+  lotArea: string
+  frontage: string
+  corner: boolean
+  ridge: boolean
+  terrain: '' | 'Flat' | 'Sloped' | 'Irregular'
+  beds: string
+  baths: string
+  parking: string
+  parkIncl: '' | 'Included' | 'Separate'
+  cond: '' | 'Brand new' | 'Good' | 'Needs repair'
+  year: string
+  floor: string
+  furn: '' | 'Furnished' | 'Semi-furnished' | 'Unfurnished'
+  asking: string
+  /** The pin field as typed; lat/lng are the subject's applied point. */
+  pin: string
+  lat: number
+  lng: number
+  moreOpen: boolean
+  searchOpen: boolean
+  /** The place / type was shown when last seen: becoming hidden then moves the subject (§7.3.5). */
+  locShown: boolean
+  typeShown: boolean
 }
 
 export type MainView = '/deals' | '/market-rates' | '/cma'
@@ -222,6 +258,10 @@ export const useData = create<DataState>()((set, get) => ({
   setShowAll: (showAll) => set({ showAll }),
   hovDeal: null,
   setHovDeal: (hovDeal) => set({ hovDeal }),
+  cma: null,
+  setCma: (cma) => set({ cma }),
+  cmaSettings: DEFAULT_CMA_SETTINGS,
+  setCmaSettings: (cmaSettings) => set({ cmaSettings }),
 }))
 
 /** Only text fields count as unsaved work in a new draft (§7.4.8): the type select always has a value. */
