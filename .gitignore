@@ -12,3 +12,7 @@ docs/platform/PRD.md
 
 # Client app specs and handover packs (internal product specs, prototypes, seed data): local + vault only.
 docs/apps/
+
+# Personal session handover + local helper scripts (never commit).
+CLAUDE.local.md
+.local/
