@@ -15,6 +15,7 @@ import {
   type Range,
   type RangeInfo,
 } from '@/lib/filters'
+import { SegButtons } from '@/components/SegButtons'
 import { manilaISO } from '@/lib/format'
 import { useData } from '@/lib/store'
 
@@ -91,20 +92,14 @@ export function FiltersSheet({ open, countSearch, onClose }: { open: boolean; co
                     ))}
                   </select>
                 ) : (
-                  <div className="segb" role="radiogroup" aria-labelledby={`fk-${d.k}`}>
-                    {d.opts!.map(([v, l]) => {
-                      const on = bar.fx[d.k] === v
-                      return (
-                        <button key={v} type="button" role="radio" data-fk={d.k} data-v={v} aria-checked={on} onClick={(e) => {
-                            // Focus returns to the pressed button (§7.1.6), in WebKit too.
-                            e.currentTarget.focus()
-                            put(d.k, on ? undefined : v)
-                          }}>
-                          {l}
-                        </button>
-                      )
-                    })}
-                  </div>
+                  <SegButtons
+                    options={d.opts!}
+                    value={bar.fx[d.k] as string | undefined}
+                    optional
+                    labelledBy={`fk-${d.k}`}
+                    attrs={(v) => ({ 'data-fk': d.k, 'data-v': v })}
+                    onPick={(v) => put(d.k, v)}
+                  />
                 )}
               </div>
             ),
