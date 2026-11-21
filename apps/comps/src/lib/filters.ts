@@ -130,7 +130,11 @@ function passes(def: FDef, d: DealJSON, v: FxValue): boolean {
   return def.test!(d, v as string)
 }
 
-export type BarState = { fLoc: string; fType: string; fPeriod: string; fx: Fx }
+/**
+ * `band`: a Size choice carried over by Market rates' "See the deals" (§7.2.3). It keeps applying
+ * as a hidden filter once a type is set; Reset, Clear filters or a type change remove it.
+ */
+export type BarState = { fLoc: string; fType: string; fPeriod: string; fx: Fx; band?: string }
 export const DEFAULT_BAR: BarState = { fLoc: '', fType: '', fPeriod: DEFAULT_PERIOD, fx: {} }
 
 /** `filtered()`: the bar and the sheet, before search (the Market rates list). */
@@ -143,6 +147,7 @@ export function filtered<T extends DealJSON>(deals: T[], bar: BarState, types: T
       (!bar.fLoc || locKeyOf(d) === bar.fLoc) &&
       (!bar.fType || typeKeyOf(d) === bar.fType) &&
       months(d.date, today) <= p &&
+      (!bar.band || d.band === bar.band) &&
       act.every((def) => passes(def, d, bar.fx[def.k]!)),
   )
 }
@@ -150,8 +155,11 @@ export function filtered<T extends DealJSON>(deals: T[], bar: BarState, types: T
 /** How many filters are off their defaults: drives "Clear filters" (§6.3). */
 export function filtersOn(bar: BarState, types: TypeJSON[]): number {
   const bars = (bar.fLoc ? 1 : 0) + (bar.fType ? 1 : 0) + (bar.fPeriod !== DEFAULT_PERIOD ? 1 : 0)
-  return bars + activeDefs(bar.fx, typeInfoOf(bar.fType, types)).length
+  return bars + badgeCount(bar, types)
 }
+
+/** The Filters button badge: visible sheet filters that are on, plus a carried Size choice. */
+export const badgeCount = (bar: BarState, types: TypeJSON[]) => activeDefs(bar.fx, typeInfoOf(bar.fType, types)).length + (bar.band ? 1 : 0)
 
 // ---------- search (§8.7) ----------
 

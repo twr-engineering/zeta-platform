@@ -4,6 +4,7 @@ import { create } from 'zustand'
 
 import type { BootstrapJSON, DealJSON, LocationJSON, TypeJSON } from './data'
 import { DEFAULT_BAR, type BarState, type Fx, type SortDir, type SortKey } from './filters'
+import type { TrendBy } from './rates'
 
 /**
  * The one client store for the browser tab (app PRD §5.1). M2 holds the bootstrap data
@@ -48,6 +49,17 @@ type DataState = {
   /** Location or period: also resets "show all" and the open deal. Type: also clears the sheet. */
   setBarField: (k: 'fLoc' | 'fType' | 'fPeriod', v: string) => void
   setFx: (fx: Fx) => void
+  /** The sheet's "Reset": every sheet filter off, a carried Size choice too. */
+  resetFx: () => void
+  /** Market rates' "See the {n} deals" (§7.2.3): that row's place and type, same period and sheet, no search. */
+  seeDeals: (locKey: string, typeKey: string) => void
+  /** Market rates (§5.1): the selected row, "show rows with fewer than 5", the trend grouping. */
+  selectedKey: string | null
+  setSelectedKey: (k: string | null) => void
+  showLow: boolean
+  setShowLow: (v: boolean) => void
+  trendBy: TrendBy
+  setTrendBy: (v: TrendBy) => void
   /** "Clear filters": the three selects to defaults and every sheet filter off; the search stays. */
   clearFilters: () => void
   /** "Show them": Any location, Any type, Any time, no sheet filters; the search stays (§7.1.3). */
@@ -184,10 +196,24 @@ export const useData = create<DataState>()((set, get) => ({
   leaveGuard: null,
   setLeaveGuard: (leaveGuard) => set({ leaveGuard }),
   bar: DEFAULT_BAR,
-  setBarField: (k, v) => set((st) => ({ bar: { ...st.bar, [k]: v, ...(k === 'fType' ? { fx: {} } : {}) }, showAll: false, selDeal: null })),
+  setBarField: (k, v) => set((st) => ({ bar: { ...st.bar, [k]: v, ...(k === 'fType' ? { fx: {}, band: undefined } : {}) }, showAll: false, selDeal: null })),
   setFx: (fx) => set((st) => ({ bar: { ...st.bar, fx }, showAll: false, selDeal: null })),
   clearFilters: () => set({ bar: DEFAULT_BAR, showAll: false, selDeal: null }),
   widenFilters: () => set({ bar: { fLoc: '', fType: '', fPeriod: '9999', fx: {} }, showAll: false, selDeal: null }),
+  resetFx: () => set((st) => ({ bar: { ...st.bar, fx: {}, band: undefined }, showAll: false, selDeal: null })),
+  seeDeals: (locKey, typeKey) =>
+    set((st) => {
+      // A Size choice only shows with no type set; it keeps applying, hidden, once the type is set.
+      const { band, ...rest } = st.bar.fx
+      const carried = typeof band === 'string' && !st.bar.fType ? band : st.bar.band
+      return { bar: { ...st.bar, fLoc: locKey, fType: typeKey, fx: st.bar.fType ? st.bar.fx : rest, band: carried }, query: '', showAll: false, selDeal: null }
+    }),
+  selectedKey: null,
+  setSelectedKey: (selectedKey) => set({ selectedKey }),
+  showLow: false,
+  setShowLow: (showLow) => set({ showLow }),
+  trendBy: 'q',
+  setTrendBy: (trendBy) => set({ trendBy }),
   query: '',
   setQuery: (query) => set({ query, showAll: false, selDeal: null }),
   sort: { key: 'date', dir: 'desc' },

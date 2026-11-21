@@ -31,6 +31,7 @@ export function FiltersSheet({ open, countSearch, onClose }: { open: boolean; co
   const deals = useData((s) => s.deals)
   const query = useData((s) => s.query)
   const setFx = useData((s) => s.setFx)
+  const resetFx = useData((s) => s.resetFx)
 
   useEffect(() => {
     const d = ref.current!
@@ -66,7 +67,7 @@ export function FiltersSheet({ open, countSearch, onClose }: { open: boolean; co
         <h3 id="filterT" tabIndex={-1} ref={title}>
           Filters
         </h3>
-        <button type="button" className="textbtn" id="fReset" onClick={() => setFx({})}>
+        <button type="button" className="textbtn" id="fReset" onClick={resetFx}>
           Reset
         </button>
       </div>

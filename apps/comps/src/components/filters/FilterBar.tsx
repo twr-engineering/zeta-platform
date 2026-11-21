@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 
 import { Icon } from '@/components/Icon'
 import { refKey } from '@/lib/deals'
-import { DEFAULT_PERIOD, PERIODS, activeDefs, filtersOn, typeInfoOf } from '@/lib/filters'
+import { DEFAULT_PERIOD, PERIODS, badgeCount, filtersOn } from '@/lib/filters'
 import { CATEGORIES } from '@/lib/settings'
 import { useData } from '@/lib/store'
 
@@ -27,7 +27,7 @@ export function FilterBar({ countSearch }: { countSearch: boolean }) {
 
   const oddLocs = useMemo(() => [...new Set(deals.filter((d) => d.location.id === null).map((d) => d.location.name))].sort(), [deals])
   const oddTypes = useMemo(() => [...new Set(deals.filter((d) => d.type.id === null).map((d) => d.type.name))].sort(), [deals])
-  const n = activeDefs(bar.fx, typeInfoOf(bar.fType, types)).length
+  const n = badgeCount(bar, types)
   const on = filtersOn(bar, types)
 
   return (
