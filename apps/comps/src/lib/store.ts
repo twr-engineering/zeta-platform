@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 
 import type { BootstrapJSON, DealJSON, LocationJSON, TypeJSON } from './data'
+import { DEFAULT_BAR, type BarState, type Fx, type SortDir, type SortKey } from './filters'
 
 /**
  * The one client store for the browser tab (app PRD §5.1). M2 holds the bootstrap data
@@ -41,6 +42,23 @@ type DataState = {
    */
   leaveGuard: LeaveGuard | null
   setLeaveGuard: (g: LeaveGuard | null) => void
+
+  /** One filter bar and Filters sheet for Closed deals and Market rates (§5.1, §6.3). */
+  bar: BarState
+  /** Location or period: also resets "show all" and the open deal. Type: also clears the sheet. */
+  setBarField: (k: 'fLoc' | 'fType' | 'fPeriod', v: string) => void
+  setFx: (fx: Fx) => void
+  /** "Clear filters": the three selects to defaults and every sheet filter off; the search stays. */
+  clearFilters: () => void
+  /** "Show them": Any location, Any type, Any time, no sheet filters; the search stays (§7.1.3). */
+  widenFilters: () => void
+  /** Closed deals search text as typed (debounced); trimmed when used (§7.1.3). */
+  query: string
+  setQuery: (q: string) => void
+  sort: { key: SortKey; dir: SortDir }
+  setSort: (key: SortKey, dir: SortDir) => void
+  showAll: boolean
+  setShowAll: (v: boolean) => void
 }
 
 export type MainView = '/deals' | '/market-rates' | '/cma'
@@ -155,6 +173,17 @@ export const useData = create<DataState>()((set, get) => ({
   setDraft: (draft) => set({ draft }),
   leaveGuard: null,
   setLeaveGuard: (leaveGuard) => set({ leaveGuard }),
+  bar: DEFAULT_BAR,
+  setBarField: (k, v) => set((st) => ({ bar: { ...st.bar, [k]: v, ...(k === 'fType' ? { fx: {} } : {}) }, showAll: false, selDeal: null })),
+  setFx: (fx) => set((st) => ({ bar: { ...st.bar, fx }, showAll: false, selDeal: null })),
+  clearFilters: () => set({ bar: DEFAULT_BAR, showAll: false, selDeal: null }),
+  widenFilters: () => set({ bar: { fLoc: '', fType: '', fPeriod: '9999', fx: {} }, showAll: false, selDeal: null }),
+  query: '',
+  setQuery: (query) => set({ query, showAll: false, selDeal: null }),
+  sort: { key: 'date', dir: 'desc' },
+  setSort: (key, dir) => set({ sort: { key, dir } }),
+  showAll: false,
+  setShowAll: (showAll) => set({ showAll }),
 }))
 
 export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; status: number; code: string; message?: string; field?: string }

@@ -81,7 +81,8 @@ export function serializeDeal(d: CompsDeal, locs: Map<number, LocationJSON>, typ
     area,
     lotArea: num(d.lotArea),
     price,
-    pp: Math.round((price / area) * 100) / 100,
+    // Exact: rounding here and again in peso() would show ₱36,504 for 36,503.497 (D.5 L12).
+    pp: price / area,
     band: bandOf(area),
     date: d.dateSold,
     lat: Number(d.lat),

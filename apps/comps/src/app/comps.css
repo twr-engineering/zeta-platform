@@ -643,3 +643,8 @@ html, body { margin: 0; }
 }
 /* The add form's controls sit in one fieldset so loading can disable them all (§5.3). */
 .formset { border: 0; margin: 0; padding: 0; min-width: 0; }
+/* Closed deals map container (§9.1 heights): 760 / 600, capped at 100vh − 240px over 980 px. */
+.dealmap { border-radius: 14px; aspect-ratio: 760 / 600; max-height: calc(100vh - 240px); }
+@media (max-width: 980px) { .dealmap { max-height: none; } }
+/* "Show all" sits full width under the table with its label on the left (§7.1.4). */
+.listcol > #more { justify-content: flex-start; width: 100%; }
