@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import { FilterBar } from '@/components/filters/FilterBar'
+import { SegButtons } from '@/components/SegButtons'
 import { LoadError, TableSkeleton } from '@/components/LoadState'
 import { InfoButton } from '@/components/Tips'
 import { filtered } from '@/lib/filters'
@@ -61,7 +62,7 @@ function RatesTable({ groups, sel, anyDeals }: { groups: Group[]; sel: Group | n
   const showLow = useData((s) => s.showLow)
   const setShowLow = useData((s) => s.setShowLow)
   const setSelectedKey = useData((s) => s.setSelectedKey)
-  const toggle = useRef<HTMLTableRowElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
   const ready = groups.filter((g) => g.ok)
   const waiting = groups.filter((g) => !g.ok)
   // A selected waiting row forces the toggle open, and it stays open after (as the reference build).
@@ -158,17 +159,24 @@ function RatesTable({ groups, sel, anyDeals }: { groups: Group[]; sel: Group | n
           )}
           {ready.map(row)}
           {waiting.length > 0 && (
-            <tr
-              ref={toggle}
-              className="clickable lowtoggle"
-              id="lowToggle"
-              tabIndex={0}
-              aria-expanded={open}
-              onClick={() => setShowLow(!open)}
-              onKeyDown={onKeys(() => setShowLow(!open))}
-            >
+            // A row can't carry aria-expanded (axe aria-conditional-attr): the toggle is a button
+            // filling the row; clicking anywhere on the row still toggles it.
+            <tr className="clickable lowtoggle" onClick={() => setShowLow(!open)}>
               <td colSpan={6} className="c-all">
-                {open ? 'Hide' : 'Show'} {plural(waiting.length, 'row')} with fewer than {MIN_DEALS} deals
+                <button
+                  ref={toggle}
+                  type="button"
+                  className="rowbtn"
+                  id="lowToggle"
+                  aria-expanded={open}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.currentTarget.focus()
+                    setShowLow(!open)
+                  }}
+                >
+                  {open ? 'Hide' : 'Show'} {plural(waiting.length, 'row')} with fewer than {MIN_DEALS} deals
+                </button>
               </td>
             </tr>
           )}
@@ -198,23 +206,14 @@ function TrendCard({ g, anyDeals, loading }: { g: Group | null; anyDeals: boolea
           </h2>
           <InfoButton tip="trend" />
         </span>
-        <div className="segb trendseg" role="radiogroup" aria-label="Group the trend by">
-          {opts.map(([v, l]) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              data-tp={v}
-              aria-checked={trendBy === v}
-              onClick={(e) => {
-                e.currentTarget.focus()
-                setTrendBy(v)
-              }}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        <SegButtons
+          className="segb trendseg"
+          label="Group the trend by"
+          options={opts}
+          value={trendBy}
+          attrs={(v) => ({ 'data-tp': v })}
+          onPick={(v) => v && setTrendBy(v as TrendBy)}
+        />
       </header>
       <div id="trend">
         {loading ? null : !g ? (

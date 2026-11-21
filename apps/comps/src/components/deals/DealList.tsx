@@ -132,7 +132,7 @@ export function DealList() {
           <Empty q={q} anyDeals={deals.length > 0} anywhere={everywhere > 0} onClear={clearFilters} />
         ) : (
           <>
-            <div className="dhead" role="row">
+            <div className="dhead">
               <div>Property</div>
               {split ? (
                 <>
@@ -282,11 +282,13 @@ function Row({ d, open, onToggle }: { d: DealJSON; open: boolean; onToggle: () =
         tabIndex={0}
         role="button"
         aria-expanded={open}
-        aria-label={`${d.location.name}${d.details ? ' ' + d.details : ''}, ${d.type.name}, sold ${fmtDate(d.date)}, ${peso(d.pp)} per sqm`}
         onClick={onToggle}
         onKeyDown={onKey}
       >
-        <div className="c-prop">
+        {/* The row's name (§7.1.4) as hidden text, so it is the name without an aria-label that
+            would not contain the visible text (WCAG 2.5.3); the visual cells are hidden from it. */}
+        <span className="srl">{`${d.location.name}${d.details ? ' ' + d.details : ''}, ${d.type.name}, sold ${fmtDate(d.date)}, ${peso(d.pp)} per sqm`}</span>
+        <div className="c-prop" aria-hidden="true">
           <span className="p1" title={d.location.name + (blt ? ` · ${blt}` : '')}>
             {d.location.name}
             {blt && (
@@ -316,7 +318,7 @@ function Row({ d, open, onToggle }: { d: DealJSON; open: boolean; onToggle: () =
             </span>
           </span>
         </div>
-        <div className="c-size">
+        <div className="c-size" aria-hidden="true">
           {f === 'lot' ? (
             <span>{sqm(d.area)} lot</span>
           ) : f === 'condo' ? (
@@ -328,9 +330,9 @@ function Row({ d, open, onToggle }: { d: DealJSON; open: boolean; onToggle: () =
             </>
           )}
         </div>
-        <div className="c-lot r">{sqm(f === 'lot' ? d.area : d.lotArea)}</div>
-        <div className="c-floor r">{f === 'lot' ? '–' : sqm(d.area)}</div>
-        <div className="c-pp">{peso(d.pp)}</div>
+        <div className="c-lot r" aria-hidden="true">{sqm(f === 'lot' ? d.area : d.lotArea)}</div>
+        <div className="c-floor r" aria-hidden="true">{f === 'lot' ? '–' : sqm(d.area)}</div>
+        <div className="c-pp" aria-hidden="true">{peso(d.pp)}</div>
       </div>
       {open && <Details d={d} />}
     </div>
