@@ -28,6 +28,8 @@ export function createZetaMap(L: L, el: HTMLElement, label: string): { map: Leaf
   el.setAttribute('role', 'region')
   const touch = coarse()
   const map = L.map(el, { scrollWheelZoom: false, keyboard: true, dragging: !touch, tapHold: false, zoomSnap: 0.5 })
+  // Canvas markers are not in the DOM: tests and debugging reach the map through its own element.
+  ;(el as HTMLElement & { __map?: Leaflet.Map }).__map = map
   L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTRIBUTION }).addTo(map)
   L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map)
 

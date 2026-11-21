@@ -236,7 +236,11 @@ function SortHead({ k, label, right, cur, dir, className }: { k: SortKey; label:
         aria-pressed={on}
         aria-label={`Sort by ${label.toLowerCase()}${on ? (dir === 'asc' ? ', lowest first' : ', highest first') : ''}`}
         // Clicking the active header flips it; another header sorts by it, highest first.
-        onClick={() => setSort(k, on ? (dir === 'asc' ? 'desc' : 'asc') : 'desc')}
+        onClick={(e) => {
+          // Focus stays on the header after a click; WebKit does not focus buttons on click by itself.
+          e.currentTarget.focus()
+          setSort(k, on ? (dir === 'asc' ? 'desc' : 'asc') : 'desc')
+        }}
       >
         {right ? (
           <>
@@ -256,6 +260,8 @@ function SortHead({ k, label, right, cur, dir, className }: { k: SortKey; label:
 
 /** One deal row and, when open, its details (§7.1.4–7.1.5). */
 function Row({ d, open, onToggle }: { d: DealJSON; open: boolean; onToggle: () => void }) {
+  const hov = useData((s) => s.hovDeal === d.id)
+  const setHovDeal = useData((s) => s.setHovDeal)
   const f = d.type.form
   const blt = d.details || d.code || ''
   const words = blt.split(' ')
@@ -269,8 +275,10 @@ function Row({ d, open, onToggle }: { d: DealJSON; open: boolean; onToggle: () =
   return (
     <div className="dwrap">
       <div
-        className={'drow' + (open ? ' sel' : '')}
+        className={'drow' + (open ? ' sel' : hov ? ' hov' : '')}
         data-id={d.id}
+        onMouseEnter={() => setHovDeal(d.id)}
+        onMouseLeave={() => setHovDeal(null)}
         tabIndex={0}
         role="button"
         aria-expanded={open}

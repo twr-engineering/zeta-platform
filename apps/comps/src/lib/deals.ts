@@ -378,3 +378,26 @@ export function suggestionHint(s: Suggestion | null): { key: string; hint: strin
   if (s && s.dist <= 1500) return { key: s.key, hint: `nearest saved place is ${(s.dist / 1000).toFixed(1)} km away, check it is right${tail}`, warn: true }
   return { key: '', hint: `no saved place near the pin, choose one${tail}`, warn: true }
 }
+
+type PlaceLike = { id: number; name: string; lat: number; lng: number; hidden: boolean }
+type DealLike = { lat: number; lng: number; location: { id: number | null; name: string } }
+
+/**
+ * The add form's suggestion (§7.4.2): nearest shown place center or deal pin at a shown place.
+ * Hidden places and names not in Settings are not candidates (the select has no option for them).
+ */
+export function suggestFor(pin: { lat: number; lng: number }, places: PlaceLike[], deals: DealLike[], dist: (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => number) {
+  const shown = new Set(places.filter((l) => !l.hidden).map((l) => l.id))
+  const candidates = [
+    ...places.filter((l) => !l.hidden).map((l) => ({ key: String(l.id), lat: l.lat, lng: l.lng })),
+    ...deals.filter((x) => x.location.id !== null && shown.has(x.location.id)).map((x) => ({ key: String(x.location.id), lat: x.lat, lng: x.lng })),
+  ]
+  return suggestionHint(nearestPlace(pin, candidates, dist))
+}
+
+/** The pin card's "Near {location}" (§9.2.7): any saved place center or deal pin within 1,500 m, else null. */
+export function nearName(pin: { lat: number; lng: number }, places: PlaceLike[], deals: DealLike[], dist: (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => number): string | null {
+  const candidates = [...places.map((l) => ({ key: l.name, lat: l.lat, lng: l.lng })), ...deals.map((x) => ({ key: x.location.name, lat: x.lat, lng: x.lng }))]
+  const best = nearestPlace(pin, candidates, dist)
+  return best && best.dist <= 1500 ? best.key : null
+}

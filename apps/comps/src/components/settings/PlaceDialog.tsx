@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
+import { PinMap } from '@/components/map/PinMap'
 import { InfoButton } from '@/components/Tips'
 import { pinText } from '@/lib/format'
 import type { LocationJSON } from '@/lib/data'
-import { plural, type Kind } from '@/lib/settings'
+import { parsePin, pinOk, plural, type Kind } from '@/lib/settings'
+import { useData } from '@/lib/store'
 
 import { SettingsDialog } from './SettingsDialog'
 
@@ -38,6 +40,15 @@ export function PlaceDialog({
   const [d, setD] = useState<PlaceDraft>(() =>
     editing ? { name: editing.name, kind: editing.kind, center: pinText(editing.lat, editing.lng) } : { name: '', kind: 'Subdivision', center: initialCenter ?? '' },
   )
+
+  const locations = useData((x) => x.locations)
+  // The map (§9.5): other saved places as context, the center as a draggable pin.
+  const others = useMemo(() => locations.filter((l) => l.id !== editing?.id).map((l) => ({ id: l.id, name: l.name, lat: l.lat, lng: l.lng })), [locations, editing])
+  const pin = useMemo(() => {
+    const p = parsePin(d.center)
+    return pinOk(p) ? { lat: p.lat, lng: p.lng } : null
+  }, [d.center])
+  const noDots = useMemo(() => [], [])
 
   const n = editing?.dealCount ?? 0
   const sub = subOverride
@@ -111,6 +122,18 @@ export function PlaceDialog({
         />
       </label>
       <p className="hint">Copy it from Google Maps by right-clicking the middle of the area.</p>
+      <PinMap
+        pin={pin}
+        places={others}
+        dots={noDots}
+        chosenId={null}
+        label="Click to set the map center"
+        pinZoom={16}
+        onPick={(p) => {
+          setD((cur) => ({ ...cur, center: pinText(p.lat, p.lng) }))
+          onInput()
+        }}
+      />
     </SettingsDialog>
   )
 }

@@ -94,7 +94,11 @@ export function FiltersSheet({ open, countSearch, onClose }: { open: boolean; co
                     {d.opts!.map(([v, l]) => {
                       const on = bar.fx[d.k] === v
                       return (
-                        <button key={v} type="button" role="radio" data-fk={d.k} data-v={v} aria-checked={on} onClick={() => put(d.k, on ? undefined : v)}>
+                        <button key={v} type="button" role="radio" data-fk={d.k} data-v={v} aria-checked={on} onClick={(e) => {
+                            // Focus returns to the pressed button (§7.1.6), in WebKit too.
+                            e.currentTarget.focus()
+                            put(d.k, on ? undefined : v)
+                          }}>
                           {l}
                         </button>
                       )
