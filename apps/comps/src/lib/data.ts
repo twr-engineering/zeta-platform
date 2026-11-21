@@ -5,10 +5,12 @@
  * route handlers stay thin wrappers. Every call runs as the signed-in user with
  * `overrideAccess: false`, so collection access still applies.
  */
-import type { Payload, PayloadRequest } from 'payload'
+import type { Payload, PayloadRequest, Where } from 'payload'
 import type { CompsDeal, CompsLocation, CompsPropertyType, User } from '@zeta/cms-config/types'
 
 import type { ApiErrorCode } from './api-codes'
+import { LEGACY_TYPE, buildRecord, checkDeal, inputShapeOk, refKey, type DealInput, type DupCandidate, type TypeInfo } from './deals'
+import { manilaISO } from './format'
 import {
   CATEGORIES,
   DEFAULT_LOCATIONS,
@@ -393,4 +395,120 @@ export async function ensureDefaultSettings(payload: Payload, admin: User): Prom
     }
   }
   return added
+}
+
+// ---------- deals (§14.3) ----------
+
+type DealOut = { deal: DealJSON }
+
+const blankish = (v: unknown) => v === undefined || v === null || String(v).trim() === ''
+
+/**
+ * Resolves the place and type a deal input names. An id must exist (hidden ones are accepted,
+ * §14.3); a legacy name is only accepted when editing a deal that already has that name.
+ */
+async function resolveRefs(ctx: Ctx, req: Req, body: DealInput, current: CompsDeal | null) {
+  const { locations, types } = await loadSettings(ctx, [], req)
+  const locId = blankish(body.locationId) ? null : Number(body.locationId)
+  const typeId = blankish(body.typeId) ? null : Number(body.typeId)
+  const loc = locId === null ? null : (locations.find((l) => l.id === locId) ?? null)
+  const type = typeId === null ? null : (types.find((t) => t.id === typeId) ?? null)
+  const legacyLoc =
+    !loc && !blankish(body.legacyLocationName) && current?.legacyLocationName && body.legacyLocationName === current.legacyLocationName
+      ? current.legacyLocationName
+      : null
+  const legacyType =
+    !type && !blankish(body.legacyTypeName) && current?.legacyTypeName && body.legacyTypeName === current.legacyTypeName ? current.legacyTypeName : null
+  return { locations, types, loc, type, legacyLoc, legacyType }
+}
+
+/** Runs §8.6.3 and builds §8.6.4 for a create (current = null) or a replace. */
+async function prepareDeal(ctx: Ctx, req: Req, body: DealInput, current: CompsDeal | null) {
+  const r = await resolveRefs(ctx, req, body, current)
+  if (!r.type && !r.legacyType) return { fail: bad }
+  const typeInfo: TypeInfo = r.type ? { form: r.type.form, category: r.type.category } : LEGACY_TYPE
+  const locName = r.loc?.name ?? r.legacyLoc
+  const locKey = r.loc ? refKey({ id: r.loc.id, name: r.loc.name }) : r.legacyLoc ? refKey({ id: null, name: r.legacyLoc }) : ''
+  let others: DupCandidate[] = []
+  if (locName && !blankish(body.details)) {
+    const where: Where = r.loc ? { location: { equals: r.loc.id } } : { legacyLocationName: { equals: r.legacyLoc } }
+    const found = await ctx.payload.find({ collection: 'comps-deals', where, depth: 0, pagination: false, ...as(ctx, req) })
+    others = found.docs.map((d) => ({ id: d.id, locKey, details: d.details ?? null, price: Number(d.price) }))
+  }
+  const err = checkDeal(body, {
+    kind: r.loc ? r.loc.kind : r.legacyLoc ? '' : null,
+    type: typeInfo,
+    locKey,
+    others,
+    editId: current?.id ?? null,
+    today: manilaISO(),
+  })
+  if (err) return { fail: { error: 'validation', ...err } as Fail }
+  const data = {
+    ...buildRecord(body, typeInfo),
+    location: r.loc?.id ?? null,
+    legacyLocationName: r.loc ? null : r.legacyLoc,
+    propertyType: r.type?.id ?? null,
+    legacyTypeName: r.type ? null : r.legacyType,
+  }
+  const L = new Map(r.locations.map((l) => [l.id, l]))
+  const T = new Map(r.types.map((t) => [t.id, t]))
+  return { data, L, T }
+}
+
+/** GET /api/deals: live deals, newest first. */
+export async function listDeals(ctx: Ctx): Promise<{ deals: DealJSON[] }> {
+  return { deals: (await loadBootstrap(ctx)).deals }
+}
+
+/** POST /api/deals. */
+export async function createDeal(ctx: Ctx, body: DealInput): Promise<DealOut | Fail> {
+  if (!inputShapeOk(body)) return bad
+  return inTx(ctx.payload, async (req) => {
+    const p = await prepareDeal(ctx, req, body, null)
+    if ('fail' in p) return p.fail!
+    const doc = await ctx.payload.create({ collection: 'comps-deals', data: p.data, depth: 0, ...as(ctx, req) })
+    return { deal: serializeDeal(doc, p.L, p.T) }
+  })
+}
+
+/** PUT /api/deals/{id}: replaces every value; keeps createdAt/createdBy (ADD-012). */
+export async function updateDeal(ctx: Ctx, id: number, body: DealInput): Promise<DealOut | Fail> {
+  if (!inputShapeOk(body)) return bad
+  return inTx(ctx.payload, async (req) => {
+    const current = await findLive(ctx, req, id)
+    if (!current) return { error: 'not_found' }
+    const p = await prepareDeal(ctx, req, body, current)
+    if ('fail' in p) return p.fail!
+    const doc = await ctx.payload.update({ collection: 'comps-deals', id, data: p.data, depth: 0, ...as(ctx, req) })
+    return { deal: serializeDeal(doc, p.L, p.T) }
+  })
+}
+
+async function findLive(ctx: Ctx, req: Req, id: number): Promise<CompsDeal | null> {
+  const res = await ctx.payload.find({ collection: 'comps-deals', where: { id: { equals: id } }, depth: 0, limit: 1, ...as(ctx, req) })
+  return res.docs[0] ?? null
+}
+
+/** DELETE /api/deals/{id}: soft delete (Payload trash; the hook stamps deletedBy). */
+export async function trashDeal(ctx: Ctx, id: number): Promise<{ id: number } | Fail> {
+  return inTx(ctx.payload, async (req) => {
+    if (!(await findLive(ctx, req, id))) return { error: 'not_found' }
+    await ctx.payload.update({ collection: 'comps-deals', id, data: { deletedAt: new Date().toISOString() }, depth: 0, ...as(ctx, req) })
+    return { id }
+  })
+}
+
+/** POST /api/deals/{id}/restore: Undo. Clears deletedAt/deletedBy; the edit stamps stay as they were (DATA-003). */
+export async function restoreDeal(ctx: Ctx, id: number): Promise<DealOut | Fail> {
+  return inTx(ctx.payload, async (req) => {
+    const res = await ctx.payload.find({ collection: 'comps-deals', where: { id: { equals: id } }, trash: true, depth: 0, limit: 1, ...as(ctx, req) })
+    const cur = res.docs[0]
+    if (!cur) return { error: 'not_found' }
+    const doc = cur.deletedAt
+      ? await ctx.payload.update({ collection: 'comps-deals', id, data: { deletedAt: null }, trash: true, depth: 0, ...as(ctx, req) })
+      : cur
+    const { locations, types } = await loadSettings(ctx, [], req)
+    return { deal: serializeDeal(doc, new Map(locations.map((l) => [l.id, l])), new Map(types.map((t) => [t.id, t]))) }
+  })
 }

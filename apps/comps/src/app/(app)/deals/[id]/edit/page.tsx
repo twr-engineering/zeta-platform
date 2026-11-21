@@ -1,13 +1,11 @@
-import { PageHead } from '@/components/PageHead'
-import { LoadGate } from '@/components/LoadState'
-import { PAGE_HEADS } from '@/lib/copy'
+import { redirect } from 'next/navigation'
 
-// Edit closed deal (M3). M1: page head only.
-export default function EditDealPage() {
-  return (
-    <main className="addwrap">
-      <PageHead title={PAGE_HEADS.edit.title} sub={PAGE_HEADS.edit.sub} />
-      <LoadGate />
-    </main>
-  )
+import { DealScreen } from '@/components/deal/DealScreen'
+
+/** Edit closed deal (app PRD §7.4.7). An id that is not a number can never be saved: back to the list. */
+export default async function EditDealPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  if (!/^\d{1,12}$/.test(id)) redirect('/deals')
+  // Keyed by id so opening another deal starts a fresh form.
+  return <DealScreen key={id} editId={Number(id)} />
 }

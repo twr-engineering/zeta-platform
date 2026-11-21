@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 
 import { expectNoSidewaysScroll } from './helpers'
 import { ADMIN_STATE } from './users'

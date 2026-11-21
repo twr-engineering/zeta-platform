@@ -20,6 +20,8 @@ export function PlaceDialog({
   onClose,
   onSubmit,
   onInput,
+  initialCenter,
+  subOverride,
 }: {
   open: boolean
   editing: LocationJSON | null
@@ -28,14 +30,19 @@ export function PlaceDialog({
   onClose: () => void
   onSubmit: (d: PlaceDraft) => void
   onInput: () => void
+  /** Opened from the add form with a valid pin (§7.4.2): the center starts at the pin. */
+  initialCenter?: string
+  subOverride?: string
 }) {
   // Mounted fresh for each opening (keyed by the caller), so the draft starts from the row.
   const [d, setD] = useState<PlaceDraft>(() =>
-    editing ? { name: editing.name, kind: editing.kind, center: pinText(editing.lat, editing.lng) } : { name: '', kind: 'Subdivision', center: '' },
+    editing ? { name: editing.name, kind: editing.kind, center: pinText(editing.lat, editing.lng) } : { name: '', kind: 'Subdivision', center: initialCenter ?? '' },
   )
 
   const n = editing?.dealCount ?? 0
-  const sub = editing
+  const sub = subOverride
+    ? subOverride
+    : editing
     ? n
       ? `Renaming also updates its ${plural(n, 'closed deal')}.`
       : 'No closed deals use it yet.'
