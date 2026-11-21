@@ -616,3 +616,6 @@ html, body { margin: 0; }
   .skel { animation: skelpulse 1.2s ease-in-out infinite; }
   @keyframes skelpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 }
+/* Load failure banner (§5.3): the "Try again" text button sits inline after the message. */
+.loaderr .link { margin-left: 4px; }
+.skelrows { display: flex; flex-direction: column; gap: 8px; }
