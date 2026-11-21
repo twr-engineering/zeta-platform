@@ -23,7 +23,10 @@ export const auditFields = (withDeletedBy = false): Field[] => [
   ...(withDeletedBy ? [stamp('deletedBy', 'relationship')] : []),
 ]
 
-export const stampAudit: CollectionBeforeChangeHook = ({ data, operation, originalDoc, req }) => {
+export const stampAudit: CollectionBeforeChangeHook = ({ context, data, operation, originalDoc, req }) => {
+  // System bookkeeping that is not a user edit (Settings delete re-pointing trashed deals to a
+  // legacy name) keeps every stamp as saved.
+  if (operation === 'update' && context?.keepStamps) return data
   const userId = req.user?.id
   const now = new Date().toISOString()
 

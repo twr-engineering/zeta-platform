@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { ConfirmProvider } from '@/components/Confirm'
+import { DataLoader } from '@/components/DataLoader'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import { TipLayer } from '@/components/Tips'
 import { ToastProvider } from '@/components/Toast'
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <ConfirmProvider>
+        <DataLoader />
         <TopBar name={user.name} />
         <div className="wrap">{children}</div>
         <TipLayer />

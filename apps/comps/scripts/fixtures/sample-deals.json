@@ -1,0 +1,1471 @@
+{
+ "settings": {
+  "locations": [
+   {
+    "name": "Alegria Hills",
+    "kind": "Subdivision",
+    "lat": 8.493,
+    "lng": 124.668,
+    "hidden": false
+   },
+   {
+    "name": "Uptown back lane",
+    "kind": "Zone",
+    "lat": 8.4728,
+    "lng": 124.6612,
+    "hidden": true
+   }
+  ],
+  "types": [
+   {
+    "name": "Shophouse",
+    "form": "house",
+    "category": "Commercial",
+    "hidden": false
+   },
+   {
+    "name": "Office unit",
+    "form": "condo",
+    "category": "Commercial",
+    "hidden": true
+   }
+  ]
+ },
+ "dateRule": "q = quarters before the current quarter (Asia/Manila), day = day of that quarter (1 = first day); or abs = fixed date; or today = true",
+ "deals": [
+  {
+   "ref": "L01",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 580,
+   "price": 21500000,
+   "lat": 8.48994,
+   "lng": 124.662545,
+   "details": "B22 L27",
+   "frontage": 20,
+   "corner": true,
+   "code": "ZTP815",
+   "asking": 22000000,
+   "dom": 45,
+   "fin": "Cash",
+   "terrain": "Flat",
+   "dateSold": {
+    "q": 6,
+    "day": 10
+   },
+   "directToDatabase": false,
+   "covers": "Duplicate-check target; search \"b22-l27\"; typed code; corner"
+  },
+  {
+   "ref": "L02",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 450,
+   "price": 16560000,
+   "lat": 8.489393,
+   "lng": 124.664236,
+   "details": "B3 L4",
+   "frontage": 14,
+   "code": "ZTP816",
+   "asking": 16000000,
+   "dom": 30,
+   "fin": "Bank loan",
+   "dateSold": {
+    "q": 6,
+    "day": 40
+   },
+   "directToDatabase": false,
+   "covers": "Frontage 14 m = exactly 30% under 20; sold ABOVE asking; stored as code ZTP816, as if the Zeta link https://zetagroup.ph/r/ztp816/ was typed"
+  },
+  {
+   "ref": "L03",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 520,
+   "price": 19860000,
+   "lat": 8.486922,
+   "lng": 124.663751,
+   "details": "B7 L12",
+   "frontage": 26,
+   "corner": true,
+   "code": "ZTP900",
+   "link": "https://www.facebook.com/zetarealty/posts/123",
+   "asking": 21000000,
+   "fin": "Pag-IBIG",
+   "dateSold": {
+    "q": 5,
+    "day": 20
+   },
+   "directToDatabase": true,
+   "covers": "Frontage 26 m = exactly 30% over 20; code AND different link (shows Listing code row); corner; only deal in its quarter (trend gap)"
+  },
+  {
+   "ref": "L04",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 300,
+   "price": 11250000,
+   "lat": 8.486026,
+   "lng": 124.660913,
+   "details": "B9 L2",
+   "frontage": 18,
+   "code": "ZTP901",
+   "link": "https://zetagroup.ph/r/ZTP901/",
+   "asking": 11250000,
+   "fin": "In-house or developer financing",
+   "dateSold": {
+    "q": 4,
+    "day": 5
+   },
+   "directToDatabase": true,
+   "view": "Ridge view",
+   "covers": "Area 300 = lowest of the 300 to 1,000 band; sold AT asking (exact); ridge view; code and matching Zeta link (no Listing code row)"
+  },
+  {
+   "ref": "L05",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 1000,
+   "price": 36100000,
+   "lat": 8.488372,
+   "lng": 124.658422,
+   "details": "B15 L1",
+   "frontage": 24,
+   "corner": true,
+   "terrain": "Sloped",
+   "dom": 0,
+   "link": "https://www.facebook.com/marketplace/item/555",
+   "asking": 38000000,
+   "fin": "Other",
+   "dateSold": {
+    "q": 4,
+    "day": 60
+   },
+   "directToDatabase": false,
+   "covers": "Area 1,000 = top of the band; sloped; days on market 0; Facebook Marketplace"
+  },
+  {
+   "ref": "L06",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 610,
+   "price": 23490000,
+   "lat": 8.492118,
+   "lng": 124.659373,
+   "details": "B18 L6",
+   "frontage": 22,
+   "corner": true,
+   "terrain": "Irregular",
+   "link": "https://www.facebook.com/watch/?v=777",
+   "asking": 24500000,
+   "fin": "Cash",
+   "dateSold": {
+    "q": 2,
+    "day": 10
+   },
+   "directToDatabase": false,
+   "view": "Ridge view",
+   "covers": "Corner + ridge view + irregular; Facebook video"
+  },
+  {
+   "ref": "L07",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 480,
+   "price": 17710000,
+   "lat": 8.493453,
+   "lng": 124.662789,
+   "details": "B20 L3",
+   "frontage": 19,
+   "terrain": "Flat",
+   "link": "https://fb.watch/abc123/",
+   "asking": 17715000,
+   "fin": "Bank loan",
+   "dateSold": {
+    "q": 2,
+    "day": 50
+   },
+   "directToDatabase": false,
+   "covers": "Asking within 0.05% of sold: shows \"At asking\"; fb.watch link"
+  },
+  {
+   "ref": "L08",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 540,
+   "price": 20410000,
+   "lat": 8.487144,
+   "lng": 124.667121,
+   "details": "B21 L9",
+   "frontage": 21,
+   "corner": true,
+   "terrain": "Flat",
+   "link": "https://m.facebook.com/story.php?id=42",
+   "asking": 21500000,
+   "dateSold": {
+    "q": 1,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Corner; flat; m.facebook.com post"
+  },
+  {
+   "ref": "L09",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 560,
+   "price": 20890000,
+   "lat": 8.482766,
+   "lng": 124.663104,
+   "details": "B24 L11",
+   "frontage": 20,
+   "terrain": "Flat",
+   "asking": 10445000,
+   "fin": "Cash",
+   "dateSold": {
+    "q": 0,
+    "day": 1
+   },
+   "directToDatabase": false,
+   "covers": "Asking exactly half the sold price (lowest allowed): ▲100.0%; current quarter"
+  },
+  {
+   "ref": "L10",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 470,
+   "price": 17670000,
+   "lat": 8.486216,
+   "lng": 124.654319,
+   "details": "B30 L5",
+   "frontage": 17,
+   "link": "https://www.lamudi.com.ph/property/xe-lot",
+   "asking": 18500000,
+   "dateSold": {
+    "q": 0,
+    "day": 1
+   },
+   "directToDatabase": false,
+   "covers": "900 m away: inside 1 km; current quarter; Lamudi"
+  },
+  {
+   "ref": "L11",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 299,
+   "price": 11330000,
+   "lat": 8.489904,
+   "lng": 124.663573,
+   "details": "B31 L1",
+   "frontage": 20,
+   "dateSold": {
+    "q": 4,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Area 299 = Under 300 band: NOT similar to a 500 sqm subject"
+  },
+  {
+   "ref": "L12",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 1001,
+   "price": 36540000,
+   "lat": 8.486773,
+   "lng": 124.661606,
+   "details": "B32 L2",
+   "frontage": 20,
+   "dateSold": {
+    "q": 2,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Area 1,001 = Over 1,000 band: NOT similar"
+  },
+  {
+   "ref": "L13",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 500,
+   "price": 18600000,
+   "lat": 8.490357,
+   "lng": 124.65964,
+   "details": "B33 L3",
+   "frontage": 26.5,
+   "dateSold": {
+    "q": 1,
+    "day": 10
+   },
+   "directToDatabase": false,
+   "covers": "Frontage 26.5 m: over 30%, NOT similar"
+  },
+  {
+   "ref": "L14",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 500,
+   "price": 18350000,
+   "lat": 8.491974,
+   "lng": 124.663087,
+   "details": "B34 L4",
+   "dateSold": {
+    "q": 1,
+    "day": 50
+   },
+   "directToDatabase": false,
+   "covers": "No frontage recorded: NOT similar when a frontage is entered"
+  },
+  {
+   "ref": "L15",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 500,
+   "price": 18700000,
+   "lat": 8.478802,
+   "lng": 124.658272,
+   "details": "B35 L5",
+   "frontage": 20,
+   "dateSold": {
+    "q": 0,
+    "day": 1
+   },
+   "directToDatabase": false,
+   "covers": "1.2 km away: outside 1 km, inside 1.25 km"
+  },
+  {
+   "ref": "L16",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 500,
+   "price": 18550000,
+   "lat": 8.502597,
+   "lng": 124.66697,
+   "details": "B36 L6",
+   "frontage": 20,
+   "dateSold": {
+    "q": 0,
+    "day": 1
+   },
+   "directToDatabase": false,
+   "covers": "1.6 km away: outside 1.5 km, shown as \"Too far\" at 1 km"
+  },
+  {
+   "ref": "L17",
+   "loc": "Xavier Estates",
+   "type": "Residential lot",
+   "area": 500,
+   "price": 16750000,
+   "lat": 8.489,
+   "lng": 124.663362,
+   "details": "B37 L7",
+   "frontage": 20,
+   "dateSold": {
+    "q": 10,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "About 30 months old: outside \"Last 24 months\", inside 36"
+  },
+  {
+   "ref": "P01",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 300,
+   "price": 7650000,
+   "lat": 8.462904,
+   "lng": 124.629,
+   "details": "Block 14 Lot 7",
+   "frontage": 10,
+   "dateSold": {
+    "q": 1,
+    "day": 5
+   },
+   "directToDatabase": false,
+   "covers": "Details exactly 14 characters (stays on one line)"
+  },
+  {
+   "ref": "P02",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 320,
+   "price": 8190000,
+   "lat": 8.463108,
+   "lng": 124.629934,
+   "details": "Blk 14 Lot 7 PH",
+   "frontage": 11,
+   "dateSold": {
+    "q": 1,
+    "day": 10
+   },
+   "directToDatabase": false,
+   "covers": "Details 15 characters (dot stays with first word, rest may wrap)"
+  },
+  {
+   "ref": "P03",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 280,
+   "price": 7110000,
+   "lat": 8.462345,
+   "lng": 124.630968,
+   "details": "Phase 2 Block 14 Lot 7 near the creek rd",
+   "frontage": 12,
+   "note": "Bought by a family moving back from Dubai. Seller dropped the price twice before it sold, first in March and again in May. Buyer paid cash after a short viewing. Lot faces the creek and the back fence needs work. Road widening is planned here, so ask the city first. Title is clean and taxes paid up.",
+   "dateSold": {
+    "q": 1,
+    "day": 20
+   },
+   "directToDatabase": false,
+   "covers": "Details at the 40-character limit; 300-character note"
+  },
+  {
+   "ref": "P04",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 350,
+   "price": 8960000,
+   "lat": 8.460734,
+   "lng": 124.631202,
+   "details": "B2 L8",
+   "frontage": 13,
+   "link": "https://www.carousell.ph/p/lot-for-sale-99",
+   "fin": "Pag-IBIG",
+   "dateSold": {
+    "q": 1,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Carousell link; Pag-IBIG"
+  },
+  {
+   "ref": "P05",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 260,
+   "price": 6680000,
+   "lat": 8.459111,
+   "lng": 124.630056,
+   "details": "B2 L9",
+   "frontage": 14,
+   "link": "https://www.property24.com.ph/listing/1",
+   "dateSold": {
+    "q": 1,
+    "day": 40
+   },
+   "directToDatabase": false,
+   "covers": "Property24 link"
+  },
+  {
+   "ref": "P06",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 400,
+   "price": 10160000,
+   "lat": 8.458601,
+   "lng": 124.627758,
+   "details": "B3 L1",
+   "frontage": 15,
+   "link": "https://www.dotproperty.com.ph/ads/2",
+   "dateSold": {
+    "q": 1,
+    "day": 50
+   },
+   "directToDatabase": false,
+   "covers": "Dot Property link"
+  },
+  {
+   "ref": "P07",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 380,
+   "price": 9580000,
+   "lat": 8.45992,
+   "lng": 124.625382,
+   "details": "B3 L2",
+   "frontage": 16,
+   "link": "https://youtu.be/xyz",
+   "note": "Facing the ridge, good morning light.",
+   "dateSold": {
+    "q": 1,
+    "day": 60
+   },
+   "directToDatabase": false,
+   "covers": "YouTube link; short note"
+  },
+  {
+   "ref": "P08",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 240,
+   "price": 6170000,
+   "lat": 8.462817,
+   "lng": 124.624349,
+   "details": "B4 L1",
+   "frontage": 17,
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Alone in its quarter"
+  },
+  {
+   "ref": "P09",
+   "loc": "Pueblo de Oro",
+   "type": "Residential lot",
+   "area": 420,
+   "price": 10500000,
+   "lat": 8.466018,
+   "lng": 124.625614,
+   "details": "B4 L2",
+   "frontage": 18,
+   "link": "https://www.tiktok.com/@zeta/video/1",
+   "dateSold": {
+    "q": 5,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Alone in its quarter; TikTok link"
+  },
+  {
+   "ref": "G01",
+   "loc": "Gran Europa",
+   "type": "Commercial lot",
+   "area": 400,
+   "price": 12000000,
+   "lat": 8.471723,
+   "lng": 124.641,
+   "details": "Block A Lot 1",
+   "frontage": 20,
+   "dateSold": {
+    "q": 0,
+    "day": 1
+   },
+   "directToDatabase": false,
+   "covers": "Exactly 5 deals: middle price shows"
+  },
+  {
+   "ref": "G02",
+   "loc": "Gran Europa",
+   "type": "Commercial lot",
+   "area": 500,
+   "price": 19000000,
+   "lat": 8.471402,
+   "lng": 124.642109,
+   "details": "Block A Lot 2",
+   "frontage": 25,
+   "dateSold": {
+    "q": 1,
+    "day": 20
+   },
+   "directToDatabase": false,
+   "covers": "Wide spread: Low"
+  },
+  {
+   "ref": "G03",
+   "loc": "Gran Europa",
+   "type": "Commercial lot",
+   "area": 600,
+   "price": 27600000,
+   "lat": 8.469753,
+   "lng": 124.642051,
+   "details": "Block A Lot 3",
+   "frontage": 30,
+   "dateSold": {
+    "q": 2,
+    "day": 20
+   },
+   "directToDatabase": false,
+   "covers": "One deal per quarter: \"No quarter has that so far\""
+  },
+  {
+   "ref": "G04",
+   "loc": "Gran Europa",
+   "type": "Commercial lot",
+   "area": 700,
+   "price": 38500000,
+   "lat": 8.469199,
+   "lng": 124.639956,
+   "details": "Block A Lot 4",
+   "frontage": 35,
+   "link": "https://www.instagram.com/p/abc/",
+   "dateSold": {
+    "q": 3,
+    "day": 20
+   },
+   "directToDatabase": false,
+   "covers": "Instagram link"
+  },
+  {
+   "ref": "G05",
+   "loc": "Gran Europa",
+   "type": "Commercial lot",
+   "area": 800,
+   "price": 56000000,
+   "lat": 8.47144,
+   "lng": 124.638496,
+   "details": "Block A Lot 5",
+   "frontage": 40,
+   "link": "https://www.myproperty.ph/listing/9",
+   "dateSold": {
+    "q": 4,
+    "day": 20
+   },
+   "directToDatabase": false,
+   "covers": "Other site link: label is the host"
+  },
+  {
+   "ref": "N01",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 600,
+   "price": 32400000,
+   "lat": 8.485085,
+   "lng": 124.65,
+   "frontage": 18,
+   "details": "Along the main road",
+   "dateSold": {
+    "today": true
+   },
+   "directToDatabase": false,
+   "covers": "Sold today (latest allowed date)"
+  },
+  {
+   "ref": "N02",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 700,
+   "price": 38500000,
+   "lat": 8.484859,
+   "lng": 124.651494,
+   "frontage": 21,
+   "code": "ZTP777",
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "No details; Zeta code only: list line 1 shows the code"
+  },
+  {
+   "ref": "N03",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 800,
+   "price": 43200000,
+   "lat": 8.482824,
+   "lng": 124.652045,
+   "frontage": 24,
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "No details and no code"
+  },
+  {
+   "ref": "N04",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 650,
+   "price": 35750000,
+   "lat": 8.481016,
+   "lng": 124.65,
+   "frontage": 27,
+   "details": "Corner of Masterson Ave",
+   "corner": true,
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Corner lot in an Area"
+  },
+  {
+   "ref": "N05",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 900,
+   "price": 48600000,
+   "lat": 8.482191,
+   "lng": 124.646854,
+   "frontage": 30,
+   "details": "Beside the gas station",
+   "dateSold": {
+    "q": 4,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Over 1,000 band neighbour check"
+  },
+  {
+   "ref": "N06",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial lot",
+   "area": 750,
+   "price": 40500000,
+   "lat": 8.486125,
+   "lng": 124.646303,
+   "frontage": 33,
+   "details": "Across Centrio Mall",
+   "dateSold": {
+    "q": 5,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Mode of payment not recorded"
+  },
+  {
+   "ref": "S01",
+   "loc": "Uptown main road, south stretch",
+   "type": "Commercial lot",
+   "area": 550,
+   "price": 24200000,
+   "lat": 8.471357,
+   "lng": 124.635,
+   "details": "Lot 1 main road",
+   "frontage": 18,
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "4 deals: \"4 of 5 deals needed\""
+  },
+  {
+   "ref": "S02",
+   "loc": "Uptown main road, south stretch",
+   "type": "Commercial lot",
+   "area": 600,
+   "price": 26400000,
+   "lat": 8.47,
+   "lng": 124.637271,
+   "details": "Lot 2 main road",
+   "frontage": 20,
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "CMA: 4 of the 5 needed"
+  },
+  {
+   "ref": "S03",
+   "loc": "Uptown main road, south stretch",
+   "type": "Commercial lot",
+   "area": 650,
+   "price": 28600000,
+   "lat": 8.466835,
+   "lng": 124.635,
+   "details": "Lot 3 main road",
+   "frontage": 22,
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Similar to a 600 sqm, 20 m subject"
+  },
+  {
+   "ref": "S04",
+   "loc": "Uptown main road, south stretch",
+   "type": "Commercial lot",
+   "area": 700,
+   "price": 30800000,
+   "lat": 8.47,
+   "lng": 124.630913,
+   "details": "Lot 4 main road",
+   "frontage": 24,
+   "dateSold": {
+    "q": 4,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Same"
+  },
+  {
+   "ref": "I01",
+   "loc": "Uptown inner roads",
+   "type": "Industrial lot",
+   "area": 3000,
+   "price": 28500000,
+   "lat": 8.477279,
+   "lng": 124.660284,
+   "frontage": 40,
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Single deal: \"1 of 5 deals needed\"; Area"
+  },
+  {
+   "ref": "B01",
+   "loc": "Teakwood Hills",
+   "type": "Beach lot",
+   "area": 500,
+   "price": 8000000,
+   "lat": 8.478336,
+   "lng": 124.655237,
+   "details": "B1 L1",
+   "frontage": 15,
+   "terrain": "Sloped",
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "view": "Ridge view",
+   "covers": "Sloped + ridge view"
+  },
+  {
+   "ref": "B02",
+   "loc": "Teakwood Hills",
+   "type": "Beach lot",
+   "area": 650,
+   "price": 9750000,
+   "lat": 8.47513,
+   "lng": 124.654317,
+   "details": "B1 L2",
+   "frontage": 18,
+   "terrain": "Irregular",
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Irregular shape"
+  },
+  {
+   "ref": "A01",
+   "loc": "Gran Europa",
+   "type": "Agricultural lot",
+   "area": 1000000,
+   "price": 100000000,
+   "lat": 8.464669,
+   "lng": 124.641,
+   "details": "Farm parcel 1",
+   "frontage": 300,
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Area 1,000,000 sqm (largest allowed) at ₱100 per sqm (lowest allowed)"
+  },
+  {
+   "ref": "T01",
+   "loc": "Teakwood Hills",
+   "type": "Residential lot",
+   "area": 400,
+   "price": 4000000,
+   "lat": 8.477452,
+   "lng": 124.654213,
+   "details": "B5 L5",
+   "frontage": 15,
+   "dateSold": {
+    "abs": "2000-01-01"
+   },
+   "directToDatabase": false,
+   "covers": "Sold 1 Jan 2000 (earliest allowed): shows only with \"Any time\""
+  },
+  {
+   "ref": "T02",
+   "loc": "Teakwood Hills",
+   "type": "Residential lot",
+   "area": 400,
+   "price": 6000000,
+   "lat": 8.476186,
+   "lng": 124.656416,
+   "details": "B5 L6",
+   "frontage": 15,
+   "dom": 3650,
+   "asking": 6500000,
+   "dateSold": {
+    "abs": "2016-06-15"
+   },
+   "directToDatabase": false,
+   "covers": "Sold 2016; days on market 3,650 (highest allowed)"
+  },
+  {
+   "ref": "U01",
+   "loc": "Uptown back lane",
+   "type": "Residential lot",
+   "area": 350,
+   "price": 9100000,
+   "lat": 8.473252,
+   "lng": 124.6612,
+   "frontage": 12,
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Deal at a HIDDEN place (Uptown back lane)"
+  },
+  {
+   "ref": "H01",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 140,
+   "price": 9520000,
+   "lat": 8.489874,
+   "lng": 124.662235,
+   "details": "B40 L1",
+   "lotArea": 210,
+   "beds": 3,
+   "baths": 2,
+   "parking": 1,
+   "storeys": 2,
+   "cond": "Good",
+   "year": 2015,
+   "furn": "Semi-furnished",
+   "fin": "Bank loan",
+   "dateSold": {
+    "q": 0,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Floor 140 and lot 210: exactly 30% under"
+  },
+  {
+   "ref": "H02",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 260,
+   "price": 22880000,
+   "lat": 8.489911,
+   "lng": 124.663129,
+   "details": "B41 L2",
+   "lotArea": 390,
+   "beds": 3,
+   "baths": 3,
+   "parking": 2,
+   "storeys": 2,
+   "cond": "Brand new",
+   "year": 2024,
+   "furn": "Furnished",
+   "fin": "Pag-IBIG",
+   "dateSold": {
+    "q": 1,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Floor 260 and lot 390: exactly 30% over"
+  },
+  {
+   "ref": "H03",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 200,
+   "price": 14800000,
+   "lat": 8.489104,
+   "lng": 124.663995,
+   "details": "B42 L3",
+   "lotArea": 300,
+   "beds": 3,
+   "baths": 2,
+   "parking": 1,
+   "storeys": 2,
+   "cond": "Good",
+   "year": 2012,
+   "furn": "Unfurnished",
+   "fin": "Cash",
+   "dateSold": {
+    "q": 2,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Same size as the subject"
+  },
+  {
+   "ref": "H04",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 180,
+   "price": 10800000,
+   "lat": 8.487621,
+   "lng": 124.664133,
+   "details": "B43 L4",
+   "lotArea": 280,
+   "beds": 3,
+   "baths": 2,
+   "storeys": 1,
+   "cond": "Needs repair",
+   "year": 2005,
+   "dateSold": {
+    "q": 3,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Needs repair; no furnishing or parking recorded"
+  },
+  {
+   "ref": "H05",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 220,
+   "price": 18480000,
+   "lat": 8.486129,
+   "lng": 124.663107,
+   "details": "B44 L5",
+   "lotArea": 320,
+   "beds": 3,
+   "parking": 2,
+   "storeys": 3,
+   "cond": "Good",
+   "year": 2018,
+   "furn": "Semi-furnished",
+   "fin": "In-house or developer financing",
+   "dateSold": {
+    "q": 4,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "No bathrooms recorded"
+  },
+  {
+   "ref": "H06",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 210,
+   "price": 15120000,
+   "lat": 8.485506,
+   "lng": 124.66106,
+   "details": "B45 L6",
+   "lotArea": 300,
+   "beds": 3,
+   "dateSold": {
+    "q": 5,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Only the required fields plus bedrooms"
+  },
+  {
+   "ref": "H07",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 261,
+   "price": 19836000,
+   "lat": 8.486382,
+   "lng": 124.658753,
+   "details": "B46 L7",
+   "lotArea": 300,
+   "beds": 3,
+   "dateSold": {
+    "q": 6,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Floor 261: over 30%, NOT similar"
+  },
+  {
+   "ref": "H08",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 200,
+   "price": 12800000,
+   "lat": 8.488754,
+   "lng": 124.657284,
+   "details": "B47 L8",
+   "lotArea": 391,
+   "beds": 3,
+   "dateSold": {
+    "q": 0,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Lot 391: over 30%, NOT similar"
+  },
+  {
+   "ref": "H09",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 200,
+   "price": 16000000,
+   "lat": 8.491857,
+   "lng": 124.657582,
+   "details": "B48 L9",
+   "lotArea": 300,
+   "beds": 4,
+   "baths": 3,
+   "dateSold": {
+    "q": 1,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "4 bedrooms: NOT similar to a 3 BR subject"
+  },
+  {
+   "ref": "H10",
+   "loc": "Xavier Estates",
+   "type": "House and lot",
+   "area": 600,
+   "price": 55200000,
+   "lat": 8.494404,
+   "lng": 124.659917,
+   "details": "B49 L10",
+   "lotArea": 900,
+   "beds": 5,
+   "baths": 5,
+   "parking": 3,
+   "storeys": 4,
+   "year": 1900,
+   "cond": "Needs repair",
+   "furn": "Furnished",
+   "asking": 56000000,
+   "dom": 200,
+   "dateSold": {
+    "q": 2,
+    "day": 25
+   },
+   "directToDatabase": false,
+   "covers": "Top choices: 5 or more bedrooms and bathrooms, 3 or more parking, 4 or more storeys; built 1900"
+  },
+  {
+   "ref": "W01",
+   "loc": "Pueblo de Oro",
+   "type": "Townhouse",
+   "area": 90,
+   "price": 4680000,
+   "lat": 8.462,
+   "lng": 124.631725,
+   "details": "Unit 3 Row B",
+   "lotArea": 60,
+   "beds": 2,
+   "baths": 1,
+   "parking": 0,
+   "storeys": 2,
+   "cond": "Good",
+   "year": 2020,
+   "furn": "Unfurnished",
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Townhouse: house form with rooms"
+  },
+  {
+   "ref": "K01",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial building",
+   "area": 500,
+   "price": 31000000,
+   "lat": 8.480601,
+   "lng": 124.648757,
+   "lotArea": 600,
+   "parking": 3,
+   "storeys": 3,
+   "cond": "Good",
+   "year": 2010,
+   "furn": "Furnished",
+   "fin": "Bank loan",
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Commercial: no rooms, has furnishing; no details (Area)"
+  },
+  {
+   "ref": "K02",
+   "loc": "Uptown main road, north stretch",
+   "type": "Commercial building",
+   "area": 800,
+   "price": 49600000,
+   "lat": 8.481965,
+   "lng": 124.64646,
+   "details": "Corner of Tiano and Hayes",
+   "lotArea": 900,
+   "storeys": 4,
+   "cond": "Brand new",
+   "year": 2023,
+   "dateSold": {
+    "q": 3,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Commercial building with details"
+  },
+  {
+   "ref": "R01",
+   "loc": "Uptown inner roads",
+   "type": "Warehouse",
+   "area": 1200,
+   "price": 36000000,
+   "lat": 8.474417,
+   "lng": 124.661753,
+   "lotArea": 2000,
+   "parking": 0,
+   "storeys": 1,
+   "cond": "Needs repair",
+   "year": 2001,
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Industrial: no rooms, no furnishing; parking None"
+  },
+  {
+   "ref": "C01",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 28,
+   "price": 3584000,
+   "lat": 8.478362,
+   "lng": 124.647,
+   "details": "Tower 1, 1A",
+   "beds": 1,
+   "baths": 1,
+   "parking": 0,
+   "floor": 1,
+   "furn": "Unfurnished",
+   "dateSold": {
+    "q": 0,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Floor area 28: exactly 30% under; floor level 1 (lowest); parking None"
+  },
+  {
+   "ref": "C02",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 52,
+   "price": 7280000,
+   "lat": 8.478416,
+   "lng": 124.647417,
+   "details": "Tower 2, 30B",
+   "beds": 1,
+   "baths": 1,
+   "parking": 1,
+   "parkIncl": "Included",
+   "floor": 30,
+   "furn": "Furnished",
+   "dateSold": {
+    "q": 1,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Floor area 52: exactly 30% over; parking included"
+  },
+  {
+   "ref": "C03",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 40,
+   "price": 5200000,
+   "lat": 8.478,
+   "lng": 124.647817,
+   "details": "Tower 3, 12C",
+   "beds": 1,
+   "baths": 1,
+   "parking": 1,
+   "parkIncl": "Separate",
+   "floor": 12,
+   "furn": "Semi-furnished",
+   "dateSold": {
+    "q": 2,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Parking sold separately"
+  },
+  {
+   "ref": "C04",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 36,
+   "price": 4500000,
+   "lat": 8.477265,
+   "lng": 124.647739,
+   "details": "Tower 1, 100D",
+   "beds": 1,
+   "floor": 100,
+   "dateSold": {
+    "q": 3,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Floor level 100 (highest); no parking, baths or furnishing recorded"
+  },
+  {
+   "ref": "C05",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 45,
+   "price": 6120000,
+   "lat": 8.476734,
+   "lng": 124.647,
+   "details": "Tower 2, 22E",
+   "beds": 1,
+   "baths": 2,
+   "parking": 1,
+   "parkIncl": "Included",
+   "floor": 22,
+   "furn": "Furnished",
+   "dateSold": {
+    "q": 0,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Parking included"
+  },
+  {
+   "ref": "C06",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 53,
+   "price": 6943000,
+   "lat": 8.476945,
+   "lng": 124.64594,
+   "details": "Tower 3, 8F",
+   "beds": 1,
+   "floor": 8,
+   "dateSold": {
+    "q": 1,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Floor area 53: over 30%, NOT similar"
+  },
+  {
+   "ref": "C07",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 24,
+   "price": 3600000,
+   "lat": 8.478,
+   "lng": 124.645274,
+   "details": "Tower 1, 5G",
+   "beds": 0,
+   "baths": 1,
+   "floor": 5,
+   "furn": "Furnished",
+   "dateSold": {
+    "q": 2,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "Studio: NOT similar to a 1 BR subject"
+  },
+  {
+   "ref": "C08",
+   "loc": "Centrio",
+   "type": "Condo unit",
+   "area": 62,
+   "price": 7564000,
+   "lat": 8.479375,
+   "lng": 124.645619,
+   "details": "Tower 2, 18H",
+   "beds": 2,
+   "baths": 2,
+   "parking": 3,
+   "parkIncl": "Included",
+   "floor": 18,
+   "furn": "Semi-furnished",
+   "dateSold": {
+    "q": 3,
+    "day": 30
+   },
+   "directToDatabase": false,
+   "covers": "2 BR; parking 3 or more, included"
+  },
+  {
+   "ref": "E01",
+   "loc": "Centrio",
+   "type": "Condotel unit",
+   "area": 24,
+   "price": 3600000,
+   "lat": 8.478271,
+   "lng": 124.646528,
+   "details": "Tower 1, 9C",
+   "beds": 0,
+   "baths": 1,
+   "parking": 1,
+   "parkIncl": "Separate",
+   "floor": 9,
+   "furn": "Furnished",
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Condotel (Commercial condo): studio, parking separate"
+  },
+  {
+   "ref": "E02",
+   "loc": "Centrio",
+   "type": "Condotel unit",
+   "area": 48,
+   "price": 6720000,
+   "lat": 8.478548,
+   "lng": 124.646682,
+   "details": "Tower 2, 16A",
+   "beds": 2,
+   "baths": 2,
+   "floor": 16,
+   "furn": "Semi-furnished",
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "Condotel 2 BR"
+  },
+  {
+   "ref": "O01",
+   "loc": "Centrio",
+   "type": "Office unit",
+   "area": 10,
+   "price": 10000000,
+   "lat": 8.478,
+   "lng": 124.647272,
+   "details": "Tower 3, 15F",
+   "floor": 15,
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": false,
+   "covers": "HIDDEN type; area 10 sqm (smallest allowed) at ₱1,000,000 per sqm (highest allowed)"
+  },
+  {
+   "ref": "X01",
+   "type": "Residential lot",
+   "area": 400,
+   "price": 12000000,
+   "lat": 8.48,
+   "lng": 124.645,
+   "details": "Along the old road",
+   "frontage": 16,
+   "dateSold": {
+    "q": 1,
+    "day": 15
+   },
+   "directToDatabase": true,
+   "legacyLocationName": "Old Masterson Road",
+   "covers": "Location not in Settings: no Area pill, \"Not in Settings\" filter group"
+  },
+  {
+   "ref": "X02",
+   "loc": "Xavier Estates",
+   "area": 150,
+   "price": 9000000,
+   "lat": 8.488072,
+   "lng": 124.65944,
+   "details": "B5 L9",
+   "lotArea": 200,
+   "dateSold": {
+    "q": 2,
+    "day": 15
+   },
+   "directToDatabase": true,
+   "legacyTypeName": "Duplex",
+   "covers": "Type not in Settings: counts as house form, Residential"
+  }
+ ]
+}

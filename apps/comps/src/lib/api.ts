@@ -1,28 +1,8 @@
 import { NextResponse } from 'next/server'
 
-/** Error codes and HTTP statuses of app PRD §14.1. */
-export type ApiErrorCode =
-  | 'bad_request'
-  | 'unauthenticated'
-  | 'invalid_credentials'
-  | 'forbidden'
-  | 'not_found'
-  | 'conflict'
-  | 'validation'
-  | 'rate_limited'
-  | 'server'
+import { STATUS, type ApiErrorCode } from './api-codes'
 
-const STATUS: Record<ApiErrorCode, number> = {
-  bad_request: 400,
-  unauthenticated: 401,
-  invalid_credentials: 401,
-  forbidden: 403,
-  not_found: 404,
-  conflict: 409,
-  validation: 422,
-  rate_limited: 429,
-  server: 500,
-}
+export type { ApiErrorCode }
 
 /** `{ "error": { "code", "message"?, "field"? } }` with the code's status. */
 export const apiError = (code: ApiErrorCode, message?: string, field?: string) =>
@@ -55,3 +35,6 @@ export async function readBody<K extends string>(req: Request, keys: readonly K[
   if (Object.keys(body).some((k) => !keys.includes(k as K))) return null
   return body as Partial<Record<K, unknown>>
 }
+
+/** A positive integer route id, or null (unknown ids answer 404). */
+export const idParam = (s: string): number | null => (/^\d{1,12}$/.test(s) ? Number(s) : null)
