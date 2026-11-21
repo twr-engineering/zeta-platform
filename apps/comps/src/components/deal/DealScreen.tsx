@@ -11,7 +11,7 @@ import { PlaceDialog, type PlaceDraft } from '@/components/settings/PlaceDialog'
 import { InfoButton } from '@/components/Tips'
 import { useToast } from '@/components/Toast'
 import { PAGE_HEADS } from '@/lib/copy'
-import type { DealJSON, LocationJSON, TypeJSON } from '@/lib/data'
+import type { DealJSON, LocationJSON } from '@/lib/data'
 import {
   BATH_OPTS,
   COND_OPTS,
@@ -27,6 +27,7 @@ import {
   checkDeal,
   commas,
   digits,
+  firstShownType,
   hasFurnish,
   hasParking,
   hasRooms,
@@ -112,9 +113,6 @@ function draftFromDeal(d: DealJSON): DealDraft {
   }
 }
 
-/** Types in the select's order: category groups, Settings order inside each. */
-const typeOrder = (types: TypeJSON[]) => CATEGORIES.flatMap((c) => types.filter((t) => t.category === c))
-const firstShownType = (types: TypeJSON[]) => typeOrder(types).find((t) => !t.hidden) ?? typeOrder(types)[0]
 
 type Err = { field?: string; message: string } | null
 

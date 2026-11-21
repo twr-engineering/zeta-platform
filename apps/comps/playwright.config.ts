@@ -28,6 +28,9 @@ export default defineConfig({
       name: 'writes',
       use: { ...devices['Desktop Chrome'], colorScheme: 'light' },
       grep: /@write/,
+      // One at a time: a Settings rename in one file must not race a save in another.
+      workers: 1,
+      fullyParallel: false,
       dependencies: ['chromium-light', 'chromium-dark', 'webkit-light', 'webkit-dark'],
     },
   ],
