@@ -59,6 +59,9 @@ type DataState = {
   setSort: (key: SortKey, dir: SortDir) => void
   showAll: boolean
   setShowAll: (v: boolean) => void
+  /** The deal hovered on the map or in the list: the other side shows it too (§9.2.1). */
+  hovDeal: number | null
+  setHovDeal: (id: number | null) => void
 }
 
 export type MainView = '/deals' | '/market-rates' | '/cma'
@@ -99,6 +102,13 @@ export type DealDraft = {
   note: string
   moreOpen: boolean
 }
+
+/** A blank add form. */
+export const emptyDraft = (): DealDraft => ({
+  pin: '', loc: '', locManual: false, hint: '', hintWarn: false, type: '', details: '', area: '', lotArea: '', frontage: '', price: '', date: '',
+  beds: '', corner: false, ridge: false, terrain: '', cond: '', year: '', storeys: '', floor: '', furn: '', baths: '', parking: '', parkIncl: '',
+  asking: '', fin: '', dom: '', codeOrLink: '', note: '', moreOpen: false,
+})
 
 /** Deal counts per place and type follow the live deals. */
 function withCounts(locations: LocationJSON[], types: TypeJSON[], deals: DealJSON[]) {
@@ -184,7 +194,13 @@ export const useData = create<DataState>()((set, get) => ({
   setSort: (key, dir) => set({ sort: { key, dir } }),
   showAll: false,
   setShowAll: (showAll) => set({ showAll }),
+  hovDeal: null,
+  setHovDeal: (hovDeal) => set({ hovDeal }),
 }))
+
+/** Only text fields count as unsaved work in a new draft (§7.4.8): the type select always has a value. */
+export const DRAFT_TEXT_KEYS = ['pin', 'details', 'area', 'lotArea', 'frontage', 'price', 'date', 'asking', 'dom', 'codeOrLink', 'note', 'year', 'floor'] as const
+export const draftHasText = (d: DealDraft | null) => !!d && DRAFT_TEXT_KEYS.some((k) => d[k].trim() !== '')
 
 export type ApiResult<T> = { ok: true; status: number; data: T } | { ok: false; status: number; code: string; message?: string; field?: string }
 

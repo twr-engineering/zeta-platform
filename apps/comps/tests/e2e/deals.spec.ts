@@ -5,7 +5,7 @@ import { ADMIN_STATE } from './users'
 
 // Add and edit a deal (app PRD §7.4, ADD-001..013) on the Appendix D set (global setup reseeds).
 // R4: every row of §8.6.3 in the browser and over HTTP. R5: leaving an edit asks, pin moves
-// included. R15: placeholders read as examples. Checks that save run only in chromium-light,
+// included. R15: placeholders read as examples. Checks that save (@write) run once in the writes project,
 // one at a time, and delete what they add.
 test.use({ storageState: ADMIN_STATE })
 
@@ -15,7 +15,6 @@ type Boot = {
   deals: { id: number; details: string | null; pp: number; location: { id: number | null; name: string }; type: { id: number | null; name: string }; createdAt: string; createdBy: number; note: string | null }[]
 }
 const boot = async (request: APIRequestContext): Promise<Boot> => (await request.get('/api/bootstrap')).json()
-const writes = () => test.skip(test.info().project.name !== 'chromium-light', 'writes run once, in chromium-light')
 const lightOnly = () => test.skip(/dark/.test(test.info().project.name), 'theme does not change validation')
 
 async function openNew(page: Page) {
@@ -260,6 +259,7 @@ test('edit: filled from the deal; moving only the pin and clicking a tab asks (R
   await page.goto(`/deals/${deal.id}/edit`)
   await expect(page.locator('#aPin')).not.toHaveValue('')
   const before = await page.locator('#aPin').inputValue()
+  await expect(page.getByTestId('pinmap').locator('.leaflet-tile-pane')).toBeAttached()
   await page.getByTestId('pinmap').click({ position: { x: 60, y: 60 } })
   await expect(page.locator('#aPin')).not.toHaveValue(before)
   const moved = await page.locator('#aPin').inputValue()
@@ -283,11 +283,10 @@ test('edit: filled from the deal; moving only the pin and clicking a tab asks (R
   expect((await boot(request)).deals.find((d) => d.id === deal.id)).toBeTruthy()
 })
 
-// ---------- saving (chromium-light) ----------
+// ---------- saving (@write: the writes project) ----------
 
-test.describe.serial('saving', () => {
+test.describe.serial('saving', { tag: '@write' }, () => {
   test('save and add another keeps location, type and date (ADD-011), then edit keeps the created stamps (ADD-012)', async ({ page, request, baseURL }) => {
-    writes()
     await openNew(page)
     await page.locator('#aPin').fill('8.47800, 124.64700')
     await page.locator('#aLoc').selectOption({ label: 'Centrio' })
@@ -331,7 +330,6 @@ test.describe.serial('saving', () => {
   })
 
   test('add a place from the list: prefilled with the pin, selected after, the draft kept (ADD-009)', async ({ page, request, baseURL }) => {
-    writes()
     await openNew(page)
     await page.locator('#aPin').fill('8.45000, 124.70000')
     await page.locator('#aBL').fill('B1 L2')

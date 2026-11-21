@@ -4,7 +4,7 @@ import { expectNoSidewaysScroll } from './helpers'
 import { ADMIN_STATE } from './users'
 
 // Settings (app PRD §7.5, SET-001..008) on the Appendix D sample set (global setup reseeds).
-// Read-only checks run in every project; the writes run once (chromium-light), in order, and
+// Read-only checks run in every project; the writes (@write) run once, in the writes project after the read-only ones, in order, and
 // put everything back.
 test.use({ storageState: ADMIN_STATE })
 
@@ -164,9 +164,8 @@ test('phone layout: stacked rows with the deal word, no sideways scroll', async 
   await expectNoSidewaysScroll(page)
 })
 
-test.describe('writes', () => {
+test.describe('writes', { tag: '@write' }, () => {
   test.describe.configure({ mode: 'serial' })
-  test.beforeEach(({}, info) => test.skip(info.project.name !== 'chromium-light', 'writes run once'))
 
   test('rename moves every deal and reports it in one toast (SET-003)', async ({ page }) => {
     await page.goto('/settings')

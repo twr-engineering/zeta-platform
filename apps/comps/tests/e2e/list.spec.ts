@@ -4,7 +4,7 @@ import { expectNoSidewaysScroll } from './helpers'
 import { ADMIN_STATE } from './users'
 
 // Closed deals list (app PRD §7.1, CD-001..019) on the Appendix D set; expected values from D.5.
-// R3, R8, R9, R10 are regressions. Writes run only in chromium-light, serially, and put back
+// R3, R8, R9, R10 are regressions. Writes (@write) run once in the writes project, after the read-only projects, and put back
 // what they change.
 test.use({ storageState: ADMIN_STATE })
 
@@ -13,7 +13,6 @@ const count = (page: Page) => page.locator('#listCount')
 const sub = (page: Page) => page.locator('#listSub')
 const rows = (page: Page) => page.locator('.drow')
 const toast = (page: Page) => page.locator('#toast')
-const writes = () => test.skip(test.info().project.name !== 'chromium-light', 'writes run once, in chromium-light')
 
 async function open(page: Page, size = WIDE) {
   await page.setViewportSize(size)
@@ -286,9 +285,8 @@ test('empty, loading and failure states (CD-019, §7.1.7)', async ({ page }) => 
   await expect(count(page)).toHaveText('72 closed deals')
 })
 
-test.describe.serial('writes', () => {
+test.describe.serial('writes', { tag: '@write' }, () => {
   test('delete with undo restores the same deal, open (CD-015)', async ({ page, request }) => {
-    writes()
     await open(page)
     await search(page, 'b22-l27')
     const before = (await (await request.get('/api/deals')).json()).deals.find((d: { details: string }) => d.details === 'B22 L27')
@@ -307,7 +305,6 @@ test.describe.serial('writes', () => {
   })
 
   test('edit from the details returns to the list with the deal open; long details clamp to 2 lines (CD-016)', async ({ page, request, baseURL }) => {
-    writes()
     const boot = await (await request.get('/api/bootstrap')).json()
     const loc = boot.locations.find((l: { name: string }) => l.name === 'Uptown main road, north stretch').id
     const type = boot.types.find((t: { name: string }) => t.name === 'Residential lot').id

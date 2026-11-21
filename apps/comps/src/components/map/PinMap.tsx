@@ -23,6 +23,7 @@ export function PinMap({
   chosenId,
   label,
   onPick,
+  pinZoom,
 }: {
   pin: LatLng | null
   places: MapPlace[]
@@ -30,6 +31,8 @@ export function PinMap({
   chosenId: number | null
   label: string
   onPick: (p: LatLng) => void
+  /** Start centered on the pin at this zoom when there is one (the Settings dialog map, §9.5). */
+  pinZoom?: number
 }) {
   const box = useRef<HTMLDivElement>(null)
   const st = useRef<{ L: L; map: Leaflet.Map; ctx: Leaflet.LayerGroup; pin: Leaflet.Marker | null; labels: HTMLElement[]; chosen: HTMLElement | null } | null>(null)
@@ -52,6 +55,12 @@ export function PinMap({
       map.on('click', (e: Leaflet.LeafletMouseEvent) => pick.current({ lat: e.latlng.lat, lng: e.latlng.lng }))
       map.on('zoomend moveend', () => st.current && declutter(st.current.labels, st.current.chosen))
       const { pin: p0, places: pl, dots: d0 } = initial.current
+      if (p0 && pinZoom) {
+        map.setView([p0.lat, p0.lng], pinZoom)
+        draw()
+        setPin(p0, false)
+        return
+      }
       const pts: [number, number][] = [...pl.map((x) => [x.lat, x.lng] as [number, number]), ...d0.map((x) => [x.lat, x.lng] as [number, number])]
       if (p0) pts.push([p0.lat, p0.lng])
       if (pts.length) map.fitBounds(Lf.latLngBounds(pts), { padding: [40, 40], maxZoom: 17 })

@@ -30,11 +30,10 @@ import {
   hasFurnish,
   hasParking,
   hasRooms,
-  nearestPlace,
   preview,
   previewWarning,
   refKey,
-  suggestionHint,
+  suggestFor,
   type DealInput,
   type Opt,
   type TypeInfo,
@@ -42,7 +41,7 @@ import {
 import { manilaISO, peso, pinText } from '@/lib/format'
 import { CATEGORIES, SETTINGS_COPY, parsePin, pinOk } from '@/lib/settings'
 import { metres } from '@/lib/stats'
-import { api, useData, type DealDraft } from '@/lib/store'
+import { api, draftHasText, emptyDraft, useData, type DealDraft } from '@/lib/store'
 
 import { useDeleteDeal } from './useDeleteDeal'
 
@@ -74,14 +73,7 @@ const FIELD_ID: Record<string, string> = {
 }
 /** Inputs inside "More details": an error there opens it. */
 const IN_MORE = new Set(['dom', 'asking', 'year', 'floor', 'codeOrLink'])
-/** Only text fields count as unsaved work in a new draft (§7.4.8). */
-const TEXT_KEYS = ['pin', 'details', 'area', 'lotArea', 'frontage', 'price', 'date', 'asking', 'dom', 'codeOrLink', 'note', 'year', 'floor'] as const
 
-export const emptyDraft = (): DealDraft => ({
-  pin: '', loc: '', locManual: false, hint: '', hintWarn: false, type: '', details: '', area: '', lotArea: '', frontage: '', price: '', date: '',
-  beds: '', corner: false, ridge: false, terrain: '', cond: '', year: '', storeys: '', floor: '', furn: '', baths: '', parking: '', parkIncl: '',
-  asking: '', fin: '', dom: '', codeOrLink: '', note: '', moreOpen: false,
-})
 
 const s = (v: number | string | null | undefined) => (v === null || v === undefined ? '' : String(v))
 
@@ -285,12 +277,7 @@ export function DealScreen({ editId }: { editId?: number }) {
   // ----- location suggestion (§7.4.2) -----
   const suggest = (p: LatLng | null, base: DealDraft): DealDraft => {
     if (!p || base.locManual || isEdit) return base
-    const shown = new Set(locations.filter((l) => !l.hidden).map((l) => l.id))
-    const candidates = [
-      ...locations.filter((l) => !l.hidden).map((l) => ({ key: String(l.id), lat: l.lat, lng: l.lng })),
-      ...deals.filter((x) => x.location.id !== null && shown.has(x.location.id)).map((x) => ({ key: String(x.location.id), lat: x.lat, lng: x.lng })),
-    ]
-    const h = suggestionHint(nearestPlace(p, candidates, metres))
+    const h = suggestFor(p, locations, deals, metres)
     return { ...base, loc: h.key, hint: h.hint, hintWarn: h.warn }
   }
 
@@ -336,7 +323,7 @@ export function DealScreen({ editId }: { editId?: number }) {
   }
 
   // ----- leaving by Back or Cancel (§7.4.8) -----
-  const hasText = TEXT_KEYS.some((k) => d[k].trim() !== '')
+  const hasText = draftHasText(d)
   const backOrCancel = () => {
     const goBack = () => router.push(lastView)
     if (isEdit) {

@@ -19,10 +19,17 @@ export default defineConfig({
   use: { baseURL, trace: 'retain-on-failure' },
   projects: [
     { name: 'setup', testMatch: /admin\.setup\.ts/ },
-    { name: 'chromium-light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' }, dependencies: ['setup'] },
-    { name: 'chromium-dark', use: { ...devices['Desktop Chrome'], colorScheme: 'dark' }, dependencies: ['setup'] },
-    { name: 'webkit-light', use: { ...devices['Desktop Safari'], colorScheme: 'light' }, dependencies: ['setup'] },
-    { name: 'webkit-dark', use: { ...devices['Desktop Safari'], colorScheme: 'dark' }, dependencies: ['setup'] },
+    { name: 'chromium-light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' }, dependencies: ['setup'], grepInvert: /@write/ },
+    { name: 'chromium-dark', use: { ...devices['Desktop Chrome'], colorScheme: 'dark' }, dependencies: ['setup'], grepInvert: /@write/ },
+    { name: 'webkit-light', use: { ...devices['Desktop Safari'], colorScheme: 'light' }, dependencies: ['setup'], grepInvert: /@write/ },
+    { name: 'webkit-dark', use: { ...devices['Desktop Safari'], colorScheme: 'dark' }, dependencies: ['setup'], grepInvert: /@write/ },
+    // Tests that change data run once, after every read-only project, so exact counts never race a write.
+    {
+      name: 'writes',
+      use: { ...devices['Desktop Chrome'], colorScheme: 'light' },
+      grep: /@write/,
+      dependencies: ['chromium-light', 'chromium-dark', 'webkit-light', 'webkit-dark'],
+    },
   ],
   webServer: {
     command: `pnpm exec next start -p ${PORT}`,
