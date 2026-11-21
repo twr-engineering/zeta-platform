@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+
+import { GuardedLink, useGuard } from './GuardedLink'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -42,8 +44,10 @@ export function TopBar({ name }: { name: string }) {
     }
   }, [open])
 
+  const guard = useGuard()
   async function logOut() {
     setOpen(false)
+    if (!(await guard())) return
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined)
     router.replace('/login')
     router.refresh()
@@ -52,15 +56,15 @@ export function TopBar({ name }: { name: string }) {
   return (
     <header className="top">
       <div className="wrap topin">
-        <Link className="brand" href="/deals" aria-label="Zeta, closed deals">
+        <GuardedLink className="brand" href="/deals" aria-label="Zeta, closed deals">
           <Logo />
-        </Link>
+        </GuardedLink>
         <nav className="tabs" aria-label="Sections">
           {TABS.map((t) => (
-            <Link key={t.href} className="tab" href={t.href} aria-current={pathname === t.href ? 'page' : undefined} title={'title' in t ? t.title : undefined}>
+            <GuardedLink key={t.href} className="tab" href={t.href} aria-current={pathname === t.href ? 'page' : undefined} title={'title' in t ? t.title : undefined}>
               <Icon name={t.icon} className="tabicon" />
               <span>{t.label}</span>
-            </Link>
+            </GuardedLink>
           ))}
         </nav>
         <div className="topright">
@@ -91,10 +95,10 @@ export function TopBar({ name }: { name: string }) {
                 <strong>{name}</strong>
                 <span>Owner</span>
               </div>
-              <Link className="menuitem" role="menuitem" href="/settings" onClick={() => setOpen(false)}>
+              <GuardedLink className="menuitem" role="menuitem" href="/settings" onClick={() => setOpen(false)}>
                 <Icon name="gear" />
                 Settings
-              </Link>
+              </GuardedLink>
               <button type="button" className="menuitem" role="menuitem" onClick={logOut}>
                 <Icon name="logout" />
                 Log out

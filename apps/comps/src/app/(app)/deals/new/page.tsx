@@ -1,13 +1,6 @@
-import { PageHead } from '@/components/PageHead'
-import { LoadGate } from '@/components/LoadState'
-import { PAGE_HEADS } from '@/lib/copy'
+import { DealScreen } from '@/components/deal/DealScreen'
 
-// Add a closed deal (M3). M1: page head only.
+/** Add a closed deal (app PRD §7.4). */
 export default function AddDealPage() {
-  return (
-    <main className="addwrap">
-      <PageHead title={PAGE_HEADS.add.title} sub={PAGE_HEADS.add.sub} />
-      <LoadGate />
-    </main>
-  )
+  return <DealScreen />
 }
