@@ -7,7 +7,10 @@
 export const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const
 
 /** ₱ + whole pesos with en-US commas: 26450.5 → "₱26,451". */
-export const peso = (n: number): string => '₱' + Math.round(n).toLocaleString('en-US')
+// One shared formatter: toLocaleString builds a new one on every call, which costs ~0.03 ms per
+// number and adds up to hundreds of ms over thousands of map markers (NFR-002).
+const WHOLE = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+export const peso = (n: number): string => '₱' + WHOLE.format(Math.round(n))
 
 /** ≥ 1,000,000 → "₱21.5M" (2 decimals, trailing zeros and point removed); otherwise peso(). */
 export const pesoShort = (n: number): string =>

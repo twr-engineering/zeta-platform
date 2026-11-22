@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 
 import {
   clampRange,
-  filtered,
   rangeInfo,
   rangeText,
-  searched,
   typeInfoOf,
   visibleDefs,
   type FDef,
@@ -15,8 +13,8 @@ import {
   type Range,
   type RangeInfo,
 } from '@/lib/filters'
+import { shownDeals } from '@/components/deals/useShownDeals'
 import { SegButtons } from '@/components/SegButtons'
-import { manilaISO } from '@/lib/format'
 import { useData } from '@/lib/store'
 
 /**
@@ -44,8 +42,8 @@ export function FiltersSheet({ open, countSearch, onClose }: { open: boolean; co
 
   const t = typeInfoOf(bar.fType, types)
   const defs = visibleDefs(t)
-  const list = filtered(deals, bar, types, manilaISO())
-  const n = (countSearch ? searched(list, query.trim()) : list).length
+  const shown = shownDeals(deals, types, bar, query)
+  const n = (countSearch ? shown.list : shown.inFilters).length
   const put = (k: FDef['k'], v: Fx[FDef['k']] | undefined) => {
     const fx = { ...bar.fx }
     if (v === undefined || v === '') delete fx[k]

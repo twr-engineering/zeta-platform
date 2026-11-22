@@ -6,7 +6,7 @@
  */
 import type { DealJSON, TypeJSON } from './data'
 import { FIN_OPTS, FURN_OPTS, COND_OPTS, LEGACY_TYPE, hasFurnish, hasRooms, refKey, type TypeInfo } from './deals'
-import { median, MIN_DEALS, pct } from './stats'
+import { MIN_DEALS, pctSorted } from './stats'
 
 // ---------- filter bar (§6.3) ----------
 
@@ -23,6 +23,17 @@ export const DEFAULT_PERIOD = '24'
 export function months(date: string, today: string): number {
   const days = (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86_400_000
   return days / 30.44
+}
+
+/**
+ * The earliest date inside "sold within N months" (NFR-002: one date per filter change instead of
+ * parsing every deal's date). months(d) <= N ⇔ days(d) <= 30.44·N; deal dates are whole days, so
+ * the cutoff is today − ⌊30.44·N⌋ days, and `date >= cutoff` (ISO strings sort as dates) is exact.
+ */
+export function periodCutoff(today: string, n: number): string {
+  if (n >= 9999) return '0000-01-01'
+  const t = Date.parse(`${today}T00:00:00Z`) - Math.floor(30.44 * n) * 86_400_000
+  return new Date(t).toISOString().slice(0, 10)
 }
 
 /** Filter-bar keys of a deal's place and type: refKey (`id:5`, or `name:…` for a name not in Settings). */
@@ -141,12 +152,12 @@ export const DEFAULT_BAR: BarState = { fLoc: '', fType: '', fPeriod: DEFAULT_PER
 export function filtered<T extends DealJSON>(deals: T[], bar: BarState, types: TypeJSON[], today: string): T[] {
   const t = typeInfoOf(bar.fType, types)
   const act = activeDefs(bar.fx, t)
-  const p = Number(bar.fPeriod)
+  const cutoff = periodCutoff(today, Number(bar.fPeriod))
   return deals.filter(
     (d) =>
       (!bar.fLoc || locKeyOf(d) === bar.fLoc) &&
       (!bar.fType || typeKeyOf(d) === bar.fType) &&
-      months(d.date, today) <= p &&
+      d.date >= cutoff &&
       (!bar.band || d.band === bar.band) &&
       act.every((def) => passes(def, d, bar.fx[def.k]!)),
   )
@@ -171,13 +182,36 @@ export const searchText = (d: DealJSON) =>
 
 /** `searched()`: every word must match, plainly or with punctuation removed. */
 export function searched<T extends DealJSON>(list: T[], query: string): T[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean)
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => ({ w, sq: squash(w) }))
   if (!words.length) return list
   return list.filter((d) => {
-    const t = searchText(d)
-    const tq = squash(t)
-    return words.every((w) => t.includes(w) || (!!squash(w) && tq.includes(squash(w))))
+    const { t, tq } = haystack(d)
+    return words.every(({ w, sq }) => t.includes(w) || (!!sq && tq.includes(sq)))
   })
+}
+
+/**
+ * A deal's search text, built once per deal object (NFR-002: 20,000 deals per keystroke). Deals
+ * from the store are never mutated, an edit replaces the object, so the cache cannot go stale.
+ */
+const HAY = new WeakMap<DealJSON, { t: string; tq: string }>()
+
+/** Fill the search-text cache ahead of the first search. */
+export function warmSearch(deals: DealJSON[]): void {
+  for (const d of deals) haystack(d)
+}
+function haystack(d: DealJSON) {
+  let h = HAY.get(d)
+  if (!h) {
+    const t = searchText(d)
+    h = { t, tq: squash(t) }
+    HAY.set(d, h)
+  }
+  return h
 }
 
 // ---------- sort (§7.1.4) ----------
@@ -208,9 +242,11 @@ export function sortVal(d: DealJSON, k: SortKey): number {
 /** Ties sort newest first. */
 export function sortList<T extends DealJSON>(list: T[], k: SortKey, dir: SortDir): T[] {
   const s = dir === 'asc' ? 1 : -1
+  // ISO dates compare as strings; numeric keys are read once per deal, not once per comparison.
+  const cmpDate = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
   return list
-    .map((d, i) => ({ d, i }))
-    .sort((a, b) => (sortVal(a.d, k) - sortVal(b.d, k)) * s || Date.parse(b.d.date) - Date.parse(a.d.date) || a.i - b.i)
+    .map((d, i) => ({ d, i, v: k === 'date' ? 0 : sortVal(d, k) }))
+    .sort((a, b) => (k === 'date' ? cmpDate(a.d.date, b.d.date) : a.v - b.v) * s || cmpDate(b.d.date, a.d.date) || a.i - b.i)
     .map((x) => x.d)
 }
 
@@ -264,8 +300,9 @@ export type Confidence = { lvl: 'High' | 'Medium' | 'Low'; n: number; spread: nu
 export function confidence(vals: number[]): Confidence | null {
   const n = vals.length
   if (n < MIN_DEALS) return null
-  const med = median(vals)
-  const spread = (pct(vals, 0.75) - pct(vals, 0.25)) / med
+  const s = vals.slice().sort((a, b) => a - b)
+  const med = pctSorted(s, 0.5)
+  const spread = (pctSorted(s, 0.75) - pctSorted(s, 0.25)) / med
   const lvl = n >= 10 && spread <= 0.15 ? 'High' : n >= 7 && spread <= 0.25 ? 'Medium' : 'Low'
   return { lvl, n, spread }
 }

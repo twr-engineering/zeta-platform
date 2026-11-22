@@ -10,6 +10,7 @@ import {
   filtered,
   filtersOn,
   months,
+  periodCutoff,
   rangeInfo,
   rangeText,
   searched,
@@ -243,5 +244,15 @@ describe('details for every Appendix D deal (D.5, CD-012, CD-017)', () => {
   })
   it('a name not in Settings gets no Location type (CD-018)', () => {
     expect(detailFields(byRef('X01')).map((x) => x.label)).not.toContain('Location type')
+  })
+})
+
+describe('period cutoff equals the months() rule (NFR-002 optimisation)', () => {
+  it('for every fixture deal, period and several "today"s', () => {
+    const days = ['2026-11-04', '2026-03-01', '2026-02-28', '2027-01-01']
+    for (const today of days)
+      for (const p of [3, 6, 12, 24, 36])
+        for (const d of DEALS) expect(d.date >= periodCutoff(today, p), `${d.ref} ${today} ${p}`).toBe(months(d.date, today) <= p)
+    expect(periodCutoff('2026-11-04', 9999)).toBe('0000-01-01')
   })
 })

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import { useDeleteDeal } from '@/components/deal/useDeleteDeal'
 import { Icon } from '@/components/Icon'
@@ -10,11 +10,13 @@ import { LoadError } from '@/components/LoadState'
 import { InfoButton } from '@/components/Tips'
 import type { DealJSON } from '@/lib/data'
 import { detailFields, gridCols, type Field } from '@/lib/details'
-import { LIMIT, SORT_OPTS, confidence, filtered, isSplit, searched, sortList, typeInfoOf, type SortDir, type SortKey } from '@/lib/filters'
-import { fmtDate, fmtMonth, manilaISO, peso, sqm } from '@/lib/format'
+import { LIMIT, SORT_OPTS, confidence, isSplit, searched, sortList, typeInfoOf, type SortDir, type SortKey } from '@/lib/filters'
+import { fmtDate, fmtMonth, peso, sqm } from '@/lib/format'
 import { linkLabel } from '@/lib/listing'
 import { median } from '@/lib/stats'
 import { useData } from '@/lib/store'
+
+import { shownDeals } from './useShownDeals'
 
 /**
  * The Closed deals list column (app PRD §7.1.2–7.1.8): header with count, middle price and
@@ -41,11 +43,21 @@ export function DealList() {
     if (key !== sort.key) setSort(key, sort.dir)
   }, [key, sort.key, sort.dir, setSort])
 
-  const inFilters = filtered(deals, bar, types, manilaISO())
-  const list = searched(inFilters, q)
-  const everywhere = q ? searched(deals, q).length : 0
+  // One cached result shared with the map and the sheet; sorting and the "outside your filters"
+  // count are cached too (NFR-002: with 20,000 deals these are the costly parts).
+  const { list } = shownDeals(deals, types, bar, query)
+  const everywhere = useMemo(() => (q ? searched(deals, q).length : 0), [deals, q])
   const outside = everywhere - list.length
-  const sorted = sortList(list, key, sort.dir)
+  const sorted = useMemo(() => sortList(list, key, sort.dir), [list, key, sort.dir])
+  // The summary line: one pass and one sort per list change (NFR-002).
+  const summary = useMemo(() => {
+    const vals = list.map((d) => d.pp)
+    return {
+      oneType: new Set(list.map((d) => `${d.type.id}|${d.type.name}`)).size === 1,
+      conf: confidence(vals),
+      med: median(vals),
+    }
+  }, [list])
   let limit = showAll ? sorted.length : LIMIT
   if (selDeal !== null) {
     const ix = sorted.findIndex((d) => d.id === selDeal)
@@ -69,9 +81,7 @@ export function DealList() {
       </>
     )
 
-  const vals = list.map((d) => d.pp)
-  const oneType = new Set(list.map((d) => `${d.type.id}|${d.type.name}`)).size === 1
-  const conf = confidence(vals)
+  const { oneType, conf, med } = summary
 
   return (
     <>
@@ -86,7 +96,7 @@ export function DealList() {
               'Choose a property type to see the middle price per sqm.'
             ) : conf ? (
               <>
-                Middle price <strong className="num">{peso(median(vals))}</strong> per sqm <InfoButton tip="middle" />
+                Middle price <strong className="num">{peso(med)}</strong> per sqm <InfoButton tip="middle" />
                 {'  '}
                 <span className={`pill conf-${conf.lvl.toLowerCase()}`}>{conf.lvl} confidence</span>
               </>

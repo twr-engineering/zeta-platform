@@ -1,6 +1,10 @@
 /** Percentiles as in the reference build's pct() (app PRD §8.2, §17.4): linear interpolation. */
 export function pct(values: number[], p: number): number {
-  const s = values.slice().sort((a, b) => a - b)
+  return pctSorted(values.slice().sort((a, b) => a - b), p)
+}
+
+/** pct() on values already sorted ascending: several percentiles from one sort (NFR-002). */
+export function pctSorted(s: number[], p: number): number {
   if (!s.length) return NaN
   const i = (s.length - 1) * p
   const lo = Math.floor(i)

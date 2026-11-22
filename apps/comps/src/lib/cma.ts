@@ -5,7 +5,7 @@
 import type { DealJSON } from './data'
 import { bedsLabel } from './details'
 import { refKey, type TypeInfo } from './deals'
-import { confidence, months, type Confidence } from './filters'
+import { confidence, periodCutoff, type Confidence } from './filters'
 import { distanceLabel } from './format'
 import { median, metres, MIN_DEALS, pct } from './stats'
 import { bandOf } from './settings'
@@ -82,8 +82,9 @@ export const LOW_NOTE = 'Low confidence. Treat this as a starting point and chec
 export function runCma(s: Subject, deals: DealJSON[], st: CmaSettings, today: string): Cma {
   const crit = criteria(s)
   const like = st.similar && crit.length > 0
+  const cutoff = periodCutoff(today, st.months)
   const near = deals
-    .filter((d) => refKey(d.type) === s.typeKey && months(d.date, today) <= st.months && (!like || isSimilar(s, d)))
+    .filter((d) => refKey(d.type) === s.typeKey && d.date >= cutoff && (!like || isSimilar(s, d)))
     .map((d) => ({ d, dist: metres(s, d) }))
   const inside = near.filter((x) => x.dist <= st.radius).sort((a, b) => a.dist - b.dist)
   const tooFar = near.filter((x) => x.dist > st.radius && x.dist <= 2 * st.radius).sort((a, b) => a.dist - b.dist)
