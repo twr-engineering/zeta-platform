@@ -15,6 +15,10 @@ BEGIN
   END IF;
 END $$;
 
+-- Postgres 16+: a non-superuser owner (Supabase's "postgres") must be a member of cms_app before it
+-- can hand it the schema. The creator already holds ADMIN on the role, so it can grant itself this.
+GRANT cms_app TO CURRENT_USER;
+
 -- The schema belongs to the CMS role: it creates and alters its own tables through migrations.
 CREATE SCHEMA IF NOT EXISTS cms AUTHORIZATION cms_app;
 ALTER SCHEMA cms OWNER TO cms_app;
