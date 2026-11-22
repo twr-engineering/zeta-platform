@@ -73,11 +73,17 @@ describe('comps data layer', () => {
     ['pin outside CDO', 'lat', '9.5'],
     ['lower-case listing code', 'code', "'ztp815'"],
   ])('the database rejects %s (DATA-001)', async (_label, column, value) => {
-    await expect(raw(sql.raw(`UPDATE "comps_deals" SET "${column}" = ${value} WHERE "id" = ${deal.id}`))).rejects.toThrow()
+    await expect(raw(sql.raw(`UPDATE "cms"."comps_deals" SET "${column}" = ${value} WHERE "id" = ${deal.id}`))).rejects.toThrow()
+  })
+
+  // Control: the same raw path accepts a valid write, so the rejections above are the checks
+  // firing, not a wrong table name (the tables live in schema "cms", ADR-23).
+  it('a valid raw update succeeds', async () => {
+    await expect(raw(sql.raw(`UPDATE "cms"."comps_deals" SET "price" = "price" WHERE "id" = ${deal.id}`))).resolves.toBeDefined()
   })
 
   it('the database rejects a deal with both a location and a legacy location name', async () => {
-    await expect(raw(sql.raw(`UPDATE "comps_deals" SET "legacy_location_name" = 'Old Road' WHERE "id" = ${deal.id}`))).rejects.toThrow()
+    await expect(raw(sql.raw(`UPDATE "cms"."comps_deals" SET "legacy_location_name" = 'Old Road' WHERE "id" = ${deal.id}`))).rejects.toThrow()
   })
 
   it('trash sets deletedAt/deletedBy only; restore brings back the exact stamps (DATA-003, C19)', async () => {

@@ -1,4 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+
+/** The Postgres schema Payload owns in the shared platform database (ADR-23). */
+export const DB_SCHEMA = 'cms'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -129,6 +132,10 @@ export function createConfig(options: CreateConfigOptions = {}): Promise<import(
     typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
     db: postgresAdapter({
       pool: { connectionString: process.env.DATABASE_URI || '' },
+      // ADR-23: one shared platform database (the commission Supabase project), one schema per
+      // app. Payload and Comps own `cms`; commission keeps `public`. Every environment uses the
+      // same schema, so migrations are written once, fully qualified to "cms".
+      schemaName: DB_SCHEMA,
       // Schema changes go through committed migrations (PRD §14.5), never dev auto-push: push
       // stops on an interactive rename prompt, which hangs unattended (cloud agent) sessions.
       push: false,

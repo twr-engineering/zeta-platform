@@ -1,15 +1,9 @@
-import * as migration_20261029_153705_initial from './20261029_153705_initial';
-import * as migration_20261120_170210_comps_init from './20261120_170210_comps_init';
+import * as migration_20261122_101638_cms_baseline from './20261122_101638_cms_baseline';
 
 export const migrations = [
   {
-    up: migration_20261029_153705_initial.up,
-    down: migration_20261029_153705_initial.down,
-    name: '20261029_153705_initial',
-  },
-  {
-    up: migration_20261120_170210_comps_init.up,
-    down: migration_20261120_170210_comps_init.down,
-    name: '20261120_170210_comps_init'
+    up: migration_20261122_101638_cms_baseline.up,
+    down: migration_20261122_101638_cms_baseline.down,
+    name: '20261122_101638_cms_baseline'
   },
 ];
