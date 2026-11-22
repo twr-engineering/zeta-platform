@@ -9,7 +9,11 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   // Hand-written: on Supabase the schema already exists, owned by the CMS role; locally it does not.
-  await db.execute(sql`CREATE SCHEMA IF NOT EXISTS "cms";`)
+  // Checked first, because CREATE SCHEMA (even IF NOT EXISTS) needs CREATE on the whole database,
+  // which cms_app deliberately does not have.
+  await db.execute(sql`DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'cms') THEN CREATE SCHEMA "cms"; END IF;
+  END $$;`)
   await db.execute(sql`
    CREATE TYPE "cms"."_locales" AS ENUM('en');
   CREATE TYPE "cms"."enum_locations_type" AS ENUM('region', 'province', 'city', 'municipality', 'barangay', 'subdivision');
