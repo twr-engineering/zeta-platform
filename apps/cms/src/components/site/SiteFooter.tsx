@@ -2,6 +2,8 @@ import Link from 'next/link'
 
 import { Pending } from '@/components/Pending'
 
+import { CookieSettingsLink } from './CookieConsent'
+
 type LinkRow = { label: string; url: string }
 type Column = { title: string; links?: LinkRow[] | null }
 type Social = { facebook?: string | null; tiktok?: string | null; youtube?: string | null; instagram?: string | null; linkedin?: string | null }
@@ -71,6 +73,7 @@ export function SiteFooter({ explore, columns, tagline, newsletter, social, brok
         <div className="container footer-legal">
           <span>© {new Date().getFullYear()} Zeta Group</span>
           {brokerLicence && <span>PRC Broker Lic. No. {brokerLicence}</span>}
+          <CookieSettingsLink />
         </div>
       </div>
     </footer>

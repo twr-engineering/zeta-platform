@@ -1,12 +1,16 @@
 import { Poppins } from 'next/font/google'
+import { cookies } from 'next/headers'
 import React from 'react'
 
+import { CookieConsent } from '@/components/site/CookieConsent'
 import { SiteFooter } from '@/components/site/SiteFooter'
 import { SiteHeader, type MenuItem } from '@/components/site/SiteHeader'
+import { activeCategories, CONSENT_COOKIE, parseConsent } from '@/lib/site/consent'
 import { CURRENCIES } from '@/lib/site/currencies'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
 import { getLocationMenu, getSiteSettings } from '@/lib/site/settings'
 import { resolveMeasurement } from '@/lib/site/units'
+import { TrackingScripts } from '@/components/site/TrackingScripts'
 
 import './styles.css'
 
@@ -26,6 +30,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     resolveDisplayCurrency(),
     resolveMeasurement(),
   ])
+  const consent = parseConsent((await cookies()).get(CONSENT_COOKIE)?.value)
+  const tracking = settings.tracking ?? {}
   return (
     <html lang="en" className={poppins.variable}>
       <body>
@@ -47,6 +53,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           social={settings.social ?? {}}
           brokerLicence={settings.brokerLicence}
         />
+        <CookieConsent categories={activeCategories(tracking)} consent={consent} />
+        <TrackingScripts ids={tracking} consent={consent} />
       </body>
     </html>
   )

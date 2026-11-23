@@ -1958,6 +1958,13 @@ export interface SiteSetting {
     linkedin?: string | null;
   };
   /**
+   * Optional analytics and marketing tags (FR-G10). Each loads only after the visitor consents to its category; leave empty and no tag, and no cookie banner, is shown.
+   */
+  tracking?: {
+    gaMeasurementId?: string | null;
+    metaPixelId?: string | null;
+  };
+  /**
    * The button beside the menu on scrolled and inner pages.
    */
   headerCta?: {
@@ -2119,6 +2126,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         youtube?: T;
         instagram?: T;
         linkedin?: T;
+      };
+  tracking?:
+    | T
+    | {
+        gaMeasurementId?: T;
+        metaPixelId?: T;
       };
   headerCta?:
     | T
