@@ -19,6 +19,7 @@
     "staging:reset": "node --env-file-if-exists=.env --import tsx scripts/staging-reset.ts",
     "seed:scale": "node --env-file-if-exists=.env --import tsx scripts/seed-scale.ts",
     "perf:bootstrap": "node --env-file-if-exists=.env --import tsx scripts/perf-bootstrap.ts",
+    "screenshots": "node --import tsx scripts/screenshots.ts",
     "perf:filters": "node --import tsx scripts/perf-filters.ts"
   },
   "dependencies": {
