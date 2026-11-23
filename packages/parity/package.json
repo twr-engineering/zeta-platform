@@ -8,6 +8,7 @@
     "./price": "./src/price.ts",
     "./calculator": "./src/calculator.ts",
     "./area": "./src/area.ts",
+    "./card": "./src/card.ts",
     "./pending": "./src/pending.ts",
     "./search/params": "./src/search/params.ts",
     "./search/device": "./src/search/device.ts"

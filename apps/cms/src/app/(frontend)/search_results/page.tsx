@@ -7,6 +7,7 @@ import { deviceType } from '@/lib/search/device'
 import { parseSearch, type SearchModuleConfig } from '@/lib/search/params'
 import { searchListings } from '@/lib/search/query'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
+import { resolveMeasurement } from '@/lib/site/units'
 import { getRates, payload } from '@/lib/site/payload'
 
 /**
@@ -41,10 +42,11 @@ export default async function SearchResults({ searchParams }: Props) {
   const raw = await searchParams
   const sp = toSp(raw)
   const q = parseSearch(sp, { ...MODULE, device: deviceType((await headers()).get('user-agent')) })
-  const [result, rates, currency] = await Promise.all([
+  const [result, rates, currency, measurement] = await Promise.all([
     searchListings(await payload(), q),
     getRates(),
     resolveDisplayCurrency(raw.currency),
+    resolveMeasurement(),
   ])
 
   // ?pageid={n} is the pagination form the site emits (BPM-013), preserved here.
@@ -62,7 +64,7 @@ export default async function SearchResults({ searchParams }: Props) {
       <Pending id="price-slider-plus">The filter panel (price slider, banded facets) is not built yet. The URL contract is.</Pending>
       <div className="grid">
         {result.docs.map((l) => (
-          <ListingCard key={l.id} listing={l} rates={rates} currency={currency} />
+          <ListingCard key={l.id} listing={l} rates={rates} currency={currency} measurement={measurement} />
         ))}
       </div>
       {result.totalPages > 1 && (
