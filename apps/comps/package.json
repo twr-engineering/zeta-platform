@@ -16,6 +16,7 @@
     "seed:admin": "node --env-file-if-exists=.env --import tsx scripts/seed-admin.ts",
     "admin:reset-password": "node --env-file-if-exists=.env --import tsx scripts/reset-password.ts",
     "seed:sample": "node --env-file-if-exists=.env --import tsx scripts/seed-sample.ts",
+    "staging:reset": "node --env-file-if-exists=.env --import tsx scripts/staging-reset.ts",
     "seed:scale": "node --env-file-if-exists=.env --import tsx scripts/seed-scale.ts",
     "perf:bootstrap": "node --env-file-if-exists=.env --import tsx scripts/perf-bootstrap.ts",
     "perf:filters": "node --import tsx scripts/perf-filters.ts"

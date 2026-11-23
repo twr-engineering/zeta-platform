@@ -70,6 +70,7 @@ test('the login page works under the CSP', async ({ browser }) => {
 
 test('no server secret in the built client files (NFR-009)', () => {
   test.skip(test.info().project.name !== 'chromium-light', 'file scan: once')
+  test.skip(!!process.env.E2E_BASE_URL, 'scans the local build; staging runs the same code')
   const dir = path.resolve(process.cwd(), '.next/static') // Playwright runs from apps/comps
   const files: string[] = []
   const walk = (d: string) => {
