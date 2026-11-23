@@ -112,6 +112,13 @@ export const PENDING = {
     unblock: 'Pick Mountain, then Corner on production and record the URL and the CRM call.',
     interim: 'All selected attributes are sent and AND-ed (BPM-004).',
   },
+  'location-counts': {
+    need: 'City Guide listing counts (FR-H06) need each Location bound to its CRM geography ids (crmGeography), set during content migration.',
+    refs: ['FR-H06', 'BPM-017'],
+    blockedOn: 'build',
+    unblock: 'Bind Locations to their CRM province/municipality/town ids (WP-10 content migration).',
+    interim: 'Counts match listings by municipality name, which over-counts (e.g. every Cagayan de Oro listing, not just the city page\'s own).',
+  },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
     refs: ['BPM-007', 'FR-P11', 'OQ-23'],

@@ -752,6 +752,130 @@ export interface Page {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Sections in order; drag to reorder (FR-H01, FR-H10). The page with slug "home" is the front page.
+   */
+  layout?:
+    | (
+        | {
+            heading: string;
+            backgroundImage?: (number | null) | Media;
+            /**
+             * Optional MP4 played muted behind the headline; the image is its poster and the fallback.
+             */
+            backgroundVideoUrl?: string | null;
+            presenterName?: string | null;
+            presenterTagline?: string | null;
+            guideLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeHero';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            testimonials?: (number | Testimonial)[] | null;
+            moreLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeTestimonials';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            items?:
+              | {
+                  value: string;
+                  label: string;
+                  id?: string | null;
+                }[]
+              | null;
+            moreLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeStats';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            locations?: (number | Location)[] | null;
+            moreLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeLocations';
+          }
+        | {
+            heading: string;
+            text?: string | null;
+            image?: (number | null) | Media;
+            imageSide?: ('left' | 'right') | null;
+            button?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeCta';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            shortlists?: (number | Shortlist)[] | null;
+            moreLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeShortlists';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            /**
+             * Leave empty for the latest 8.
+             */
+            posts?: (number | Post)[] | null;
+            /**
+             * Leave empty for the latest 4.
+             */
+            shorts?: (number | Short)[] | null;
+            moreLink?: {
+              label?: string | null;
+              url?: string | null;
+            };
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeContent';
+          }
+        | {
+            heading: string;
+            intro?: string | null;
+            items?:
+              | {
+                  question: string;
+                  answer: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'homeFaq';
+          }
+      )[]
+    | null;
   content?: {
     root: {
       type: string;
@@ -1635,6 +1759,140 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         path?: T;
         id?: T;
+      };
+  layout?:
+    | T
+    | {
+        homeHero?:
+          | T
+          | {
+              heading?: T;
+              backgroundImage?: T;
+              backgroundVideoUrl?: T;
+              presenterName?: T;
+              presenterTagline?: T;
+              guideLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeTestimonials?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              testimonials?: T;
+              moreLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeStats?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              items?:
+                | T
+                | {
+                    value?: T;
+                    label?: T;
+                    id?: T;
+                  };
+              moreLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeLocations?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              locations?: T;
+              moreLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeCta?:
+          | T
+          | {
+              heading?: T;
+              text?: T;
+              image?: T;
+              imageSide?: T;
+              button?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeShortlists?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              shortlists?: T;
+              moreLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeContent?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              posts?: T;
+              shorts?: T;
+              moreLink?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        homeFaq?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              items?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   content?: T;
   seo?:

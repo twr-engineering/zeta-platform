@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, publishedOrStaff } from '../access'
+import { HOME_BLOCKS } from '../blocks/home'
 import { slugField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
 
@@ -20,6 +21,12 @@ export const Pages: CollectionConfig = {
   fields: [
     { name: 'title', type: 'text', required: true },
     ...slugField(),
+    {
+      name: 'layout',
+      type: 'blocks',
+      blocks: HOME_BLOCKS,
+      admin: { description: 'Sections in order; drag to reorder (FR-H01, FR-H10). The page with slug "home" is the front page.' },
+    },
     { name: 'content', type: 'richText' },
     seoGroup,
   ],
