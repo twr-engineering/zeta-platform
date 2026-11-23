@@ -18,7 +18,7 @@ import { YIELD_DEALS, REFERRER_DEAL, deal } from "./fixtures";
 /**
  * M2.2 — the materialized read model must produce numbers byte-identical to the M2.1
  * pure functions. `cellsFromDeals` is the pure mirror of the SQL aggregation
- * (app.recompute_yield_cell / reconcile's truth CTE): group non-archived, classified
+ * (commission_private.recompute_yield_cell / reconcile's truth CTE): group non-archived, classified
  * deals by (segment, year) and sum the stored 2-dp values (Rule 8). Proving
  * `reportFromAggregates ∘ cellsFromDeals === buildYieldReport` here shows the reducer
  * is a faithful inverse of the aggregation; the live script proves the DB computes

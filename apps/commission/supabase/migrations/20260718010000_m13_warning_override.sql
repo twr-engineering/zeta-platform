@@ -15,10 +15,10 @@
 -- boundary, the same one M0.4 drew for events it cannot roll into the writer.
 --
 -- SECURITY INVOKER: the deal lookup runs under the caller's RLS, so a caller can
--- only ever log an override against their own deal, and app.write_audit_entry
+-- only ever log an override against their own deal, and commission_private.write_audit_entry
 -- pins the actor to auth.uid().
 
-create or replace function public.log_deal_warning_override(
+create or replace function commission.log_deal_warning_override(
   p_deal_id uuid,
   p_warnings text[]
 )
@@ -38,14 +38,14 @@ begin
 
   -- RLS confines this to the caller's own deal; another tenant's id sees no row.
   select workspace_id into v_workspace_id
-  from public.deal
+  from commission.deal
   where id = p_deal_id;
 
   if v_workspace_id is null then
     return jsonb_build_object('ok', false, 'reason', 'not_found');
   end if;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_workspace_id,
     'deal',
     p_deal_id,
@@ -60,5 +60,5 @@ begin
 end;
 $$;
 
-comment on function public.log_deal_warning_override is
+comment on function commission.log_deal_warning_override is
   'FR-M1-11. Records on a deal''s audit trail that it was saved past active soft warnings (the "Continue anyway" override). Called after a successful create/update; SECURITY INVOKER so RLS scopes the deal lookup and the actor is auth.uid().';

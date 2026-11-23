@@ -85,6 +85,7 @@ if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)) {
 }
 
 const admin = createClient(url, serviceKey, {
+  db: { schema: "commission" },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

@@ -16,14 +16,14 @@
 -- deal-edit gate). These functions are the single writer + audit; the explicit
 -- confirmation token (checkConfirmation, M0 §3.2 — mode 'checked', OQ3) is enforced
 -- in src/lib/dashboard/actions.ts before the RPC. Tenant isolation is RLS
--- (app.current_workspace_id() scopes every write to the caller's workspace).
+-- (commission_private.current_workspace_id() scopes every write to the caller's workspace).
 
 -- ---------------------------------------------------------------------------
--- public.annual_target_override — one optional row per (workspace, year)
+-- commission.annual_target_override — one optional row per (workspace, year)
 -- ---------------------------------------------------------------------------
-create table public.annual_target_override (
+create table commission.annual_target_override (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
   -- The paid/dashboard year this override governs. A sane calendar band keeps a
   -- fat-fingered 20260 out; matches the TargetTable's 2020–2032 planning band.
   year integer not null,
@@ -46,49 +46,49 @@ create table public.annual_target_override (
   constraint annual_target_override_one_per_year unique (workspace_id, year)
 );
 
-comment on table public.annual_target_override is
+comment on table commission.annual_target_override is
   'M6 §3.1 (sheet cell E15). One optional manual annual GCI target per (workspace, year); when present its amount replaces the TargetTable-derived target in Section 2 + Section 6. Set/change/clear are confirmed + audited (FR-M6-03).';
 
 create index annual_target_override_workspace_year_idx
-  on public.annual_target_override (workspace_id, year);
+  on commission.annual_target_override (workspace_id, year);
 
-alter table public.annual_target_override enable row level security;
+alter table commission.annual_target_override enable row level security;
 
 create policy "annual_target_override_select_member"
-  on public.annual_target_override for select
+  on commission.annual_target_override for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "annual_target_override_insert_member"
-  on public.annual_target_override for insert
+  on commission.annual_target_override for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "annual_target_override_update_member"
-  on public.annual_target_override for update
+  on commission.annual_target_override for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "annual_target_override_delete_member"
-  on public.annual_target_override for delete
+  on commission.annual_target_override for delete
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create trigger annual_target_override_touch_updated_at
-  before update on public.annual_target_override
-  for each row execute function app.touch_updated_at();
+  before update on commission.annual_target_override
+  for each row execute function commission_private.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
--- public.set_annual_target_override — set OR change the override for a year
+-- commission.set_annual_target_override — set OR change the override for a year
 -- ---------------------------------------------------------------------------
 -- Upsert on (workspace, year): a positive amount + optional ≤240-char note. Audits
 -- old→new (amount and note); the year is carried on the entry for context. The
 -- friction-gate confirmation is enforced at the action layer (FR-M6-03 / OQ3).
-create or replace function public.set_annual_target_override(
+create or replace function commission.set_annual_target_override(
   p_year integer,
   p_amount numeric,
   p_note text
@@ -101,8 +101,8 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_before public.annual_target_override;
-  v_after public.annual_target_override;
+  v_before commission.annual_target_override;
+  v_after commission.annual_target_override;
   v_note text;
   v_audit_id uuid;
   v_is_insert boolean;
@@ -111,7 +111,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -130,12 +130,12 @@ begin
 
   -- Pre-image for the audit (null on a first set).
   select * into v_before
-  from public.annual_target_override
+  from commission.annual_target_override
   where workspace_id = v_ws and year = p_year
   for update;
   v_is_insert := not found;
 
-  insert into public.annual_target_override (
+  insert into commission.annual_target_override (
     workspace_id, year, amount, note, created_by, updated_by
   )
   values (v_ws, p_year, p_amount, v_note, v_uid, v_uid)
@@ -145,9 +145,9 @@ begin
     updated_by = v_uid
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_ws, 'annual_target_override', v_after.id,
-    case when v_is_insert then 'create'::public.audit_action else 'update'::public.audit_action end,
+    case when v_is_insert then 'create'::commission.audit_action else 'update'::commission.audit_action end,
     jsonb_build_object(
       'year', jsonb_build_object('old', to_jsonb(v_before.year), 'new', to_jsonb(v_after.year)),
       'amount', jsonb_build_object(
@@ -167,21 +167,21 @@ begin
 end;
 $$;
 
-comment on function public.set_annual_target_override is
+comment on function commission.set_annual_target_override is
   'FR-M6-03. Sets/changes the AnnualTargetOverride for (workspace, year): positive amount + optional ≤240-char note; upsert on the unique (workspace, year) key. Audited old→new (create on first set, else update). Friction gate at the action layer.';
 
-revoke all on function public.set_annual_target_override(integer, numeric, text) from public;
-grant execute on function public.set_annual_target_override(integer, numeric, text) to authenticated;
+revoke all on function commission.set_annual_target_override(integer, numeric, text) from public;
+grant execute on function commission.set_annual_target_override(integer, numeric, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.clear_annual_target_override — remove the override for a year
+-- commission.clear_annual_target_override — remove the override for a year
 -- ---------------------------------------------------------------------------
 -- Clearing removes the row → the target reverts to the TargetTable derivation
 -- (Section 2 shows the derived value again). The removal is audited as 'archive'
 -- (the enum's retire-a-record token — the override is a single mutable cell, not a
 -- soft-deleted entity, so there is no archived_at; 'archive' records that it was
 -- retired old→null). Idempotent: clearing a non-existent override is a no-op.
-create or replace function public.clear_annual_target_override(
+create or replace function commission.clear_annual_target_override(
   p_year integer
 )
 returns jsonb
@@ -192,20 +192,20 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_before public.annual_target_override;
+  v_before commission.annual_target_override;
   v_audit_id uuid;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select * into v_before
-  from public.annual_target_override
+  from commission.annual_target_override
   where workspace_id = v_ws and year = p_year
   for update;
 
@@ -213,9 +213,9 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'year', p_year);
   end if;
 
-  delete from public.annual_target_override where id = v_before.id;
+  delete from commission.annual_target_override where id = v_before.id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_ws, 'annual_target_override', v_before.id, 'archive',
     jsonb_build_object(
       'year', jsonb_build_object('old', to_jsonb(v_before.year), 'new', to_jsonb(v_before.year)),
@@ -230,8 +230,8 @@ begin
 end;
 $$;
 
-comment on function public.clear_annual_target_override is
+comment on function commission.clear_annual_target_override is
   'FR-M6-03. Removes the AnnualTargetOverride for (workspace, year) → the target reverts to the TargetTable derivation. Audited as ''archive'' (amount old→null). Idempotent (no-op when none exists). Friction gate at the action layer.';
 
-revoke all on function public.clear_annual_target_override(integer) from public;
-grant execute on function public.clear_annual_target_override(integer) to authenticated;
+revoke all on function commission.clear_annual_target_override(integer) from public;
+grant execute on function commission.clear_annual_target_override(integer) to authenticated;

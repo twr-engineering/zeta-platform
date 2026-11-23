@@ -44,3 +44,10 @@ export function getSupabaseEnv(): SupabaseEnv {
 
   return { url: url as string, anonKey: anonKey as string };
 }
+
+/**
+ * The app's schema in the shared platform database (ADR-23). Every client sends it, or PostgREST
+ * falls back to `public`, which belongs to another app there. The project must list it under
+ * API → Exposed schemas.
+ */
+export const DB_SCHEMA = "commission" as const;

@@ -12,7 +12,7 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  public: {
+  commission: {
     Tables: {
       annual_target_override: {
         Row: {
@@ -60,7 +60,7 @@ export type Database = {
       }
       audit_log_entry: {
         Row: {
-          action: Database["public"]["Enums"]["audit_action"]
+          action: Database["commission"]["Enums"]["audit_action"]
           actor_user_id: string
           entity_id: string
           entity_type: string
@@ -71,7 +71,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
-          action: Database["public"]["Enums"]["audit_action"]
+          action: Database["commission"]["Enums"]["audit_action"]
           actor_user_id: string
           entity_id: string
           entity_type: string
@@ -82,7 +82,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
-          action?: Database["public"]["Enums"]["audit_action"]
+          action?: Database["commission"]["Enums"]["audit_action"]
           actor_user_id?: string
           entity_id?: string
           entity_type?: string
@@ -143,7 +143,7 @@ export type Database = {
           created_at: string
           id: string
           published_at: string | null
-          status: Database["public"]["Enums"]["content_bundle_status"]
+          status: Database["commission"]["Enums"]["content_bundle_status"]
           version: string
         }
         Insert: {
@@ -151,7 +151,7 @@ export type Database = {
           created_at?: string
           id?: string
           published_at?: string | null
-          status?: Database["public"]["Enums"]["content_bundle_status"]
+          status?: Database["commission"]["Enums"]["content_bundle_status"]
           version: string
         }
         Update: {
@@ -159,7 +159,7 @@ export type Database = {
           created_at?: string
           id?: string
           published_at?: string | null
-          status?: Database["public"]["Enums"]["content_bundle_status"]
+          status?: Database["commission"]["Enums"]["content_bundle_status"]
           version?: string
         }
         Relationships: []
@@ -171,12 +171,12 @@ export type Database = {
           booked_date: string
           booked_year: number
           client_name: string
-          comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
-          commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          comm_base: Database["commission"]["Enums"]["deal_comm_base_display"]
+          commission_basis: Database["commission"]["Enums"]["deal_commission_basis"]
           created_at: string
           created_by: string | null
           deal_code: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible: number
           developer_id: string | null
           display_label: string
@@ -188,30 +188,30 @@ export type Database = {
           incentive_billed: number
           incentive_net: number
           incentive_taxable:
-            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | Database["commission"]["Enums"]["deal_incentive_taxable"]
             | null
           is_sample: boolean
           lead_source_id: string
           list_price: number
-          mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          mode_of_payment: Database["commission"]["Enums"]["deal_mode_of_payment"]
           net_gci: number
           net_list_price: number
           property_details: string
           property_type_id: string
-          property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          property_vat: Database["commission"]["Enums"]["deal_property_vat"]
           rate_pct: string | null
           receipt_issued: boolean
           referral_out: number
           referral_out_fixed: number
           referral_out_pct: number
           referral_paid: boolean
-          representation: Database["public"]["Enums"]["deal_representation"]
+          representation: Database["commission"]["Enums"]["deal_representation"]
           search_blob: string | null
           taxable: boolean
-          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          transaction_type: Database["commission"]["Enums"]["deal_transaction_type"]
           updated_at: string
           updated_by: string | null
-          vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_memo: number
           version: number
           workspace_id: string
@@ -223,12 +223,12 @@ export type Database = {
           booked_date: string
           booked_year: number
           client_name: string
-          comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
-          commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
+          comm_base: Database["commission"]["Enums"]["deal_comm_base_display"]
+          commission_basis: Database["commission"]["Enums"]["deal_commission_basis"]
           created_at?: string
           created_by?: string | null
           deal_code: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible: number
           developer_id?: string | null
           display_label: string
@@ -240,30 +240,30 @@ export type Database = {
           incentive_billed?: number
           incentive_net: number
           incentive_taxable?:
-            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | Database["commission"]["Enums"]["deal_incentive_taxable"]
             | null
           is_sample?: boolean
           lead_source_id: string
           list_price: number
-          mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          mode_of_payment: Database["commission"]["Enums"]["deal_mode_of_payment"]
           net_gci: number
           net_list_price: number
           property_details: string
           property_type_id: string
-          property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          property_vat: Database["commission"]["Enums"]["deal_property_vat"]
           rate_pct?: string | null
           receipt_issued?: boolean
           referral_out: number
           referral_out_fixed?: number
           referral_out_pct?: number
           referral_paid?: boolean
-          representation: Database["public"]["Enums"]["deal_representation"]
+          representation: Database["commission"]["Enums"]["deal_representation"]
           search_blob?: string | null
           taxable: boolean
-          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          transaction_type: Database["commission"]["Enums"]["deal_transaction_type"]
           updated_at?: string
           updated_by?: string | null
-          vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_memo: number
           version?: number
           workspace_id: string
@@ -275,12 +275,12 @@ export type Database = {
           booked_date?: string
           booked_year?: number
           client_name?: string
-          comm_base?: Database["public"]["Enums"]["deal_comm_base_display"]
-          commission_basis?: Database["public"]["Enums"]["deal_commission_basis"]
+          comm_base?: Database["commission"]["Enums"]["deal_comm_base_display"]
+          commission_basis?: Database["commission"]["Enums"]["deal_commission_basis"]
           created_at?: string
           created_by?: string | null
           deal_code?: string
-          deal_type?: Database["public"]["Enums"]["deal_type"]
+          deal_type?: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible?: number
           developer_id?: string | null
           display_label?: string
@@ -292,30 +292,30 @@ export type Database = {
           incentive_billed?: number
           incentive_net?: number
           incentive_taxable?:
-            | Database["public"]["Enums"]["deal_incentive_taxable"]
+            | Database["commission"]["Enums"]["deal_incentive_taxable"]
             | null
           is_sample?: boolean
           lead_source_id?: string
           list_price?: number
-          mode_of_payment?: Database["public"]["Enums"]["deal_mode_of_payment"]
+          mode_of_payment?: Database["commission"]["Enums"]["deal_mode_of_payment"]
           net_gci?: number
           net_list_price?: number
           property_details?: string
           property_type_id?: string
-          property_vat?: Database["public"]["Enums"]["deal_property_vat"]
+          property_vat?: Database["commission"]["Enums"]["deal_property_vat"]
           rate_pct?: string | null
           receipt_issued?: boolean
           referral_out?: number
           referral_out_fixed?: number
           referral_out_pct?: number
           referral_paid?: boolean
-          representation?: Database["public"]["Enums"]["deal_representation"]
+          representation?: Database["commission"]["Enums"]["deal_representation"]
           search_blob?: string | null
           taxable?: boolean
-          transaction_type?: Database["public"]["Enums"]["deal_transaction_type"]
+          transaction_type?: Database["commission"]["Enums"]["deal_transaction_type"]
           updated_at?: string
           updated_by?: string | null
-          vat_basis?: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis?: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_memo?: number
           version?: number
           workspace_id?: string
@@ -358,7 +358,7 @@ export type Database = {
           audit_entry_id: string
           deal_code: string
           deal_id: string
-          event_type: Database["public"]["Enums"]["deal_event_type"]
+          event_type: Database["commission"]["Enums"]["deal_event_type"]
           field_changes: Json
           id: string
           new_values: Json | null
@@ -372,7 +372,7 @@ export type Database = {
           audit_entry_id: string
           deal_code: string
           deal_id: string
-          event_type: Database["public"]["Enums"]["deal_event_type"]
+          event_type: Database["commission"]["Enums"]["deal_event_type"]
           field_changes?: Json
           id?: string
           new_values?: Json | null
@@ -386,7 +386,7 @@ export type Database = {
           audit_entry_id?: string
           deal_code?: string
           deal_id?: string
-          event_type?: Database["public"]["Enums"]["deal_event_type"]
+          event_type?: Database["commission"]["Enums"]["deal_event_type"]
           field_changes?: Json
           id?: string
           new_values?: Json | null
@@ -422,7 +422,7 @@ export type Database = {
       developer: {
         Row: {
           archived_at: string | null
-          comm_base: Database["public"]["Enums"]["developer_comm_base"]
+          comm_base: Database["commission"]["Enums"]["developer_comm_base"]
           created_at: string
           created_by: string | null
           id: string
@@ -434,7 +434,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
-          comm_base?: Database["public"]["Enums"]["developer_comm_base"]
+          comm_base?: Database["commission"]["Enums"]["developer_comm_base"]
           created_at?: string
           created_by?: string | null
           id?: string
@@ -445,7 +445,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
-          comm_base?: Database["public"]["Enums"]["developer_comm_base"]
+          comm_base?: Database["commission"]["Enums"]["developer_comm_base"]
           created_at?: string
           created_by?: string | null
           id?: string
@@ -686,7 +686,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          role: Database["public"]["Enums"]["membership_role"]
+          role: Database["commission"]["Enums"]["membership_role"]
           updated_at: string
           user_id: string
           workspace_id: string
@@ -694,7 +694,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["membership_role"]
+          role?: Database["commission"]["Enums"]["membership_role"]
           updated_at?: string
           user_id: string
           workspace_id: string
@@ -702,7 +702,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["membership_role"]
+          role?: Database["commission"]["Enums"]["membership_role"]
           updated_at?: string
           user_id?: string
           workspace_id?: string
@@ -724,7 +724,7 @@ export type Database = {
           id: string
           metadata: Json
           occurred_at: string
-          step: Database["public"]["Enums"]["onboarding_step"] | null
+          step: Database["commission"]["Enums"]["onboarding_step"] | null
           workspace_id: string
         }
         Insert: {
@@ -733,7 +733,7 @@ export type Database = {
           id?: string
           metadata?: Json
           occurred_at?: string
-          step?: Database["public"]["Enums"]["onboarding_step"] | null
+          step?: Database["commission"]["Enums"]["onboarding_step"] | null
           workspace_id: string
         }
         Update: {
@@ -742,7 +742,7 @@ export type Database = {
           id?: string
           metadata?: Json
           occurred_at?: string
-          step?: Database["public"]["Enums"]["onboarding_step"] | null
+          step?: Database["commission"]["Enums"]["onboarding_step"] | null
           workspace_id?: string
         }
         Relationships: [
@@ -760,12 +760,12 @@ export type Database = {
           completed_at: string | null
           created_at: string
           created_by: string | null
-          current_step: Database["public"]["Enums"]["onboarding_step"]
+          current_step: Database["commission"]["Enums"]["onboarding_step"]
           dismissed_at: string | null
           id: string
           import_job_id: string | null
           sample_deal_id: string | null
-          status: Database["public"]["Enums"]["onboarding_status"]
+          status: Database["commission"]["Enums"]["onboarding_status"]
           step_data: Json
           updated_at: string
           updated_by: string | null
@@ -775,12 +775,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
-          current_step?: Database["public"]["Enums"]["onboarding_step"]
+          current_step?: Database["commission"]["Enums"]["onboarding_step"]
           dismissed_at?: string | null
           id?: string
           import_job_id?: string | null
           sample_deal_id?: string | null
-          status?: Database["public"]["Enums"]["onboarding_status"]
+          status?: Database["commission"]["Enums"]["onboarding_status"]
           step_data?: Json
           updated_at?: string
           updated_by?: string | null
@@ -790,12 +790,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
-          current_step?: Database["public"]["Enums"]["onboarding_step"]
+          current_step?: Database["commission"]["Enums"]["onboarding_step"]
           dismissed_at?: string | null
           id?: string
           import_job_id?: string | null
           sample_deal_id?: string | null
-          status?: Database["public"]["Enums"]["onboarding_status"]
+          status?: Database["commission"]["Enums"]["onboarding_status"]
           step_data?: Json
           updated_at?: string
           updated_by?: string | null
@@ -840,13 +840,13 @@ export type Database = {
           net_cash: number
           net_of_vat: number
           payment_date: string
-          payment_type: Database["public"]["Enums"]["payment_type"]
+          payment_type: Database["commission"]["Enums"]["payment_type"]
           reference_note: string | null
           retained_cash: number
           updated_at: string
           updated_by: string | null
           vat_amount: number
-          vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis_used: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_rate_used: number
           version: number
           workspace_id: string
@@ -866,13 +866,13 @@ export type Database = {
           net_cash: number
           net_of_vat: number
           payment_date: string
-          payment_type: Database["public"]["Enums"]["payment_type"]
+          payment_type: Database["commission"]["Enums"]["payment_type"]
           reference_note?: string | null
           retained_cash: number
           updated_at?: string
           updated_by?: string | null
           vat_amount: number
-          vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis_used: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_rate_used: number
           version?: number
           workspace_id: string
@@ -892,13 +892,13 @@ export type Database = {
           net_cash?: number
           net_of_vat?: number
           payment_date?: string
-          payment_type?: Database["public"]["Enums"]["payment_type"]
+          payment_type?: Database["commission"]["Enums"]["payment_type"]
           reference_note?: string | null
           retained_cash?: number
           updated_at?: string
           updated_by?: string | null
           vat_amount?: number
-          vat_basis_used?: Database["public"]["Enums"]["deal_vat_basis"]
+          vat_basis_used?: Database["commission"]["Enums"]["deal_vat_basis"]
           vat_rate_used?: number
           version?: number
           workspace_id?: string
@@ -926,7 +926,7 @@ export type Database = {
           actor_user_id: string
           audit_entry_id: string
           deal_id: string
-          event_type: Database["public"]["Enums"]["payment_event_type"]
+          event_type: Database["commission"]["Enums"]["payment_event_type"]
           field_changes: Json
           id: string
           new_values: Json
@@ -939,7 +939,7 @@ export type Database = {
           actor_user_id: string
           audit_entry_id: string
           deal_id: string
-          event_type: Database["public"]["Enums"]["payment_event_type"]
+          event_type: Database["commission"]["Enums"]["payment_event_type"]
           field_changes?: Json
           id?: string
           new_values: Json
@@ -952,7 +952,7 @@ export type Database = {
           actor_user_id?: string
           audit_entry_id?: string
           deal_id?: string
-          event_type?: Database["public"]["Enums"]["payment_event_type"]
+          event_type?: Database["commission"]["Enums"]["payment_event_type"]
           field_changes?: Json
           id?: string
           new_values?: Json
@@ -1074,7 +1074,7 @@ export type Database = {
           name: string
           updated_at: string
           updated_by: string | null
-          vat_rule: Database["public"]["Enums"]["property_vat_rule"]
+          vat_rule: Database["commission"]["Enums"]["property_vat_rule"]
           workspace_id: string
           reference_count: number | null
         }
@@ -1086,7 +1086,7 @@ export type Database = {
           name: string
           updated_at?: string
           updated_by?: string | null
-          vat_rule: Database["public"]["Enums"]["property_vat_rule"]
+          vat_rule: Database["commission"]["Enums"]["property_vat_rule"]
           workspace_id: string
         }
         Update: {
@@ -1097,7 +1097,7 @@ export type Database = {
           name?: string
           updated_at?: string
           updated_by?: string | null
-          vat_rule?: Database["public"]["Enums"]["property_vat_rule"]
+          vat_rule?: Database["commission"]["Enums"]["property_vat_rule"]
           workspace_id?: string
         }
         Relationships: [
@@ -1127,7 +1127,7 @@ export type Database = {
           days_to_first_release: number | null
           deal_code: string
           deal_id: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible: number
           developer_id: string | null
           first_payment_date: string | null
@@ -1141,7 +1141,7 @@ export type Database = {
           pct_collected: number | null
           property_details: string
           search_blob: string | null
-          status: Database["public"]["Enums"]["receivable_status"]
+          status: Database["commission"]["Enums"]["receivable_status"]
           total_collectible: number | null
           updated_at: string
           updated_by: string | null
@@ -1166,7 +1166,7 @@ export type Database = {
           days_to_first_release?: number | null
           deal_code: string
           deal_id: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible: number
           developer_id?: string | null
           first_payment_date?: string | null
@@ -1180,7 +1180,7 @@ export type Database = {
           pct_collected?: number | null
           property_details: string
           search_blob?: string | null
-          status?: Database["public"]["Enums"]["receivable_status"]
+          status?: Database["commission"]["Enums"]["receivable_status"]
           total_collectible?: number | null
           updated_at?: string
           updated_by?: string | null
@@ -1205,7 +1205,7 @@ export type Database = {
           days_to_first_release?: number | null
           deal_code?: string
           deal_id?: string
-          deal_type?: Database["public"]["Enums"]["deal_type"]
+          deal_type?: Database["commission"]["Enums"]["deal_type"]
           default_total_collectible?: number
           developer_id?: string | null
           first_payment_date?: string | null
@@ -1219,7 +1219,7 @@ export type Database = {
           pct_collected?: number | null
           property_details?: string
           search_blob?: string | null
-          status?: Database["public"]["Enums"]["receivable_status"]
+          status?: Database["commission"]["Enums"]["receivable_status"]
           total_collectible?: number | null
           updated_at?: string
           updated_by?: string | null
@@ -1626,10 +1626,10 @@ export type Database = {
     Functions: {
       advance_onboarding: {
         Args: {
-          p_from_step: Database["public"]["Enums"]["onboarding_step"]
+          p_from_step: Database["commission"]["Enums"]["onboarding_step"]
           p_skipped?: boolean
           p_step_data?: Json
-          p_to_step: Database["public"]["Enums"]["onboarding_step"]
+          p_to_step: Database["commission"]["Enums"]["onboarding_step"]
         }
         Returns: Json
       }
@@ -1669,9 +1669,9 @@ export type Database = {
           p_billed_commission: number
           p_booked_date: string
           p_client_name: string
-          p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
-          p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
-          p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_comm_base: Database["commission"]["Enums"]["deal_comm_base_display"]
+          p_commission_basis: Database["commission"]["Enums"]["deal_commission_basis"]
+          p_deal_type: Database["commission"]["Enums"]["deal_type"]
           p_default_total_collectible: number
           p_developer_id: string
           p_ewt_memo: number
@@ -1680,26 +1680,26 @@ export type Database = {
           p_gci_net_of_vat: number
           p_incentive_billed: number
           p_incentive_net: number
-          p_incentive_taxable: Database["public"]["Enums"]["deal_incentive_taxable"]
+          p_incentive_taxable: Database["commission"]["Enums"]["deal_incentive_taxable"]
           p_is_sample?: boolean
           p_lead_source_id: string
           p_list_price: number
-          p_mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          p_mode_of_payment: Database["commission"]["Enums"]["deal_mode_of_payment"]
           p_net_gci: number
           p_net_list_price: number
           p_property_details: string
           p_property_type_id: string
-          p_property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          p_property_vat: Database["commission"]["Enums"]["deal_property_vat"]
           p_rate_pct: string
           p_receipt_issued: boolean
           p_referral_out: number
           p_referral_out_fixed: number
           p_referral_out_pct: number
           p_referral_paid: boolean
-          p_representation: Database["public"]["Enums"]["deal_representation"]
+          p_representation: Database["commission"]["Enums"]["deal_representation"]
           p_taxable: boolean
-          p_transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
-          p_vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          p_transaction_type: Database["commission"]["Enums"]["deal_transaction_type"]
+          p_vat_basis: Database["commission"]["Enums"]["deal_vat_basis"]
           p_vat_memo: number
           p_yield_on_list: number
         }
@@ -1707,7 +1707,7 @@ export type Database = {
       }
       create_developer: {
         Args: {
-          p_comm_base?: Database["public"]["Enums"]["developer_comm_base"]
+          p_comm_base?: Database["commission"]["Enums"]["developer_comm_base"]
           p_name: string
         }
         Returns: Json
@@ -1722,11 +1722,11 @@ export type Database = {
           p_net_cash: number
           p_net_of_vat: number
           p_payment_date: string
-          p_payment_type: Database["public"]["Enums"]["payment_type"]
+          p_payment_type: Database["commission"]["Enums"]["payment_type"]
           p_reference_note: string
           p_retained_cash: number
           p_vat_amount: number
-          p_vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_basis_used: Database["commission"]["Enums"]["deal_vat_basis"]
           p_vat_rate_used: number
         }
         Returns: Json
@@ -1734,7 +1734,7 @@ export type Database = {
       create_property_type: {
         Args: {
           p_name: string
-          p_vat_rule: Database["public"]["Enums"]["property_vat_rule"]
+          p_vat_rule: Database["commission"]["Enums"]["property_vat_rule"]
         }
         Returns: Json
       }
@@ -1762,7 +1762,7 @@ export type Database = {
           p_deal_id: string
           p_legacy_note_missing?: boolean
           p_note: string
-          p_status: Database["public"]["Enums"]["receivable_status"]
+          p_status: Database["commission"]["Enums"]["receivable_status"]
         }
         Returns: Json
       }
@@ -1792,22 +1792,22 @@ export type Database = {
       reconcile_yield_aggregate: { Args: never; Returns: Json }
       reference_count:
         | {
-            Args: { "": Database["public"]["Tables"]["developer"]["Row"] }
+            Args: { "": Database["commission"]["Tables"]["developer"]["Row"] }
             Returns: {
               error: true
-            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+            } & "the function commission.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
           }
         | {
-            Args: { "": Database["public"]["Tables"]["lead_source"]["Row"] }
+            Args: { "": Database["commission"]["Tables"]["lead_source"]["Row"] }
             Returns: {
               error: true
-            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+            } & "the function commission.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
           }
         | {
-            Args: { "": Database["public"]["Tables"]["property_type"]["Row"] }
+            Args: { "": Database["commission"]["Tables"]["property_type"]["Row"] }
             Returns: {
               error: true
-            } & "the function public.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+            } & "the function commission.reference_count with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
           }
       rename_profile: { Args: { p_display_name: string }; Returns: Json }
       rename_workspace: { Args: { p_name: string }; Returns: Json }
@@ -1828,7 +1828,7 @@ export type Database = {
           p_offset?: number
           p_only_with_balance?: boolean
           p_sort?: string
-          p_status?: Database["public"]["Enums"]["receivable_status"]
+          p_status?: Database["commission"]["Enums"]["receivable_status"]
           p_text?: string
           p_year?: number
         }
@@ -1840,10 +1840,10 @@ export type Database = {
           collected_net: string
           deal_code: string
           deal_id: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           id: string
           property_details: string
-          status: Database["public"]["Enums"]["receivable_status"]
+          status: Database["commission"]["Enums"]["receivable_status"]
           total_collectible: string
           total_count: number
         }[]
@@ -1863,13 +1863,13 @@ export type Database = {
           booked_year: number
           client_name: string
           deal_code: string
-          deal_type: Database["public"]["Enums"]["deal_type"]
+          deal_type: Database["commission"]["Enums"]["deal_type"]
           developer_name: string
           id: string
           net_gci: string
           property_details: string
           total_count: number
-          transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
+          transaction_type: Database["commission"]["Enums"]["deal_transaction_type"]
         }[]
       }
       search_payments: {
@@ -1934,9 +1934,9 @@ export type Database = {
           p_billed_commission: number
           p_booked_date: string
           p_client_name: string
-          p_comm_base: Database["public"]["Enums"]["deal_comm_base_display"]
-          p_commission_basis: Database["public"]["Enums"]["deal_commission_basis"]
-          p_deal_type: Database["public"]["Enums"]["deal_type"]
+          p_comm_base: Database["commission"]["Enums"]["deal_comm_base_display"]
+          p_commission_basis: Database["commission"]["Enums"]["deal_commission_basis"]
+          p_deal_type: Database["commission"]["Enums"]["deal_type"]
           p_default_total_collectible: number
           p_developer_id: string
           p_ewt_memo: number
@@ -1947,25 +1947,25 @@ export type Database = {
           p_id: string
           p_incentive_billed: number
           p_incentive_net: number
-          p_incentive_taxable: Database["public"]["Enums"]["deal_incentive_taxable"]
+          p_incentive_taxable: Database["commission"]["Enums"]["deal_incentive_taxable"]
           p_lead_source_id: string
           p_list_price: number
-          p_mode_of_payment: Database["public"]["Enums"]["deal_mode_of_payment"]
+          p_mode_of_payment: Database["commission"]["Enums"]["deal_mode_of_payment"]
           p_net_gci: number
           p_net_list_price: number
           p_property_details: string
           p_property_type_id: string
-          p_property_vat: Database["public"]["Enums"]["deal_property_vat"]
+          p_property_vat: Database["commission"]["Enums"]["deal_property_vat"]
           p_rate_pct: string
           p_receipt_issued: boolean
           p_referral_out: number
           p_referral_out_fixed: number
           p_referral_out_pct: number
           p_referral_paid: boolean
-          p_representation: Database["public"]["Enums"]["deal_representation"]
+          p_representation: Database["commission"]["Enums"]["deal_representation"]
           p_taxable: boolean
-          p_transaction_type: Database["public"]["Enums"]["deal_transaction_type"]
-          p_vat_basis: Database["public"]["Enums"]["deal_vat_basis"]
+          p_transaction_type: Database["commission"]["Enums"]["deal_transaction_type"]
+          p_vat_basis: Database["commission"]["Enums"]["deal_vat_basis"]
           p_vat_memo: number
           p_yield_on_list: number
         }
@@ -1974,7 +1974,7 @@ export type Database = {
       update_developer: {
         Args: {
           p_affected_deal_count?: number
-          p_comm_base?: Database["public"]["Enums"]["developer_comm_base"]
+          p_comm_base?: Database["commission"]["Enums"]["developer_comm_base"]
           p_id: string
           p_name?: string
         }
@@ -2007,11 +2007,11 @@ export type Database = {
           p_net_cash: number
           p_net_of_vat: number
           p_payment_date: string
-          p_payment_type: Database["public"]["Enums"]["payment_type"]
+          p_payment_type: Database["commission"]["Enums"]["payment_type"]
           p_reference_note: string
           p_retained_cash: number
           p_vat_amount: number
-          p_vat_basis_used: Database["public"]["Enums"]["deal_vat_basis"]
+          p_vat_basis_used: Database["commission"]["Enums"]["deal_vat_basis"]
           p_vat_rate_used: number
         }
         Returns: Json
@@ -2021,7 +2021,7 @@ export type Database = {
           p_affected_deal_count?: number
           p_id: string
           p_name?: string
-          p_vat_rule?: Database["public"]["Enums"]["property_vat_rule"]
+          p_vat_rule?: Database["commission"]["Enums"]["property_vat_rule"]
         }
         Returns: Json
       }
@@ -2102,7 +2102,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "commission">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -2218,7 +2218,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  public: {
+  commission: {
     Enums: {
       audit_action: [
         "create",

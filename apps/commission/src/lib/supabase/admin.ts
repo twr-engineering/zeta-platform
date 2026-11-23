@@ -1,8 +1,8 @@
 import "server-only";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-import { getSupabaseEnv } from "./env";
+import { DB_SCHEMA, getSupabaseEnv } from "./env";
 
 /**
  * Service-role admin client — bypasses RLS and carries GoTrue's admin API.
@@ -19,7 +19,7 @@ import { getSupabaseEnv } from "./env";
  * carries no user session and no cookies, so there is no chance of it acting as
  * anything other than the service role.
  */
-export function createAdminClient(): SupabaseClient {
+export function createAdminClient() {
   const { url } = getSupabaseEnv();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -28,6 +28,7 @@ export function createAdminClient(): SupabaseClient {
   }
 
   return createClient(url, serviceRoleKey, {
+    db: { schema: DB_SCHEMA },
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

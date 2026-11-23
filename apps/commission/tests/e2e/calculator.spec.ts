@@ -39,7 +39,7 @@ const E = env();
 const admin: SupabaseClient = createClient(
   E.NEXT_PUBLIC_SUPABASE_URL,
   E.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { persistSession: false } }
+  { db: { schema: "commission" }, auth: { persistSession: false } }
 );
 
 const PASSWORD = "throwaway-m33-pw";

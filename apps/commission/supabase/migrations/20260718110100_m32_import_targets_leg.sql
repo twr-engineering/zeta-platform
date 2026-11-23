@@ -16,7 +16,7 @@
 -- added. The targets are a trusted bulk insert (like the deals leg), NOT the gated
 -- upsert_plan_year_target RPC — import bypasses the friction gate (m4_1/m5_1 pattern).
 
-create or replace function public.run_workbook_import(p_payload jsonb)
+create or replace function commission.run_workbook_import(p_payload jsonb)
 returns jsonb
 language plpgsql
 security invoker
@@ -48,7 +48,7 @@ declare
   v_receipt boolean;
   v_booked_year integer;
   v_display_label text;
-  v_row public.deal;
+  v_row commission.deal;
   v_changes jsonb;
   v_audit_id uuid;
   v_deal_id uuid;
@@ -61,7 +61,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -71,20 +71,20 @@ begin
   end if;
 
   -- (1) Idempotency + empty-workspace guards.
-  if exists (select 1 from public.import_batch where workspace_id = v_ws and file_hash = v_hash) then
+  if exists (select 1 from commission.import_batch where workspace_id = v_ws and file_hash = v_hash) then
     return jsonb_build_object('ok', false, 'reason', 'already_imported');
   end if;
-  if exists (select 1 from public.deal where workspace_id = v_ws) then
+  if exists (select 1 from commission.deal where workspace_id = v_ws) then
     return jsonb_build_object('ok', false, 'reason', 'workspace_not_empty');
   end if;
 
-  insert into public.import_batch (workspace_id, file_hash, file_name, created_by)
+  insert into commission.import_batch (workspace_id, file_hash, file_name, created_by)
   values (v_ws, v_hash, p_payload->>'file_name', v_uid)
   returning id into v_batch_id;
 
   -- (2) Tax settings.
   if p_payload ? 'tax' then
-    update public.tax_settings set
+    update commission.tax_settings set
       vat_rate = coalesce((p_payload->'tax'->>'vat_rate')::numeric, vat_rate),
       ewt_rate = coalesce((p_payload->'tax'->>'ewt_rate')::numeric, ewt_rate),
       property_vat_threshold = coalesce((p_payload->'tax'->>'property_vat_threshold')::numeric, property_vat_threshold),
@@ -95,13 +95,13 @@ begin
 
   -- (3) Lists — resolve-or-create, case-insensitive.
   for v_item in select value from jsonb_array_elements(coalesce(p_payload->'property_types', '[]'::jsonb)) loop
-    select id into v_pt_id from public.property_type
+    select id into v_pt_id from commission.property_type
       where workspace_id = v_ws and lower(name) = lower(btrim(v_item->>'name')) limit 1;
     if v_pt_id is null then
-      insert into public.property_type (workspace_id, name, vat_rule, created_by, updated_by)
-      values (v_ws, btrim(v_item->>'name'), (v_item->>'vat_rule')::public.property_vat_rule, v_uid, v_uid)
+      insert into commission.property_type (workspace_id, name, vat_rule, created_by, updated_by)
+      values (v_ws, btrim(v_item->>'name'), (v_item->>'vat_rule')::commission.property_vat_rule, v_uid, v_uid)
       returning id into v_pt_id;
-      perform app.write_audit_entry(v_ws, 'property_type', v_pt_id, 'create',
+      perform commission_private.write_audit_entry(v_ws, 'property_type', v_pt_id, 'create',
         jsonb_build_object(
           'name', jsonb_build_object('old', null, 'new', btrim(v_item->>'name')),
           'vat_rule', jsonb_build_object('old', null, 'new', v_item->>'vat_rule')));
@@ -110,13 +110,13 @@ begin
   end loop;
 
   for v_item in select value from jsonb_array_elements(coalesce(p_payload->'developers', '[]'::jsonb)) loop
-    select id into v_dev_id from public.developer
+    select id into v_dev_id from commission.developer
       where workspace_id = v_ws and lower(name) = lower(btrim(v_item->>'name')) limit 1;
     if v_dev_id is null then
-      insert into public.developer (workspace_id, name, comm_base, created_by, updated_by)
-      values (v_ws, btrim(v_item->>'name'), coalesce((v_item->>'comm_base')::public.developer_comm_base, 'net'), v_uid, v_uid)
+      insert into commission.developer (workspace_id, name, comm_base, created_by, updated_by)
+      values (v_ws, btrim(v_item->>'name'), coalesce((v_item->>'comm_base')::commission.developer_comm_base, 'net'), v_uid, v_uid)
       returning id into v_dev_id;
-      perform app.write_audit_entry(v_ws, 'developer', v_dev_id, 'create',
+      perform commission_private.write_audit_entry(v_ws, 'developer', v_dev_id, 'create',
         jsonb_build_object(
           'name', jsonb_build_object('old', null, 'new', btrim(v_item->>'name')),
           'comm_base', jsonb_build_object('old', null, 'new', coalesce(v_item->>'comm_base', 'net'))));
@@ -124,16 +124,16 @@ begin
     end if;
   end loop;
 
-  v_next_order := coalesce((select max(sort_order) from public.lead_source where workspace_id = v_ws), 0);
+  v_next_order := coalesce((select max(sort_order) from commission.lead_source where workspace_id = v_ws), 0);
   for v_item in select value from jsonb_array_elements(coalesce(p_payload->'lead_sources', '[]'::jsonb)) loop
-    select id into v_ls_id from public.lead_source
+    select id into v_ls_id from commission.lead_source
       where workspace_id = v_ws and lower(name) = lower(btrim(v_item->>'name')) limit 1;
     if v_ls_id is null then
       v_next_order := v_next_order + 1;
-      insert into public.lead_source (workspace_id, name, sort_order, created_by, updated_by)
+      insert into commission.lead_source (workspace_id, name, sort_order, created_by, updated_by)
       values (v_ws, btrim(v_item->>'name'), v_next_order, v_uid, v_uid)
       returning id into v_ls_id;
-      perform app.write_audit_entry(v_ws, 'lead_source', v_ls_id, 'create',
+      perform commission_private.write_audit_entry(v_ws, 'lead_source', v_ls_id, 'create',
         jsonb_build_object('name', jsonb_build_object('old', null, 'new', btrim(v_item->>'name'))));
       v_ls_created := v_ls_created + 1;
     end if;
@@ -144,7 +144,7 @@ begin
     v_derived := v_deal->'derived';
     v_code := btrim(v_deal->>'deal_code');
 
-    select id into v_pt_id from public.property_type
+    select id into v_pt_id from commission.property_type
       where workspace_id = v_ws and lower(name) = lower(btrim(v_deal->>'property_type_name')) limit 1;
     if v_pt_id is null then
       raise exception 'import: property type % not found for %', v_deal->>'property_type_name', v_code
@@ -153,7 +153,7 @@ begin
 
     v_dev_id := null;
     if nullif(btrim(coalesce(v_deal->>'developer_name', '')), '') is not null then
-      select id into v_dev_id from public.developer
+      select id into v_dev_id from commission.developer
         where workspace_id = v_ws and lower(name) = lower(btrim(v_deal->>'developer_name')) limit 1;
       if v_dev_id is null then
         raise exception 'import: developer % not found for %', v_deal->>'developer_name', v_code
@@ -161,14 +161,14 @@ begin
       end if;
     end if;
 
-    select id into v_ls_id from public.lead_source
+    select id into v_ls_id from commission.lead_source
       where workspace_id = v_ws and lower(name) = lower(btrim(v_deal->>'lead_source_name')) limit 1;
     if v_ls_id is null then
       raise exception 'import: lead source % not found for %', v_deal->>'lead_source_name', v_code
         using errcode = 'foreign_key_violation';
     end if;
 
-    perform app.assert_deal_composition(
+    perform commission_private.assert_deal_composition(
       (v_derived->>'billed_commission')::numeric,
       (v_derived->>'gci_net_of_vat')::numeric,
       (v_derived->>'incentive_net')::numeric,
@@ -182,7 +182,7 @@ begin
     v_booked_year := extract(year from (v_deal->>'booked_date')::date)::integer;
     v_display_label := v_code || ' — ' || (v_deal->>'client_name');
 
-    insert into public.deal (
+    insert into commission.deal (
       workspace_id, deal_code,
       booked_date, transaction_type, deal_type, developer_id, client_name,
       representation, property_type_id, lead_source_id, property_details,
@@ -197,29 +197,29 @@ begin
     values (
       v_ws, v_code,
       (v_deal->>'booked_date')::date,
-      (v_deal->>'transaction_type')::public.deal_transaction_type,
-      (v_deal->>'deal_type')::public.deal_type,
+      (v_deal->>'transaction_type')::commission.deal_transaction_type,
+      (v_deal->>'deal_type')::commission.deal_type,
       v_dev_id,
       v_deal->>'client_name',
-      (v_deal->>'representation')::public.deal_representation,
+      (v_deal->>'representation')::commission.deal_representation,
       v_pt_id, v_ls_id,
       v_deal->>'property_details',
-      (v_deal->>'mode_of_payment')::public.deal_mode_of_payment,
+      (v_deal->>'mode_of_payment')::commission.deal_mode_of_payment,
       (v_deal->>'list_price')::numeric,
       coalesce((v_deal->>'force_vat')::boolean, false),
-      (v_deal->>'commission_basis')::public.deal_commission_basis,
+      (v_deal->>'commission_basis')::commission.deal_commission_basis,
       v_deal->>'rate_pct',
       case when v_deal->>'fixed_amount' is null then null else (v_deal->>'fixed_amount')::numeric end,
       v_receipt,
       coalesce((v_deal->>'incentive_billed')::numeric, 0),
-      case when v_deal->>'incentive_taxable' is null then null else (v_deal->>'incentive_taxable')::public.deal_incentive_taxable end,
+      case when v_deal->>'incentive_taxable' is null then null else (v_deal->>'incentive_taxable')::commission.deal_incentive_taxable end,
       coalesce((v_deal->>'referral_out_pct')::numeric, 0),
       coalesce((v_deal->>'referral_out_fixed')::numeric, 0),
       coalesce((v_deal->>'referral_paid')::boolean, false),
-      (v_derived->>'property_vat')::public.deal_property_vat,
+      (v_derived->>'property_vat')::commission.deal_property_vat,
       (v_derived->>'net_list_price')::numeric,
-      (v_derived->>'comm_base')::public.deal_comm_base_display,
-      (v_derived->>'vat_basis')::public.deal_vat_basis,
+      (v_derived->>'comm_base')::commission.deal_comm_base_display,
+      (v_derived->>'vat_basis')::commission.deal_vat_basis,
       (v_derived->>'billed_commission')::numeric,
       (v_derived->>'gci_net_of_vat')::numeric,
       (v_derived->>'incentive_net')::numeric,
@@ -235,16 +235,16 @@ begin
     )
     returning * into v_row;
 
-    v_changes := app.deal_created_changes(v_row);
-    v_audit_id := app.write_audit_entry(v_ws, 'deal', v_row.id, 'create', v_changes);
+    v_changes := commission_private.deal_created_changes(v_row);
+    v_audit_id := commission_private.write_audit_entry(v_ws, 'deal', v_row.id, 'create', v_changes);
 
-    insert into public.deal_event (
+    insert into commission.deal_event (
       workspace_id, actor_user_id, deal_id, deal_code, event_type,
       old_values, new_values, field_changes, audit_entry_id
     )
     values (
       v_ws, v_uid, v_row.id, v_row.deal_code, 'created',
-      null, app.deal_snapshot(v_row), '{}'::jsonb, v_audit_id
+      null, commission_private.deal_snapshot(v_row), '{}'::jsonb, v_audit_id
     );
 
     v_suffix := nullif(regexp_replace(v_code, '^\D+', ''), '')::integer;
@@ -256,25 +256,25 @@ begin
   end loop;
 
   if v_max_suffix > 0 then
-    update public.workspace
+    update commission.workspace
     set deal_id_sequence = greatest(deal_id_sequence, v_max_suffix)
     where id = v_ws;
   end if;
 
   -- (5) Project the deal.created events onto receivables (auto-create).
   loop
-    select coalesce((public.consume_deal_events(500)->>'processed')::integer, 0) into v_n;
+    select coalesce((commission.consume_deal_events(500)->>'processed')::integer, 0) into v_n;
     exit when v_n = 0;
   end loop;
 
   -- (6) Overlays — status / confirmed / note onto the auto-created receivables.
   for v_item in select value from jsonb_array_elements(coalesce(p_payload->'overlays', '[]'::jsonb)) loop
-    select id into v_deal_id from public.deal
+    select id into v_deal_id from commission.deal
       where workspace_id = v_ws and deal_code = btrim(v_item->>'deal_code');
     if v_deal_id is not null then
-      perform public.import_receivable_overlay(
+      perform commission.import_receivable_overlay(
         v_deal_id,
-        (v_item->>'status')::public.receivable_status,
+        (v_item->>'status')::commission.receivable_status,
         case when v_item->>'confirmed' is null then null else (v_item->>'confirmed')::numeric end,
         v_item->>'note',
         coalesce((v_item->>'legacy_note_missing')::boolean, false)
@@ -285,24 +285,24 @@ begin
 
   -- (7) Payments — the M5.1 un-gated bulk path (create_payment per row).
   for v_item in select value from jsonb_array_elements(coalesce(p_payload->'payments', '[]'::jsonb)) loop
-    select id into v_deal_id from public.deal
+    select id into v_deal_id from commission.deal
       where workspace_id = v_ws and deal_code = btrim(v_item->>'deal_code');
     if v_deal_id is null then
       raise exception 'import: payment references unknown deal %', v_item->>'deal_code'
         using errcode = 'foreign_key_violation';
     end if;
-    perform public.create_payment(
+    perform commission.create_payment(
       v_deal_id,
       (v_item->>'payment_date')::date,
       (v_item->>'gross_amount')::numeric,
-      (v_item->>'payment_type')::public.payment_type,
+      (v_item->>'payment_type')::commission.payment_type,
       v_item->>'reference_note',
       (v_item->'split'->>'net_of_vat')::numeric,
       (v_item->'split'->>'vat')::numeric,
       (v_item->'split'->>'ewt')::numeric,
       (v_item->'split'->>'net_cash')::numeric,
       (v_item->'split'->>'retained')::numeric,
-      (v_item->>'vat_basis_used')::public.deal_vat_basis,
+      (v_item->>'vat_basis_used')::commission.deal_vat_basis,
       (v_item->>'ewt_rate_used')::numeric,
       (v_item->>'vat_rate_used')::numeric
     );
@@ -316,7 +316,7 @@ begin
   -- 9). ON CONFLICT DO NOTHING is belt-and-suspenders (the empty-workspace guard means
   -- there are no rows yet; a duplicate year in the sheet would simply be ignored).
   for v_target in select value from jsonb_array_elements(coalesce(p_payload->'targets', '[]'::jsonb)) loop
-    insert into public.plan_year_target (
+    insert into commission.plan_year_target (
       workspace_id, year, net_income_target, opex_pct, cos_pct,
       yield_override, avg_price_override, created_by, updated_by
     )
@@ -334,7 +334,7 @@ begin
     returning id into v_target_id;
 
     if v_target_id is not null then
-      perform app.write_audit_entry(v_ws, 'plan_year_target', v_target_id, 'create',
+      perform commission_private.write_audit_entry(v_ws, 'plan_year_target', v_target_id, 'create',
         jsonb_build_object(
           'year', jsonb_build_object('old', null, 'new', to_jsonb((v_target->>'year')::integer)),
           'net_income_target', jsonb_build_object('old', null, 'new', v_target->'net_income_target'),
@@ -349,7 +349,7 @@ begin
   -- Seed the workspace's global funnel-rate row with the workbook defaults (FR-M3-02;
   -- the sheet's editable rate cells hold exactly 25/70/30/20 seller, 30/70/10 buyer —
   -- the DEFAULT_FUNNEL_RATES). Lazy no-op if a row somehow already exists.
-  insert into public.funnel_rates (
+  insert into commission.funnel_rates (
     workspace_id, year,
     listing_to_sold, listing_appointment_rate, seller_contact_to_appt, seller_lead_to_contact,
     buyer_viewing_to_atp, buyer_contact_to_viewing, buyer_lead_to_contact,
@@ -373,11 +373,11 @@ begin
     'anchors', coalesce(p_payload->'anchors', '{}'::jsonb)
   );
 
-  update public.import_batch set summary = v_summary where id = v_batch_id;
+  update commission.import_batch set summary = v_summary where id = v_batch_id;
 
   return jsonb_build_object('ok', true, 'batch_id', v_batch_id, 'summary', v_summary);
 end;
 $$;
 
-comment on function public.run_workbook_import is
+comment on function commission.run_workbook_import is
   'FR-M1-10 + M3.2. Single-transaction workbook import: idempotency + empty-workspace guards, tax settings, lists, deals (codes preserved), receivable auto-create + overlay, payments, and — NEW — the GCI Calculator TARGETS rows as plan_year_target records + seeded global funnel_rates. Engine-computed money is re-checked, never re-derived; any hard failure rolls the whole import back.';

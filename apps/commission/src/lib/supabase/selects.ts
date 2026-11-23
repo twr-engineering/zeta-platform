@@ -199,7 +199,7 @@ export const YIELD_AGGREGATE_SELECT = [
 /**
  * payment_event (§3.4) — the append-only event log. No `numeric` column: the money
  * lives inside old_values/new_values (jsonb the write path filled with ::text
- * strings via app.payment_snapshot), so `*` is safe — the exact decimal never
+ * strings via commission_private.payment_snapshot), so `*` is safe — the exact decimal never
  * becomes a JSON number.
  */
 export const PAYMENT_EVENT_SELECT = "*";
@@ -253,7 +253,7 @@ export const FUNNEL_RATES_SELECT = [
 /**
  * deal_event (FR-M1-08) — the append-only event log. No `numeric` column: the
  * money lives inside old_values/new_values (jsonb the write path filled with
- * ::text strings via app.deal_snapshot), so `*` is safe for the same reason it
+ * ::text strings via commission_private.deal_snapshot), so `*` is safe for the same reason it
  * is on audit_log_entry — the exact decimal never becomes a JSON number.
  */
 export const DEAL_EVENT_SELECT = "*";

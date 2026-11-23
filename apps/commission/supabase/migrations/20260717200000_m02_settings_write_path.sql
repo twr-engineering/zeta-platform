@@ -33,9 +33,9 @@
 --
 -- Historical payment rows are deliberately NOT in scope (rule 3): they are
 -- statements of what was actually withheld and keep their stored splits.
-create table public.settings_change_event (
+create table commission.settings_change_event (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- Bare uuid, FK-free, for the same reason as audit_log_entry.actor_user_id:
   -- the trail must outlive the account. Pinned to auth.uid() by RLS.
@@ -58,7 +58,7 @@ create table public.settings_change_event (
 
   -- The audit entry written in the same transaction, so an event always has its
   -- human-readable counterpart and vice versa.
-  audit_entry_id uuid not null references public.audit_log_entry (id) on delete cascade,
+  audit_entry_id uuid not null references commission.audit_log_entry (id) on delete cascade,
 
   occurred_at timestamptz not null default now(),
 
@@ -73,30 +73,30 @@ create table public.settings_change_event (
   constraint settings_event_consumer_pair check ((consumed_at is null) = (consumed_by is null))
 );
 
-comment on table public.settings_change_event is
+comment on table commission.settings_change_event is
   'M0 rule 3 recompute contract. M0.2 emits (atomically with the settings change); M1 consumes pending rows and stamps consumed_at/consumed_by. Emitted ONLY after the agent confirmed — a cancelled confirmation writes nothing (AC10).';
-comment on column public.settings_change_event.field_changes is
+comment on column commission.settings_change_event.field_changes is
   'The money-restating fields only, old→new, decimals as exact strings. Enough to replay the restatement without re-reading the settings row.';
-comment on column public.settings_change_event.affected_deal_count is
+comment on column commission.settings_change_event.affected_deal_count is
   'What the confirmation claimed at the time. M0.2 always emits 0 — no deals table exists until M1.';
 
 -- M1's pending-work queue. Partial: consumed events are history, not work.
 create index settings_change_event_pending_idx
-  on public.settings_change_event (workspace_id, occurred_at)
+  on commission.settings_change_event (workspace_id, occurred_at)
   where consumed_at is null;
 
-alter table public.settings_change_event enable row level security;
+alter table commission.settings_change_event enable row level security;
 
 create policy "settings_event_select_member"
-  on public.settings_change_event for select
+  on commission.settings_change_event for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "settings_event_insert_member"
-  on public.settings_change_event for insert
+  on commission.settings_change_event for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and actor_user_id = (select auth.uid())
   );
 
@@ -104,12 +104,12 @@ create policy "settings_event_insert_member"
 -- flatly append-only. The trigger below is what keeps that narrow: consumption
 -- is the ONLY permitted update.
 create policy "settings_event_consume_member"
-  on public.settings_change_event for update
+  on commission.settings_change_event for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
-create or replace function app.reject_settings_event_rewrite()
+create or replace function commission_private.reject_settings_event_rewrite()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -141,21 +141,21 @@ end;
 $$;
 
 create trigger settings_change_event_consumption_only
-  before update on public.settings_change_event
-  for each row execute function app.reject_settings_event_rewrite();
+  before update on commission.settings_change_event
+  for each row execute function commission_private.reject_settings_event_rewrite();
 
 -- ---------------------------------------------------------------------------
--- app.write_audit_entry — the one place an entry is written
+-- commission_private.write_audit_entry — the one place an entry is written
 -- ---------------------------------------------------------------------------
 
--- Callable only from inside other functions in this schema (app is not exposed
+-- Callable only from inside other functions in this schema (commission_private is not exposed
 -- via PostgREST). SECURITY INVOKER, so the audit_insert_member policy still
 -- decides whether the insert is allowed.
-create or replace function app.write_audit_entry(
+create or replace function commission_private.write_audit_entry(
   p_workspace_id uuid,
   p_entity_type text,
   p_entity_id uuid,
-  p_action public.audit_action,
+  p_action commission.audit_action,
   p_field_changes jsonb
 )
 returns uuid
@@ -163,7 +163,7 @@ language sql
 security invoker
 set search_path = ''
 as $$
-  insert into public.audit_log_entry (
+  insert into commission.audit_log_entry (
     workspace_id, actor_user_id, entity_type, entity_id, action, field_changes
   )
   values (
@@ -179,11 +179,11 @@ as $$
   returning id;
 $$;
 
-comment on function app.write_audit_entry is
+comment on function commission_private.write_audit_entry is
   'Audit insert with the actor pinned to auth.uid(). Call from inside a mutation function so the change and its entry share one transaction (M0 rule 12).';
 
 -- ---------------------------------------------------------------------------
--- public.update_tax_settings — FR-M0-03
+-- commission.update_tax_settings — FR-M0-03
 -- ---------------------------------------------------------------------------
 
 -- One transaction: diff → update → audit entry → recompute event.
@@ -193,7 +193,7 @@ comment on function app.write_audit_entry is
 -- ("0.1250"), which PostgREST casts straight to numeric — a JSON number would
 -- have already been through an IEEE-754 double by the time it got here
 -- (Master PRD §4.3).
-create or replace function public.update_tax_settings(
+create or replace function commission.update_tax_settings(
   p_vat_rate numeric default null,
   p_vat_registered boolean default null,
   p_confirm_vat_registration boolean default false,
@@ -208,8 +208,8 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.tax_settings;
-  v_after public.tax_settings;
+  v_before commission.tax_settings;
+  v_after commission.tax_settings;
   v_changes jsonb := '{}'::jsonb;
   v_restating jsonb := '{}'::jsonb;
   v_next_confirmed_at timestamptz;
@@ -223,7 +223,7 @@ begin
   -- RLS narrows this to the caller's own row (one per workspace, one workspace
   -- per user in v1). FOR UPDATE locks it so the diff cannot race a concurrent
   -- save and record an old→new pair that never existed.
-  select * into v_before from public.tax_settings for update;
+  select * into v_before from commission.tax_settings for update;
 
   if not found then
     raise exception 'tax settings not found for this workspace'
@@ -241,7 +241,7 @@ begin
     else v_before.vat_registered_confirmed_at
   end;
 
-  update public.tax_settings set
+  update commission.tax_settings set
     vat_rate = coalesce(p_vat_rate, vat_rate),
     vat_registered = coalesce(p_vat_registered, vat_registered),
     vat_registered_confirmed_at = v_next_confirmed_at,
@@ -295,7 +295,7 @@ begin
     return jsonb_build_object('changed', false, 'field_changes', v_changes);
   end if;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_after.workspace_id, 'tax_settings', v_after.id, 'update', v_changes
   );
 
@@ -306,7 +306,7 @@ begin
   v_restating := v_changes - 'chase_idle_months' - 'vat_registered_confirmed_at';
 
   if v_restating <> '{}'::jsonb then
-    insert into public.settings_change_event (
+    insert into commission.settings_change_event (
       workspace_id, actor_user_id, entity_type, entity_id,
       field_changes, affected_deal_count, audit_entry_id
     )
@@ -341,33 +341,33 @@ begin
 end;
 $$;
 
-comment on function public.update_tax_settings is
+comment on function commission.update_tax_settings is
   'FR-M0-03. Atomic: diff, update, audit entry, recompute event — one transaction. Send rates as JSON strings ("0.1250"); a JSON number arrives as a float. Range validation stays on the table constraints, so a forged request cannot land an out-of-range rate.';
 
 -- ---------------------------------------------------------------------------
--- public.rename_workspace — migrating M0.1 off the two-call pattern
+-- commission.rename_workspace — migrating M0.1 off the two-call pattern
 -- ---------------------------------------------------------------------------
 
 -- M0.1 shipped rename as update-then-audit and flagged it: "M0.2 should make
 -- the pair atomic. Do not add more callers on the two-call pattern first."
 -- This is that fix — the one existing caller moves here, and after this commit
 -- there are no callers left on the old path.
-create or replace function public.rename_workspace(p_name text)
+create or replace function commission.rename_workspace(p_name text)
 returns jsonb
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.workspace;
-  v_after public.workspace;
+  v_before commission.workspace;
+  v_after commission.workspace;
   v_name text := btrim(p_name);
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.workspace for update;
+  select * into v_before from commission.workspace for update;
 
   if not found then
     raise exception 'workspace not found' using errcode = 'no_data_found';
@@ -379,13 +379,13 @@ begin
 
   -- workspace_name_not_blank / workspace_name_max_len still do the enforcing;
   -- this function does not restate them.
-  update public.workspace set name = v_name
+  update commission.workspace set name = v_name
   where id = v_before.id
   returning * into v_after;
 
   -- The workspace IS the tenant, so its own id is the workspace_id the entry
   -- is scoped by.
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_after.id, 'workspace', v_after.id, 'update',
     jsonb_build_object('name', jsonb_build_object('old', v_before.name, 'new', v_after.name))
   );
@@ -394,7 +394,7 @@ begin
 end;
 $$;
 
-comment on function public.rename_workspace is
+comment on function commission.rename_workspace is
   'FR-M0-02. Rename + audit entry in one transaction. Not friction-gated: rule 9 reserves gates for destructive and money-restating actions, and a name change is neither.';
 
 -- ---------------------------------------------------------------------------
@@ -403,8 +403,8 @@ comment on function public.rename_workspace is
 
 -- Both functions raise on a null auth.uid() and RLS refuses anon regardless;
 -- revoking is belt-and-braces so an anonymous caller cannot even reach the body.
-revoke all on function public.update_tax_settings(numeric, boolean, boolean, numeric, numeric, integer, integer) from public;
-revoke all on function public.rename_workspace(text) from public;
+revoke all on function commission.update_tax_settings(numeric, boolean, boolean, numeric, numeric, integer, integer) from public;
+revoke all on function commission.rename_workspace(text) from public;
 
-grant execute on function public.update_tax_settings(numeric, boolean, boolean, numeric, numeric, integer, integer) to authenticated;
-grant execute on function public.rename_workspace(text) to authenticated;
+grant execute on function commission.update_tax_settings(numeric, boolean, boolean, numeric, numeric, integer, integer) to authenticated;
+grant execute on function commission.rename_workspace(text) to authenticated;

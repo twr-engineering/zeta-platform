@@ -35,7 +35,7 @@ import {
  * PostgREST wraps a request in a transaction, two calls have no such guarantee,
  * and an unaudited rate change is precisely what rule 12 forbids. This closes
  * the caveat M0.1 recorded against its update-then-audit rename: that path is
- * gone, and `app.write_audit_entry` is now reachable only from inside a
+ * gone, and `commission_private.write_audit_entry` is now reachable only from inside a
  * mutation function.
  */
 

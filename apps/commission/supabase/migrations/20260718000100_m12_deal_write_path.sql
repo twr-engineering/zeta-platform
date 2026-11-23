@@ -26,8 +26,8 @@
 -- column types (numeric(14,2) renders "8000000.00" on both sides, so a re-save
 -- of the same figure is correctly a non-change) and money as ::text (never a
 -- JSON float). This is the audit view of a deal; the EVENT payload is the
--- separate, downstream-facing app.deal_snapshot.
-create or replace function app.deal_audit_row(d public.deal)
+-- separate, downstream-facing commission_private.deal_snapshot.
+create or replace function commission_private.deal_audit_row(d commission.deal)
 returns jsonb
 language sql
 immutable
@@ -76,7 +76,7 @@ $$;
 -- Old→new diff of two audit rows: the keys whose value moved, each as
 -- {old, new}. Assumes the same key set on both sides (deal_audit_row always
 -- produces it).
-create or replace function app.jsonb_diff(p_before jsonb, p_after jsonb)
+create or replace function commission_private.jsonb_diff(p_before jsonb, p_after jsonb)
 returns jsonb
 language sql
 immutable
@@ -91,7 +91,7 @@ as $$
 $$;
 
 -- The full row as create-time changes: every field old=null → new=value.
-create or replace function app.deal_created_changes(d public.deal)
+create or replace function commission_private.deal_created_changes(d commission.deal)
 returns jsonb
 language sql
 immutable
@@ -101,11 +101,11 @@ as $$
     jsonb_object_agg(e.key, jsonb_build_object('old', null, 'new', e.value)),
     '{}'::jsonb
   )
-  from jsonb_each(app.deal_audit_row(d)) e
+  from jsonb_each(commission_private.deal_audit_row(d)) e
 $$;
 
 -- ---------------------------------------------------------------------------
--- app.assert_deal_composition — the invariants the DB enforces on the engine
+-- commission_private.assert_deal_composition — the invariants the DB enforces on the engine
 -- ---------------------------------------------------------------------------
 
 -- Rules G and H are pure addition; the DB re-checks them so a forged call that
@@ -113,7 +113,7 @@ $$;
 -- (Rules A–F, I, J) is trusted from the engine — reproducing it here would be a
 -- second source of truth. ₱0.01 tolerance because the engine rounds each stored
 -- figure to centavos independently (ROUNDING.md).
-create or replace function app.assert_deal_composition(
+create or replace function commission_private.assert_deal_composition(
   p_billed_commission numeric,
   p_gci_net_of_vat numeric,
   p_incentive_net numeric,
@@ -142,41 +142,41 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- public.create_deal — FR-M1-01
+-- commission.create_deal — FR-M1-01
 -- ---------------------------------------------------------------------------
 
 -- One transaction: allocate the permanent code, verify composition, insert,
 -- audit, emit the created event. Inputs AND the engine's derived figures are
 -- parameters; the app computed the latter with computeDeal().
-create or replace function public.create_deal(
+create or replace function commission.create_deal(
   -- inputs
   p_booked_date date,
-  p_transaction_type public.deal_transaction_type,
-  p_deal_type public.deal_type,
+  p_transaction_type commission.deal_transaction_type,
+  p_deal_type commission.deal_type,
   p_developer_id uuid,
   p_client_name text,
-  p_representation public.deal_representation,
+  p_representation commission.deal_representation,
   p_property_type_id uuid,
   p_lead_source_id uuid,
   p_property_details text,
-  p_mode_of_payment public.deal_mode_of_payment,
+  p_mode_of_payment commission.deal_mode_of_payment,
   p_list_price numeric,
   p_force_vat boolean,
-  p_commission_basis public.deal_commission_basis,
+  p_commission_basis commission.deal_commission_basis,
   p_rate_pct text,
   p_fixed_amount numeric,
   p_receipt_issued boolean,
   p_incentive_billed numeric,
-  p_incentive_taxable public.deal_incentive_taxable,
+  p_incentive_taxable commission.deal_incentive_taxable,
   p_referral_out_pct numeric,
   p_referral_out_fixed numeric,
   p_referral_paid boolean,
   -- engine-computed (the M1.1 DealDerived fields; booked_year/display_label are
   -- derived in-body since display_label needs the freshly-allocated code)
-  p_property_vat public.deal_property_vat,
+  p_property_vat commission.deal_property_vat,
   p_net_list_price numeric,
-  p_comm_base public.deal_comm_base_display,
-  p_vat_basis public.deal_vat_basis,
+  p_comm_base commission.deal_comm_base_display,
+  p_vat_basis commission.deal_vat_basis,
   p_billed_commission numeric,
   p_gci_net_of_vat numeric,
   p_incentive_net numeric,
@@ -200,7 +200,7 @@ declare
   v_receipt boolean;
   v_booked_year integer;
   v_display_label text;
-  v_row public.deal;
+  v_row commission.deal;
   v_changes jsonb;
   v_audit_id uuid;
   v_event_id uuid;
@@ -209,14 +209,14 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   -- The engine is trusted for tax math; the arithmetic that ties the figures is
   -- enforced (see the function's note).
-  perform app.assert_deal_composition(
+  perform commission_private.assert_deal_composition(
     p_billed_commission, p_gci_net_of_vat, p_incentive_net, p_referral_out,
     p_referral_out_pct, p_referral_out_fixed, p_net_gci
   );
@@ -230,7 +230,7 @@ begin
   -- serialise here: each reads a distinct, monotonically increasing sequence
   -- value. No gaps in the success path, never a reused number — the DB sequence
   -- replaces the workbook's fragile Apps Script.
-  update public.workspace
+  update commission.workspace
   set deal_id_sequence = deal_id_sequence + 1
   where id = v_workspace_id
   returning deal_id_sequence into v_seq;
@@ -243,7 +243,7 @@ begin
   v_booked_year := extract(year from p_booked_date)::integer;
   v_display_label := v_code || ' — ' || p_client_name;
 
-  insert into public.deal (
+  insert into commission.deal (
     workspace_id, deal_code,
     booked_date, transaction_type, deal_type, developer_id, client_name,
     representation, property_type_id, lead_source_id, property_details,
@@ -269,21 +269,21 @@ begin
   )
   returning * into v_row;
 
-  v_changes := app.deal_created_changes(v_row);
+  v_changes := commission_private.deal_created_changes(v_row);
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_workspace_id, 'deal', v_row.id, 'create', v_changes
   );
 
   -- FR-M1-08: created → old NULL, new = the full snapshot. M4 upserts a
   -- receivable from this; M2 counts it into segment aggregates.
-  insert into public.deal_event (
+  insert into commission.deal_event (
     workspace_id, actor_user_id, deal_id, deal_code, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_workspace_id, v_uid, v_row.id, v_row.deal_code, 'created',
-    null, app.deal_snapshot(v_row), '{}'::jsonb, v_audit_id
+    null, commission_private.deal_snapshot(v_row), '{}'::jsonb, v_audit_id
   )
   returning id into v_event_id;
 
@@ -300,11 +300,11 @@ begin
 end;
 $$;
 
-comment on function public.create_deal is
+comment on function commission.create_deal is
   'FR-M1-01. Allocates the permanent code atomically, verifies Rule G/H composition, persists the engine''s derived figures, audits, and emits deal.created — one transaction. Send money as JSON strings.';
 
 -- ---------------------------------------------------------------------------
--- public.update_deal — FR-M1-03 (+ optimistic locking §8)
+-- commission.update_deal — FR-M1-03 (+ optimistic locking §8)
 -- ---------------------------------------------------------------------------
 
 -- The engine recomputes in the app; this persists the new inputs+derived,
@@ -316,36 +316,36 @@ comment on function public.create_deal is
 -- The edit-after-payments friction gate (edge case 13) is enforced in the app
 -- action via checkConfirmation (server-side), the same place every gate decision
 -- is made; this function trusts that the gate was cleared, exactly as the M0.3
--- list functions trust their comm_base/vat_rule gate. app.deal_payment_count is
+-- list functions trust their comm_base/vat_rule gate. commission_private.deal_payment_count is
 -- the count the action reads to decide whether to gate (0 until M5).
-create or replace function public.update_deal(
+create or replace function commission.update_deal(
   p_id uuid,
   p_expected_version integer,
   p_booked_date date,
-  p_transaction_type public.deal_transaction_type,
-  p_deal_type public.deal_type,
+  p_transaction_type commission.deal_transaction_type,
+  p_deal_type commission.deal_type,
   p_developer_id uuid,
   p_client_name text,
-  p_representation public.deal_representation,
+  p_representation commission.deal_representation,
   p_property_type_id uuid,
   p_lead_source_id uuid,
   p_property_details text,
-  p_mode_of_payment public.deal_mode_of_payment,
+  p_mode_of_payment commission.deal_mode_of_payment,
   p_list_price numeric,
   p_force_vat boolean,
-  p_commission_basis public.deal_commission_basis,
+  p_commission_basis commission.deal_commission_basis,
   p_rate_pct text,
   p_fixed_amount numeric,
   p_receipt_issued boolean,
   p_incentive_billed numeric,
-  p_incentive_taxable public.deal_incentive_taxable,
+  p_incentive_taxable commission.deal_incentive_taxable,
   p_referral_out_pct numeric,
   p_referral_out_fixed numeric,
   p_referral_paid boolean,
-  p_property_vat public.deal_property_vat,
+  p_property_vat commission.deal_property_vat,
   p_net_list_price numeric,
-  p_comm_base public.deal_comm_base_display,
-  p_vat_basis public.deal_vat_basis,
+  p_comm_base commission.deal_comm_base_display,
+  p_vat_basis commission.deal_vat_basis,
   p_billed_commission numeric,
   p_gci_net_of_vat numeric,
   p_incentive_net numeric,
@@ -363,8 +363,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.deal;
-  v_after public.deal;
+  v_before commission.deal;
+  v_after commission.deal;
   v_receipt boolean;
   v_changes jsonb;
   v_audit_id uuid;
@@ -374,7 +374,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  perform app.assert_deal_composition(
+  perform commission_private.assert_deal_composition(
     p_billed_commission, p_gci_net_of_vat, p_incentive_net, p_referral_out,
     p_referral_out_pct, p_referral_out_fixed, p_net_gci
   );
@@ -382,7 +382,7 @@ begin
   -- RLS makes another tenant's row invisible, so a cross-tenant id is simply not
   -- found — never a 200 with someone else's data (AC9). FOR UPDATE locks it so
   -- the diff cannot race a concurrent save.
-  select * into v_before from public.deal where id = p_id for update;
+  select * into v_before from commission.deal where id = p_id for update;
   if not found then
     raise exception 'deal not found' using errcode = 'no_data_found';
   end if;
@@ -442,7 +442,7 @@ begin
   v_after.booked_year := extract(year from p_booked_date)::integer;
   v_after.display_label := v_before.deal_code || ' — ' || p_client_name;
 
-  v_changes := app.jsonb_diff(app.deal_audit_row(v_before), app.deal_audit_row(v_after));
+  v_changes := commission_private.jsonb_diff(commission_private.deal_audit_row(v_before), commission_private.deal_audit_row(v_after));
 
   -- Nothing moved: no write, no version bump, no audit, no event. A re-save of
   -- identical inputs is a no-op, not a stale-version trap for the next reader.
@@ -455,7 +455,7 @@ begin
 
   v_after.version := v_before.version + 1;
 
-  update public.deal set
+  update commission.deal set
     booked_date = v_after.booked_date,
     transaction_type = v_after.transaction_type,
     deal_type = v_after.deal_type,
@@ -497,20 +497,20 @@ begin
   where id = p_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'deal', v_after.id, 'update', v_changes
   );
 
   -- FR-M1-08: updated → BOTH snapshots + the diff. M4 restates the receivable's
   -- booked figures; M2 moves the deal between segment aggregates using the old
   -- values. The OLD snapshot is why this shape is a locked contract.
-  insert into public.deal_event (
+  insert into commission.deal_event (
     workspace_id, actor_user_id, deal_id, deal_code, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_before.workspace_id, v_uid, v_after.id, v_after.deal_code, 'updated',
-    app.deal_snapshot(v_before), app.deal_snapshot(v_after), v_changes, v_audit_id
+    commission_private.deal_snapshot(v_before), commission_private.deal_snapshot(v_after), v_changes, v_audit_id
   )
   returning id into v_event_id;
 
@@ -523,11 +523,11 @@ begin
 end;
 $$;
 
-comment on function public.update_deal is
+comment on function commission.update_deal is
   'FR-M1-03. Persists recomputed inputs+derived, field-level audit, deal.updated with old+new snapshots; refuses a stale version (§8). The edit-after-payments gate is enforced in the app action.';
 
 -- ---------------------------------------------------------------------------
--- public.set_deal_archived — FR-M1-04 (soft delete, rule 2)
+-- commission.set_deal_archived — FR-M1-04 (soft delete, rule 2)
 -- ---------------------------------------------------------------------------
 
 -- Archive is the always-available reversible delete (rule 2: soft-delete
@@ -536,7 +536,7 @@ comment on function public.update_deal is
 -- archive-cascade confirmation (which lists the N payments and the receivable
 -- that go with it) is the APP's job to show; this returns the payment count so
 -- the action can populate it (0 until M5).
-create or replace function public.set_deal_archived(
+create or replace function commission.set_deal_archived(
   p_id uuid,
   p_archived boolean
 )
@@ -547,8 +547,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.deal;
-  v_after public.deal;
+  v_before commission.deal;
+  v_after commission.deal;
   v_audit_id uuid;
   v_event_id uuid;
 begin
@@ -556,7 +556,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.deal where id = p_id for update;
+  select * into v_before from commission.deal where id = p_id for update;
   if not found then
     raise exception 'deal not found' using errcode = 'no_data_found';
   end if;
@@ -565,20 +565,20 @@ begin
     return jsonb_build_object(
       'ok', true, 'changed', false, 'id', v_before.id,
       'deal_code', v_before.deal_code, 'archived', p_archived,
-      'payment_count', app.deal_payment_count(p_id)
+      'payment_count', commission_private.deal_payment_count(p_id)
     );
   end if;
 
-  update public.deal
+  update commission.deal
   set archived_at = case when p_archived then now() else null end,
       version = v_before.version + 1,
       updated_by = v_uid
   where id = p_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'deal', v_after.id,
-    case when p_archived then 'archive' else 'restore' end::public.audit_action,
+    case when p_archived then 'archive' else 'restore' end::commission.audit_action,
     jsonb_build_object(
       'deal_code', jsonb_build_object('old', v_before.deal_code, 'new', v_after.deal_code),
       'archived_at', jsonb_build_object(
@@ -586,31 +586,31 @@ begin
     )
   );
 
-  insert into public.deal_event (
+  insert into commission.deal_event (
     workspace_id, actor_user_id, deal_id, deal_code, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_before.workspace_id, v_uid, v_after.id, v_after.deal_code,
-    case when p_archived then 'archived' else 'restored' end::public.deal_event_type,
-    app.deal_snapshot(v_before), app.deal_snapshot(v_after), '{}'::jsonb, v_audit_id
+    case when p_archived then 'archived' else 'restored' end::commission.deal_event_type,
+    commission_private.deal_snapshot(v_before), commission_private.deal_snapshot(v_after), '{}'::jsonb, v_audit_id
   )
   returning id into v_event_id;
 
   return jsonb_build_object(
     'ok', true, 'changed', true, 'id', v_after.id,
     'deal_code', v_after.deal_code, 'archived', p_archived,
-    'payment_count', app.deal_payment_count(p_id),
+    'payment_count', commission_private.deal_payment_count(p_id),
     'audit_entry_id', v_audit_id, 'event_id', v_event_id
   );
 end;
 $$;
 
-comment on function public.set_deal_archived is
+comment on function commission.set_deal_archived is
   'FR-M1-04 rule 2. Soft delete/restore; emits deal.archived/restored. Returns payment_count so the app can show the archive-cascade confirmation (0 until M5).';
 
 -- ---------------------------------------------------------------------------
--- public.delete_deal — FR-M1-04 (hard delete, rule 2: never with children)
+-- commission.delete_deal — FR-M1-04 (hard delete, rule 2: never with children)
 -- ---------------------------------------------------------------------------
 
 -- Hard delete is permitted ONLY at payment count 0 (rule 2). Like the M0.3 list
@@ -623,7 +623,7 @@ comment on function public.set_deal_archived is
 -- The FK cascade removes this deal's events with it — the log stays a history of
 -- deals that exist. For a deal with any downstream footprint the answer is
 -- Archive, which is why that path emits events and this one does not.
-create or replace function public.delete_deal(p_id uuid)
+create or replace function commission.delete_deal(p_id uuid)
 returns jsonb
 language plpgsql
 security invoker
@@ -631,7 +631,7 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_row public.deal;
+  v_row commission.deal;
   v_count bigint;
   v_deleted uuid;
 begin
@@ -639,15 +639,15 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_row from public.deal where id = p_id for update;
+  select * into v_row from commission.deal where id = p_id for update;
   if not found then
     raise exception 'deal not found' using errcode = 'no_data_found';
   end if;
 
-  v_count := app.deal_payment_count(p_id);
+  v_count := commission_private.deal_payment_count(p_id);
 
   if v_count > 0 then
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_row.workspace_id, 'deal', v_row.id, 'delete_blocked',
       jsonb_build_object(
         'deal_code', jsonb_build_object('old', v_row.deal_code, 'new', v_row.deal_code),
@@ -661,7 +661,7 @@ begin
     );
   end if;
 
-  delete from public.deal where id = p_id returning id into v_deleted;
+  delete from commission.deal where id = p_id returning id into v_deleted;
 
   -- The policy disagreed with the count — i.e. M5 wired a real count into the
   -- policy but not here (or vice versa). Fail loudly rather than reporting a
@@ -673,7 +673,7 @@ begin
 
   -- The code is retired, never reused (§4 rule 1): the audit entry is the
   -- surviving record that D-nnn existed and was deleted.
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_row.workspace_id, 'deal', v_row.id, 'delete',
     jsonb_build_object(
       'deal_code', jsonb_build_object('old', v_row.deal_code, 'new', null),
@@ -686,7 +686,7 @@ begin
 end;
 $$;
 
-comment on function public.delete_deal is
+comment on function commission.delete_deal is
   'FR-M1-04 rule 2. Hard delete only at payment count 0; a blocked attempt returns with a delete_blocked audit entry. Retires the code permanently.';
 
 -- ---------------------------------------------------------------------------
@@ -704,76 +704,76 @@ comment on function public.delete_deal is
 -- developer/source and still computes with the stored FK (§4 rule 15), so the
 -- list item cannot be hard-deleted while any deal uses it. Archiving the list
 -- item stays allowed (M0.3 semantics) — only hard delete is gated on this count.
-create or replace function app.property_type_reference_count(p_id uuid)
+create or replace function commission_private.property_type_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select count(*) from public.deal where property_type_id = p_id $$;
+as $$ select count(*) from commission.deal where property_type_id = p_id $$;
 
-create or replace function app.developer_reference_count(p_id uuid)
+create or replace function commission_private.developer_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select count(*) from public.deal where developer_id = p_id $$;
+as $$ select count(*) from commission.deal where developer_id = p_id $$;
 
-create or replace function app.lead_source_reference_count(p_id uuid)
+create or replace function commission_private.lead_source_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select count(*) from public.deal where lead_source_id = p_id $$;
+as $$ select count(*) from commission.deal where lead_source_id = p_id $$;
 
 -- ---------------------------------------------------------------------------
 -- Grants
 -- ---------------------------------------------------------------------------
 
-revoke all on function public.create_deal(
-  date, public.deal_transaction_type, public.deal_type, uuid, text,
-  public.deal_representation, uuid, uuid, text, public.deal_mode_of_payment,
-  numeric, boolean, public.deal_commission_basis, text, numeric, boolean,
-  numeric, public.deal_incentive_taxable, numeric, numeric, boolean,
-  public.deal_property_vat, numeric, public.deal_comm_base_display,
-  public.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
+revoke all on function commission.create_deal(
+  date, commission.deal_transaction_type, commission.deal_type, uuid, text,
+  commission.deal_representation, uuid, uuid, text, commission.deal_mode_of_payment,
+  numeric, boolean, commission.deal_commission_basis, text, numeric, boolean,
+  numeric, commission.deal_incentive_taxable, numeric, numeric, boolean,
+  commission.deal_property_vat, numeric, commission.deal_comm_base_display,
+  commission.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
   numeric, numeric, boolean
 ) from public;
 
-revoke all on function public.update_deal(
-  uuid, integer, date, public.deal_transaction_type, public.deal_type, uuid, text,
-  public.deal_representation, uuid, uuid, text, public.deal_mode_of_payment,
-  numeric, boolean, public.deal_commission_basis, text, numeric, boolean,
-  numeric, public.deal_incentive_taxable, numeric, numeric, boolean,
-  public.deal_property_vat, numeric, public.deal_comm_base_display,
-  public.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
+revoke all on function commission.update_deal(
+  uuid, integer, date, commission.deal_transaction_type, commission.deal_type, uuid, text,
+  commission.deal_representation, uuid, uuid, text, commission.deal_mode_of_payment,
+  numeric, boolean, commission.deal_commission_basis, text, numeric, boolean,
+  numeric, commission.deal_incentive_taxable, numeric, numeric, boolean,
+  commission.deal_property_vat, numeric, commission.deal_comm_base_display,
+  commission.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
   numeric, numeric, boolean
 ) from public;
 
-revoke all on function public.set_deal_archived(uuid, boolean) from public;
-revoke all on function public.delete_deal(uuid) from public;
+revoke all on function commission.set_deal_archived(uuid, boolean) from public;
+revoke all on function commission.delete_deal(uuid) from public;
 
-grant execute on function public.create_deal(
-  date, public.deal_transaction_type, public.deal_type, uuid, text,
-  public.deal_representation, uuid, uuid, text, public.deal_mode_of_payment,
-  numeric, boolean, public.deal_commission_basis, text, numeric, boolean,
-  numeric, public.deal_incentive_taxable, numeric, numeric, boolean,
-  public.deal_property_vat, numeric, public.deal_comm_base_display,
-  public.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
+grant execute on function commission.create_deal(
+  date, commission.deal_transaction_type, commission.deal_type, uuid, text,
+  commission.deal_representation, uuid, uuid, text, commission.deal_mode_of_payment,
+  numeric, boolean, commission.deal_commission_basis, text, numeric, boolean,
+  numeric, commission.deal_incentive_taxable, numeric, numeric, boolean,
+  commission.deal_property_vat, numeric, commission.deal_comm_base_display,
+  commission.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
   numeric, numeric, boolean
 ) to authenticated;
 
-grant execute on function public.update_deal(
-  uuid, integer, date, public.deal_transaction_type, public.deal_type, uuid, text,
-  public.deal_representation, uuid, uuid, text, public.deal_mode_of_payment,
-  numeric, boolean, public.deal_commission_basis, text, numeric, boolean,
-  numeric, public.deal_incentive_taxable, numeric, numeric, boolean,
-  public.deal_property_vat, numeric, public.deal_comm_base_display,
-  public.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
+grant execute on function commission.update_deal(
+  uuid, integer, date, commission.deal_transaction_type, commission.deal_type, uuid, text,
+  commission.deal_representation, uuid, uuid, text, commission.deal_mode_of_payment,
+  numeric, boolean, commission.deal_commission_basis, text, numeric, boolean,
+  numeric, commission.deal_incentive_taxable, numeric, numeric, boolean,
+  commission.deal_property_vat, numeric, commission.deal_comm_base_display,
+  commission.deal_vat_basis, numeric, numeric, numeric, numeric, numeric, numeric,
   numeric, numeric, boolean
 ) to authenticated;
 
-grant execute on function public.set_deal_archived(uuid, boolean) to authenticated;
-grant execute on function public.delete_deal(uuid) to authenticated;
+grant execute on function commission.set_deal_archived(uuid, boolean) to authenticated;
+grant execute on function commission.delete_deal(uuid) to authenticated;

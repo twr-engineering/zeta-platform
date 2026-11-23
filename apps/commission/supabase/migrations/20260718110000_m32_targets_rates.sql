@@ -29,18 +29,18 @@
 -- WRITE PATH = ONE DB FUNCTION PER MUTATION (m0_2 pattern). upsert_plan_year_target /
 -- delete_plan_year_target / update_funnel_rates each do their change AND its audit
 -- entry (rule 13) in ONE transaction — SECURITY INVOKER so RLS still governs, actor
--- pinned to auth.uid(), tenant resolved via app.current_workspace_id(). The friction
+-- pinned to auth.uid(), tenant resolved via commission_private.current_workspace_id(). The friction
 -- gate (rule 14 — these edits restate the dashboard pace line, so they are money-
 -- planning acts) lives at the ACTION layer (checkConfirmation), exactly like the
 -- annual-target override and the receivable transitions. Validation that mirrors the
 -- CHECKs is returned as typed reasons (not exceptions) so the UI shows a field error.
 
 -- ===========================================================================
--- public.plan_year_target — one row per (workspace, year) (§3.1)
+-- commission.plan_year_target — one row per (workspace, year) (§3.1)
 -- ===========================================================================
-create table public.plan_year_target (
+create table commission.plan_year_target (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
   -- The planning year. Unique per workspace; a sane calendar band keeps a
   -- fat-fingered 20260 out (§3.1 "any year ≥ 2000", bounded above like the override).
   year integer not null,
@@ -85,48 +85,48 @@ create table public.plan_year_target (
   constraint plan_year_target_one_per_year unique (workspace_id, year)
 );
 
-comment on table public.plan_year_target is
+comment on table commission.plan_year_target is
   'M3 §3.1. One row per (workspace, year): Net Income Target + opex/cos assumptions + optional yield/avg-price overrides. Rates stored as exact decimals; NULL = use default/all-time. NULL net_income_target = year not plannable (rule 9). Mutations audited old→new, confirmation-gated at the action layer (rule 14). Feeds M6 Section-2 via deriveAnnualTarget (FR-M3-11).';
 
 create index plan_year_target_workspace_year_idx
-  on public.plan_year_target (workspace_id, year);
+  on commission.plan_year_target (workspace_id, year);
 
-alter table public.plan_year_target enable row level security;
+alter table commission.plan_year_target enable row level security;
 
 create policy "plan_year_target_select_member"
-  on public.plan_year_target for select
+  on commission.plan_year_target for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "plan_year_target_insert_member"
-  on public.plan_year_target for insert
+  on commission.plan_year_target for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "plan_year_target_update_member"
-  on public.plan_year_target for update
+  on commission.plan_year_target for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "plan_year_target_delete_member"
-  on public.plan_year_target for delete
+  on commission.plan_year_target for delete
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create trigger plan_year_target_touch_updated_at
-  before update on public.plan_year_target
-  for each row execute function app.touch_updated_at();
+  before update on commission.plan_year_target
+  for each row execute function commission_private.touch_updated_at();
 
 -- ===========================================================================
--- public.funnel_rates — the seven global conversion rates (§3.2)
+-- commission.funnel_rates — the seven global conversion rates (§3.2)
 -- ===========================================================================
-create table public.funnel_rates (
+create table commission.funnel_rates (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
   -- NULL = the GLOBAL rate set (v1, OQ-5 default). Reserved non-null for a future
   -- per-year upgrade so that change is additive (no migration to make rates per-year).
   year integer,
@@ -160,51 +160,51 @@ create table public.funnel_rates (
   constraint funnel_rates_buyer_lead_range check (buyer_lead_to_contact > 0 and buyer_lead_to_contact <= 1)
 );
 
-comment on table public.funnel_rates is
+comment on table commission.funnel_rates is
   'M3 §3.2. The seven global conversion rates (one row per workspace; year NULL = global, reserved non-null for the OQ-5 per-year upgrade). Each rate ∈ (0,1]. Seeded to the workbook defaults (25/70/30/20 / 30/70/10) lazily on first read-or-write (FR-M3-02). Edits audited old→new, gated at the action layer.';
 
 -- One GLOBAL (year IS NULL) row per workspace, and at most one per (workspace, year)
 -- for the reserved per-year case. Partial indexes because a plain UNIQUE would treat
 -- multiple NULL years as distinct (Postgres NULL semantics) and allow duplicates.
 create unique index funnel_rates_workspace_global_uq
-  on public.funnel_rates (workspace_id) where year is null;
+  on commission.funnel_rates (workspace_id) where year is null;
 create unique index funnel_rates_workspace_year_uq
-  on public.funnel_rates (workspace_id, year) where year is not null;
+  on commission.funnel_rates (workspace_id, year) where year is not null;
 
-alter table public.funnel_rates enable row level security;
+alter table commission.funnel_rates enable row level security;
 
 create policy "funnel_rates_select_member"
-  on public.funnel_rates for select
+  on commission.funnel_rates for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "funnel_rates_insert_member"
-  on public.funnel_rates for insert
+  on commission.funnel_rates for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "funnel_rates_update_member"
-  on public.funnel_rates for update
+  on commission.funnel_rates for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create trigger funnel_rates_touch_updated_at
-  before update on public.funnel_rates
-  for each row execute function app.touch_updated_at();
+  before update on commission.funnel_rates
+  for each row execute function commission_private.touch_updated_at();
 
 -- ===========================================================================
--- public.upsert_plan_year_target — set or change a year's target row (FR-M3-01)
+-- commission.upsert_plan_year_target — set or change a year's target row (FR-M3-01)
 -- ===========================================================================
 -- Upsert on (workspace, year). Every field validated per §3.1 (each returned as a
 -- typed reason, never an exception); the cross-field "opex + cos < 100%" rule (Rule
 -- P2, so net income % > 0) is checked on the EFFECTIVE values (nulls → 0.22/0.10),
 -- reproducing AC5's rejection. Audits old→new (create on first set, else update). The
 -- friction-gate confirmation is enforced at the action layer (rule 14).
-create or replace function public.upsert_plan_year_target(
+create or replace function commission.upsert_plan_year_target(
   p_year integer,
   p_net_income_target numeric,
   p_opex_pct numeric,
@@ -220,8 +220,8 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_before public.plan_year_target;
-  v_after public.plan_year_target;
+  v_before commission.plan_year_target;
+  v_after commission.plan_year_target;
   v_is_insert boolean;
   v_opex_eff numeric;
   v_cos_eff numeric;
@@ -231,7 +231,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -266,12 +266,12 @@ begin
   end if;
 
   select * into v_before
-  from public.plan_year_target
+  from commission.plan_year_target
   where workspace_id = v_ws and year = p_year
   for update;
   v_is_insert := not found;
 
-  insert into public.plan_year_target (
+  insert into commission.plan_year_target (
     workspace_id, year, net_income_target, opex_pct, cos_pct,
     yield_override, avg_price_override, created_by, updated_by
   )
@@ -288,9 +288,9 @@ begin
     updated_by = v_uid
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_ws, 'plan_year_target', v_after.id,
-    case when v_is_insert then 'create'::public.audit_action else 'update'::public.audit_action end,
+    case when v_is_insert then 'create'::commission.audit_action else 'update'::commission.audit_action end,
     jsonb_build_object(
       'year', jsonb_build_object('old', to_jsonb(v_before.year), 'new', to_jsonb(v_after.year)),
       'net_income_target', jsonb_build_object(
@@ -319,19 +319,19 @@ begin
 end;
 $$;
 
-comment on function public.upsert_plan_year_target is
+comment on function commission.upsert_plan_year_target is
   'FR-M3-01. Sets/changes the PlanYearTarget for (workspace, year): NIT (>0 or null=not-plannable), opex/cos [0,1) with combined <100% (Rule P2), optional yield (0,1)/price (>0) overrides. Upsert on the unique key; audited old→new. Validation returned as typed reasons; friction gate at the action layer.';
 
-revoke all on function public.upsert_plan_year_target(integer, numeric, numeric, numeric, numeric, numeric) from public;
-grant execute on function public.upsert_plan_year_target(integer, numeric, numeric, numeric, numeric, numeric) to authenticated;
+revoke all on function commission.upsert_plan_year_target(integer, numeric, numeric, numeric, numeric, numeric) from public;
+grant execute on function commission.upsert_plan_year_target(integer, numeric, numeric, numeric, numeric, numeric) to authenticated;
 
 -- ===========================================================================
--- public.delete_plan_year_target — remove a year's target row (FR-M3-01)
+-- commission.delete_plan_year_target — remove a year's target row (FR-M3-01)
 -- ===========================================================================
 -- Removes the whole year row (the targets-table editor's "remove year"). Audited as
 -- 'archive' (the enum's retire token — the row is deleted, not soft-deleted, so there
 -- is no archived_at). Idempotent: deleting a non-existent year is a no-op.
-create or replace function public.delete_plan_year_target(
+create or replace function commission.delete_plan_year_target(
   p_year integer
 )
 returns jsonb
@@ -342,20 +342,20 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_before public.plan_year_target;
+  v_before commission.plan_year_target;
   v_audit_id uuid;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select * into v_before
-  from public.plan_year_target
+  from commission.plan_year_target
   where workspace_id = v_ws and year = p_year
   for update;
 
@@ -363,9 +363,9 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'year', p_year);
   end if;
 
-  delete from public.plan_year_target where id = v_before.id;
+  delete from commission.plan_year_target where id = v_before.id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_ws, 'plan_year_target', v_before.id, 'archive',
     jsonb_build_object(
       'year', jsonb_build_object('old', to_jsonb(v_before.year), 'new', to_jsonb(v_before.year)),
@@ -386,21 +386,21 @@ begin
 end;
 $$;
 
-comment on function public.delete_plan_year_target is
+comment on function commission.delete_plan_year_target is
   'FR-M3-01. Removes the PlanYearTarget for (workspace, year) → the year has no plan and no M6 target. Audited as ''archive'' (all fields old→null). Idempotent. Friction gate at the action layer.';
 
-revoke all on function public.delete_plan_year_target(integer) from public;
-grant execute on function public.delete_plan_year_target(integer) to authenticated;
+revoke all on function commission.delete_plan_year_target(integer) from public;
+grant execute on function commission.delete_plan_year_target(integer) to authenticated;
 
 -- ===========================================================================
--- public.get_or_seed_funnel_rates — the lazy-seeding read (FR-M3-02)
+-- commission.get_or_seed_funnel_rates — the lazy-seeding read (FR-M3-02)
 -- ===========================================================================
 -- Returns the workspace's global funnel-rate row, SEEDING the workbook defaults on
 -- first read for a workspace that predates this migration (FR-M3-02 says "seeded on
 -- workspace creation"; a lazy read-or-write path covers both new and existing
 -- workspaces uniformly). Seeding a system default is NOT a user mutation → not audited.
 -- Rates returned as ::text so the caller does decimal, never float, arithmetic.
-create or replace function public.get_or_seed_funnel_rates()
+create or replace function commission.get_or_seed_funnel_rates()
 returns jsonb
 language plpgsql
 security invoker
@@ -409,20 +409,20 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_row public.funnel_rates;
+  v_row commission.funnel_rates;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   -- Seed the global row on first read; the partial unique index makes a concurrent
   -- seed a no-op (ON CONFLICT on the (workspace_id) WHERE year IS NULL index).
-  insert into public.funnel_rates (
+  insert into commission.funnel_rates (
     workspace_id, year,
     listing_to_sold, listing_appointment_rate, seller_contact_to_appt, seller_lead_to_contact,
     buyer_viewing_to_atp, buyer_contact_to_viewing, buyer_lead_to_contact,
@@ -437,7 +437,7 @@ begin
   on conflict (workspace_id) where year is null do nothing;
 
   select * into v_row
-  from public.funnel_rates
+  from commission.funnel_rates
   where workspace_id = v_ws and year is null;
 
   return jsonb_build_object(
@@ -453,19 +453,19 @@ begin
 end;
 $$;
 
-comment on function public.get_or_seed_funnel_rates is
+comment on function commission.get_or_seed_funnel_rates is
   'FR-M3-02. Returns the workspace''s global funnel-rate row, seeding the workbook defaults (25/70/30/20 / 30/70/10) on first read (covers pre-migration workspaces). Rates as ::text. Seeding a default is not a user mutation → not audited.';
 
-revoke all on function public.get_or_seed_funnel_rates() from public;
-grant execute on function public.get_or_seed_funnel_rates() to authenticated;
+revoke all on function commission.get_or_seed_funnel_rates() from public;
+grant execute on function commission.get_or_seed_funnel_rates() to authenticated;
 
 -- ===========================================================================
--- public.update_funnel_rates — edit the seven global rates (FR-M3-02)
+-- commission.update_funnel_rates — edit the seven global rates (FR-M3-02)
 -- ===========================================================================
 -- Validates each rate ∈ (0,1] (typed reason on failure), ensures the global row
 -- exists (seeding defaults first so the audit diff is meaningful), then updates all
 -- seven and audits old→new. Friction gate at the action layer (rule 14).
-create or replace function public.update_funnel_rates(
+create or replace function commission.update_funnel_rates(
   p_listing_to_sold numeric,
   p_listing_appointment_rate numeric,
   p_seller_contact_to_appt numeric,
@@ -482,8 +482,8 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_ws uuid;
-  v_before public.funnel_rates;
-  v_after public.funnel_rates;
+  v_before commission.funnel_rates;
+  v_after commission.funnel_rates;
   v_audit_id uuid;
   v_rates numeric[] := array[
     p_listing_to_sold, p_listing_appointment_rate, p_seller_contact_to_appt,
@@ -501,7 +501,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -515,7 +515,7 @@ begin
   end loop;
 
   -- Ensure the global row exists (defaults) so the pre-image is a real baseline.
-  insert into public.funnel_rates (
+  insert into commission.funnel_rates (
     workspace_id, year,
     listing_to_sold, listing_appointment_rate, seller_contact_to_appt, seller_lead_to_contact,
     buyer_viewing_to_atp, buyer_contact_to_viewing, buyer_lead_to_contact,
@@ -530,11 +530,11 @@ begin
   on conflict (workspace_id) where year is null do nothing;
 
   select * into v_before
-  from public.funnel_rates
+  from commission.funnel_rates
   where workspace_id = v_ws and year is null
   for update;
 
-  update public.funnel_rates set
+  update commission.funnel_rates set
     listing_to_sold = p_listing_to_sold,
     listing_appointment_rate = p_listing_appointment_rate,
     seller_contact_to_appt = p_seller_contact_to_appt,
@@ -546,7 +546,7 @@ begin
   where id = v_before.id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_ws, 'funnel_rates', v_after.id, 'update',
     jsonb_build_object(
       'listing_to_sold', jsonb_build_object('old', to_jsonb(v_before.listing_to_sold::text), 'new', to_jsonb(v_after.listing_to_sold::text)),
@@ -563,8 +563,8 @@ begin
 end;
 $$;
 
-comment on function public.update_funnel_rates is
+comment on function commission.update_funnel_rates is
   'FR-M3-02. Updates all seven global funnel rates (each ∈ (0,1], typed reason on failure); seeds defaults first so the audit has a baseline, then audits old→new. Friction gate at the action layer.';
 
-revoke all on function public.update_funnel_rates(numeric, numeric, numeric, numeric, numeric, numeric, numeric) from public;
-grant execute on function public.update_funnel_rates(numeric, numeric, numeric, numeric, numeric, numeric, numeric) to authenticated;
+revoke all on function commission.update_funnel_rates(numeric, numeric, numeric, numeric, numeric, numeric, numeric) from public;
+grant execute on function commission.update_funnel_rates(numeric, numeric, numeric, numeric, numeric, numeric, numeric) to authenticated;

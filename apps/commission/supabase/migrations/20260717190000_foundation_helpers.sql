@@ -1,25 +1,25 @@
--- Foundation helpers: the `app` schema and updated_at plumbing.
+-- Foundation helpers: the `commission_private` schema and updated_at plumbing.
 --
 -- Module: M0 (Account Foundation & Settings)
 --
--- The tenant predicates (app.is_workspace_member, app.current_workspace_id)
+-- The tenant predicates (commission_private.is_workspace_member, commission_private.current_workspace_id)
 -- deliberately live in the next migration, not here: they are SQL-language
 -- functions, whose bodies Postgres validates at CREATE time, and they read
--- public.membership — which does not exist yet at this point in the ordering.
+-- commission.membership — which does not exist yet at this point in the ordering.
 
-create schema if not exists app;
+create schema if not exists commission_private;
 
-comment on schema app is
+comment on schema commission_private is
   'Internal helpers (RLS predicates, triggers). Not exposed via PostgREST.';
 
-revoke all on schema app from anon, authenticated;
-grant usage on schema app to authenticated;
+revoke all on schema commission_private from anon, authenticated;
+grant usage on schema commission_private to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- updated_at maintenance
 -- ---------------------------------------------------------------------------
 
-create or replace function app.touch_updated_at()
+create or replace function commission_private.touch_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -30,5 +30,5 @@ begin
 end;
 $$;
 
-comment on function app.touch_updated_at() is
+comment on function commission_private.touch_updated_at() is
   'BEFORE UPDATE trigger: stamps updated_at. Attached to every mutable table.';

@@ -25,33 +25,33 @@
 -- Overloaded on the row type, so all three read `reference_count` — the same
 -- word for the same idea on every list.
 
-create or replace function public.reference_count(public.property_type)
+create or replace function commission.reference_count(commission.property_type)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select app.property_type_reference_count($1.id) $$;
+as $$ select commission_private.property_type_reference_count($1.id) $$;
 
-create or replace function public.reference_count(public.developer)
+create or replace function commission.reference_count(commission.developer)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select app.developer_reference_count($1.id) $$;
+as $$ select commission_private.developer_reference_count($1.id) $$;
 
-create or replace function public.reference_count(public.lead_source)
+create or replace function commission.reference_count(commission.lead_source)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select app.lead_source_reference_count($1.id) $$;
+as $$ select commission_private.lead_source_reference_count($1.id) $$;
 
-comment on function public.reference_count(public.property_type) is
-  'PostgREST computed column: select=*,reference_count. Delegates to app.property_type_reference_count — the single place M1 turns real counts on.';
+comment on function commission.reference_count(commission.property_type) is
+  'PostgREST computed column: select=*,reference_count. Delegates to commission_private.property_type_reference_count — the single place M1 turns real counts on.';
 
-grant execute on function public.reference_count(public.property_type) to authenticated;
-grant execute on function public.reference_count(public.developer) to authenticated;
-grant execute on function public.reference_count(public.lead_source) to authenticated;
+grant execute on function commission.reference_count(commission.property_type) to authenticated;
+grant execute on function commission.reference_count(commission.developer) to authenticated;
+grant execute on function commission.reference_count(commission.lead_source) to authenticated;

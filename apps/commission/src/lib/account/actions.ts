@@ -202,7 +202,7 @@ export async function changePassword(
  *
  * The delete removes the row from auth.users via the service role. Everything
  * else falls out of the schema: profile and membership cascade from the user,
- * and membership's last-member-out trigger (app.reap_orphaned_workspace) takes
+ * and membership's last-member-out trigger (commission_private.reap_orphaned_workspace) takes
  * the workspace with it — and the workspace cascade carries tax_settings, the
  * audit trail, the settings events and all three lists. So this rides the reaper
  * rather than duplicating a delete-everything routine that could drift from it.

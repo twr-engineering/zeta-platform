@@ -16,7 +16,7 @@
 --
 -- WHERE THE MATH LIVES. Variance and written_off are pure differences of two
 -- STORED values (collected_net and total_collectible) — never tax math. They are
--- computed in ONE place, app.recompute_receivable_payment_fields (extended below),
+-- computed in ONE place, commission_private.recompute_receivable_payment_fields (extended below),
 -- keyed off status, so:
 --   · closing then posting a late payment updates variance (AC5 / edge case 8) —
 --     variance is "frozen for DISPLAY" (it replaces balance as the residual shown),
@@ -42,14 +42,14 @@
 -- review action (clear_override_review_flag) or by re-confirming/clearing the
 -- override (set_confirmed_collectible). Carries the edit date so the banner can
 -- read "The deal was edited on {date}; your confirmed ₱… predates it — review."
-alter table public.receivable
+alter table commission.receivable
   add column override_review_flagged_at timestamptz;
 
-comment on column public.receivable.override_review_flagged_at is
+comment on column commission.receivable.override_review_flagged_at is
   'M4.3 / §4 rule 7. When a deal edit restated this receivable while a confirmed_collectible was set, the edit timestamp — surfaces the "deal restated since override — review" flag. Null once reviewed/re-confirmed/cleared.';
 
 -- ---------------------------------------------------------------------------
--- app.recompute_receivable_payment_fields — EXTENDED with Rule N/O by status
+-- commission_private.recompute_receivable_payment_fields — EXTENDED with Rule N/O by status
 -- ---------------------------------------------------------------------------
 -- M4.2's body verbatim (Rule L/M + dates + days_to_first_release + chase key) PLUS
 -- the status-driven residual: variance when Closed (Rule N), written_off when
@@ -58,14 +58,14 @@ comment on column public.receivable.override_review_flagged_at is
 -- pick it up. Still absolute (idempotent) and today-INDEPENDENT (months_idle/
 -- age_months remain read-time). version is deliberately NOT bumped — a system
 -- projection, not a user edit.
-create or replace function app.recompute_receivable_payment_fields(p_deal_id uuid)
+create or replace function commission_private.recompute_receivable_payment_fields(p_deal_id uuid)
 returns void
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_rec public.receivable;
+  v_rec commission.receivable;
   v_collected numeric(14, 2);
   v_last date;
   v_first date;
@@ -75,7 +75,7 @@ declare
   v_variance numeric(14, 2);
   v_written_off numeric(14, 2);
 begin
-  select * into v_rec from public.receivable where deal_id = p_deal_id for update;
+  select * into v_rec from commission.receivable where deal_id = p_deal_id for update;
   if not found then
     return;
   end if;
@@ -84,7 +84,7 @@ begin
   -- Commission AND Incentive alike (§4 rule 11). Stored 2-dp values → exact sum.
   select coalesce(sum(net_of_vat), 0), max(payment_date), min(payment_date)
     into v_collected, v_last, v_first
-  from public.payment
+  from commission.payment
   where deal_id = p_deal_id and archived_at is null;
 
   -- Rule M — balance = total_collectible − collected (signed, no clamp; §4 rules
@@ -117,7 +117,7 @@ begin
     v_written_off := null;
   end if;
 
-  update public.receivable set
+  update commission.receivable set
     collected_net = v_collected,
     last_payment_date = v_last,
     first_payment_date = v_first,
@@ -132,13 +132,13 @@ begin
 end;
 $$;
 
-comment on function app.recompute_receivable_payment_fields is
+comment on function commission_private.recompute_receivable_payment_fields is
   'M4.2 Rule L/M + M4.3 Rule N/O. Re-aggregates a deal''s non-archived payments and writes the today-independent payment-derived columns (collected/balance/pct/dates/days/chase) plus the status-driven residual: variance when Closed (collected − total_collectible), written_off when Cancelled (total_collectible − collected), both null when Open. Absolute (idempotent); months_idle/age_months are read-time. Called by both consumers and the status transitions.';
 
-grant execute on function app.recompute_receivable_payment_fields(uuid) to authenticated;
+grant execute on function commission_private.recompute_receivable_payment_fields(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- app.transition_receivable — shared guard for the three status mutations
+-- commission_private.transition_receivable — shared guard for the three status mutations
 -- ---------------------------------------------------------------------------
 -- Locks the receivable, checks existence + optimistic version, and returns the
 -- pre-image. NULL out means the caller already returned a jsonb error to the RPC
@@ -150,14 +150,14 @@ grant execute on function app.recompute_receivable_payment_fields(uuid) to authe
 --   6) perform recompute (Rule N/O); 7) audit old→new; 8) return the residual.
 
 -- ---------------------------------------------------------------------------
--- public.close_receivable — Open → Closed (FR-M4-05; Rule N)
+-- commission.close_receivable — Open → Closed (FR-M4-05; Rule N)
 -- ---------------------------------------------------------------------------
 -- Closing freezes the balance into variance for display (Rule N). NOT blocked on a
 -- non-zero balance — closing short is legitimate (Corrections doctrine case 3): the
 -- shortfall becomes visible Variance instead of a hidden gap (§3.3, §6 close
 -- dialog). The friction gate (explicit confirm) is the action layer's; here we do
 -- the single-writer mutation + audit.
-create or replace function public.close_receivable(
+create or replace function commission.close_receivable(
   p_receivable_id uuid,
   p_expected_version integer
 )
@@ -168,15 +168,15 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
-  v_after public.receivable;
+  v_before commission.receivable;
+  v_after commission.receivable;
   v_audit_id uuid;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -191,7 +191,7 @@ begin
 
   -- Closed/Cancelled leave the aging/chase views and null their idle counters
   -- (§4 Rule P; the read layer already guards, this makes the stored state honest).
-  update public.receivable
+  update commission.receivable
   set status = 'closed',
       months_idle = null,
       age_months = null,
@@ -200,11 +200,11 @@ begin
   where id = p_receivable_id;
 
   -- Rule N: variance = collected − total_collectible, frozen for display.
-  perform app.recompute_receivable_payment_fields(v_before.deal_id);
+  perform commission_private.recompute_receivable_payment_fields(v_before.deal_id);
 
-  select * into v_after from public.receivable where id = p_receivable_id;
+  select * into v_after from commission.receivable where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'status', jsonb_build_object('old', v_before.status::text, 'new', 'closed'),
@@ -222,20 +222,20 @@ begin
 end;
 $$;
 
-comment on function public.close_receivable is
+comment on function commission.close_receivable is
   'FR-M4-05 / Rule N. Open→Closed: freezes variance (collected − total_collectible) for display, nulls idle counters, audits status + variance old→new. Optimistic-locked on p_expected_version (stale_version). NOT blocked on a non-zero balance — closing short is the Corrections doctrine''s Variance path. The friction-gate confirmation is enforced at the action layer.';
 
-revoke all on function public.close_receivable(uuid, integer) from public;
-grant execute on function public.close_receivable(uuid, integer) to authenticated;
+revoke all on function commission.close_receivable(uuid, integer) from public;
+grant execute on function commission.close_receivable(uuid, integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.cancel_receivable — Open → Cancelled (FR-M4-05; Rule O; Q20)
+-- commission.cancel_receivable — Open → Cancelled (FR-M4-05; Rule O; Q20)
 -- ---------------------------------------------------------------------------
 -- The deal died; the uncollected remainder is written off, cash already collected
 -- is KEPT (§4 rule 10). A free-text reason is REQUIRED (Q20 default) — captured on
 -- the audit trail (no reason-code taxonomy in v1, out of scope §10). The reason is
 -- the cancel's audit note, the sibling of the override's required note.
-create or replace function public.cancel_receivable(
+create or replace function commission.cancel_receivable(
   p_receivable_id uuid,
   p_expected_version integer,
   p_reason text
@@ -247,8 +247,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
-  v_after public.receivable;
+  v_before commission.receivable;
+  v_after commission.receivable;
   v_reason text;
   v_audit_id uuid;
 begin
@@ -264,7 +264,7 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'reason_too_long');
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -277,7 +277,7 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'not_open');
   end if;
 
-  update public.receivable
+  update commission.receivable
   set status = 'cancelled',
       months_idle = null,
       age_months = null,
@@ -286,11 +286,11 @@ begin
   where id = p_receivable_id;
 
   -- Rule O: written_off = total_collectible − collected at cancellation.
-  perform app.recompute_receivable_payment_fields(v_before.deal_id);
+  perform commission_private.recompute_receivable_payment_fields(v_before.deal_id);
 
-  select * into v_after from public.receivable where id = p_receivable_id;
+  select * into v_after from commission.receivable where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'status', jsonb_build_object('old', v_before.status::text, 'new', 'cancelled'),
@@ -309,21 +309,21 @@ begin
 end;
 $$;
 
-comment on function public.cancel_receivable is
+comment on function commission.cancel_receivable is
   'FR-M4-05 / Rule O / Q20. Open→Cancelled: written_off = total_collectible − collected; collected cash is kept. Requires a free-text reason (captured on the audit). Optimistic-locked (stale_version). Friction gate at the action layer.';
 
-revoke all on function public.cancel_receivable(uuid, integer, text) from public;
-grant execute on function public.cancel_receivable(uuid, integer, text) to authenticated;
+revoke all on function commission.cancel_receivable(uuid, integer, text) from public;
+grant execute on function commission.cancel_receivable(uuid, integer, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.reopen_receivable — Closed/Cancelled → Open (FR-M4-05; §4 rule 6, OQ4)
+-- commission.reopen_receivable — Closed/Cancelled → Open (FR-M4-05; §4 rule 6, OQ4)
 -- ---------------------------------------------------------------------------
 -- Reopening is ALLOWED and UNLIMITED (OQ4 default), audit-logged; it restores the
 -- Open balance/aging math — recompute clears variance/written_off (status back to
 -- open) and re-derives balance from the current payments. Closed↔Cancelled direct
 -- transitions are not offered (go through Open); this rejects a receivable that is
 -- already Open.
-create or replace function public.reopen_receivable(
+create or replace function commission.reopen_receivable(
   p_receivable_id uuid,
   p_expected_version integer
 )
@@ -334,15 +334,15 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
-  v_after public.receivable;
+  v_before commission.receivable;
+  v_after commission.receivable;
   v_audit_id uuid;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -355,7 +355,7 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'not_reopenable');
   end if;
 
-  update public.receivable
+  update commission.receivable
   set status = 'open',
       version = v_before.version + 1,
       updated_by = v_uid
@@ -363,11 +363,11 @@ begin
 
   -- Back to Open: variance/written_off → null, balance resumes (recompute reads the
   -- new status). months_idle/age_months are read-time (idle.ts) — no stored value.
-  perform app.recompute_receivable_payment_fields(v_before.deal_id);
+  perform commission_private.recompute_receivable_payment_fields(v_before.deal_id);
 
-  select * into v_after from public.receivable where id = p_receivable_id;
+  select * into v_after from commission.receivable where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'status', jsonb_build_object('old', v_before.status::text, 'new', 'open')
@@ -382,19 +382,19 @@ begin
 end;
 $$;
 
-comment on function public.reopen_receivable is
+comment on function commission.reopen_receivable is
   'FR-M4-05 / §4 rule 6 / OQ4. Closed or Cancelled → Open (unlimited, audited): clears variance/written_off and resumes balance/aging math. Optimistic-locked (stale_version). Friction gate at the action layer.';
 
-revoke all on function public.reopen_receivable(uuid, integer) from public;
-grant execute on function public.reopen_receivable(uuid, integer) to authenticated;
+revoke all on function commission.reopen_receivable(uuid, integer) from public;
+grant execute on function commission.reopen_receivable(uuid, integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.clear_override_review_flag — the explicit "reviewed" action (§4 rule 7)
+-- commission.clear_override_review_flag — the explicit "reviewed" action (§4 rule 7)
 -- ---------------------------------------------------------------------------
 -- Clears the restated-override review flag without changing the override value —
 -- the agent looked and the confirmed figure still stands. Audited. (Re-confirming
 -- or clearing the override via set_confirmed_collectible clears it too.)
-create or replace function public.clear_override_review_flag(
+create or replace function commission.clear_override_review_flag(
   p_receivable_id uuid
 )
 returns jsonb
@@ -404,14 +404,14 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
+  v_before commission.receivable;
   v_audit_id uuid;
 begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -420,13 +420,13 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', p_receivable_id);
   end if;
 
-  update public.receivable
+  update commission.receivable
   set override_review_flagged_at = null,
       version = v_before.version + 1,
       updated_by = v_uid
   where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'override_review', jsonb_build_object(
@@ -440,19 +440,19 @@ begin
 end;
 $$;
 
-comment on function public.clear_override_review_flag is
+comment on function commission.clear_override_review_flag is
   'M4.3 / §4 rule 7. Clears the restated-override review flag (the confirmed figure still stands) without changing the override; audited. set_confirmed_collectible also clears it on re-confirm/clear.';
 
-revoke all on function public.clear_override_review_flag(uuid) from public;
-grant execute on function public.clear_override_review_flag(uuid) to authenticated;
+revoke all on function commission.clear_override_review_flag(uuid) from public;
+grant execute on function commission.clear_override_review_flag(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.set_confirmed_collectible — EXTENDED to clear the review flag on review
+-- commission.set_confirmed_collectible — EXTENDED to clear the review flag on review
 -- ---------------------------------------------------------------------------
 -- M4.1's body verbatim (edge case 17 note gate, override precedence, audit) PLUS:
 -- setting/changing/clearing the override IS a review of it, so it clears
 -- override_review_flagged_at in the same write. Same signature — additive.
-create or replace function public.set_confirmed_collectible(
+create or replace function commission.set_confirmed_collectible(
   p_receivable_id uuid,
   p_value numeric,
   p_note text
@@ -464,8 +464,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
-  v_after public.receivable;
+  v_before commission.receivable;
+  v_after commission.receivable;
   v_note text;
   v_audit_id uuid;
 begin
@@ -473,7 +473,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -492,7 +492,7 @@ begin
     end if;
   end if;
 
-  update public.receivable
+  update commission.receivable
   set confirmed_collectible = p_value,
       next_action_note = coalesce(v_note, next_action_note),
       -- Setting/changing/clearing the override reviews it → clear the flag.
@@ -504,10 +504,10 @@ begin
 
   -- total_collectible is generated; balance/variance follow it — restate the
   -- payment-derived money so a changed override moves balance in the same call.
-  perform app.recompute_receivable_payment_fields(v_before.deal_id);
-  select * into v_after from public.receivable where id = p_receivable_id;
+  perform commission_private.recompute_receivable_payment_fields(v_before.deal_id);
+  select * into v_after from commission.receivable where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'confirmed_collectible', jsonb_build_object(
@@ -533,14 +533,14 @@ begin
 end;
 $$;
 
-comment on function public.set_confirmed_collectible is
+comment on function commission.set_confirmed_collectible is
   'FR-M4-06 / edge case 17 (+ M4.3). Sets/changes/clears the Confirmed Collectible override; setting REQUIRES a positive value and a non-empty note. Clearing reverts total_collectible to the Rule K.2 default. Reviews (clears) the restated-override flag and restates the payment-derived money. Audited old→new with the note.';
 
-revoke all on function public.set_confirmed_collectible(uuid, numeric, text) from public;
-grant execute on function public.set_confirmed_collectible(uuid, numeric, text) to authenticated;
+revoke all on function commission.set_confirmed_collectible(uuid, numeric, text) from public;
+grant execute on function commission.set_confirmed_collectible(uuid, numeric, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.consume_deal_events — EXTENDED to raise the restated-override flag
+-- commission.consume_deal_events — EXTENDED to raise the restated-override flag
 -- ---------------------------------------------------------------------------
 -- M4.2's body verbatim (upsert mirrors + Rule K anchors + archive; recompute the
 -- payment-derived money) PLUS §4 rule 7: after restating, if the receivable
@@ -549,7 +549,7 @@ grant execute on function public.set_confirmed_collectible(uuid, numeric, text) 
 -- trips on the initial create (no prior override) — only on a genuine restatement.
 -- Same signature — additive; every caller (deal actions, recompute runner,
 -- run_workbook_import) picks it up. Still idempotent + resumable.
-create or replace function public.consume_deal_events(p_limit integer default 500)
+create or replace function commission.consume_deal_events(p_limit integer default 500)
 returns jsonb
 language plpgsql
 security invoker
@@ -573,30 +573,30 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select last_occurred_at, last_event_id into v_last_at, v_last_id
-  from public.receivable_event_cursor
+  from commission.receivable_event_cursor
   where workspace_id = v_ws
   for update;
 
   if not found then
-    insert into public.receivable_event_cursor (workspace_id)
+    insert into commission.receivable_event_cursor (workspace_id)
     values (v_ws)
     on conflict (workspace_id) do nothing;
 
     select last_occurred_at, last_event_id into v_last_at, v_last_id
-    from public.receivable_event_cursor
+    from commission.receivable_event_cursor
     where workspace_id = v_ws
     for update;
   end if;
 
   for r in
     select e.id, e.occurred_at, e.deal_id, e.new_values
-    from public.deal_event e
+    from commission.deal_event e
     where e.workspace_id = v_ws
       and (
         e.occurred_at > v_last_at
@@ -611,9 +611,9 @@ begin
     -- first create). Drives the §4 rule 7 flag decision below.
     select confirmed_collectible, default_total_collectible, booked_net_gci
       into v_prev_confirmed, v_prev_default, v_prev_booked
-    from public.receivable where deal_id = r.deal_id;
+    from commission.receivable where deal_id = r.deal_id;
 
-    insert into public.receivable (
+    insert into commission.receivable (
       workspace_id, deal_id, deal_code, booked_year, developer_id, client_name,
       property_details, deal_type, lead_source_id, booking_date,
       booked_net_gci, default_total_collectible, archived_at, created_by, updated_by
@@ -625,7 +625,7 @@ begin
       (v_snap->>'developer_id')::uuid,
       v_snap->>'client_name',
       v_snap->>'property_details',
-      (v_snap->>'deal_type')::public.deal_type,
+      (v_snap->>'deal_type')::commission.deal_type,
       (v_snap->>'lead_source_id')::uuid,
       (v_snap->>'booked_date')::date,
       (v_snap->>'net_gci')::numeric,
@@ -647,7 +647,7 @@ begin
       archived_at = excluded.archived_at,
       updated_by = v_uid;
 
-    perform app.recompute_receivable_payment_fields(r.deal_id);
+    perform commission_private.recompute_receivable_payment_fields(r.deal_id);
 
     -- §4 rule 7 — restated-override review flag. An override was set AND the deal's
     -- money moved (default or booked) → the confirmed figure may predate this edit.
@@ -656,7 +656,7 @@ begin
       v_new_booked := (v_snap->>'net_gci')::numeric;
       if v_prev_default is distinct from v_new_default
          or v_prev_booked is distinct from v_new_booked then
-        update public.receivable
+        update commission.receivable
         set override_review_flagged_at = r.occurred_at
         where deal_id = r.deal_id;
       end if;
@@ -668,7 +668,7 @@ begin
   end loop;
 
   if v_processed > 0 then
-    update public.receivable_event_cursor
+    update commission.receivable_event_cursor
     set last_occurred_at = v_last_at,
         last_event_id = v_last_id,
         updated_at = now()
@@ -679,8 +679,8 @@ begin
 end;
 $$;
 
-comment on function public.consume_deal_events is
-  'FR-M4-01/02/03 (+ M4.2/M4.3). Drains M4''s cursor over public.deal_event: upserts each deal''s receivable from the snapshot (mirrors + Rule K anchors + archive; user inputs preserved), recomputes the payment-derived money (balance/variance/written_off/chase), and raises the §4 rule 7 restated-override review flag when a restatement moves the booked/default of an overridden receivable. Idempotent + resumable.';
+comment on function commission.consume_deal_events is
+  'FR-M4-01/02/03 (+ M4.2/M4.3). Drains M4''s cursor over commission.deal_event: upserts each deal''s receivable from the snapshot (mirrors + Rule K anchors + archive; user inputs preserved), recomputes the payment-derived money (balance/variance/written_off/chase), and raises the §4 rule 7 restated-override review flag when a restatement moves the booked/default of an overridden receivable. Idempotent + resumable.';
 
-revoke all on function public.consume_deal_events(integer) from public;
-grant execute on function public.consume_deal_events(integer) to authenticated;
+revoke all on function commission.consume_deal_events(integer) from public;
+grant execute on function commission.consume_deal_events(integer) to authenticated;

@@ -2,7 +2,7 @@
  * Headless end-to-end proof of M9.1 (the Search read layer & query API) in a
  * THROWAWAY workspace. Imports the REAL v30.20 workbook, drains the deal + payment
  * consumers as the app does, then exercises the three source query functions
- * (public.search_deals / search_collectibles / search_payments) AS A REAL JWT USER
+ * (commission.search_deals / search_collectibles / search_payments) AS A REAL JWT USER
  * — proving PRD §9 acceptance criteria 1–9 against the workbook fixtures:
  *
  *   AC1  text "lainie" → 3 deals (D013/D014/D015); same text on Collectibles → 3;
@@ -63,7 +63,7 @@ if (!URL_ || URL_ === "PLACEHOLDER_PENDING_CREDENTIALS" || !SERVICE || !ANON) {
   process.exit(0);
 }
 
-const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+const admin = createClient(URL_, SERVICE, { db: { schema: "commission" }, auth: { persistSession: false } });
 type Client = ReturnType<typeof createClient>;
 
 const fails: string[] = [];
@@ -77,7 +77,7 @@ async function makeUser(tag: string): Promise<{ uid: string; user: Client }> {
   const password = "throwaway-m91-pw";
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw created.error;
-  const user = createClient(URL_, ANON, { auth: { persistSession: false } });
+  const user = createClient(URL_, ANON, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email, password });
   if (signIn.error) throw signIn.error;
   return { uid: created.data.user!.id, user };

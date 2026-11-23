@@ -22,7 +22,7 @@ if (SERVICE.includes("PLACEHOLDER_PENDING_CREDENTIALS")) {
   process.exit(0);
 }
 
-const admin = createClient(URL, SERVICE, { auth: { autoRefreshToken: false, persistSession: false } });
+const admin = createClient(URL, SERVICE, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
 const email = `m102-${Date.now()}@throwaway.test`;
 const password = "Test-Passw0rd-m102";
@@ -44,7 +44,7 @@ try {
   if (created.error) throw created.error;
   userId = created.data.user.id;
 
-  const user = createClient(URL, ANON, { auth: { autoRefreshToken: false, persistSession: false } });
+  const user = createClient(URL, ANON, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email, password });
   if (signIn.error) throw signIn.error;
 

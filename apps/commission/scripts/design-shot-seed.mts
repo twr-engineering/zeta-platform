@@ -39,7 +39,7 @@ if (!URL_ || !SERVICE || SERVICE.includes("PLACEHOLDER")) {
   process.exit(0);
 }
 
-const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+const admin = createClient(URL_, SERVICE, { db: { schema: "commission" }, auth: { persistSession: false } });
 
 if (process.argv.includes("--delete")) {
   if (existsSync(CRED)) {
@@ -68,7 +68,7 @@ const created = await admin.auth.admin.createUser({ email, password, email_confi
 if (created.error) throw created.error;
 const uid = created.data.user!.id;
 
-const user = createClient(URL_, ANON, { auth: { persistSession: false } });
+const user = createClient(URL_, ANON, { db: { schema: "commission" }, auth: { persistSession: false } });
 const signIn = await user.auth.signInWithPassword({ email, password });
 if (signIn.error) throw signIn.error;
 

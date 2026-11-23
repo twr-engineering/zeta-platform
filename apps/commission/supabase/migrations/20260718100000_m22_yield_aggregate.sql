@@ -9,7 +9,7 @@
 --   · yield_aggregate — one materialized row per (workspace, segment, booked_year)
 --     with {deal_count, volume_sum, gci_sum, incentive_net_sum, referral_out_sum}
 --     (PRD §3.5). Report reads become O(segments × years) instead of 1,000-row scans.
---   · yield_event_cursor — M2's OWN high-water mark over public.deal_event (M2 keeps
+--   · yield_event_cursor — M2's OWN high-water mark over commission.deal_event (M2 keeps
 --     its own cursor, exactly like M4's receivable_event_cursor; there is no shared
 --     consumed stamp — m1_2 handoff).
 --   · yield_basis_version — the per-workspace monotonic counter M3 caches against,
@@ -41,13 +41,13 @@
 --     the pure buildYieldReport over the same rows to the centavo (the reconciliation
 --     asserts this).
 --
--- The classifier is duplicated ONCE into SQL (app.deal_segment), mirroring the pure
+-- The classifier is duplicated ONCE into SQL (commission_private.deal_segment), mirroring the pure
 -- classifySegment (§3.2) token-for-token. reconcile_yield_aggregate is precisely the
 -- guard against the two drifting: it recomputes through this SQL predicate and the
 -- pure functions recompute through the TS one, and the verification asserts equality.
 
 -- ---------------------------------------------------------------------------
--- app.deal_segment — the SQL mirror of classifySegment (PRD §3.2)
+-- commission_private.deal_segment — the SQL mirror of classifySegment (PRD §3.2)
 -- ---------------------------------------------------------------------------
 -- The ONE SQL home of segment membership. Order encodes the predicates' precedence
 -- exactly as src/lib/yield/segments.ts classifySegment:
@@ -58,10 +58,10 @@
 -- reachable via imported/legacy data breaking M1's type coupling, Rule 9); such a
 -- deal contributes to NO cell and is surfaced by reconcile_yield_aggregate, never
 -- silently folded in. IMMUTABLE so it can be used in the aggregate predicate.
-create or replace function app.deal_segment(
-  p_transaction_type public.deal_transaction_type,
-  p_deal_type public.deal_type,
-  p_representation public.deal_representation
+create or replace function commission_private.deal_segment(
+  p_transaction_type commission.deal_transaction_type,
+  p_deal_type commission.deal_type,
+  p_representation commission.deal_representation
 )
 returns text
 language sql
@@ -77,7 +77,7 @@ as $$
   end
 $$;
 
-comment on function app.deal_segment is
+comment on function commission_private.deal_segment is
   'M2 PRD §3.2. The SQL mirror of src/lib/yield/segments.ts classifySegment — the single SQL home of segment membership. referrer→referral first (any txn type), then rental, then sale by deal_type into resale/developer; NULL = unclassified (Rule 9). reconcile_yield_aggregate guards it against the pure classifier.';
 
 -- ---------------------------------------------------------------------------
@@ -89,8 +89,8 @@ comment on function app.deal_segment is
 -- deal columns numeric(14,2) — the sums are exact 2-dp (Rule 8). Only the four real
 -- segments live here; SALES SUBTOTAL is Resale+Developer, derived on read (§3.2),
 -- never a stored cell.
-create table public.yield_aggregate (
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+create table commission.yield_aggregate (
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
   segment text not null,
   booked_year integer not null,
   deal_count integer not null default 0,
@@ -105,40 +105,40 @@ create table public.yield_aggregate (
   constraint yield_aggregate_count_positive check (deal_count > 0)
 );
 
-comment on table public.yield_aggregate is
+comment on table commission.yield_aggregate is
   'M2 PRD §3.5. Materialized yield read model: one row per (workspace, segment, booked_year) with deal_count + volume/gci/incentive/referral sums (stored 2-dp deal values, Rule 8). Maintained by consume_yield_events (absolute per-cell re-aggregation on deal events); sparse (zero-deal cells deleted). SALES SUBTOTAL is derived (Resale+Developer), never stored.';
 
 -- The primary key already indexes (workspace_id, segment, booked_year). Report reads
 -- scan a workspace's cells (a year filter, or All across years); this partial-free
 -- index on (workspace_id, booked_year) backs the per-year segment scan.
 create index yield_aggregate_year_idx
-  on public.yield_aggregate (workspace_id, booked_year);
+  on commission.yield_aggregate (workspace_id, booked_year);
 
-alter table public.yield_aggregate enable row level security;
+alter table commission.yield_aggregate enable row level security;
 
 -- Tenant isolation is the RLS job (M0 rule 1). This is a read-only surface to the
 -- user (M2 has no mutation endpoints — FR-M2-11); INSERT/UPDATE/DELETE policies
 -- exist only for the SECURITY INVOKER consumer, which deletes emptied cells.
 create policy "yield_aggregate_select_member"
-  on public.yield_aggregate for select
+  on commission.yield_aggregate for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_aggregate_insert_member"
-  on public.yield_aggregate for insert
+  on commission.yield_aggregate for insert
   to authenticated
-  with check (app.is_workspace_member(workspace_id));
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_aggregate_update_member"
-  on public.yield_aggregate for update
+  on commission.yield_aggregate for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_aggregate_delete_member"
-  on public.yield_aggregate for delete
+  on commission.yield_aggregate for delete
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 -- ---------------------------------------------------------------------------
 -- yield_basis_version — the per-workspace monotonic counter (PRD §3.4)
@@ -147,32 +147,32 @@ create policy "yield_aggregate_delete_member"
 -- it increments whenever the all-time sales basis COULD have moved, i.e. whenever a
 -- Sales-segment (Resale/Developer) cell's stored values actually change. A monotonic
 -- counter, never reset; computed_at stamps the last bump. One row per workspace.
-create table public.yield_basis_version (
-  workspace_id uuid primary key references public.workspace (id) on delete cascade,
+create table commission.yield_basis_version (
+  workspace_id uuid primary key references commission.workspace (id) on delete cascade,
   basis_version bigint not null default 0,
   computed_at timestamptz not null default now()
 );
 
-comment on table public.yield_basis_version is
+comment on table commission.yield_basis_version is
   'M2 PRD §3.4. Per-workspace monotonic basis_version, bumped by consume_yield_events whenever a Sales-segment (Resale/Developer) cell changes value. M3 caches the PlanningBasis against this token; M2.3 reads it into the API contract.';
 
-alter table public.yield_basis_version enable row level security;
+alter table commission.yield_basis_version enable row level security;
 
 create policy "yield_basis_version_select_member"
-  on public.yield_basis_version for select
+  on commission.yield_basis_version for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_basis_version_insert_member"
-  on public.yield_basis_version for insert
+  on commission.yield_basis_version for insert
   to authenticated
-  with check (app.is_workspace_member(workspace_id));
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_basis_version_update_member"
-  on public.yield_basis_version for update
+  on commission.yield_basis_version for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- ---------------------------------------------------------------------------
 -- yield_event_cursor — M2's OWN cursor over the deal event log
@@ -181,45 +181,45 @@ create policy "yield_basis_version_update_member"
 -- consumer of deal_event keeps its own high-water mark (m1_2 handoff). Ordered by
 -- (occurred_at, id). '-infinity' start replays the whole log the first time; reset
 -- it and re-drain to re-project every cell identically (the consumer is idempotent).
-create table public.yield_event_cursor (
-  workspace_id uuid primary key references public.workspace (id) on delete cascade,
+create table commission.yield_event_cursor (
+  workspace_id uuid primary key references commission.workspace (id) on delete cascade,
   last_occurred_at timestamptz not null default '-infinity',
   last_event_id uuid,
   updated_at timestamptz not null default now()
 );
 
-comment on table public.yield_event_cursor is
-  'M2.2. The yield consumer''s high-water mark over public.deal_event, per workspace (distinct from M4''s cursor). Ordered by (occurred_at, id). Reset to defaults to replay; consume_yield_events is idempotent (per-cell re-aggregation) so a replay re-projects to the same state.';
+comment on table commission.yield_event_cursor is
+  'M2.2. The yield consumer''s high-water mark over commission.deal_event, per workspace (distinct from M4''s cursor). Ordered by (occurred_at, id). Reset to defaults to replay; consume_yield_events is idempotent (per-cell re-aggregation) so a replay re-projects to the same state.';
 
-alter table public.yield_event_cursor enable row level security;
+alter table commission.yield_event_cursor enable row level security;
 
 create policy "yield_event_cursor_select_member"
-  on public.yield_event_cursor for select
+  on commission.yield_event_cursor for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_event_cursor_insert_member"
-  on public.yield_event_cursor for insert
+  on commission.yield_event_cursor for insert
   to authenticated
-  with check (app.is_workspace_member(workspace_id));
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "yield_event_cursor_update_member"
-  on public.yield_event_cursor for update
+  on commission.yield_event_cursor for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- ---------------------------------------------------------------------------
--- app.recompute_yield_cell(workspace, segment, year) — the absolute per-cell rebuild
+-- commission_private.recompute_yield_cell(workspace, segment, year) — the absolute per-cell rebuild
 -- ---------------------------------------------------------------------------
 -- Re-aggregates ONE (segment, year) cell from the workspace's CURRENT non-archived
 -- deals and upserts it (or deletes it when the cell empties). Absolute, so calling
 -- it twice is a no-op — the idempotency guarantee the consumer relies on. Returns
 -- true iff a SALES-segment (resale/developer) cell's stored values actually changed,
 -- so the caller knows whether to bump basis_version (§3.4). Archived deals are
--- excluded (Rule 10); the segment predicate is app.deal_segment (Rule 9 nulls never
+-- excluded (Rule 10); the segment predicate is commission_private.deal_segment (Rule 9 nulls never
 -- match a cell).
-create or replace function app.recompute_yield_cell(
+create or replace function commission_private.recompute_yield_cell(
   p_workspace_id uuid,
   p_segment text,
   p_year integer
@@ -235,7 +235,7 @@ declare
   v_gci numeric(14, 2);
   v_incentive numeric(14, 2);
   v_referral numeric(14, 2);
-  v_old public.yield_aggregate;
+  v_old commission.yield_aggregate;
   v_found boolean;
   v_changed boolean := false;
 begin
@@ -247,15 +247,15 @@ begin
     coalesce(sum(incentive_net), 0),
     coalesce(sum(referral_out), 0)
   into v_count, v_volume, v_gci, v_incentive, v_referral
-  from public.deal
+  from commission.deal
   where workspace_id = p_workspace_id
     and archived_at is null
     and booked_year = p_year
-    and app.deal_segment(transaction_type, deal_type, representation) = p_segment;
+    and commission_private.deal_segment(transaction_type, deal_type, representation) = p_segment;
 
   -- Lock the existing cell so concurrent recomputes (two events, same cell) serialise.
   select * into v_old
-  from public.yield_aggregate
+  from commission.yield_aggregate
   where workspace_id = p_workspace_id and segment = p_segment and booked_year = p_year
   for update;
   v_found := found;
@@ -263,12 +263,12 @@ begin
   if v_count = 0 then
     -- Cell emptied — delete it (keep the table sparse). A change iff it existed.
     if v_found then
-      delete from public.yield_aggregate
+      delete from commission.yield_aggregate
       where workspace_id = p_workspace_id and segment = p_segment and booked_year = p_year;
       v_changed := true;
     end if;
   elsif not v_found then
-    insert into public.yield_aggregate (
+    insert into commission.yield_aggregate (
       workspace_id, segment, booked_year,
       deal_count, volume_sum, gci_sum, incentive_net_sum, referral_out_sum
     )
@@ -282,7 +282,7 @@ begin
      or v_old.gci_sum <> v_gci
      or v_old.incentive_net_sum <> v_incentive
      or v_old.referral_out_sum <> v_referral then
-    update public.yield_aggregate set
+    update commission.yield_aggregate set
       deal_count = v_count,
       volume_sum = v_volume,
       gci_sum = v_gci,
@@ -298,13 +298,13 @@ begin
 end;
 $$;
 
-comment on function app.recompute_yield_cell is
+comment on function commission_private.recompute_yield_cell is
   'M2.2. Absolute re-aggregation of one (workspace, segment, booked_year) yield_aggregate cell from the current non-archived deals (upsert, or delete when emptied). Idempotent. Returns true iff a Sales-segment (resale/developer) cell''s values changed, signalling a basis_version bump. Called by consume_yield_events and reconcile_yield_aggregate.';
 
-grant execute on function app.recompute_yield_cell(uuid, text, integer) to authenticated;
+grant execute on function commission_private.recompute_yield_cell(uuid, text, integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.consume_yield_events — drain M2's cursor, restate yield_aggregate (FR-M2-04)
+-- commission.consume_yield_events — drain M2's cursor, restate yield_aggregate (FR-M2-04)
 -- ---------------------------------------------------------------------------
 -- Reads deal events after the cursor in (occurred_at, id) order. Each event names
 -- the cells it can affect: the NEW (segment, year) from new_values (always present),
@@ -314,7 +314,7 @@ grant execute on function app.recompute_yield_cell(uuid, text, integer) to authe
 -- Bumps basis_version once per drain if any Sales cell changed (§3.4). Mirrors
 -- consume_deal_events / consume_payment_events structurally. Call in a loop until
 -- processed = 0.
-create or replace function public.consume_yield_events(p_limit integer default 500)
+create or replace function commission.consume_yield_events(p_limit integer default 500)
 returns jsonb
 language plpgsql
 security invoker
@@ -337,31 +337,31 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   -- Load (or initialise) the cursor, locked so concurrent drains serialise on it.
   select last_occurred_at, last_event_id into v_last_at, v_last_id
-  from public.yield_event_cursor
+  from commission.yield_event_cursor
   where workspace_id = v_ws
   for update;
 
   if not found then
-    insert into public.yield_event_cursor (workspace_id)
+    insert into commission.yield_event_cursor (workspace_id)
     values (v_ws)
     on conflict (workspace_id) do nothing;
 
     select last_occurred_at, last_event_id into v_last_at, v_last_id
-    from public.yield_event_cursor
+    from commission.yield_event_cursor
     where workspace_id = v_ws
     for update;
   end if;
 
   for r in
     select e.id, e.occurred_at, e.old_values, e.new_values
-    from public.deal_event e
+    from commission.deal_event e
     where e.workspace_id = v_ws
       and (
         e.occurred_at > v_last_at
@@ -372,14 +372,14 @@ begin
   loop
     -- NEW cell (new_values is present on every event type). A null segment
     -- (unclassified, Rule 9) belongs to no cell — skip it; reconcile surfaces it.
-    v_new_seg := app.deal_segment(
-      (r.new_values->>'transaction_type')::public.deal_transaction_type,
-      (r.new_values->>'deal_type')::public.deal_type,
-      (r.new_values->>'representation')::public.deal_representation
+    v_new_seg := commission_private.deal_segment(
+      (r.new_values->>'transaction_type')::commission.deal_transaction_type,
+      (r.new_values->>'deal_type')::commission.deal_type,
+      (r.new_values->>'representation')::commission.deal_representation
     );
     v_new_year := (r.new_values->>'booked_year')::integer;
     if v_new_seg is not null then
-      if app.recompute_yield_cell(v_ws, v_new_seg, v_new_year) then
+      if commission_private.recompute_yield_cell(v_ws, v_new_seg, v_new_year) then
         v_sales_changed := true;
       end if;
     end if;
@@ -388,16 +388,16 @@ begin
     -- deal MOVED (different segment or year) — otherwise the NEW recompute already
     -- covered it. Handles Resale→Developer, 2026→2027, and classified→unclassified.
     if r.old_values is not null then
-      v_old_seg := app.deal_segment(
-        (r.old_values->>'transaction_type')::public.deal_transaction_type,
-        (r.old_values->>'deal_type')::public.deal_type,
-        (r.old_values->>'representation')::public.deal_representation
+      v_old_seg := commission_private.deal_segment(
+        (r.old_values->>'transaction_type')::commission.deal_transaction_type,
+        (r.old_values->>'deal_type')::commission.deal_type,
+        (r.old_values->>'representation')::commission.deal_representation
       );
       v_old_year := (r.old_values->>'booked_year')::integer;
       if v_old_seg is not null
          and (v_old_seg is distinct from v_new_seg or v_old_year is distinct from v_new_year)
       then
-        if app.recompute_yield_cell(v_ws, v_old_seg, v_old_year) then
+        if commission_private.recompute_yield_cell(v_ws, v_old_seg, v_old_year) then
           v_sales_changed := true;
         end if;
       end if;
@@ -409,7 +409,7 @@ begin
   end loop;
 
   if v_processed > 0 then
-    update public.yield_event_cursor
+    update commission.yield_event_cursor
     set last_occurred_at = v_last_at,
         last_event_id = v_last_id,
         updated_at = now()
@@ -421,10 +421,10 @@ begin
   -- (basis_version is a cache-coherence token, expected to advance — the VALUES it
   -- guards reconstruct identically).
   if v_sales_changed then
-    insert into public.yield_basis_version (workspace_id, basis_version, computed_at)
+    insert into commission.yield_basis_version (workspace_id, basis_version, computed_at)
     values (v_ws, 1, now())
     on conflict (workspace_id) do update set
-      basis_version = public.yield_basis_version.basis_version + 1,
+      basis_version = commission.yield_basis_version.basis_version + 1,
       computed_at = now();
   end if;
 
@@ -434,14 +434,14 @@ begin
 end;
 $$;
 
-comment on function public.consume_yield_events is
-  'FR-M2-04. Drains M2''s cursor over public.deal_event, recomputing the affected (segment, year) yield_aggregate cells (old + new, handling segment/year moves) from the current deals. Idempotent (re-aggregation) + resumable (cursor). Bumps basis_version when a Sales cell changes. Call in a loop until processed = 0.';
+comment on function commission.consume_yield_events is
+  'FR-M2-04. Drains M2''s cursor over commission.deal_event, recomputing the affected (segment, year) yield_aggregate cells (old + new, handling segment/year moves) from the current deals. Idempotent (re-aggregation) + resumable (cursor). Bumps basis_version when a Sales cell changes. Call in a loop until processed = 0.';
 
-revoke all on function public.consume_yield_events(integer) from public;
-grant execute on function public.consume_yield_events(integer) to authenticated;
+revoke all on function commission.consume_yield_events(integer) from public;
+grant execute on function commission.consume_yield_events(integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.reconcile_yield_aggregate — the on-demand drift check (FR-M2-10)
+-- commission.reconcile_yield_aggregate — the on-demand drift check (FR-M2-10)
 -- ---------------------------------------------------------------------------
 -- Recomputes every cell from raw deals (the same GROUP BY the pure functions sum
 -- over) and full-outer-joins it to the materialized yield_aggregate. Any divergence —
@@ -450,7 +450,7 @@ grant execute on function public.consume_yield_events(integer) to authenticated;
 -- job / nightly runner surfaces LOUDLY. Also returns the Rule 9 unclassified deal
 -- codes (a data-quality signal the aggregate deliberately excludes). READ-ONLY — it
 -- reports, it does not repair; a replay (reset the cursor + re-drain) is the repair.
-create or replace function public.reconcile_yield_aggregate()
+create or replace function commission.reconcile_yield_aggregate()
 returns jsonb
 language plpgsql
 security invoker
@@ -468,30 +468,30 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   with truth as (
     select
-      app.deal_segment(transaction_type, deal_type, representation) as segment,
+      commission_private.deal_segment(transaction_type, deal_type, representation) as segment,
       booked_year,
       count(*)::integer as deal_count,
       coalesce(sum(list_price), 0)::numeric(14, 2) as volume_sum,
       coalesce(sum(net_gci), 0)::numeric(14, 2) as gci_sum,
       coalesce(sum(incentive_net), 0)::numeric(14, 2) as incentive_net_sum,
       coalesce(sum(referral_out), 0)::numeric(14, 2) as referral_out_sum
-    from public.deal
+    from commission.deal
     where workspace_id = v_ws
       and archived_at is null
-      and app.deal_segment(transaction_type, deal_type, representation) is not null
+      and commission_private.deal_segment(transaction_type, deal_type, representation) is not null
     group by 1, 2
   ),
   agg as (
     select segment, booked_year, deal_count, volume_sum, gci_sum,
            incentive_net_sum, referral_out_sum
-    from public.yield_aggregate
+    from commission.yield_aggregate
     where workspace_id = v_ws
   ),
   drift as (
@@ -529,13 +529,13 @@ begin
   -- Rule 9 — non-archived deals matching no segment (surfaced, never folded in).
   select coalesce(jsonb_agg(deal_code order by deal_code), '[]'::jsonb)
   into v_unclassified
-  from public.deal
+  from commission.deal
   where workspace_id = v_ws
     and archived_at is null
-    and app.deal_segment(transaction_type, deal_type, representation) is null;
+    and commission_private.deal_segment(transaction_type, deal_type, representation) is null;
 
   select basis_version into v_basis
-  from public.yield_basis_version where workspace_id = v_ws;
+  from commission.yield_basis_version where workspace_id = v_ws;
 
   return jsonb_build_object(
     'ok', v_drift_count = 0,
@@ -547,8 +547,8 @@ begin
 end;
 $$;
 
-comment on function public.reconcile_yield_aggregate is
+comment on function commission.reconcile_yield_aggregate is
   'FR-M2-10. On-demand reconciliation: recomputes every yield_aggregate cell from raw deals and reports any drift (wrong sum / stale cell / missing cell) vs the materialized rows. ok=true iff zero drift (§8). Also returns Rule 9 unclassified deal codes + current basis_version. Read-only — a cursor reset + re-drain is the repair.';
 
-revoke all on function public.reconcile_yield_aggregate() from public;
-grant execute on function public.reconcile_yield_aggregate() to authenticated;
+revoke all on function commission.reconcile_yield_aggregate() from public;
+grant execute on function commission.reconcile_yield_aggregate() to authenticated;

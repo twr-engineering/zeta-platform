@@ -38,7 +38,7 @@
 -- it when cash is logged. One shared routine keeps the two in lock-step.
 
 -- ---------------------------------------------------------------------------
--- app.recompute_receivable_payment_fields(deal_id) — the shared re-aggregation
+-- commission_private.recompute_receivable_payment_fields(deal_id) — the shared re-aggregation
 -- ---------------------------------------------------------------------------
 -- Re-aggregates the deal's non-archived payments and writes the today-INDEPENDENT
 -- payment-derived columns (Rule L/M + dates + days_to_first_release + chase key).
@@ -46,14 +46,14 @@
 -- Absolute (never a delta), so calling it twice is a no-op — the idempotency
 -- guarantee both cursors rely on. months_idle/age_months are deliberately NOT
 -- touched here (today-dependent, computed at read — see the header).
-create or replace function app.recompute_receivable_payment_fields(p_deal_id uuid)
+create or replace function commission_private.recompute_receivable_payment_fields(p_deal_id uuid)
 returns void
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_rec public.receivable;
+  v_rec commission.receivable;
   v_collected numeric(14, 2);
   v_last date;
   v_first date;
@@ -62,7 +62,7 @@ declare
   v_days integer;
 begin
   -- Lock the receivable so a concurrent recompute (two events, same deal) serialises.
-  select * into v_rec from public.receivable where deal_id = p_deal_id for update;
+  select * into v_rec from commission.receivable where deal_id = p_deal_id for update;
   if not found then
     -- No receivable yet (the deal consumer upserts it before calling us). Nothing
     -- to project onto — the next drain will pick it up.
@@ -75,7 +75,7 @@ begin
   -- the PRD's "collected = Σ of stored payment values" precision policy holds.
   select coalesce(sum(net_of_vat), 0), max(payment_date), min(payment_date)
     into v_collected, v_last, v_first
-  from public.payment
+  from commission.payment
   where deal_id = p_deal_id and archived_at is null;
 
   -- Rule M — balance = total_collectible − collected (may be negative and is stored
@@ -96,7 +96,7 @@ begin
     v_days := null;
   end if;
 
-  update public.receivable set
+  update commission.receivable set
     collected_net = v_collected,
     last_payment_date = v_last,
     first_payment_date = v_first,
@@ -116,12 +116,12 @@ begin
 end;
 $$;
 
-comment on function app.recompute_receivable_payment_fields is
+comment on function commission_private.recompute_receivable_payment_fields is
   'M4.2 Rule L/M. Re-aggregates a deal''s non-archived payments and writes the today-independent payment-derived receivable columns (collected_net, balance, pct_collected, first/last payment date, days_to_first_release, chase_priority). Absolute (idempotent). months_idle/age_months are computed at read time. Called by consume_payment_events and consume_deal_events.';
 
 -- Called by the two SECURITY INVOKER consumers, so the invoking authenticated user
--- needs EXECUTE (same convention as app.assert_payment_split / app.resolve_payment_deal).
-grant execute on function app.recompute_receivable_payment_fields(uuid) to authenticated;
+-- needs EXECUTE (same convention as commission_private.assert_payment_split / commission_private.resolve_payment_deal).
+grant execute on function commission_private.recompute_receivable_payment_fields(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Chase projection index (Rule Q, the "indexed projection" deliverable)
@@ -131,7 +131,7 @@ grant execute on function app.recompute_receivable_payment_fields(uuid) to authe
 -- M6 chase list and the aging views read; the read layer refines with the live
 -- months_idle tiebreaker.
 create index receivable_chase_idx
-  on public.receivable (workspace_id, chase_priority desc)
+  on commission.receivable (workspace_id, chase_priority desc)
   where status = 'open' and archived_at is null;
 
 -- ---------------------------------------------------------------------------
@@ -139,46 +139,46 @@ create index receivable_chase_idx
 -- ---------------------------------------------------------------------------
 -- One row per workspace; distinct from receivable_event_cursor (which tracks
 -- deal_event). (last_occurred_at, last_event_id) is the high-water mark over
--- public.payment_event, ordered (occurred_at, id). '-infinity' start replays the
+-- commission.payment_event, ordered (occurred_at, id). '-infinity' start replays the
 -- whole log; reset it and re-drain to re-project every deal identically (the
 -- consumer is idempotent). Each consumer of payment_event keeps its own cursor
 -- (m1_2 / m5_1 handoff) — no shared consumed stamp.
-create table public.receivable_payment_cursor (
-  workspace_id uuid primary key references public.workspace (id) on delete cascade,
+create table commission.receivable_payment_cursor (
+  workspace_id uuid primary key references commission.workspace (id) on delete cascade,
   last_occurred_at timestamptz not null default '-infinity',
   last_event_id uuid,
   updated_at timestamptz not null default now()
 );
 
-comment on table public.receivable_payment_cursor is
-  'M4.2. The receivable consumer''s high-water mark over public.payment_event, per workspace. Ordered by (occurred_at, id). Reset to defaults to replay; consume_payment_events is idempotent (re-aggregation) so a replay re-projects to the same state.';
+comment on table commission.receivable_payment_cursor is
+  'M4.2. The receivable consumer''s high-water mark over commission.payment_event, per workspace. Ordered by (occurred_at, id). Reset to defaults to replay; consume_payment_events is idempotent (re-aggregation) so a replay re-projects to the same state.';
 
-alter table public.receivable_payment_cursor enable row level security;
+alter table commission.receivable_payment_cursor enable row level security;
 
 create policy "receivable_payment_cursor_select_member"
-  on public.receivable_payment_cursor for select
+  on commission.receivable_payment_cursor for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "receivable_payment_cursor_insert_member"
-  on public.receivable_payment_cursor for insert
+  on commission.receivable_payment_cursor for insert
   to authenticated
-  with check (app.is_workspace_member(workspace_id));
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "receivable_payment_cursor_update_member"
-  on public.receivable_payment_cursor for update
+  on commission.receivable_payment_cursor for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- ---------------------------------------------------------------------------
--- public.consume_payment_events — drain M4's payment cursor, restate receivables
+-- commission.consume_payment_events — drain M4's payment cursor, restate receivables
 -- ---------------------------------------------------------------------------
 -- FR-M4-04. Reads payment events after the cursor in (occurred_at, id) order and
 -- re-aggregates each referenced deal's receivable (Rule L/M + dates). Idempotent
 -- (re-aggregation) + resumable (the cursor). Mirrors consume_deal_events exactly,
 -- over payment_event instead of deal_event. Call in a loop until processed = 0.
-create or replace function public.consume_payment_events(p_limit integer default 500)
+create or replace function commission.consume_payment_events(p_limit integer default 500)
 returns jsonb
 language plpgsql
 security invoker
@@ -196,31 +196,31 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   -- Load (or initialise) the cursor, locked so concurrent drains serialise on it.
   select last_occurred_at, last_event_id into v_last_at, v_last_id
-  from public.receivable_payment_cursor
+  from commission.receivable_payment_cursor
   where workspace_id = v_ws
   for update;
 
   if not found then
-    insert into public.receivable_payment_cursor (workspace_id)
+    insert into commission.receivable_payment_cursor (workspace_id)
     values (v_ws)
     on conflict (workspace_id) do nothing;
 
     select last_occurred_at, last_event_id into v_last_at, v_last_id
-    from public.receivable_payment_cursor
+    from commission.receivable_payment_cursor
     where workspace_id = v_ws
     for update;
   end if;
 
   for r in
     select e.id, e.occurred_at, e.deal_id
-    from public.payment_event e
+    from commission.payment_event e
     where e.workspace_id = v_ws
       and (
         e.occurred_at > v_last_at
@@ -232,7 +232,7 @@ begin
     -- created/updated/deleted all restate the same way: re-aggregate the deal's
     -- current payment rows. (deleted rows are archived, so they drop out of the
     -- sum; updated rows are already at their new values.)
-    perform app.recompute_receivable_payment_fields(r.deal_id);
+    perform commission_private.recompute_receivable_payment_fields(r.deal_id);
 
     v_last_at := r.occurred_at;
     v_last_id := r.id;
@@ -240,7 +240,7 @@ begin
   end loop;
 
   if v_processed > 0 then
-    update public.receivable_payment_cursor
+    update commission.receivable_payment_cursor
     set last_occurred_at = v_last_at,
         last_event_id = v_last_id,
         updated_at = now()
@@ -251,11 +251,11 @@ begin
 end;
 $$;
 
-comment on function public.consume_payment_events is
-  'FR-M4-04. Drains M4''s cursor over public.payment_event, re-aggregating each referenced deal''s receivable (Rule L collected, Rule M balance/pct, payment dates, days_to_first_release). Idempotent (re-aggregation) and resumable (cursor). Call in a loop until processed = 0.';
+comment on function commission.consume_payment_events is
+  'FR-M4-04. Drains M4''s cursor over commission.payment_event, re-aggregating each referenced deal''s receivable (Rule L collected, Rule M balance/pct, payment dates, days_to_first_release). Idempotent (re-aggregation) and resumable (cursor). Call in a loop until processed = 0.';
 
-revoke all on function public.consume_payment_events(integer) from public;
-grant execute on function public.consume_payment_events(integer) to authenticated;
+revoke all on function commission.consume_payment_events(integer) from public;
+grant execute on function commission.consume_payment_events(integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- consume_deal_events — EXTENDED to recompute balance for every projection
@@ -272,7 +272,7 @@ grant execute on function public.consume_payment_events(integer) to authenticate
 -- CREATE OR REPLACE is additive and every caller (deal actions, recompute runner,
 -- run_workbook_import) picks it up. Still idempotent + resumable (both the upsert
 -- and the recompute are absolute).
-create or replace function public.consume_deal_events(p_limit integer default 500)
+create or replace function commission.consume_deal_events(p_limit integer default 500)
 returns jsonb
 language plpgsql
 security invoker
@@ -291,30 +291,30 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select last_occurred_at, last_event_id into v_last_at, v_last_id
-  from public.receivable_event_cursor
+  from commission.receivable_event_cursor
   where workspace_id = v_ws
   for update;
 
   if not found then
-    insert into public.receivable_event_cursor (workspace_id)
+    insert into commission.receivable_event_cursor (workspace_id)
     values (v_ws)
     on conflict (workspace_id) do nothing;
 
     select last_occurred_at, last_event_id into v_last_at, v_last_id
-    from public.receivable_event_cursor
+    from commission.receivable_event_cursor
     where workspace_id = v_ws
     for update;
   end if;
 
   for r in
     select e.id, e.occurred_at, e.deal_id, e.new_values
-    from public.deal_event e
+    from commission.deal_event e
     where e.workspace_id = v_ws
       and (
         e.occurred_at > v_last_at
@@ -325,7 +325,7 @@ begin
   loop
     v_snap := r.new_values;
 
-    insert into public.receivable (
+    insert into commission.receivable (
       workspace_id, deal_id, deal_code, booked_year, developer_id, client_name,
       property_details, deal_type, lead_source_id, booking_date,
       booked_net_gci, default_total_collectible, archived_at, created_by, updated_by
@@ -337,7 +337,7 @@ begin
       (v_snap->>'developer_id')::uuid,
       v_snap->>'client_name',
       v_snap->>'property_details',
-      (v_snap->>'deal_type')::public.deal_type,
+      (v_snap->>'deal_type')::commission.deal_type,
       (v_snap->>'lead_source_id')::uuid,
       (v_snap->>'booked_date')::date,
       (v_snap->>'net_gci')::numeric,
@@ -362,7 +362,7 @@ begin
     -- M4.2: restate balance/pct/chase/dates from the deal's current payments now
     -- that total_collectible is current (no-op re-aggregation if unpaid → collected
     -- 0, balance = total_collectible).
-    perform app.recompute_receivable_payment_fields(r.deal_id);
+    perform commission_private.recompute_receivable_payment_fields(r.deal_id);
 
     v_last_at := r.occurred_at;
     v_last_id := r.id;
@@ -370,7 +370,7 @@ begin
   end loop;
 
   if v_processed > 0 then
-    update public.receivable_event_cursor
+    update commission.receivable_event_cursor
     set last_occurred_at = v_last_at,
         last_event_id = v_last_id,
         updated_at = now()
@@ -381,8 +381,8 @@ begin
 end;
 $$;
 
-comment on function public.consume_deal_events is
-  'FR-M4-01/02/03 (+ M4.2). Drains M4''s cursor over public.deal_event, upserting each deal''s receivable from the event snapshot (mirrors + Rule K anchors + archive; user inputs preserved) and recomputing the payment-derived money (balance/pct/chase/dates) so every receivable — paid or not — carries a live balance. Idempotent + resumable.';
+comment on function commission.consume_deal_events is
+  'FR-M4-01/02/03 (+ M4.2). Drains M4''s cursor over commission.deal_event, upserting each deal''s receivable from the event snapshot (mirrors + Rule K anchors + archive; user inputs preserved) and recomputing the payment-derived money (balance/pct/chase/dates) so every receivable — paid or not — carries a live balance. Idempotent + resumable.';
 
-revoke all on function public.consume_deal_events(integer) from public;
-grant execute on function public.consume_deal_events(integer) to authenticated;
+revoke all on function commission.consume_deal_events(integer) from public;
+grant execute on function commission.consume_deal_events(integer) to authenticated;

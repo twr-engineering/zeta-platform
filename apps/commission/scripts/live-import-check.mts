@@ -30,7 +30,7 @@ const ANON = E.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SERVICE = E.SUPABASE_SERVICE_ROLE_KEY;
 const FILE = "discovery/source/ZETA GCI Calculator  Collections v30.20 (1).xlsx";
 
-const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+const admin = createClient(URL_, SERVICE, { db: { schema: "commission" }, auth: { persistSession: false } });
 const email = `import-check-${Date.now()}@throwaway.test`;
 const password = "throwaway-import-check-pw";
 
@@ -51,7 +51,7 @@ async function main() {
   if (created.error) throw created.error;
   uid = created.data.user!.id;
 
-  const user = createClient(URL_, ANON, { auth: { persistSession: false } });
+  const user = createClient(URL_, ANON, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email, password });
   if (signIn.error) throw signIn.error;
 

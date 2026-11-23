@@ -44,7 +44,7 @@ export function previousStep(step: OnboardingStep): OnboardingStep {
 
 /**
  * The client-safe view of the state row (the RPCs return exactly this jsonb —
- * see app.onboarding_state_json). No money, no audit ids.
+ * see commission_private.onboarding_state_json). No money, no audit ids.
  */
 export type OnboardingStateView = {
   id: string;
