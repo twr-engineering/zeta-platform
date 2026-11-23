@@ -13,13 +13,14 @@
     "./respacio/types": "./src/crm/respacio/types.ts"
   },
   "dependencies": {
-    "payload": "3.88.0",
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/plugin-nested-docs": "3.88.0",
     "@payloadcms/plugin-redirects": "3.88.0",
     "@payloadcms/plugin-seo": "3.88.0",
     "@payloadcms/richtext-lexical": "3.88.0",
-    "sharp": "0.34.2",
-    "@zeta/parity": "workspace:*"
+    "@payloadcms/storage-vercel-blob": "3.88.0",
+    "@zeta/parity": "workspace:*",
+    "payload": "3.88.0",
+    "sharp": "0.34.2"
   }
 }

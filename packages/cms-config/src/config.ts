@@ -6,6 +6,7 @@ import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig } from 'payload'
 import type { Config } from 'payload'
@@ -154,6 +155,16 @@ export function createConfig(options: CreateConfigOptions = {}): Promise<import(
       fallback: true,
     },
     plugins: [
+      /**
+       * Media storage on deployments (ADR-17 allows Vercel Blob "with config only"). Enabled only when
+       * BLOB_READ_WRITE_TOKEN is set (Vercel sets it when the Blob store is connected); local dev and
+       * CI keep files on disk.
+       */
+      vercelBlobStorage({
+        enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
+        collections: { media: true },
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      }),
       /** FR-L01/FR-L04 — the 152-record location hierarchy, 25 top-level, 47 parents. */
       nestedDocsPlugin({
         collections: ['locations', 'categories'],
