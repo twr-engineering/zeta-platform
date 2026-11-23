@@ -8,12 +8,16 @@ import { ROUTES, isPublicPath } from "@/lib/routes";
 /**
  * Landing point for emailed confirmation and recovery links (M0 FR-M0-01).
  *
- * Supabase sends the agent here with a one-time `token_hash`; exchanging it
- * establishes the session cookie, after which they continue to `next`.
+ * Supabase sends the agent here with a one-time `token_hash` (custom email
+ * templates) or, with Supabase's default templates, a PKCE `code` after its own
+ * verify step. Exchanging either establishes the session cookie, after which
+ * they continue to `next`. The shared platform project (ADR-23) is on the free
+ * plan, which cannot edit email templates without custom SMTP, so both arrive.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
+  const code = searchParams.get("code");
   const type = searchParams.get("type") as EmailOtpType | null;
   // FR-M10-01: a signup confirmation is the one unambiguous "first login to a
   // newly created workspace" — land the new owner in the first-run wizard.
@@ -30,12 +34,14 @@ export async function GET(request: NextRequest) {
     return redirectTo(request, ROUTES.setupRequired);
   }
 
-  if (!tokenHash || !type) {
+  if (!code && (!tokenHash || !type)) {
     return redirectTo(request, ROUTES.login, "Invalid confirmation link.");
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  const { error } = code
+    ? await supabase.auth.exchangeCodeForSession(code)
+    : await supabase.auth.verifyOtp({ type: type!, token_hash: tokenHash! });
 
   if (error) {
     return redirectTo(

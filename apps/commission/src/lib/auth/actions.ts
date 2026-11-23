@@ -135,7 +135,9 @@ export async function signUp(
     password: parsed.data.password,
     options: {
       data: { display_name: parsed.data.displayName },
-      emailRedirectTo: `${origin}/auth/confirm`,
+      // type=signup survives Supabase's default-template (PKCE code) flow, so the
+      // confirm route still lands a new owner in the first-run wizard.
+      emailRedirectTo: `${origin}/auth/confirm?type=signup`,
     },
   });
 
