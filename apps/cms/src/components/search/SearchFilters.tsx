@@ -23,9 +23,10 @@ import {
   type Opt,
 } from '@zeta/parity/search/form'
 import { getAll } from '@zeta/parity/search/params'
+import type { FacetCounts } from '@/lib/search/query'
 import { setPreferences } from '@/lib/site/preferences'
 
-type Props = { query: string; total: number; currencies: readonly string[]; currency: string }
+type Props = { query: string; total: number; currencies: readonly string[]; currency: string; counts: FacetCounts }
 
 /**
  * WP-04 filter bar — the live /search_results/ controls and the exact URLs they write (BPM-021).
@@ -33,7 +34,7 @@ type Props = { query: string; total: number; currencies: readonly string[]; curr
  * and the server renders it (an E-class change: same URL, same results, linkable, no JS needed
  * to read it). Every control resets pageid to 1, as the live handlers do.
  */
-export function SearchFilters({ query, total, currencies, currency }: Props) {
+export function SearchFilters({ query, total, currencies, currency, counts }: Props) {
   const router = useRouter()
   const path = usePathname()
   // The URL is the state; it is shown optimistically while the server renders the new results.
@@ -69,7 +70,7 @@ export function SearchFilters({ query, total, currencies, currency }: Props) {
           {(close) => (
             <div className="more-filters">
               <h3 className="more-title">More filters</h3>
-              <CheckGroup legend="Sales Details" options={SALES_DETAILS} selected={getAll(sp, 'sale_detail_type')} onChange={(v) => set('sale_detail_type', v)} />
+              <CheckGroup legend="Sales Details" options={SALES_DETAILS} counts={counts.saleDetail} selected={getAll(sp, 'sale_detail_type')} onChange={(v) => set('sale_detail_type', v)} />
               <CheckGroup legend="Property View" options={PROPERTY_VIEWS} selected={fa} onChange={(v) => setFaGroup(PROPERTY_VIEWS, v.filter((x) => PROPERTY_VIEWS.some((o) => o.value === x)))} />
               <CheckGroup legend="Lot Type" options={LOT_TYPES} selected={fa} onChange={(v) => setFaGroup(LOT_TYPES, v.filter((x) => LOT_TYPES.some((o) => o.value === x)))} />
               <CheckGroup legend="Payment Term" options={PAYMENT_TERMS} selected={getAll(sp, 'payment_terms')} onChange={(v) => set('payment_terms', v)} />
@@ -91,7 +92,7 @@ export function SearchFilters({ query, total, currencies, currency }: Props) {
             <ul className="opt-list" role="listbox" aria-label="Listing type">
               {PROPERTY_FOR.map((o) => (
                 <li key={o.value}>
-                  <button type="button" role="option" aria-selected={o.value === propertyFor} className="opt" onClick={() => { set('property_for', o.value); close() }}>{o.label}</button>
+                  <button type="button" role="option" aria-selected={o.value === propertyFor} className={`opt${!counts.propertyFor[o.value] ? ' is-zero' : ''}`} onClick={() => { set('property_for', o.value); close() }}>{o.label}<Count n={counts.propertyFor[o.value]} /></button>
                 </li>
               ))}
             </ul>
@@ -108,12 +109,13 @@ export function SearchFilters({ query, total, currencies, currency }: Props) {
                     const parentOn = types.includes(t.value)
                     return (
                       <div key={t.value} className="type-node">
-                        <label className="check"><input type="checkbox" checked={parentOn} onChange={() => set('type', toggleType(types, t.value))} />{t.label}</label>
+                        <label className={`check${!counts.type[t.value] ? ' is-zero' : ''}`}><input type="checkbox" checked={parentOn} onChange={() => set('type', toggleType(types, t.value))} />{t.label}<Count n={counts.type[t.value]} /></label>
                         {t.children.map((c) => (
                           // A sub-sub option is disabled until its parent is ticked (search-form.php:1340–1347).
-                          <label key={c.value} className={`check child${!parentOn && !types.includes(c.value) ? ' is-disabled' : ''}`}>
+                          <label key={c.value} className={`check child${!parentOn && !types.includes(c.value) ? ' is-disabled' : ''}${!counts.type[c.value] ? ' is-zero' : ''}`}>
                             <input type="checkbox" checked={types.includes(c.value)} disabled={!parentOn && !types.includes(c.value)} onChange={() => set('type', toggleType(types, c.value))} />
                             {c.label}
+                            <Count n={counts.type[c.value]} />
                           </label>
                         ))}
                       </div>
@@ -125,8 +127,8 @@ export function SearchFilters({ query, total, currencies, currency }: Props) {
           )}
         </Popover>
 
-        <RoomPopover label="Bedrooms" value={minBed} onChange={(v) => set('min_bedroom', v)} />
-        <RoomPopover label="Bathrooms" value={minBath} onChange={(v) => set('min_bathroom', v)} />
+        <RoomPopover label="Bedrooms" value={minBed} counts={counts.bedrooms} onChange={(v) => set('min_bedroom', v)} />
+        <RoomPopover label="Bathrooms" value={minBath} counts={counts.bathrooms} onChange={(v) => set('min_bathroom', v)} />
         <Popover label="Price" badge={sp.get('min_price') || sp.get('max_price') ? 1 : 0}>
           {() => <PricePanel sp={sp} go={go} />}
         </Popover>
@@ -145,6 +147,14 @@ export function SearchFilters({ query, total, currencies, currency }: Props) {
               {/* Live shows "Newest" here while the results are priority-ordered (CD-30); labelled honestly. */}
               <option value="">Featured</option>
               {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </label>
+          <label className="tool">
+            <span>Per page</span>
+            {/* FR-SR11: 12 or 24 (?property_per_page, honoured by the live plugin, BPM-006). */}
+            <select value={sp.get('property_per_page') === '24' ? '24' : '12'} onChange={(e) => set('property_per_page', e.target.value === '12' ? null : e.target.value)}>
+              <option value="12">12</option>
+              <option value="24">24</option>
             </select>
           </label>
           <label className="tool">
@@ -212,7 +222,7 @@ function Popover({ label, badge = 0, active, wide, children }: { label: string; 
   )
 }
 
-function RoomPopover({ label, value, onChange }: { label: string; value: string | null; onChange: (v: string | null) => void }) {
+function RoomPopover({ label, value, counts, onChange }: { label: string; value: string | null; counts: Record<string, number>; onChange: (v: string | null) => void }) {
   return (
     <Popover label={value ? `${label} ${value}+`.replace('++', '+') : label} badge={value ? 1 : 0}>
       {(close) => (
@@ -220,7 +230,7 @@ function RoomPopover({ label, value, onChange }: { label: string; value: string 
           <li><button type="button" role="option" aria-selected={!value} className="opt" onClick={() => { onChange(null); close() }}>{label}</button></li>
           {ROOM_OPTIONS.map((o) => (
             <li key={o.value}>
-              <button type="button" role="option" aria-selected={value === o.value} className="opt" onClick={() => { onChange(o.value); close() }}>{o.label}</button>
+              <button type="button" role="option" aria-selected={value === o.value} className={`opt${!counts[o.value] ? ' is-zero' : ''}`} onClick={() => { onChange(o.value); close() }}>{o.label}+<Count n={counts[o.value]} /></button>
             </li>
           ))}
         </ul>
@@ -229,14 +239,15 @@ function RoomPopover({ label, value, onChange }: { label: string; value: string 
   )
 }
 
-function CheckGroup({ legend, options, selected, onChange }: { legend: string; options: Opt[]; selected: string[]; onChange: (v: string[]) => void }) {
+function CheckGroup({ legend, options, selected, onChange, counts }: { legend: string; options: Opt[]; selected: string[]; onChange: (v: string[]) => void; counts?: Record<string, number> }) {
   return (
     <fieldset className="check-group">
       <legend>{legend}</legend>
       {options.map((o) => (
-        <label key={o.value} className="check">
+        <label key={o.value} className={`check${counts && !counts[o.value] ? ' is-zero' : ''}`}>
           <input type="checkbox" checked={selected.includes(o.value)} onChange={(e) => onChange(e.target.checked ? [...selected, o.value] : selected.filter((v) => v !== o.value))} />
           {o.label}
+          {counts && <Count n={counts[o.value]} />}
         </label>
       ))}
     </fieldset>
@@ -316,4 +327,9 @@ function PricePanel({ sp, go }: { sp: URLSearchParams; go: (s: URLSearchParams) 
       </label>
     </div>
   )
+}
+
+/** FR-SR08: the option's live count; zero is shown, and the option de-emphasised, not hidden. */
+function Count({ n }: { n?: number }) {
+  return <span className="opt-count">({n ?? 0})</span>
 }

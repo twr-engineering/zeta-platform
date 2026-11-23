@@ -46,6 +46,12 @@ export type SearchQuery = {
   complexIds: string[]
   referenceNos: string[]
   keyword: string | null
+  /**
+   * FR-SR14 (E-class, not a live parameter): free text in `q`, matched against title, development,
+   * location names and reference. Kept apart from keyword_{n}, whose reference-only rule (BPM-016)
+   * stays exact.
+   */
+  text: string | null
   ranges: Partial<Record<RangeFacet, Range>>
   sort: SortValue
   perPage: number
@@ -215,6 +221,7 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
     complexIds: getAll(sp, 'complex_name'),
     referenceNos: getAll(sp, 'reference_no'),
     keyword: keyword || null,
+    text: sp.get('q')?.trim() || null,
     ranges,
     sort,
     perPage: resolvePerPage(sp.get('property_per_page'), config),

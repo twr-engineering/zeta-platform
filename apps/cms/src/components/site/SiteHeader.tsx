@@ -149,11 +149,13 @@ export function SiteHeader({ menu, cta, locations, currency, currencies, measure
 
 function HeaderSearch() {
   pending('global-search-modal')
+  // FR-SR14 free text from any page: a plain GET form, so it works without JavaScript.
   return (
-    <Link href="/search_results/?property_for=1" className="header-search">
+    <form className="header-search" action="/search_results/" method="get" role="search">
       <SearchIcon />
-      <span>Search a development, neighborhood, or city</span>
-    </Link>
+      <input type="hidden" name="property_for" value="1" />
+      <input type="search" name="q" aria-label="Search properties" placeholder="Search a development, neighborhood, or city" />
+    </form>
   )
 }
 

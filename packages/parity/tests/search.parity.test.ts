@@ -203,3 +203,12 @@ describe('BPM-021 form helpers', async () => {
     expect(withParam(sp, 'type', null).has('type[]')).toBe(false)
   })
 })
+
+describe('FR-SR14 free text (E-class)', () => {
+  it('q is read apart from keyword_{n}', () => {
+    const r = parseSearch(new URLSearchParams('q=+Xavier+Estates+&keyword_1=ZTP73'))
+    expect(r.text).toBe('Xavier Estates')
+    expect(r.keyword).toBe('ZTP73')
+    expect(parseSearch(new URLSearchParams('q=')).text).toBeNull()
+  })
+})

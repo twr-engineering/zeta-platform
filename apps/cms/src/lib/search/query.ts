@@ -52,6 +52,13 @@ export function toWhere(q: SearchQuery): Where {
   if (q.complexIds.length) and.push({ 'geo.complexId': { in: q.complexIds } })
   if (q.referenceNos.length) and.push({ referenceNo: { in: q.referenceNos } })
 
+  // FR-SR14: free text, every word must appear in one of these fields (Payload `like`).
+  if (q.text) {
+    and.push({
+      or: ['propertyTitle', 'referenceNo', 'geo.complexName', 'geo.cityName', 'geo.municipalityName', 'geo.provinceName'].map((f) => ({ [f]: { like: q.text } })),
+    })
+  }
+
   if (q.attributeIds.length > 1) pending('fa-collision')
   if (q.minStorey !== null) and.push({ storeys: { greater_than_equal: q.minStorey } })
   if (q.builtYear) {
@@ -91,17 +98,76 @@ export async function keywordRefs(payload: Payload, keyword: string, propertyFor
   return docs.map((d) => d.referenceNo).filter((r): r is string => !!r)
 }
 
+/** Folds the keyword lookup (BPM-016) into referenceNos, so every query below sees the same set. */
+export async function resolveQuery(payload: Payload, q: SearchQuery): Promise<SearchQuery> {
+  if (q.keyword === null) return q
+  const refs = await keywordRefs(payload, q.keyword, q.propertyFor)
+  return { ...q, referenceNos: [...q.referenceNos, ...(refs.length ? refs : [NO_MATCH_REF])] }
+}
+
 export async function searchListings(payload: Payload, q: SearchQuery) {
-  if (q.keyword !== null) {
-    const refs = await keywordRefs(payload, q.keyword, q.propertyFor)
-    q = { ...q, referenceNos: [...q.referenceNos, ...(refs.length ? refs : [NO_MATCH_REF])] }
-  }
+  const resolved = await resolveQuery(payload, q)
   return payload.find({
     collection: 'listings',
-    where: toWhere(q),
-    sort: SORTS[q.sort],
-    limit: q.perPage,
-    page: q.page,
+    where: toWhere(resolved),
+    sort: SORTS[resolved.sort],
+    limit: resolved.perPage,
+    page: resolved.page,
     depth: 0,
   })
+}
+
+export async function countListings(payload: Payload, q: SearchQuery): Promise<number> {
+  return (await payload.count({ collection: 'listings', where: toWhere(await resolveQuery(payload, q)) })).totalDocs
+}
+
+/**
+ * FR-SR08 — a live count per option: for each facet group, the listings matching every other
+ * filter (the group's own selection left out), counted in memory over a lean select. The catalogue
+ * is ~600 listings, so five small reads beat fifty count queries.
+ */
+export type FacetCounts = {
+  propertyFor: Record<string, number>
+  type: Record<string, number>
+  bedrooms: Record<string, number>
+  bathrooms: Record<string, number>
+  saleDetail: Record<string, number>
+}
+
+export async function facetCounts(payload: Payload, query: SearchQuery): Promise<FacetCounts> {
+  const q = await resolveQuery(payload, query)
+  const without = (patch: Partial<SearchQuery>, rangeOff?: RangeFacet) => {
+    const ranges = { ...q.ranges }
+    if (rangeOff) delete ranges[rangeOff]
+    return toWhere({ ...q, ...patch, ranges })
+  }
+  const rows = (where: Where) =>
+    payload
+      .find({ collection: 'listings', where, pagination: false, depth: 0, select: { propertyForId: true, subTypeId: true, subSubTypeId: true, bedrooms: true, bathrooms: true, saleDetailTypeId: true } })
+      .then((r) => r.docs)
+  const [pf, types, beds, baths, sale] = await Promise.all([
+    rows(without({ propertyFor: null })),
+    rows(without({ subTypeIds: [], subSubTypeIds: [] })),
+    rows(without({}, 'bedroom')),
+    rows(without({}, 'bathroom')),
+    rows(without({ saleDetailTypeIds: [] })),
+  ])
+  const tally = (list: (string | null | undefined)[]) => {
+    const out: Record<string, number> = {}
+    for (const k of list) if (k) out[k] = (out[k] ?? 0) + 1
+    return out
+  }
+  const atLeast = (values: (number | null | undefined)[]) => {
+    const out: Record<string, number> = {}
+    for (const n of [1, 2, 3, 4, 5, 6]) out[String(n)] = values.filter((v) => (v ?? 0) >= n).length
+    out['6+'] = out['6']
+    return out
+  }
+  return {
+    propertyFor: tally(pf.map((d) => d.propertyForId)),
+    type: { ...tally(types.map((d) => (d.subTypeId ? `_st_${d.subTypeId}` : null))), ...tally(types.map((d) => (d.subSubTypeId ? `_sst_${d.subSubTypeId}` : null))) },
+    bedrooms: atLeast(beds.map((d) => d.bedrooms)),
+    bathrooms: atLeast(baths.map((d) => d.bathrooms)),
+    saleDetail: tally(sale.map((d) => d.saleDetailTypeId)),
+  }
 }
