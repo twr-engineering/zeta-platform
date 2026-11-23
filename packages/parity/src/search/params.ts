@@ -258,3 +258,19 @@ export function toCrmParams(q: SearchQuery): Record<string, string> {
   }
   return out
 }
+
+/**
+ * BPM-012 + search-results.php:408, :454–461 — a module's own `query` attribute is read first, then
+ * $_GET is layered on top unless the block sets ignore_get=true (shortlists and /search_results/
+ * set false): a key present in the request replaces that key from the saved query (array keys as a
+ * whole), and every other saved key stays.
+ */
+export function mergeModuleQuery(saved: string, request: Sp, ignoreGet = false): URLSearchParams {
+  const out = new URLSearchParams(saved)
+  if (ignoreGet) return out
+  const base = (k: string) => k.replace(/\[\d*\]$/, '')
+  const requested = new Set([...request.keys()].map(base))
+  for (const k of [...out.keys()]) if (requested.has(base(k))) out.delete(k)
+  for (const [k, v] of request) out.append(k, v)
+  return out
+}

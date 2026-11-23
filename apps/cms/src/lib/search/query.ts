@@ -105,11 +105,13 @@ export async function resolveQuery(payload: Payload, q: SearchQuery): Promise<Se
   return { ...q, referenceNos: [...q.referenceNos, ...(refs.length ? refs : [NO_MATCH_REF])] }
 }
 
-export async function searchListings(payload: Payload, q: SearchQuery) {
+/** `extra` narrows further (e.g. a location page matching by name until it is bound to CRM ids). */
+export async function searchListings(payload: Payload, q: SearchQuery, extra?: Where) {
   const resolved = await resolveQuery(payload, q)
+  const where = toWhere(resolved)
   return payload.find({
     collection: 'listings',
-    where: toWhere(resolved),
+    where: extra ? { and: [where, extra] } : where,
     sort: SORTS[resolved.sort],
     limit: resolved.perPage,
     page: resolved.page,
