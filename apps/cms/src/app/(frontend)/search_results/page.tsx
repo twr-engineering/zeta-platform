@@ -2,11 +2,14 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 
 import { ListingCard } from '@/components/ListingCard'
+import { SearchFilters } from '@/components/search/SearchFilters'
+import { CURRENCIES } from '@/lib/site/currencies'
 import { Pending } from '@/components/Pending'
 import { deviceType } from '@/lib/search/device'
 import { parseSearch, type SearchModuleConfig } from '@/lib/search/params'
 import { searchListings } from '@/lib/search/query'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
+import { resolveMeasurement } from '@/lib/site/units'
 import { getRates, payload } from '@/lib/site/payload'
 
 /**
@@ -41,10 +44,11 @@ export default async function SearchResults({ searchParams }: Props) {
   const raw = await searchParams
   const sp = toSp(raw)
   const q = parseSearch(sp, { ...MODULE, device: deviceType((await headers()).get('user-agent')) })
-  const [result, rates, currency] = await Promise.all([
+  const [result, rates, currency, measurement] = await Promise.all([
     searchListings(await payload(), q),
     getRates(),
     resolveDisplayCurrency(raw.currency),
+    resolveMeasurement(),
   ])
 
   // ?pageid={n} is the pagination form the site emits (BPM-013), preserved here.
@@ -56,13 +60,12 @@ export default async function SearchResults({ searchParams }: Props) {
 
   return (
     <section className="search">
-      <h1>Search results</h1>
-      <p className="search-count">{result.totalDocs} properties</p>
+      <h1 className="visually-hidden">Search results</h1>
+      <SearchFilters query={sp.toString()} total={result.totalDocs} currencies={CURRENCIES} currency={currency} />
       {q.amount !== null && <Pending id="amount-filter">Qualified amount from the calculator: {q.amount}. Not yet applied as a filter.</Pending>}
-      <Pending id="price-slider-plus">The filter panel (price slider, banded facets) is not built yet. The URL contract is.</Pending>
       <div className="grid">
         {result.docs.map((l) => (
-          <ListingCard key={l.id} listing={l} rates={rates} currency={currency} />
+          <ListingCard key={l.id} listing={l} rates={rates} currency={currency} measurement={measurement} />
         ))}
       </div>
       {result.totalPages > 1 && (

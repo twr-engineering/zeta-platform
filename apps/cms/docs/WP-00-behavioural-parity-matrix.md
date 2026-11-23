@@ -645,6 +645,44 @@ The separate select-picker suggestion field (`property_filter`) exists only in v
 
 ---
 
+### BPM-021 · FR-SR02..SR07 · Search form → URL contract
+
+| | |
+|---|---|
+| **Class** | P\* → resolved (param names); three behaviours **need live confirmation** (`fa-collision`, `type-tree-combination`, `payment-terms-filter`) |
+| **Source** | `wp_posts` 6 (blocks); `customtemplates` **305520** "Advance Search - Inline - Sale - Responsive 3" (the visible bar) + its `javascript` postmeta; `templates` 263744 "Search Result Wrapper Mix"; respacio `templates/search-form.php`, `templates/search-results.php`, `includes/functions.php`, `js/respacio.js`, `js/respacio-core-a.js`; `uploads/custom-css-js/295305.js`; `wp_curl_info` 6382/6487 (option labels) |
+| **Confidence** | **Extracted**; partly corroborated (`attribute[0]=143` call 6460, `sub_sub_property_type[0]=44` calls 5971–5997, `sale_detail_type[]` in 567 calls) |
+
+**Submission.** Every control writes into one object, then `history.pushState("?"+jQuery.param(...))` and an AJAX refresh of the grid and count (`action=search_property_list`); never a page load. Every handler sets `pageid=1`. Brackets are percent-encoded.
+
+| Control | Query parameter | Notes |
+|---|---|---|
+| Sale / Rent | `property_for=1` / `2` | "Rent and Sale" (3) excluded |
+| Property Type | `type[]=_st_{id}` (sub-type), `type[]=_sst_{id}` (sub-sub-type) | two branches, Residential first, A–Z; a child is disabled until its parent is ticked; ticking a parent clears its children and vice versa (`search-form.php:1340–1525`). Server: `_st_` → `sub_property_type[]`, `_sst_` → `sub_sub_property_type[]` (`functions.php:3050–3059`) |
+| Bedrooms / Bathrooms | `min_bedroom=N` / `min_bathroom=N`, options 1–6, 6+ | min only; `6+` sanitises to 6 |
+| Price | `price=&min_price=a&max_price=b`, 1,000–100,000,000, step 50,000 | the form never sends a `+` |
+| Show Properties Above ₱100,000,000+ | `min_price=100000000&max_price=1000000000` | ceiling = 10 × the slider max (`search-form.php:5285`) |
+| Sales Details | `sale_detail_type[]=1` Resale, `2` New Development | |
+| Property View | `fa[]=a129` Mountain, a130 River, a131 Golf Course, a132 Sea, a133 Garden, a134 Amenity, a135 City, a137 Sunset | a136 not in the CRM list, never renders |
+| Lot Type | `fa[]=a119` Inner, a120 Corner, a121 Fairway, a122 Ridge, a123 End, a144 Through | |
+| Is Foreclosed? | `fa[]=a143` Yes, `a142` No | single choice |
+| Payment Term | `payment_terms[]=Cash` / `Deferred Cash` / `Bank Financing` / `Pagibig Financing` | passed to the CRM untouched; 0 corpus calls |
+| Lot / Floor Area | `min_plot_size`, `max_plot_size`, `min_total_built_size`, `max_total_built_size` | free text, raw |
+| Year Built | `min_built_year`, `max_built_year` | raw on the AJAX path; the page-load path runs `DateTime(...)->format('Y')` (CD-31) |
+| Storey | `min_storey[]=1…4` or `5+` | single choice, sent raw |
+| Order By | `sortby=date_desc` Newest, `price_asc`, `price_desc` | shows "Newest" when absent while results are `priority_desc` (CD-30) |
+| Currency pill | sets `form_displaycurrency`, full reload (BPM-008) | |
+| Show Map | `map=true` and a full load | FR-SR16 (Phase 2) |
+| Save Search | session toggle, opens a sign-up modal | account area (BPM-014) |
+
+The "Show {n} results" count is the same AJAX response's `totalrecords`, written only when > 0.
+
+**Build notes.** `@zeta/parity/search/form` holds the options, the tree rule (`toggleType`) and the URL writer (`withParam`, resets `pageid`); `parseSearch` now reads `_sst_`, the area boxes, storey, year built and payment terms; the mirror gains `subSubTypeId/Name`, `storeys`, `builtYear`. Each change navigates to the same URL and the server renders it (**E**: same URL, same results, server-rendered). "Clear Filters" returns to `?property_for={n}` (the live outer link points at a non-existent `/search_result/`, CD-32).
+
+**Sign-off:** ☐
+
+---
+
 ## 3. Defects discovered during capture
 
 New since PRD v2.1. **None may be silently fixed** — each is either reproduced or raised through GP.5.
@@ -674,6 +712,9 @@ New since PRD v2.1. **None may be silently fixed** — each is either reproduced
 | **CD-27** | Gallery share links (Facebook, Twitter, LinkedIn) are hard-coded to `/r/ZTP116/` on every listing | 288102 T:816–827 | **F** |
 | **CD-28** | Marketing features "Zeta Exclusive" and "Preselling" never show a ribbon (their keys are not in the template's list) | 288102 T:51–58; 73 fixtures | **F** — client |
 | **CD-29** | Payment Term, Title Status and Required Income read `property_custom_fields`, which is empty in 73/73 listings; the data is in `custom_property_fields` | 288102 T:432–485; fixtures | **F** |
+| **CD-30** | Order By shows "Newest" when no `sortby` is set, while the results are `priority_desc` (BPM-002) | `search-form.php:6205–6221` | **F** — the rebuild labels that state "Featured" |
+| **CD-31** | Year Built on a page load runs `new DateTime($v)->format('Y')`: "2015" parses as a time (20:15) and gives the current year; "1990" may throw. The AJAX path sends it raw, so a reload can change results | `search-results.php:197–204` | **F** — the rebuild uses the raw year |
+| **CD-32** | The outer "Clear Filters" link goes to `/search_result/` (singular); no such page exists | 305520 `javascript` | **F** — the rebuild clears to `?property_for={n}` |
 
 **CD-11 is the one to look at hardest.** Arbitrary user-controlled strings are reaching a third-party API in a parameter that names a sort column. It is at minimum a correctness bug and potentially an injection surface on the CRM side. It should be reported to Respacio regardless of what this project does.
 
@@ -687,7 +728,7 @@ Session 4 (23 Nov 2026) captured every rule readable from the local artefacts: B
 |---|---|---|
 | FR-F02, F03, F04, F06 | Field names, order, labels, required flags, validation, consent wording, recipient routing of the live forms | **OQ-17**: which of the 89 `wpcf7_contact_form` records are live |
 
-Live checks and client decisions raised by session 4 are in `docs/PENDING.md` (`phone-page-detection`, `listing-route-redirect`, `keyword-case`, `account-registration`, `location-page-live-checks`, `article-double-h1`, `recommendation-scope`), with defects CD-17 to CD-29 in §3.
+Live checks and client decisions raised by session 4 are in `docs/PENDING.md` (`fa-collision`, `type-tree-combination`, `payment-terms-filter`, `phone-page-detection`, `listing-route-redirect`, `keyword-case`, `account-registration`, `location-page-live-checks`, `article-double-h1`, `recommendation-scope`), with defects CD-17 to CD-29 in §3.
 
 ### 4.1 Live check sweep — results
 

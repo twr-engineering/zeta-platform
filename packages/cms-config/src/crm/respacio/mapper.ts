@@ -22,6 +22,35 @@ export const SUB_TYPE_IDS: Record<string, string> = {
   Agricultural: '53',
 }
 
+/**
+ * pro_subsub_type name → sub-sub-type id, the target of type[]=_sst_{n} (BPM-021, from the CRM's
+ * search-property-form options, wp_curl_info 6382). List payloads carry only the name; detail
+ * payloads carry property_sub_sub_type_id, which wins when present.
+ */
+export const SUB_SUB_TYPE_IDS: Record<string, string> = {
+  Duplex: '35',
+  'Multi Unit': '90',
+  'Junior One Bedroom': '85',
+  Penthouse: '45',
+  Studio: '39',
+  Bungalow: '37',
+  'Farm House': '46',
+  'Single Attached': '43',
+  'Single Detached': '44',
+  'Town House': '32',
+  Villa: '30',
+  'Farm Lot': '96',
+  'Poultry Farm': '61',
+  'Commercial Lot': '97',
+  'Coworking Space': '82',
+  'Mix-used Building': '69',
+  'Office Space': '77',
+  'Botique Hotel': '65',
+  Resort: '66',
+  Land: '98',
+  Warehouse: '63',
+}
+
 /** sale_detail_type_id. "New Development" is what BPM-012 calls Preselling. */
 export const SALE_DETAIL_TYPE_IDS: Record<string, string> = {
   Resale: '1',
@@ -46,6 +75,7 @@ const date = (v: unknown): string | null => {
 
 export function fromListItem(item: CrmListItem): ListingData {
   const subTypeName = str(item.pro_sub_type)
+  const subSubTypeName = str(item.pro_subsub_type)
   const saleDetailType = str(item.sale_detail_type)
   return {
     crmId: item.id,
@@ -61,6 +91,8 @@ export function fromListItem(item: CrmListItem): ListingData {
     typeName: str(item.pro_type),
     subTypeId: subTypeName ? (SUB_TYPE_IDS[subTypeName] ?? null) : null,
     subTypeName,
+    subSubTypeId: subSubTypeName ? (SUB_SUB_TYPE_IDS[subSubTypeName] ?? null) : null,
+    subSubTypeName,
     saleDetailTypeId: saleDetailType ? (SALE_DETAIL_TYPE_IDS[saleDetailType] ?? null) : null,
     saleDetailType,
     rentAmountPeriod: str(item.rent_amount_period),
@@ -70,6 +102,8 @@ export function fromListItem(item: CrmListItem): ListingData {
     builtSize: num(item.built_size),
     plotSize: num(item.plot_size),
     areaUnit: str(item.area_unit),
+    storeys: num(item.storeys),
+    builtYear: num(item.built_year),
     geo: {
       latitude: num(item.latitude),
       longitude: num(item.longitude),
@@ -123,6 +157,8 @@ export function withDetail(base: ListingData, view: CrmViewResponse): ListingDat
     price: num(d.default_price) ?? num(d.price) ?? base.price,
     subTypeId: str(d.property_sub_type_id) ?? base.subTypeId,
     subTypeName: str(d.property_sub_name) ?? base.subTypeName,
+    subSubTypeId: str(d.property_sub_sub_type_id) ?? base.subSubTypeId,
+    subSubTypeName: str(d.property_sub_sub_name) ?? base.subSubTypeName,
     saleDetailTypeId: str(d.sale_detail_type_id) ?? base.saleDetailTypeId,
     saleDetailType: str(d.sale_detail_type) ?? base.saleDetailType,
     rentAmountPeriod: str(d.rent_amount_period) ?? base.rentAmountPeriod,

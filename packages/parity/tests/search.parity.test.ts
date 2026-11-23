@@ -162,3 +162,44 @@ describe('BPM-016 keyword field (search-results.php:464–500)', () => {
     expect(kw('keyword=')).toBeNull()
   })
 })
+
+describe('BPM-021 search form params', () => {
+  const q = (qs: string) => parseSearch(new URLSearchParams(qs))
+  it('splits type[] into sub-types (_st_) and sub-sub-types (_sst_)', () => {
+    const r = q('type[]=_st_9&type[]=_sst_39')
+    expect(r.subTypeIds).toEqual(['9'])
+    expect(r.subSubTypeIds).toEqual(['39'])
+    expect(toCrmParams(r)).toMatchObject({ 'sub_property_type[0]': '9', 'sub_sub_property_type[0]': '39' })
+  })
+  it('reads the More Filters area boxes as min_/max_ bounds', () => {
+    const r = q('min_plot_size=200&max_plot_size=500&min_total_built_size=80')
+    expect(r.ranges.plot_size).toEqual({ min: 200, max: 500 })
+    expect(r.ranges.total_built_size).toEqual({ min: 80, max: null })
+  })
+  it('storey: the first min_storey[]; "5+" sanitises to 5', () => {
+    expect(q('min_storey[]=3').minStorey).toBe(3)
+    expect(q('min_storey[]=5%2B').minStorey).toBe(5)
+    expect(q('').minStorey).toBeNull()
+  })
+  it('year built range and payment terms are carried', () => {
+    expect(q('min_built_year=2010').builtYear).toEqual({ min: 2010, max: null })
+    expect(q('payment_terms[]=Cash&payment_terms[]=Bank+Financing').paymentTerms).toEqual(['Cash', 'Bank Financing'])
+  })
+  it('the "above ₱100M" checkbox is a plain range (×10 ceiling)', () =>
+    expect(q('price=&min_price=100000000&max_price=1000000000').ranges.price).toEqual({ min: 100000000, max: 1000000000 }))
+})
+
+describe('BPM-021 form helpers', async () => {
+  const { toggleType, withParam } = await import('../src/search/form')
+  it('ticking a parent clears its children; ticking a child clears its parent', () => {
+    expect(toggleType(['_sst_39', '_sst_45'], '_st_38')).toEqual(['_st_38'])
+    expect(toggleType(['_st_9'], '_sst_44')).toEqual(['_sst_44'])
+    expect(toggleType(['_st_9', '_st_38'], '_st_9')).toEqual(['_st_38'])
+  })
+  it('every control resets pageid to 1 and replaces its own key', () => {
+    const sp = new URLSearchParams('property_for=1&type[]=_st_9&pageid=3')
+    expect(withParam(sp, 'type', ['_st_38']).toString()).toBe('property_for=1&pageid=1&type%5B%5D=_st_38')
+    expect(withParam(sp, 'min_bedroom', '3').get('min_bedroom')).toBe('3')
+    expect(withParam(sp, 'type', null).has('type[]')).toBe(false)
+  })
+})

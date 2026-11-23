@@ -467,6 +467,11 @@ export interface Listing {
   subTypeId?: string | null;
   subTypeName?: string | null;
   /**
+   * Sub-sub-type id — the target of type[]=_sst_{n} filters (BPM-021).
+   */
+  subSubTypeId?: string | null;
+  subSubTypeName?: string | null;
+  /**
    * 1 Resale · 2 New Development (Preselling)
    */
   saleDetailTypeId?: string | null;
@@ -485,6 +490,14 @@ export interface Listing {
   builtSize?: number | null;
   plotSize?: number | null;
   areaUnit?: string | null;
+  /**
+   * min_storey[] filter (BPM-021).
+   */
+  storeys?: number | null;
+  /**
+   * min/max_built_year filter (BPM-021).
+   */
+  builtYear?: number | null;
   /**
    * CRM geography. The ids bind to Locations.crmGeography.
    */
@@ -1368,6 +1381,8 @@ export interface ListingsSelect<T extends boolean = true> {
   typeName?: T;
   subTypeId?: T;
   subTypeName?: T;
+  subSubTypeId?: T;
+  subSubTypeName?: T;
   saleDetailTypeId?: T;
   saleDetailType?: T;
   rentAmountPeriod?: T;
@@ -1378,6 +1393,8 @@ export interface ListingsSelect<T extends boolean = true> {
   builtSize?: T;
   plotSize?: T;
   areaUnit?: T;
+  storeys?: T;
+  builtYear?: T;
   geo?:
     | T
     | {
