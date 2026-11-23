@@ -1957,6 +1957,67 @@ export interface SiteSetting {
     instagram?: string | null;
     linkedin?: string | null;
   };
+  /**
+   * The button beside the menu on scrolled and inner pages.
+   */
+  headerCta?: {
+    label?: string | null;
+    url?: string | null;
+  };
+  /**
+   * The drawer menu, in order. An item with children opens as an accordion.
+   */
+  mainMenu?:
+    | {
+        label: string;
+        url: string;
+        children?:
+          | {
+              label: string;
+              url: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  footerTagline?: string | null;
+  /**
+   * "Explore more Properties" link columns above the newsletter.
+   */
+  exploreColumns?:
+    | {
+        title: string;
+        links?:
+          | {
+              label: string;
+              url: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  newsletter?: {
+    heading?: string | null;
+    text?: string | null;
+  };
+  /**
+   * Link columns in the dark footer.
+   */
+  footerColumns?:
+    | {
+        title: string;
+        links?:
+          | {
+              label: string;
+              url: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2058,6 +2119,59 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         youtube?: T;
         instagram?: T;
         linkedin?: T;
+      };
+  headerCta?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+      };
+  mainMenu?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        children?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  footerTagline?: T;
+  exploreColumns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  newsletter?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+      };
+  footerColumns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

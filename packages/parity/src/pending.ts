@@ -77,6 +77,20 @@ export const PENDING = {
     unblock: 'Client decision.',
     interim: 'Not built.',
   },
+  'account-area-build': {
+    need: 'The account area (log in / sign up, liked properties, saved searches, subscriptions) as captured in BPM-014, with signed, expiring access links.',
+    refs: ['BPM-014', 'FR-A04', 'FR-A10', 'FR-G07'],
+    blockedOn: 'build',
+    unblock: 'Build the account area (WP-07); the drawer links to /my-account/ meanwhile.',
+    interim: 'The drawer shows "Log in / Sign up" pointing at /my-account/, which is not built.',
+  },
+  'global-search-modal': {
+    need: 'FR-G08: the faceted search modal opened from the header on any page.',
+    refs: ['FR-G08', 'FR-SR02'],
+    blockedOn: 'build',
+    unblock: 'Build the search filter panel (WP-04).',
+    interim: 'The header search field links to /search_results/?property_for=1 (Sale).',
+  },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
     refs: ['BPM-007', 'FR-P11', 'OQ-23'],
