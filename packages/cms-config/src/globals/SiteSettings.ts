@@ -41,6 +41,18 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'tracking',
+      type: 'group',
+      admin: {
+        description:
+          'Optional analytics and marketing tags (FR-G10). Each loads only after the visitor consents to its category; leave empty and no tag, and no cookie banner, is shown.',
+      },
+      fields: [
+        { name: 'gaMeasurementId', type: 'text', label: 'Google Analytics 4 measurement ID (analytics)', admin: { placeholder: 'G-XXXXXXXXXX' } },
+        { name: 'metaPixelId', type: 'text', label: 'Meta Pixel ID (marketing)' },
+      ],
+    },
+    {
       type: 'collapsible',
       label: 'Header',
       fields: [
