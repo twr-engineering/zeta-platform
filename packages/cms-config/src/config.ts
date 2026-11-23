@@ -162,7 +162,9 @@ export function createConfig(options: CreateConfigOptions = {}): Promise<import(
        */
       vercelBlobStorage({
         enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
-        collections: { media: true },
+        // Media is public (read: anyone), so files are served straight from the Blob CDN instead of
+        // being streamed through /api/media/file on every view.
+        collections: { media: { disablePayloadAccessControl: true } },
         token: process.env.BLOB_READ_WRITE_TOKEN,
       }),
       /** FR-L01/FR-L04 — the 152-record location hierarchy, 25 top-level, 47 parents. */
