@@ -9,8 +9,8 @@ import { getRates, payload } from '@/lib/site/payload'
 /**
  * Listing detail — /r/{reference_no}/ (BPM-007). Also mounted at /long-term/{ref}/.
  *
- * The rendered field set is PROVISIONAL (pending: listing-field-render-set): the 113-field
- * template transcription is not done, so this shows the obvious core and nothing more.
+ * The rendered field set is PROVISIONAL (pending: listing-field-render-set): BPM-020 captures the
+ * real 45-row field set; it is built with the design system (WP-03). Until then, the obvious core.
  */
 export const dynamic = 'force-dynamic'
 

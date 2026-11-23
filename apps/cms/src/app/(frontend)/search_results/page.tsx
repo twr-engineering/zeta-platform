@@ -1,7 +1,9 @@
+import { headers } from 'next/headers'
 import Link from 'next/link'
 
 import { ListingCard } from '@/components/ListingCard'
 import { Pending } from '@/components/Pending'
+import { deviceType } from '@/lib/search/device'
 import { parseSearch, type SearchModuleConfig } from '@/lib/search/params'
 import { searchListings } from '@/lib/search/query'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
@@ -19,8 +21,10 @@ export const dynamic = 'force-dynamic'
 /**
  * The search page's own module config. priority_desc is the operative default on every
  * configured module in the corpus (BPM-002); price_desc is only the unreached fallback.
+ * Page size (BPM-006a): page 6's search-results block stores property_per_page "12" and no phone
+ * size, so phones get the block default 9.
  */
-const MODULE: SearchModuleConfig = { sortby: 'priority_desc' }
+const MODULE: SearchModuleConfig = { sortby: 'priority_desc', propertyPerPage: 12 }
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -36,7 +40,7 @@ function toSp(raw: Record<string, string | string[] | undefined>) {
 export default async function SearchResults({ searchParams }: Props) {
   const raw = await searchParams
   const sp = toSp(raw)
-  const q = parseSearch(sp, MODULE)
+  const q = parseSearch(sp, { ...MODULE, device: deviceType((await headers()).get('user-agent')) })
   const [result, rates, currency] = await Promise.all([
     searchListings(await payload(), q),
     getRates(),

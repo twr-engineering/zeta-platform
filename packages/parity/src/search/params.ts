@@ -56,8 +56,15 @@ export type SearchQuery = {
 export type SearchModuleConfig = {
   sortby?: string
   propertyPerPage?: number
+  /** BPM-006a: the module's `property_per_page_phone`. Absent = the block default, 9. */
+  propertyPerPagePhone?: number
   layout?: string
+  /** BPM-006a: Mobile_Detect's class for this request. Phone = isMobile && !isTablet. */
+  device?: Device
 }
+
+/** BPM-006a — `Detect::deviceType()` (respacio includes/detect.php:66–68). A tablet is not a phone. */
+export type Device = 'Phone' | 'Tablet' | 'Computer'
 
 /** PHP-style array param: accepts `k`, `k[]` and `k[0]`, `k[1]`… in document order. */
 export function getAll(sp: Sp, key: string): string[] {
@@ -110,15 +117,38 @@ export function resolveSort(requested: string | null, config?: string): SortValu
   return 'price_desc'
 }
 
-/** BPM-006, desktop branch. ?property_per_page overrides unless the layout is card_only. */
+/**
+ * BPM-006 + BPM-006a (search-results.php:730–738). On a Phone the module's phone size wins; WP
+ * fills the registered block default ('9') when the attribute is absent, so a phone gets 9 unless
+ * the module sets its own (12→9, 8→9, 30→9 on the live modules). Otherwise the desktop size, else
+ * posts_per_page (9). ?property_per_page overrides both unless the layout is card_only.
+ */
 export const MAX_PER_PAGE = 50
 export function resolvePerPage(requested: string | null, config: SearchModuleConfig): number {
-  pending('phone-page-size')
-  const fromConfig = config.propertyPerPage ?? 9
+  if (config.device === 'Phone') pending('phone-page-detection')
+  const fromConfig = config.device === 'Phone' ? (config.propertyPerPagePhone ?? 9) : (config.propertyPerPage ?? 9)
   const n = config.layout !== 'card_only' && requested ? Number.parseInt(requested, 10) : fromConfig
   // Production leaves ?property_per_page unbounded. Bounding at the corpus maximum (50) is a
   // deviation that is invisible for every observed value.
   return Number.isFinite(n) && n > 0 ? Math.min(n, MAX_PER_PAGE) : fromConfig
+}
+
+/**
+ * BPM-016 (search-results.php:464–500, :557–576). The free-text field is `keyword_{n}`: the suffix
+ * is stripped only when ?property_for allows that sale type (`_1` unless property_for is 2–5,
+ * `_2` only for 2 or none, `_3`, `_4` likewise). The `_5` branch never strips its suffix, so
+ * `keyword_5` is never a keyword. A bare `keyword` always counts. The value is sent raw.
+ */
+export function resolveKeyword(sp: Sp): string | null {
+  const pf = sp.get('property_for')
+  let found: string | null = null
+  for (const [k, v] of sp) {
+    const m = /^keyword(?:_([1-4]))?$/.exec(k)
+    if (!m || v === '') continue
+    if (m[1] && pf && ['1', '2', '3', '4', '5'].includes(pf) && pf !== m[1]) continue
+    found = v
+  }
+  return found
 }
 
 export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuery {
@@ -156,8 +186,7 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
   if (sort.startsWith('date') || sort.startsWith('priorityprice')) pending('sort-field-semantics')
   const amount = sp.get('amount')
   if (amount !== null) pending('amount-filter')
-  const keyword = sp.get('keyword')
-  if (keyword) pending('keyword-search')
+  const keyword = resolveKeyword(sp)
 
   return {
     propertyFor: sp.get('property_for'),

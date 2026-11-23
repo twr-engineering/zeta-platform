@@ -8,7 +8,8 @@
     "./price": "./src/price.ts",
     "./calculator": "./src/calculator.ts",
     "./pending": "./src/pending.ts",
-    "./search/params": "./src/search/params.ts"
+    "./search/params": "./src/search/params.ts",
+    "./search/device": "./src/search/device.ts"
   },
   "scripts": {
     "test": "vitest run"

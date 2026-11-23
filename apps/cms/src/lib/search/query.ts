@@ -1,3 +1,4 @@
+import { pending } from '@/lib/parity/pending'
 import type { Payload, Where } from 'payload'
 
 import type { RangeFacet, SearchQuery, SortValue } from './params'
@@ -42,9 +43,6 @@ export function toWhere(q: SearchQuery): Where {
 
   if (q.complexIds.length) and.push({ 'geo.complexId': { in: q.complexIds } })
   if (q.referenceNos.length) and.push({ referenceNo: { in: q.referenceNos } })
-  if (q.keyword) {
-    and.push({ or: [{ referenceNo: { equals: q.keyword } }, { propertyTitle: { like: q.keyword } }] })
-  }
 
   for (const [facet, r] of Object.entries(q.ranges) as [RangeFacet, NonNullable<SearchQuery['ranges'][RangeFacet]>][]) {
     const field = RANGE_FIELDS[facet]
@@ -54,7 +52,35 @@ export function toWhere(q: SearchQuery): Where {
   return { and }
 }
 
+/**
+ * BPM-016 — a keyword is turned into references BEFORE the search (search-results.php:557–576):
+ * `filter_property` with fields=reference_no, the request's property_for (default '1', Sale) and
+ * property_per_page=50. The matches are appended to reference_no[] and AND-ed with every other
+ * facet; none → the fake reference, i.e. zero results. Titles are never matched.
+ * The CRM's match is partial (ZTP73 → ZTP730–739); prefix vs contains is indistinguishable on the
+ * corpus (every ref starts ZTP), so contains is used. Which 50 the CRM returns is CRM-side.
+ */
+export const KEYWORD_LOOKUP_CAP = 50
+export const NO_MATCH_REF = 'no results fake reference'
+
+export async function keywordRefs(payload: Payload, keyword: string, propertyFor: string | null): Promise<string[]> {
+  pending('keyword-case')
+  const { docs } = await payload.find({
+    collection: 'listings',
+    where: { and: [{ syncStatus: { equals: 'active' } }, { propertyForId: { equals: propertyFor || '1' } }, { referenceNo: { contains: keyword } }] },
+    sort: 'referenceNo',
+    limit: KEYWORD_LOOKUP_CAP,
+    depth: 0,
+    select: { referenceNo: true },
+  })
+  return docs.map((d) => d.referenceNo).filter((r): r is string => !!r)
+}
+
 export async function searchListings(payload: Payload, q: SearchQuery) {
+  if (q.keyword !== null) {
+    const refs = await keywordRefs(payload, q.keyword, q.propertyFor)
+    q = { ...q, referenceNos: [...q.referenceNos, ...(refs.length ? refs : [NO_MATCH_REF])] }
+  }
   return payload.find({
     collection: 'listings',
     where: toWhere(q),

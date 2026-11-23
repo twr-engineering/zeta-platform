@@ -6,7 +6,7 @@
 | **Project** | Zeta Group Property Portal — replatform to Payload CMS 3 + Next.js |
 | **Governs** | PRD v2.1 §GP.2, GP.3, GP.4 (FR-PY01, FR-PY02, FR-PY08) |
 | **Date** | 22 August 2026 |
-| **Status** | **Session 2 — live sweep complete.** 13 rules captured (**BPM-001 verified against production**), 11 outstanding, 5 defects live (2 withdrawn, 3 new). See §4 |
+| **Status** | **Session 4 — local capture complete (23 Nov 2026).** 21 rules captured (BPM-001 verified against production); 1 outstanding (forms, blocked on OQ-17); 18 defects live. See §4 |
 | **Sources** | `_db/cwddmsp86-20260822-021406.sql.gz` and `site/`. Every row cites file:line or table+row per FR-PY08 |
 
 > **No build ticket for a P\* requirement may be opened until its row here is complete and signed** (FR-PY02). A row marked *Extracted* is safe to build against once signed. A row marked *Needs live confirmation* must be checked against zetagroup.ph first.
@@ -407,6 +407,244 @@ Unexplained secondary point: `category: ["blog"]` does not match any of the 8 re
 
 ---
 
+### BPM-006a · FR-SR (pagination) · Phone page size: device class and per-module census
+
+| | |
+|---|---|
+| **Class** | P\* → resolved |
+| **Source** | `templates/search-results.php:730–738`; `respacio.php:12–95`, `:966–967`; `includes/detect.php:66–68`; block defaults `blocks/search-results/search-results.php:66,72–73`, `search-results-map.php:62–63`, `property-grid.php:63–64`, `property-carousel.php:78–79`; WP core `class-wp-block.php:232`; `wp_posts` 6, 234194, 299846, 284693…310770, 295838, 295881, 275272 |
+| **Confidence** | **Extracted**. What phones receive under WP Rocket's shared cache **needs live confirmation** (`phone-page-detection`) |
+
+- **Phone** = Mobile_Detect `isMobile() && !isTablet()` (`detect.php:66–68`). A tablet is not a phone.
+- **Absent is not empty.** WordPress fills registered block defaults before render, so a module with no `property_per_page_phone` gets `'9'` (`'6'` for property-carousel). On a phone, every module without its own phone size shows 9, whatever its desktop size.
+- **Census of rendered modules:**
+
+| Module | Desktop | Phone |
+|---|---|---|
+| Page 6 `/search_results/` search-results (layout_2, `ignore_get=false`) | **12** | 9 (default) |
+| Page 6 search-results-map | 9 (default) | 9 (default) |
+| Pages 234194 `/r/`, 299846 `/long-term/` similar-properties grid | 4 / 3 | **3** / 3 (explicit) |
+| Shortlists 284693, 284701, 284702, 287902, 310626, 310770 | 12 | 9 (default) |
+| Shortlist 287940 (foreclosed) | 9 (default) | 9 (default) |
+| City Middle 295838 / Municipality Middle 295881 | 8 or 9 | 9 (default) |
+| Complex Middle 275272 | 30 or 9 | 9 (default) |
+
+- Page 6 stores `"property_per_page":"12"` with no phone size. The rebuild's `/search_results/` showed 9 before this capture; it now shows 12 on desktop.
+- WP Rocket serves one cache to phones and desktops (`rocket_do_caching_mobile_files = 0`), so on cached URLs the device that primed the cache sets the size for everyone.
+
+**Build notes.** `resolvePerPage` takes the module's phone size and the request's device class. `deviceType(userAgent)` is a compact equivalent of Mobile_Detect, not its full pattern list (**R**). Not reproduced: the unsanitised `?device=` override and the macOS `?res_dev=` round-trip (`respacio.php:17–95`), both debugging aids with no user-facing contract (CD-15 already makes the search page server-rendered).
+
+**Sign-off:** ☐
+
+---
+
+### BPM-007a · FR-P11 · View-page map (`slugs.view`)
+
+| | |
+|---|---|
+| **Class** | P\* → resolved |
+| **Source** | `respacio.php:114`, `:250–266`, `:286–316`; `templates/search-results.php:408`, `:581–583`, `:1670`, `:1788–1806`; `includes/functions.php:695–722` (rewrites), `:6573–6635` (`single_property_session_set`); `wp_options.respacio_lng` |
+| **Confidence** | **Extracted**. The canonical redirect **needs live confirmation** (`listing-route-redirect`) |
+
+`slugs.view` is built per request from page slugs in `respacio_lng`: view `r` (page 234194), rent view `long-term` (page 299846); the rent-to-buy, short-rent and long-rent pages are unset or missing, so they fall back.
+
+| `property_for_id` | Page | URL |
+|---|---|---|
+| `1` Sale, `3` Rent and Sale, missing (→ `1`, `:1670`) | 234194 | `/r/{ref}/` |
+| `2` Rent, `4` Short rent, `5` Long rent | 299846 | `/long-term/{ref}/` |
+| `6` | the view page of the request's `property_for`, when present | — |
+
+- The key is `property_for_id . rent_period`, where `rent_period` is the **request's** parameter (`:581–583`), not the listing's `rent_amount_period`. No live results module sets it, so the key is `property_for_id` alone. The old interim keyed on the listing's rent period and was wrong for a Rent listing without one.
+- `single_property_session_set` rebuilds the canonical link and `wp_redirect()`s (302) when the requested URL is not part of it: `/long-term/{sale-ref}/` → `/r/{sale-ref}/`, and any query string forces a redirect that drops it.
+
+**Build notes.** `listingPath(listing, requestPropertyFor?)` implements the table. Both routes still serve any listing until the redirect is confirmed live. An undefined key (`property_for_id` 6 with no request `property_for`) links to the hosting page on production; the rebuild sends it to `/r/` (**F**).
+
+**Sign-off:** ☐
+
+---
+
+### BPM-014 · FR-A04 / FR-A10 · Account identity and account area
+
+| | |
+|---|---|
+| **Class** | P\* (feature not built) |
+| **Source** | respacio `includes/functions.php:822–897`, `:8046–8100`, `:9365–9550`; `respacio.php:1503–1800`; `social.php`; `templates/misc.php:1291–1394`; `wp_posts` 274857 (`/my-account/`), CF7 274378, 274379, 310859; `wp_options` `respacio_misc`, `users_can_register`, `mo_openid_*` |
+| **Confidence** | **Extracted**. CRM contact responses are not in the corpus (`contacts/*` is never cached) |
+
+- **Identity** is a CRM contact cookie (`res_uid`, 90 days), not a WordPress login. It is set by an emailed access link ("My Account Access" form → `contacts/check_contact`) or by Google/Facebook social login (miniorange → `contacts/register` if new, then the WordPress session is logged out at once).
+- **No e-mail verification** anywhere: WordPress registration is off, social login trusts the provider, the sign-up forms send no confirmation step.
+- **Sign-up for a new email appears to create nothing**: both sign-up forms run the account-access branch, which skips the mail for an unknown contact, and the CRM sync only runs from the mail path (`account-registration`, live check).
+- **`/my-account/`** (274857): "Personalize your search" (BPM-015), then with a contact: tabs Just For You (placeholder copy), Liked Properties, Saved Searches, Account (placeholder); "Welcome back [client_name]" and subscription toggles (Newsletter, New Property Matches → `contacts/subscribe_contact`). Without one: sign-up form, a hidden account-access form and benefit blurbs. Social login buttons always.
+- **Favourites and saved searches are local only**: the CRM write calls are switched off (`respacio_misc` `SubmitFavProperty` / `SubmitFavSearch` = `no`), yet `/my-account/` overwrites the local lists with the CRM's on every visit (CD-17).
+
+**Build notes.** Security-relevant implementation details of the live identity model are recorded outside this repository. The rebuild must use signed, expiring access links.
+
+**Sign-off:** ☐
+
+---
+
+### BPM-015 · FR-A13 · "Please sign up to see your recommendation"
+
+| | |
+|---|---|
+| **Class** | P\* → client decision (`recommendation-scope`) |
+| **Source** | `customtemplates` 289707 ("Multistep form"), 289275 + `javascript` postmeta; modal `#popupemailmodal3` on pages 2 and 274857 |
+| **Confidence** | **Extracted** |
+
+The message is the fixed last step of a four-question survey (type, area, price range, Bank/Cash financing) in the "Get started" modal. Every visitor reaches it, signed in or not. The survey is never submitted (the last step sits outside the `<form>`, nothing serialises the answers, the Bank/Cash buttons have no name), and no code anywhere computes a recommendation. The step offers social login and the sign-up form (BPM-014). **There is no rule to port**: the client decides whether to keep the survey as a sign-up prompt, drop it, or specify a real recommendation.
+
+**Sign-off:** ☐
+
+---
+
+### BPM-016 · FR-SR14 · Keyword search → `reference_no[]`
+
+| | |
+|---|---|
+| **Class** | P |
+| **Source** | `templates/search-results.php:464–500`, `:557–576`, `:817–823`; `includes/functions.php:997–1104` (`filter_auto_suggest`, `filter_auto_suggest_direct`); `templates/search-form.php:3770–3860`, `:4885–4935`; `wp_curl_info` 40 × `properties/filter_property` with paired `properties` calls |
+| **Confidence** | **Extracted + corroborated**. Case sensitivity **needs live confirmation** (`keyword-case`) |
+
+1. The live free-text field is `keyword_1` (City/Municipality search bars, home). A `_n` suffix counts only when `?property_for` is that sale type or absent (only 1–5 exclude); `_5` is never stripped, so `keyword_5` is never a keyword. A bare `keyword` always counts. The value is sent raw.
+2. No live keyword field sets `fields=`, so the lookup uses `fields=reference_no` (`functions.php:1057`): `properties/filter_property` with the request's `property_for` (default `1`, Sale) and `property_per_page=50`.
+3. The matches are appended to `reference_no[]` and **AND**-ed with every other facet. None → `reference_no[]=no results fake reference` (zero results). More than 50 → the rest are dropped.
+4. Matching is CRM-side and partial: `ZTP73` returned ZTP730–739 (row 6035). Prefix and contains are indistinguishable on the corpus (all refs start `ZTP`). Rent refs looked up with `property_for=1` returned nothing (rows 6076, 6204, 6478).
+5. **Titles are never matched.** The interim's `propertyTitle like keyword` had no basis and is removed.
+
+The separate select-picker suggestion field (`property_filter`) exists only in vendor templates not confirmed live; its picks replace `reference_no`.
+
+**Build notes.** `resolveKeyword` (params) + `keywordRefs` (query): case-insensitive contains on `referenceNo`, scoped to `property_for` (default `1`), capped at 50, sorted by reference (the CRM's order is CRM-side), unioned into `referenceNos`, none → the fake reference.
+
+**Sign-off:** ☐
+
+---
+
+### BPM-017 · FR-L02 / FR-L03 · City vs barangay location templates
+
+| | |
+|---|---|
+| **Class** | P\* (feature not built) |
+| **Source** | `autotemplate` 275060 / 275075 / 275078; `dynamicsection` 275258, 295881, 275262 (municipality) and 275264, 295838, 275268 (city); postmeta `_respacio_province_muni_town_complex_level` / `_name`; respacio `includes/functions.php:4782–4840`, `:5167–5368`; `templates/misc.php:20–240`, `:1396–1480`, `:2041`; child theme `functions.php:3855–4084` |
+| **Confidence** | **Extracted**; first tab, hidden sections and two CRM combinations **need live confirmation** (`location-page-live-checks`) |
+
+- The site's **city** page is CRM level `municipality`; its **barangay** page is CRM level `city` (child of the municipality page); a third level `complex` covers developments.
+- Chosen once, at generation: the page body is copied from autotemplate 275060 (municipality) or 275075 (city) and hard-codes three dynamic sections (Top/Middle/Bottom), loaded by exact title. `[query]` becomes `area[]={deepest non-zero level}_{id}`.
+- 152 published location pages: 21 municipality, 57 city, 53 complex (+1 mixed), 20 without level meta (Municipality sections; may render an empty name).
+
+| # | City page (municipality) | Barangay page (city) |
+|---|---|---|
+| Top | H1, save-location button | H1, "There are [count] property for sale in …" (`_respacio_count`), save-location button |
+| Resale tabs (`property_for=1`, `sale_detail_type[]=1`, 8/page) | All, House `_st_9`, Residential Lot `_st_8`, Condo-Condotel `_st_10/38/94`, Commercial `_st_7`, Agri-Industrial `_st_53/52` (no sale_detail_type); `area[]=municipality_{id}` | All, House (`priority_desc`), Residential Lot (no type, adds `area[]=municipality_{id}`); three tabs hold placeholder text (CD-18); `area[]=city_{id}` |
+| Pre-selling tabs (`sale_detail_type[]=2`) | All, House (date_desc), Residential Lot, "Commercial" holding condo types, Condo (date_desc), Agri `_st_52/54` | All, House, Lot, Condo&Condotel, "Condo" holding `_st_7/54`, Agri (malformed query, CD-19) |
+| Map | Polygon map of every complex in the municipality | Developments tag cloud (this barangay), then a polygon map with no action |
+| Bottom | Hidden "City Guide" directory grid | Hidden "Neighborhood Guide" directory grid |
+| More About | Blogs/Shorts post grids (6/page; category ignored, location meta LIKE; on city pages the 2nd tab can never match) | same |
+| Explore | `[location_list]` from CRM `properties/province_municipality_city_complex`: neighbourhoods, subdivisions (strcmp), new developments (capped at 9 by `posts_per_page`, title DESC) | same, own barangay marked active |
+
+**Sign-off:** ☐
+
+---
+
+### BPM-018 · FR-E04 / FR-E05 · Article template and block census
+
+| | |
+|---|---|
+| **Class** | P\* (feature not built) |
+| **Source** | `themes/respacio/single.php`; child `loop-templates/content-single.php`, `template-parts/content-header.php`, `tpl-fullwidthimage-nosidebar.php`; `respacio/inc/setup.php:139–160`; `theme_mods_newrespacio-child`, `sidebars_widgets`; 69 published posts |
+| **Confidence** | **Extracted**; the double H1 **needs live confirmation** (`article-double-h1`) |
+
+- **Default template (62 posts):** H1 title over the featured image banner (or alone without one); breadcrumbs off; body; `bottompostcontent` widget (social follow); `wp_link_pages`; previous/next post links (any category); comments open on all 69. Author, date, category, tags and reading time are **not** rendered. No sidebar.
+- **Full-width variant (7 posts: 288471, 294367, 294368, 294649, 311627, 311866, 311944):** H1 over the image, content, comments, **no previous/next**.
+- Every body also starts with its own H1 (56 Spectra `advanced-heading` blocks), so the page carries two H1s.
+- **Block census** (69 posts, all block editor): core paragraph 2175, list-item 941, heading 279, list 243, separator 22, image 21, group 9, spacer 6, quote 1. **Need their own renderer:** Spectra `uagb/advanced-heading` 61, `uagb/container` 58, `uagb/image` 46, `uagb/buttons` 4+4; `core/embed` 41 (all YouTube); `yoast-seo/breadcrumbs` 10; `core/html` 5 (social icons); `core/shortcode` 5 (one CF7 form); `respacio-blocks/shortlist-grid` 1.
+
+**Sign-off:** ☐
+
+---
+
+### BPM-019 · FR-E20 · Directory grid filters
+
+| | |
+|---|---|
+| **Class** | P\* (feature not built) |
+| **Source** | respacio `includes/cpt-directory.php`; `blocks/infinity-directory-grid/`; `respacio.php:1078–1110`; `templates/post-loop.php`; `includes/functions.php:2042–2786`; `dynamicsection` 290013, 308024, 275262, 275268; `customtemplates` 289463 |
+| **Confidence** | **Extracted** |
+
+- The only **visible** directory grid is the first section of Complex Bottom (308024), on the 53 complex pages. The City/Municipality grids are hidden; 290013 is orphaned.
+- Data: 25 `directory` posts in `directory-category` (mall 5; videos, shorts, blogs, building, complex 3 each; parks, public-services, lorem-ipsum 2; schools 1).
+- Query: published `directory`, `date DESC`, `post_limit` per page (6 on Complex Bottom), current page excluded. `post_tax` `directory-category|!A,!B` is one `NOT IN` clause on slugs; clauses join with OR (AND when a global `tag` is set). Location filtering exists but no instance sets it. The editor's "Directory Categories/Tags" controls are dropped and do nothing.
+- Filter UI: "All" plus the categories **present on page 1**, by name ASC; hidden when `?q=` is set. A tab click **replaces** the taxonomy query with that one slug, dropping the exclusions (CD-20). `?q=` adds a text search.
+- Paging is unset on every instance: only the first N cards ever show.
+- Empty: "No data found" (server); an empty ajax tab leaves the grid blank. Card: image, title, excerpt, permalink.
+- Worked result, Complex Bottom: 8 posts survive the exclusions; tabs **All, Mall, Public Services**; the schools and parks posts are unreachable.
+
+**Side finding:** BPM-013's 6 per page is the post-grid block's registered default `post_limit` `'6'` (`blocks/post-grid/post-grid.php:61`); its `category` is reset at `post-loop.php:13`.
+
+**Sign-off:** ☐
+
+---
+
+### BPM-020 · FR-D01 / FR-D04 / FR-P01 / FR-P02 / FR-P10 · Listing detail field set
+
+| | |
+|---|---|
+| **Class** | P\* → captured, not built (`listing-field-render-set`) |
+| **Source** | Pages `wp_posts` 234194 (`/r/`) and 299846 (`/long-term/`): block `respacio-blocks/property-view {"template":"Property View 6","custom_template":"custom property view","breadcrumb":"style3"}`, `/long-term/` adds `"rent_period":"2"`. Template `customtemplates` **288102** "custom property view" (markup `post_content`, CSS `post_excerpt`, JS postmeta 261064). Interpreter respacio `templates/single-property-view.php` (spv) and `includes/functions.php` (fn) |
+| **Confidence** | **Extracted**; field presence corroborated against the 73 detail fixtures. CSS/JS-dependent visibility **needs live confirmation** |
+
+**Template language** (spv): `[token]` is plain substitution (spv:1642–1777). `remove_[remove_X]_` writes 1 when X is set, `''` when empty; `eq=`/`neq=` write 0; `dommanipulation()` (fn:6901) deletes elements whose class holds `remove_0` or `remove__`, and `remove_ne_X_` when X is set (fn:6932–7057). `[attributes_ids|…]` prints matching attribute values in **CRM order**, not template order (spv:2737–2838). `[custom_name]` reads `property_custom_fields`. The `template` attribute is ignored once `custom_template` is set (spv:88–93).
+
+**Desktop, in DOM order** ("rm" = removed from the HTML):
+
+| # | Section | Label | Source field | Condition | Formatting |
+|---|---|---|---|---|---|
+| 1 | Header | title (h4) | `property_title` | always | |
+| 2 | Header | "for {property_for}" ribbon | `property_for` | always | probably capitalised by page CSS (live) |
+| 3 | Header | marketing ribbons: exclusive, price_changed, new, hot_deals, rush_sale, direct_listing, newly_listed, is_foreclosed | `marketing_feature_en` keys | each when present | "Zeta Exclusive" and "Preselling" never render (CD-28) |
+| 4 | Header | price (h4) | `default_price` + `currency_code` → `format_price` (BPM-008); empty → "POA" | **only on `/r/`** (`property_for_url` 1) | display currency per BPM-008 (CD-21) |
+| 5 | Essentials | "{n} Beds" | `bedrooms` | always | "0" shows "-" (CSS `is0empty`) |
+| 6 | Essentials | "{n} Baths" | `bathrooms` | always | as 5 |
+| 7 | Essentials | "1 Parking" | none: literal "1" | always | CD-22 |
+| 8 | Essentials | "{plot_size} sqm lot" | `plot_size` | always | sqft with conversion if `measurement=imperial` |
+| 9 | Essentials | "{built_size} sqm floor" | `built_size` | always | as 8 |
+| 10 | Header | Save / Share | `reference_no` | always | |
+| 11 | Sub-nav | Back · Overview · Feature · Location · Property Info · Places of Interest · Price History · Payment Calculation · Similar properties | — | always | |
+| 12 | Gallery | "Show {n} photos and videos", 1 large + 4 small | `photos` (n counts images only), `video[0]` | 2nd tile is the first video if any | |
+| 13 | Media tabs | Overview · Photos · 360 Virtual Tour · Floor Plan · Video | `iframe_url`, `floor_plans`, `video` | each rm when empty | |
+| 14 | Breadcrumb | "House in {Home / municipality / city / complex / ref}" | `municipality_name`, `city_name`, `complex_name`, `reference_no` | complex only with a city | "House" is literal for every type (CD-23) |
+| 15 | Overview | — | `description` | always | `nl2br`; for New Development (`sale_detail_type_id` 2) `[Label: a - b]` → "Label from a to b." |
+| 16 | Features | "Features" | feature values (Nearby Amenities, Transport, Community, Location) minus attribute values | heading always | lower-cased, de-duplicated, sorted A–Z, two columns |
+| 17 | Location | "Location" | `latitude`, `longitude` | map rm when either is empty | |
+| 18 | Property Info | Type | `property_sub_name` | always | |
+| 19 | 〃 | Subtype | `property_sub_sub_name` | rm if empty | |
+| 20 | 〃 | Payment Term | `property_custom_fields.payment_terms` | rm if empty | never renders: the data is in `custom_property_fields` (CD-29) |
+| 21 | 〃 | Title Status | `property_custom_fields` title status | rm if empty | as 20 |
+| 22 | 〃 | Storey | `storeys` | rm if empty or "0" | |
+| 23 | 〃 | HOA/Condo fees | `community_fees_monthly` → `format_price` | rm when empty | |
+| 24 | 〃 | RPT(yearly) | `local_tax_yearly` → `format_price` | rm when empty | |
+| 25 | 〃 | Required Income | `custom_required_income` | rm if empty | |
+| 26–37 | 〃 | Pool · Parking · Telecoms and Security · Orientation · Exterior Features · Decor · Rooms · Furnishing · Condition · Lot Type · View · Is Foreclosed ? | attribute id lists (template T:487–596; View excludes 145 "Beachfront", CD-24) | each rm unless one of its ids is present | values in CRM order |
+| 38 | 〃 | Year Built | attribute ids 113–119 (not `built_year`) | only when the media count is exactly 1 | CD-25 |
+| 39 | Places of Interest | "Places of Interest" + 10 filter buttons | `nearest_location[]` | map always; markers where lat/lng exist | |
+| 40 | Price History | Date / Change / Previous Price | `price_history[]` | empty → "Price history not found."; rows missing a price skipped | `j M Y`; ▲/▼ rounded %; previous price is the raw CRM string |
+| 41 | Payment Calculation | monthly amount, "{n} year fixed {r}% interest", principal, interest | hidden price | always | terms 1–30 y, rates 6.55–8.25 %, downpayment slider 10–90 (CD-26) |
+| 42 | Sidebar | agent card + enquiry form (CF7 235756) | literal agent details | always (sticky) | Request Visit / Video panes unreachable |
+| 43 | In-content enquiry | "Find out more about …" / "Make a booking request for …" | — | removed (sticky-enquiry option) | |
+| 44 | Gallery modal | share links | literal `/r/ZTP116/` | always | CD-27; Copy Link uses the real URL |
+| 45 | Form prefill | message fields | `property_title`, `reference_no`, view link | always | |
+
+**Mobile-only:** a title block (title, "for …", one combined ribbon followed by a literal "NEWLY LISTED") and a hero block (ref, price, bed/bath/floor/lot icons) that CSS probably hides on every device (live).
+
+**`/r/` vs `/long-term/`:** same template. `/long-term/` sends `property_for=2&rent_period=2` to the CRM, **shows no price** (row 4 and the mobile block have no variant for it; CD-21), and its Similar Properties grid has no sub-type filter, 3 per page, and keeps its heading when empty.
+
+**Never rendered:** `documents`, `logo`, `panoramic`, `vimeo_url`, `marketing_channels`, `additional_services`, `contract_period`, `unique_selling_point`, `rental_rates`, `property_sizes`, `custom_property_fields`, `assign_user`. Of the 113 detail keys only 21 are read (listed in the rows above plus the breadcrumb location ids).
+
+**Side finding (`withdrawn-listing-url`):** a non-success or `is_record≠1` response renders "Oops this property has been sold" (spv:2994–3005); the HTTP status is not visible in code.
+
+**Sign-off:** ☐
+
+---
+
 ## 3. Defects discovered during capture
 
 New since PRD v2.1. **None may be silently fixed** — each is either reproduced or raised through GP.5.
@@ -423,28 +661,33 @@ New since PRD v2.1. **None may be silently fixed** — each is either reproduced
 | **CD-10** | The similar-properties query hard-codes `displaycurrency="EUR"` while sending peso bounds | `search-results.php:356`; 40 cached calls | **F** |
 | **CD-11** | **`sortby` is unsanitised.** `$_GET['sortby']` is `explode`d and passed to the CRM as `order_by`/`order` with no allow-list. The cache contains search keywords sitting in `order_by`: `yacht insurance companies`, `18引用 硫化氢通`, `wai\\\'ula\\\'ula i101 mauna kea`, `sarah van horn grey\\\\\\'s anatomy` — with visible repeated-escaping layers | Cached corpus, 40 calls | **F** + security review |
 | **CD-12** | `min_X=0` is transmitted on every banded range search even when the user set no lower bound (`:637–639`) | `search-results.php` | Reproduce; flag only if it changes results |
+| **CD-17** | `/my-account/` overwrites the visitor's local favourites and saved searches with the CRM's lists on every visit, but the site never writes to the CRM (`SubmitFavProperty`/`SubmitFavSearch` = `no`) | respacio `respacio.php:1749–1800`; `wp_options.respacio_misc` | **F** — client: should favourites sync to the CRM? |
+| **CD-18** | Barangay resale tabs Condo-Condotel, Commercial and Agri-Industrial show placeholder text ("test 4", "test 5", "Test6") instead of listings; several pre-selling tab labels do not match their queries | `dynamicsection` 295838 | **F** |
+| **CD-19** | Barangay pre-selling Agri query is malformed (`area_1%5B%5Dcity_` has no `=`) | `dynamicsection` 295838 | **F** |
+| **CD-20** | Directory tabs drop the grid's category exclusions when clicked, and only categories present on page 1 become tabs | `post-loop.php:588–642`, `:2028–2053` | **F** |
+| **CD-21** | `/long-term/` listing pages show no price at all | `customtemplates` 288102 T:72, T:266–269 | **F** — client |
+| **CD-22** | "1 Parking" is a hard-coded literal on every listing | 288102 T:88 | **F** |
+| **CD-23** | The breadcrumb line reads "House in …" for every property type | 288102 T:333 | **F** |
+| **CD-24** | The View row omits attribute 145 "Beachfront" | 288102 T:579–587 | **F** |
+| **CD-25** | "Year Built" reads attribute ids 113–119 instead of `built_year`, and shows only when the listing has exactly one media item | 288102 T:599–607 | **F** |
+| **CD-26** | Listing payment calculator: the downpayment slider is subtracted as pesos, not %, `parseInt` truncates the rate, and changing the rate does not recalculate | postmeta 261064 | **F** — distinct from BPM-001's frozen loan calculator |
+| **CD-27** | Gallery share links (Facebook, Twitter, LinkedIn) are hard-coded to `/r/ZTP116/` on every listing | 288102 T:816–827 | **F** |
+| **CD-28** | Marketing features "Zeta Exclusive" and "Preselling" never show a ribbon (their keys are not in the template's list) | 288102 T:51–58; 73 fixtures | **F** — client |
+| **CD-29** | Payment Term, Title Status and Required Income read `property_custom_fields`, which is empty in 73/73 listings; the data is in `custom_property_fields` | 288102 T:432–485; fixtures | **F** |
 
 **CD-11 is the one to look at hardest.** Arbitrary user-controlled strings are reaching a third-party API in a parameter that names a sort column. It is at minimum a correctness bug and potentially an injection surface on the CRM side. It should be reported to Respacio regardless of what this project does.
 
 ---
 
-## 4. Outstanding — 11 rules not yet captured
+## 4. Outstanding — 1 rule not yet captured
 
-Honest status. Each has a named source; none is blocked on anything external.
+Session 4 (23 Nov 2026) captured every rule readable from the local artefacts: BPM-006a, BPM-007a and BPM-014 to BPM-020. What remains is blocked externally or needs production.
 
-| Requirement | What is still needed | Source to read |
+| Requirement | What is still needed | Blocked on |
 |---|---|---|
-| FR-L02, FR-L03 | Module set, order and data source for city vs barangay templates | `templates`/`customtemplates` records; `respacio_location_tree` postmeta (472 rows) |
-| FR-D01, FR-D04, FR-P01, FR-P02, FR-P10 | **Transcription only** — the 113-field + 24-collection inventory is already measured (PRD DG-02). Needs writing into rows, with per-field render/no-render status from the DSL | `wp_curl_info` `properties/view`; template records |
-| FR-A04, FR-A10 | Whether email verification is enforced; the account-area feature set | `functions.php:823–920`; `my-account` page body; `contacts/*` |
-| **FR-A13** | The rule behind *"Please sign up to see your recommendation"* | `functions.php`; `contacts/check_contact`; `my-account` |
-| FR-F02, F03, F04, F06 | Field names, order, labels, required flags, validation, consent wording, recipient routing | The 89 `wpcf7_contact_form` records — **blocked on OQ-17**, which subset is live |
-| FR-E04, FR-E05 | Article template field set; block census across post bodies | `wp_posts` type `post` |
-| FR-E20 | Directory filter semantics | `includes/cpt-directory.php`; `respacio-blocks/infinity-directory-grid` |
+| FR-F02, F03, F04, F06 | Field names, order, labels, required flags, validation, consent wording, recipient routing of the live forms | **OQ-17**: which of the 89 `wpcf7_contact_form` records are live |
 
-Two rows moved out of this list this session — FR-SL02 is fully captured (BPM-012), and FR-E02 is now a precisely-located conflict rather than an unknown (BPM-013).
-
-**Estimate to close:** roughly one more session for everything except FR-F02–F06, which cannot start until the client answers OQ-17.
+Live checks and client decisions raised by session 4 are in `docs/PENDING.md` (`phone-page-detection`, `listing-route-redirect`, `keyword-case`, `account-registration`, `location-page-live-checks`, `article-double-h1`, `recommendation-scope`), with defects CD-17 to CD-29 in §3.
 
 ### 4.1 Live check sweep — results
 
