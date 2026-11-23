@@ -228,7 +228,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
@@ -280,7 +280,7 @@ async function main() {
   }
   console.log(`seeded ${N} deals + ${N} receivables + ${N} payments in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
@@ -288,13 +288,13 @@ async function main() {
   // The payment list (reports 1–4, with the matrix's live deal join) + the booked-year
   // select behind the range union + the receivable list (report 5).
   const paymentExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT id, deal_id, payment_date, net_of_vat::text, vat_amount::text, ewt_amount::text, net_cash::text, year_paid, month_paid FROM public.payment WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
+    ? await explainMs(url, accessToken, `SELECT id, deal_id, payment_date, net_of_vat::text, vat_amount::text, ewt_amount::text, net_cash::text, year_paid, month_paid FROM commission.payment WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
     : 0;
   const bookedYearsExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT booked_year FROM public.deal WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
+    ? await explainMs(url, accessToken, `SELECT booked_year FROM commission.deal WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
     : 0;
   const receivableExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT booked_year, status, booked_net_gci::text, collected_net::text, balance::text, written_off::text FROM public.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
+    ? await explainMs(url, accessToken, `SELECT booked_year, status, booked_net_gci::text, collected_net::text, balance::text, written_off::text FROM commission.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
     : 0;
   // Reports 1/3/4 read payments only; the matrix also reads booked years (parallel);
   // report 5 reads receivables + payments' paid years (parallel).

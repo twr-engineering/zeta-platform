@@ -40,34 +40,34 @@
 -- Col I. Blank is documented as Commission; live rows also store explicit
 -- "Commission" (WORKBOOK §4 / register item 9). The importer maps blank ≡
 -- commission; the SaaS always stores an explicit value.
-create type public.payment_type as enum ('commission', 'incentive');
+create type commission.payment_type as enum ('commission', 'incentive');
 
 -- Event log discriminant (§3.4). Soft-delete emits 'deleted' with the full final
 -- field set (for M4's reversal math) — the row is retained, so unlike a deal hard
 -- delete this DOES emit an event.
-create type public.payment_event_type as enum ('created', 'updated', 'deleted');
+create type commission.payment_event_type as enum ('created', 'updated', 'deleted');
 
 -- ---------------------------------------------------------------------------
 -- payment (M5 PRD §3.1)
 -- ---------------------------------------------------------------------------
 
-create table public.payment (
+create table commission.payment (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- Field 2 (col C) — HARD FK to an existing deal (edge case 10). A payment can
   -- never reference a nonexistent deal; RESTRICT (the default) makes it
   -- un-orphanable from this side — a deal that has ANY payment row cannot be hard
-  -- deleted (app.deal_payment_count, turned real below, blocks it), only archived.
+  -- deleted (commission_private.deal_payment_count, turned real below, blocks it), only archived.
   -- Same-workspace + non-archived are enforced in create_payment/update_payment
   -- (an archived-deal or cross-workspace ref is refused there); the FK guarantees
   -- existence, the functions guarantee the rest.
-  deal_id uuid not null references public.deal (id),
+  deal_id uuid not null references commission.deal (id),
 
   -- --- Inputs (user-editable) — M5 §3.1 (I) ------------------------------------
   payment_date date not null,                                  -- 1 (col B)
   gross_amount numeric(14, 2) not null,                        -- 3 (col H)
-  payment_type public.payment_type not null,                   -- 4 (col I)
+  payment_type commission.payment_type not null,                   -- 4 (col I)
   reference_note text,                                         -- 5 (col O)
 
   -- --- Split snapshot (computed by M1's engine, stored here) — §3.1 (C) --------
@@ -80,12 +80,12 @@ create table public.payment (
   retained_cash numeric(14, 2) not null,                       -- 10 = gross − vat − ewt
 
   -- --- Split audit anchors (the *_used snapshots) — §3.1 (C) -------------------
-  -- The deal's vat_basis at save time. Reuses public.deal_vat_basis, whose only
+  -- The deal's vat_basis at save time. Reuses commission.deal_vat_basis, whose only
   -- representable values are 'inclusive'/'n_a' — the enum itself IS the assertion
   -- that no split can carry an 'exclusive' basis (rule 5 / OQ1 resolved by
   -- removal). vat_basis_used and the deal's CURRENT vat_basis (joined) may
   -- legitimately differ after a deal correction — that is the stale-basis flag.
-  vat_basis_used public.deal_vat_basis not null,               -- 11 (col J)
+  vat_basis_used commission.deal_vat_basis not null,               -- 11 (col J)
   ewt_rate_used numeric(6, 4) not null,                        -- 12 (workspace ewt_rate @ save)
   vat_rate_used numeric(6, 4) not null,                        -- 13 (workspace vat_rate @ save)
 
@@ -125,33 +125,33 @@ create table public.payment (
   )
 );
 
-comment on table public.payment is
+comment on table commission.payment is
   'M5 PRD §3.1. One row per commission/incentive release. The split (net_of_vat/vat/ewt/net_cash/retained) is captured at SAVE time from the deal''s then-current vat_basis + workspace rates and STORED — a historical fact, not a live formula (§3.3). Written only through create_payment/update_payment/delete_payment.';
-comment on column public.payment.deal_id is
+comment on column commission.payment.deal_id is
   'Hard FK (edge case 10). A payment cannot reference a nonexistent deal; same-workspace + non-archived are enforced in the write functions. RESTRICT makes payments un-orphanable — a deal with any payment row cannot be hard-deleted, only archived.';
-comment on column public.payment.vat_basis_used is
+comment on column commission.payment.vat_basis_used is
   'Snapshot of the deal''s vat_basis at save time. Reuses deal_vat_basis {inclusive, n_a}: ''exclusive'' is unrepresentable (rule 5 / OQ1). Differs from the deal''s current vat_basis ⇒ stale-basis (FR-M5-12).';
-comment on column public.payment.net_cash is
+comment on column commission.payment.net_cash is
   'Snapshot col N = gross − ewt (what lands in the bank). Immutable outside the audited edit/recompute flows (rule 17).';
-comment on column public.payment.year_paid is
+comment on column commission.payment.year_paid is
   'GENERATED year(payment_date). Calendar-exact, no timezone shift (rule 20). Feeds M6 monthly cash-in and M8 cash-per-year / tax-per-month.';
 
 -- Default sort is payment_date newest first (§6.2, rule 18), ties by created_at;
 -- the active list excludes soft-deleted rows, so the common read is this partial.
 create index payment_list_idx
-  on public.payment (workspace_id, payment_date desc, created_at desc)
+  on commission.payment (workspace_id, payment_date desc, created_at desc)
   where archived_at is null;
 
 -- Per-deal payments panel + the delete-protection / edit-friction count. Not
--- partial: app.deal_payment_count (below) counts ALL payment rows for the deal.
-create index payment_deal_idx on public.payment (deal_id);
+-- partial: commission_private.deal_payment_count (below) counts ALL payment rows for the deal.
+create index payment_deal_idx on commission.payment (deal_id);
 
 -- Period filters feed M6/M8 (year_paid × month_paid). Active rows only.
 create index payment_period_idx
-  on public.payment (workspace_id, year_paid, month_paid)
+  on commission.payment (workspace_id, year_paid, month_paid)
   where archived_at is null;
 
-alter table public.payment enable row level security;
+alter table commission.payment enable row level security;
 
 -- Tenant isolation is the RLS job (M0 rule 1), same shape as deal/receivable.
 -- INSERT/UPDATE exist for the SECURITY INVOKER write functions. There is NO
@@ -160,30 +160,30 @@ alter table public.payment enable row level security;
 -- can only be hard-deleted at payment count 0, so that path is unreachable while
 -- any payment exists.
 create policy "payment_select_member"
-  on public.payment for select
+  on commission.payment for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "payment_insert_member"
-  on public.payment for insert
+  on commission.payment for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "payment_update_member"
-  on public.payment for update
+  on commission.payment for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create trigger payment_touch_updated_at
-  before update on public.payment
-  for each row execute function app.touch_updated_at();
+  before update on commission.payment
+  for each row execute function commission_private.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
--- app.deal_payment_count TURNS REAL (M1.2 handoff — the one edit that turns it on)
+-- commission_private.deal_payment_count TURNS REAL (M1.2 handoff — the one edit that turns it on)
 -- ---------------------------------------------------------------------------
 -- M1.2 shipped this returning 0 with a note: "replace the body with a count over
 -- payment.deal_id". This is that replacement. With no other change, the deal
@@ -195,26 +195,26 @@ create trigger payment_touch_updated_at
 -- still has an event + a receivable restatement in history, so the deal remains
 -- un-hard-deletable (archive it instead). `stable`, not immutable — the count
 -- moves as payments are written.
-create or replace function app.deal_payment_count(p_id uuid)
+create or replace function commission_private.deal_payment_count(p_id uuid)
 returns bigint
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select count(*) from public.payment where deal_id = p_id $$;
+as $$ select count(*) from commission.payment where deal_id = p_id $$;
 
-comment on function app.deal_payment_count is
+comment on function commission_private.deal_payment_count is
   'M1 §4 rule 2 — now REAL (M5.1). Count of payment rows for the deal (archived included). Called by the deal DELETE policy, delete_deal, and the app''s edit/archive friction gates, so protection is live product-wide.';
 
 -- ---------------------------------------------------------------------------
--- app.payment_snapshot — the LOCKED event payload shape (§3.4)
+-- commission_private.payment_snapshot — the LOCKED event payload shape (§3.4)
 -- ---------------------------------------------------------------------------
 -- The single definition of what a payment event carries. M4.2 (receivable
 -- restatement), M6/M8 (aggregates) and M9 (index) read these keys, and M4.2
 -- restates against the OLD snapshot on updates/deletes, so this shape is a
 -- contract: ADD keys, never rename or drop one. Money is ::text — exact decimal
 -- strings, never JSON floats (Master PRD §4.3).
-create or replace function app.payment_snapshot(p public.payment)
+create or replace function commission_private.payment_snapshot(p commission.payment)
 returns jsonb
 language sql
 immutable
@@ -243,7 +243,7 @@ as $$
   )
 $$;
 
-comment on function app.payment_snapshot is
+comment on function commission_private.payment_snapshot is
   '§3.4. The locked payment-event payload shape (money as ::text). M4.2/M6/M8/M9 read these keys; the OLD snapshot on update/delete is what M4.2 restates against. Add keys, never rename/drop.';
 
 -- The audit view of a payment (field-level old→new). Distinct from the event
@@ -252,7 +252,7 @@ comment on function app.payment_snapshot is
 -- the same figure is a non-change). deal_id changes are audited (a payment can be
 -- re-pointed on edit, §3.3.2). Generated year/month are omitted — they are pure
 -- functions of payment_date, already in the diff.
-create or replace function app.payment_audit_row(p public.payment)
+create or replace function commission_private.payment_audit_row(p commission.payment)
 returns jsonb
 language sql
 immutable
@@ -276,7 +276,7 @@ as $$
 $$;
 
 -- The full row as create-time changes: every field old=null → new=value.
-create or replace function app.payment_created_changes(p public.payment)
+create or replace function commission_private.payment_created_changes(p commission.payment)
 returns jsonb
 language sql
 immutable
@@ -286,11 +286,11 @@ as $$
     jsonb_object_agg(e.key, jsonb_build_object('old', null, 'new', e.value)),
     '{}'::jsonb
   )
-  from jsonb_each(app.payment_audit_row(p)) e
+  from jsonb_each(commission_private.payment_audit_row(p)) e
 $$;
 
 -- ---------------------------------------------------------------------------
--- app.assert_payment_split — the invariants the DB enforces on the engine
+-- commission_private.assert_payment_split — the invariants the DB enforces on the engine
 -- ---------------------------------------------------------------------------
 -- The engine (computePaymentSplit) is trusted for the TAX decision (which rule
 -- applies); the DB re-checks the pure ties that must hold for EVERY rule, so a
@@ -301,7 +301,7 @@ $$;
 --   Ret   = H − L − M (retained = gross − vat − ewt)
 -- ₱0.01 tolerance because the engine rounds each stored field to centavos
 -- independently (edge case 15; never float equality).
-create or replace function app.assert_payment_split(
+create or replace function commission_private.assert_payment_split(
   p_gross numeric,
   p_net_of_vat numeric,
   p_vat numeric,
@@ -338,9 +338,9 @@ $$;
 -- index), each tracking its OWN cursor (m1_2 handoff). Nothing here is ever
 -- updated. Delivery is transactional with the payment mutation (§8): a payment
 -- row and its event commit together or not at all.
-create table public.payment_event (
+create table commission.payment_event (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- FK-free actor, pinned to auth.uid() by RLS — same reasoning as deal_event.
   actor_user_id uuid not null,
@@ -348,12 +348,12 @@ create table public.payment_event (
   -- ON DELETE CASCADE: a payment is soft-deleted, not removed, so this cascade is
   -- reached only if the deal (and thus the payment) is hard-deleted — which is
   -- unreachable while any payment exists. Kept for referential integrity.
-  payment_id uuid not null references public.payment (id) on delete cascade,
+  payment_id uuid not null references commission.payment (id) on delete cascade,
   -- The deal the payment is against, carried so a consumer can restate the
   -- receivable without joining through the (possibly soft-deleted) payment.
   deal_id uuid not null,
 
-  event_type public.payment_event_type not null,
+  event_type commission.payment_event_type not null,
 
   -- created  → old NULL,      new snapshot
   -- updated  → old snapshot,  new snapshot,  field_changes = the diff
@@ -365,7 +365,7 @@ create table public.payment_event (
 
   -- The audit entry written in the same transaction — every event has its
   -- human-readable counterpart (rule 11) and vice versa.
-  audit_entry_id uuid not null references public.audit_log_entry (id) on delete cascade,
+  audit_entry_id uuid not null references commission.audit_log_entry (id) on delete cascade,
 
   occurred_at timestamptz not null default now(),
 
@@ -378,54 +378,54 @@ create table public.payment_event (
   )
 );
 
-comment on table public.payment_event is
-  '§3.4 append-only event log. created/updated/deleted carry old+new snapshots (app.payment_snapshot). Consumed by M4.2 (receivable restatement), M6/M8, M9 via their own cursors — never mutated.';
+comment on table commission.payment_event is
+  '§3.4 append-only event log. created/updated/deleted carry old+new snapshots (commission_private.payment_snapshot). Consumed by M4.2 (receivable restatement), M6/M8, M9 via their own cursors — never mutated.';
 
-create index payment_event_workspace_idx on public.payment_event (workspace_id, occurred_at);
-create index payment_event_payment_idx on public.payment_event (workspace_id, payment_id, occurred_at);
-create index payment_event_deal_idx on public.payment_event (workspace_id, deal_id, occurred_at);
-create index payment_event_type_idx on public.payment_event (workspace_id, event_type, occurred_at);
+create index payment_event_workspace_idx on commission.payment_event (workspace_id, occurred_at);
+create index payment_event_payment_idx on commission.payment_event (workspace_id, payment_id, occurred_at);
+create index payment_event_deal_idx on commission.payment_event (workspace_id, deal_id, occurred_at);
+create index payment_event_type_idx on commission.payment_event (workspace_id, event_type, occurred_at);
 
-alter table public.payment_event enable row level security;
+alter table commission.payment_event enable row level security;
 
 create policy "payment_event_select_member"
-  on public.payment_event for select
+  on commission.payment_event for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "payment_event_insert_member"
-  on public.payment_event for insert
+  on commission.payment_event for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and actor_user_id = (select auth.uid())
   );
 
 -- Append-only: no UPDATE/DELETE policy, and a trigger binds every role
 -- (service_role bypasses policies) — same guarantee as deal_event / audit_log.
 create trigger payment_event_is_append_only
-  before update on public.payment_event
-  for each row execute function app.reject_deal_event_mutation();
+  before update on commission.payment_event
+  for each row execute function commission_private.reject_deal_event_mutation();
 
 -- ---------------------------------------------------------------------------
--- app.resolve_payment_deal — the shared hard-FK / same-workspace / not-archived
+-- commission_private.resolve_payment_deal — the shared hard-FK / same-workspace / not-archived
 -- ---------------------------------------------------------------------------
 -- The referential-integrity gate (edge case 10) shared by create + update: the
 -- deal must exist, be in the caller's workspace (RLS makes another tenant's deal
 -- invisible → not found), and be non-archived. Returns the locked deal row.
 -- Raises a typed error the app maps to a clear message; NOTHING is stored on a
 -- bad reference.
-create or replace function app.resolve_payment_deal(p_deal_id uuid)
-returns public.deal
+create or replace function commission_private.resolve_payment_deal(p_deal_id uuid)
+returns commission.deal
 language plpgsql
 stable
 security invoker
 set search_path = ''
 as $$
 declare
-  v_deal public.deal;
+  v_deal commission.deal;
 begin
-  select * into v_deal from public.deal where id = p_deal_id;
+  select * into v_deal from commission.deal where id = p_deal_id;
   if not found then
     -- Unknown, or another tenant's (RLS-invisible) — same answer either way.
     raise exception 'deal reference is invalid (edge case 10)'
@@ -440,7 +440,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- public.create_payment — FR-M5-01 (also the importer's bulk path, FR-M5-13)
+-- commission.create_payment — FR-M5-01 (also the importer's bulk path, FR-M5-13)
 -- ---------------------------------------------------------------------------
 -- One transaction: validate the deal reference, verify the split ties, insert,
 -- audit, emit payment.created. The split is computed by the APP via M1's
@@ -454,11 +454,11 @@ $$;
 -- row with the engine-computed split and ignores the warnings (historical fact,
 -- accepted silently, OQ5) — no separate overlay function is needed because create
 -- has no gate to bypass.
-create or replace function public.create_payment(
+create or replace function commission.create_payment(
   p_deal_id uuid,
   p_payment_date date,
   p_gross_amount numeric,
-  p_payment_type public.payment_type,
+  p_payment_type commission.payment_type,
   p_reference_note text,
   -- engine-computed split snapshot (the five ₱ fields)
   p_net_of_vat numeric,
@@ -467,7 +467,7 @@ create or replace function public.create_payment(
   p_net_cash numeric,
   p_retained_cash numeric,
   -- the *_used audit anchors
-  p_vat_basis_used public.deal_vat_basis,
+  p_vat_basis_used commission.deal_vat_basis,
   p_ewt_rate_used numeric,
   p_vat_rate_used numeric
 )
@@ -479,9 +479,9 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_workspace_id uuid;
-  v_deal public.deal;
+  v_deal commission.deal;
   v_note text;
-  v_row public.payment;
+  v_row commission.payment;
   v_changes jsonb;
   v_audit_id uuid;
   v_event_id uuid;
@@ -490,23 +490,23 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   -- Hard FK + same-workspace + non-archived (edge case 10). A bad reference
   -- raises here — nothing is stored.
-  v_deal := app.resolve_payment_deal(p_deal_id);
+  v_deal := commission_private.resolve_payment_deal(p_deal_id);
 
   -- The pure ties the engine's split must satisfy (K+L=H, N=H−M, retained).
-  perform app.assert_payment_split(
+  perform commission_private.assert_payment_split(
     p_gross_amount, p_net_of_vat, p_vat_amount, p_ewt_amount, p_net_cash, p_retained_cash
   );
 
   v_note := nullif(btrim(coalesce(p_reference_note, '')), '');
 
-  insert into public.payment (
+  insert into commission.payment (
     workspace_id, deal_id, payment_date, gross_amount, payment_type, reference_note,
     net_of_vat, vat_amount, ewt_amount, net_cash, retained_cash,
     vat_basis_used, ewt_rate_used, vat_rate_used,
@@ -522,21 +522,21 @@ begin
   )
   returning * into v_row;
 
-  v_changes := app.payment_created_changes(v_row);
+  v_changes := commission_private.payment_created_changes(v_row);
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_deal.workspace_id, 'payment', v_row.id, 'create', v_changes
   );
 
   -- §3.4: created → old NULL, new = the full snapshot. M4.2 adds net_of_vat to
   -- Collected and restates balance/dates/idle from this.
-  insert into public.payment_event (
+  insert into commission.payment_event (
     workspace_id, actor_user_id, payment_id, deal_id, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_deal.workspace_id, v_uid, v_row.id, v_row.deal_id, 'created',
-    null, app.payment_snapshot(v_row), '{}'::jsonb, v_audit_id
+    null, commission_private.payment_snapshot(v_row), '{}'::jsonb, v_audit_id
   )
   returning id into v_event_id;
 
@@ -562,11 +562,11 @@ begin
 end;
 $$;
 
-comment on function public.create_payment is
+comment on function commission.create_payment is
   'FR-M5-01. Validates the hard deal FK (same-workspace, non-archived; edge case 10), verifies the split ties (K+L=H, N=H−M), persists the engine-computed snapshot, audits, emits payment.created — one transaction. Also the importer''s un-gated bulk path (FR-M5-13). Send money as JSON strings.';
 
 -- ---------------------------------------------------------------------------
--- public.update_payment — FR-M5-07 (re-snapshot §3.3.2 + optimistic locking §8)
+-- commission.update_payment — FR-M5-07 (re-snapshot §3.3.2 + optimistic locking §8)
 -- ---------------------------------------------------------------------------
 -- A payment edit RE-SNAPSHOTS: an edit asserts "this is what the payment really
 -- was," so the app recomputes the split with the deal/settings as they are NOW
@@ -575,20 +575,20 @@ comment on function public.create_payment is
 -- including the old AND new year/month periods). Optimistic locking: a stale
 -- version is refused as a value, not an error, so M5.2 can render a conflict
 -- prompt. The friction gate (rule 11) is enforced in the app action.
-create or replace function public.update_payment(
+create or replace function commission.update_payment(
   p_id uuid,
   p_expected_version integer,
   p_deal_id uuid,
   p_payment_date date,
   p_gross_amount numeric,
-  p_payment_type public.payment_type,
+  p_payment_type commission.payment_type,
   p_reference_note text,
   p_net_of_vat numeric,
   p_vat_amount numeric,
   p_ewt_amount numeric,
   p_net_cash numeric,
   p_retained_cash numeric,
-  p_vat_basis_used public.deal_vat_basis,
+  p_vat_basis_used commission.deal_vat_basis,
   p_ewt_rate_used numeric,
   p_vat_rate_used numeric
 )
@@ -599,9 +599,9 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.payment;
-  v_after public.payment;
-  v_deal public.deal;
+  v_before commission.payment;
+  v_after commission.payment;
+  v_deal commission.deal;
   v_note text;
   v_changes jsonb;
   v_audit_id uuid;
@@ -613,7 +613,7 @@ begin
 
   -- RLS makes another tenant's row invisible → not found (AC9). FOR UPDATE locks
   -- it so the diff cannot race a concurrent save.
-  select * into v_before from public.payment where id = p_id for update;
+  select * into v_before from commission.payment where id = p_id for update;
   if not found then
     raise exception 'payment not found' using errcode = 'no_data_found';
   end if;
@@ -628,9 +628,9 @@ begin
 
   -- Re-validate the (possibly changed) deal reference — a payment can be
   -- re-pointed on edit (§3.3.2). Refuses a cross-workspace/archived/unknown deal.
-  v_deal := app.resolve_payment_deal(p_deal_id);
+  v_deal := commission_private.resolve_payment_deal(p_deal_id);
 
-  perform app.assert_payment_split(
+  perform commission_private.assert_payment_split(
     p_gross_amount, p_net_of_vat, p_vat_amount, p_ewt_amount, p_net_cash, p_retained_cash
   );
 
@@ -651,7 +651,7 @@ begin
   v_after.ewt_rate_used := p_ewt_rate_used;
   v_after.vat_rate_used := p_vat_rate_used;
 
-  v_changes := app.jsonb_diff(app.payment_audit_row(v_before), app.payment_audit_row(v_after));
+  v_changes := commission_private.jsonb_diff(commission_private.payment_audit_row(v_before), commission_private.payment_audit_row(v_after));
 
   -- Nothing moved: no write, no version bump, no audit, no event.
   if v_changes = '{}'::jsonb then
@@ -660,7 +660,7 @@ begin
     );
   end if;
 
-  update public.payment set
+  update commission.payment set
     deal_id = v_after.deal_id,
     -- workspace_id follows the (re-resolved) deal, so a re-point stays coherent.
     workspace_id = v_deal.workspace_id,
@@ -681,19 +681,19 @@ begin
   where id = p_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_after.workspace_id, 'payment', v_after.id, 'update', v_changes
   );
 
   -- §3.4: updated → BOTH snapshots + the diff. M4.2 restates deltas against the
   -- OLD one (and re-aggregates the old AND new year/month periods).
-  insert into public.payment_event (
+  insert into commission.payment_event (
     workspace_id, actor_user_id, payment_id, deal_id, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_after.workspace_id, v_uid, v_after.id, v_after.deal_id, 'updated',
-    app.payment_snapshot(v_before), app.payment_snapshot(v_after), v_changes, v_audit_id
+    commission_private.payment_snapshot(v_before), commission_private.payment_snapshot(v_after), v_changes, v_audit_id
   )
   returning id into v_event_id;
 
@@ -708,18 +708,18 @@ begin
 end;
 $$;
 
-comment on function public.update_payment is
+comment on function commission.update_payment is
   'FR-M5-07 / §3.3.2. Re-snapshots the split (the app recomputes at current deal/settings), field-level audit, emits payment.updated with old+new snapshots; refuses a stale version (§8). The friction gate is enforced in the app action.';
 
 -- ---------------------------------------------------------------------------
--- public.delete_payment — FR-M5-08 (soft delete, rule 10/11)
+-- commission.delete_payment — FR-M5-08 (soft delete, rule 10/11)
 -- ---------------------------------------------------------------------------
 -- Soft delete: sets archived_at, keeps the row for the audit trail, and emits
 -- payment.deleted with the FULL final field set (M4.2 subtracts net_of_vat from
 -- Collected and restates balance/dates/idle). Optimistic-lock guarded; the
 -- friction gate (rule 11 — the confirmation states the receivable restatement) is
 -- enforced in the app action.
-create or replace function public.delete_payment(
+create or replace function commission.delete_payment(
   p_id uuid,
   p_expected_version integer
 )
@@ -730,8 +730,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.payment;
-  v_after public.payment;
+  v_before commission.payment;
+  v_after commission.payment;
   v_audit_id uuid;
   v_event_id uuid;
 begin
@@ -739,7 +739,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.payment where id = p_id for update;
+  select * into v_before from commission.payment where id = p_id for update;
   if not found then
     raise exception 'payment not found' using errcode = 'no_data_found';
   end if;
@@ -758,14 +758,14 @@ begin
     );
   end if;
 
-  update public.payment
+  update commission.payment
   set archived_at = now(),
       version = v_before.version + 1,
       updated_by = v_uid
   where id = p_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'payment', v_after.id, 'delete',
     jsonb_build_object(
       'archived_at', jsonb_build_object(
@@ -778,13 +778,13 @@ begin
 
   -- §3.4: deleted → old (pre) + new (post, archived_at set). new_values is the
   -- full final field set for M4.2's reversal math.
-  insert into public.payment_event (
+  insert into commission.payment_event (
     workspace_id, actor_user_id, payment_id, deal_id, event_type,
     old_values, new_values, field_changes, audit_entry_id
   )
   values (
     v_before.workspace_id, v_uid, v_after.id, v_after.deal_id, 'deleted',
-    app.payment_snapshot(v_before), app.payment_snapshot(v_after), '{}'::jsonb, v_audit_id
+    commission_private.payment_snapshot(v_before), commission_private.payment_snapshot(v_after), '{}'::jsonb, v_audit_id
   )
   returning id into v_event_id;
 
@@ -798,34 +798,34 @@ begin
 end;
 $$;
 
-comment on function public.delete_payment is
+comment on function commission.delete_payment is
   'FR-M5-08 rule 10/11. Soft delete (sets archived_at, retains the row); emits payment.deleted with the full final field set for M4.2''s reversal math. Optimistic-lock guarded; the friction gate is enforced in the app action.';
 
 -- ---------------------------------------------------------------------------
 -- Grants
 -- ---------------------------------------------------------------------------
 
-revoke all on function public.create_payment(
-  uuid, date, numeric, public.payment_type, text,
+revoke all on function commission.create_payment(
+  uuid, date, numeric, commission.payment_type, text,
   numeric, numeric, numeric, numeric, numeric,
-  public.deal_vat_basis, numeric, numeric
+  commission.deal_vat_basis, numeric, numeric
 ) from public;
-grant execute on function public.create_payment(
-  uuid, date, numeric, public.payment_type, text,
+grant execute on function commission.create_payment(
+  uuid, date, numeric, commission.payment_type, text,
   numeric, numeric, numeric, numeric, numeric,
-  public.deal_vat_basis, numeric, numeric
+  commission.deal_vat_basis, numeric, numeric
 ) to authenticated;
 
-revoke all on function public.update_payment(
-  uuid, integer, uuid, date, numeric, public.payment_type, text,
+revoke all on function commission.update_payment(
+  uuid, integer, uuid, date, numeric, commission.payment_type, text,
   numeric, numeric, numeric, numeric, numeric,
-  public.deal_vat_basis, numeric, numeric
+  commission.deal_vat_basis, numeric, numeric
 ) from public;
-grant execute on function public.update_payment(
-  uuid, integer, uuid, date, numeric, public.payment_type, text,
+grant execute on function commission.update_payment(
+  uuid, integer, uuid, date, numeric, commission.payment_type, text,
   numeric, numeric, numeric, numeric, numeric,
-  public.deal_vat_basis, numeric, numeric
+  commission.deal_vat_basis, numeric, numeric
 ) to authenticated;
 
-revoke all on function public.delete_payment(uuid, integer) from public;
-grant execute on function public.delete_payment(uuid, integer) to authenticated;
+revoke all on function commission.delete_payment(uuid, integer) from public;
+grant execute on function commission.delete_payment(uuid, integer) to authenticated;

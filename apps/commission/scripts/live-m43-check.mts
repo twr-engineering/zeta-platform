@@ -34,7 +34,7 @@ const ANON = E.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SERVICE = E.SUPABASE_SERVICE_ROLE_KEY;
 const FILE = "discovery/source/ZETA GCI Calculator  Collections v30.20 (1).xlsx";
 
-const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+const admin = createClient(URL_, SERVICE, { db: { schema: "commission" }, auth: { persistSession: false } });
 
 const fails: string[] = [];
 function check(name: string, cond: boolean, detail = "") {
@@ -49,7 +49,7 @@ async function makeUser(tag: string): Promise<{ uid: string; user: Client }> {
   const password = "throwaway-m43-pw";
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw created.error;
-  const user = createClient(URL_, ANON, { auth: { persistSession: false } });
+  const user = createClient(URL_, ANON, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email, password });
   if (signIn.error) throw signIn.error;
   return { uid: created.data.user!.id, user };

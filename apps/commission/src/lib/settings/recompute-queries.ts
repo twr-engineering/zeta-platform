@@ -17,7 +17,7 @@ import type { TaxField } from "./tax";
 
 /**
  * The restatement matrix (M1 PRD §4 rule 3), addressed the way the DB predicate
- * `app.affected_deals` reads it. Which deals a settings change restates:
+ * `commission_private.affected_deals` reads it. Which deals a settings change restates:
  *
  *   - a tax rate / registration change (vat_rate, ewt_rate, vat_registered)
  *     restates every taxable deal;

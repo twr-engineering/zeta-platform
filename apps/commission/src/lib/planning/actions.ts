@@ -18,7 +18,7 @@ import type { ActionState } from "@/lib/forms/action-state";
  * and the DB function is the single writer + audit (old→new). Same shape as every
  * mutation since M0.2: authenticate → gate → let ONE database function do the change
  * + its audit entry in one transaction. Tenant isolation is RLS (the RPC resolves the
- * workspace via app.current_workspace_id()).
+ * workspace via commission_private.current_workspace_id()).
  *
  * After any target write we invalidate the per-workspace planning-targets cache so
  * M6's derived Section-2 target reflects the change immediately (§8).

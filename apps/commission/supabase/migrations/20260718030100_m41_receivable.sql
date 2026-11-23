@@ -23,20 +23,20 @@
 -- receivable_status (§3.1 field 14): Open / Closed / Cancelled, default Open
 -- ---------------------------------------------------------------------------
 
-create type public.receivable_status as enum ('open', 'closed', 'cancelled');
+create type commission.receivable_status as enum ('open', 'closed', 'cancelled');
 
 -- ---------------------------------------------------------------------------
 -- receivable (M4 PRD §3.1)
 -- ---------------------------------------------------------------------------
 
-create table public.receivable (
+create table commission.receivable (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- Field 1 — 1:1 with the deal, immutable, system-set. ON DELETE CASCADE: a deal
   -- can only be hard-deleted with zero financial children (M1 rule 2), and when it
   -- is, its receivable goes with it (the receivable is a projection of the deal).
-  deal_id uuid not null references public.deal (id) on delete cascade,
+  deal_id uuid not null references commission.deal (id) on delete cascade,
 
   -- --- Mirrored identity (§3.1 fields 2–10; C, restated on every deal.updated) ---
   -- Projections, not copies that drift (§4 rule 2): consume_deal_events restates
@@ -48,11 +48,11 @@ create table public.receivable (
   -- no-drift reason; the ledger UI (M4.4) resolves it via the developer join.
   deal_code text not null,                                     -- 2 (col B)
   booked_year integer not null,                                -- 3 (col C)
-  developer_id uuid references public.developer (id),          -- 4 (col D; null: Resale/Rental)
+  developer_id uuid references commission.developer (id),          -- 4 (col D; null: Resale/Rental)
   client_name text not null,                                   -- 5 (col E)
   property_details text not null,                              -- 6 (col F)
-  deal_type public.deal_type not null,                         -- 7 (col G)
-  lead_source_id uuid not null references public.lead_source (id), -- 8 (col Y; feeds M7)
+  deal_type commission.deal_type not null,                         -- 7 (col G)
+  lead_source_id uuid not null references commission.lead_source (id), -- 8 (col Y; feeds M7)
   booking_date date not null,                                  -- 9 (col U)
 
   -- --- Rule K anchors (§3.1 fields 11–13) ---------------------------------------
@@ -69,7 +69,7 @@ create table public.receivable (
     generated always as (coalesce(confirmed_collectible, default_total_collectible)) stored,
 
   -- --- Inputs (§3.1 fields 14, 26) ----------------------------------------------
-  status public.receivable_status not null default 'open',     -- 14 (col J)
+  status commission.receivable_status not null default 'open',     -- 14 (col J)
   next_action_note text,                                       -- 26 (col T)
 
   -- --- Payment-derived (§3.1 fields 15–25) --------------------------------------
@@ -108,11 +108,11 @@ create table public.receivable (
   constraint receivable_version_positive check (version >= 1)
 );
 
-comment on table public.receivable is
+comment on table commission.receivable is
   'M4 PRD §3.1. One receivable per deal (unique deal_id), system-managed. Identity fields mirror the deal (restated by consume_deal_events); booked_net_gci and default_total_collectible mirror the deal''s Rule K figures; total_collectible is generated (override precedence). Payment-derived columns are M4.2/M4.3.';
-comment on column public.receivable.total_collectible is
+comment on column commission.receivable.total_collectible is
   'M4 Rule K.2 (col I). Generated: coalesce(confirmed_collectible, default_total_collectible). The override (blue cell) wins when set, else the booked default.';
-comment on column public.receivable.developer_id is
+comment on column commission.receivable.developer_id is
   'Mirror of deal.developer_id (§3.1 field 4). Stored as the FK, not a denormalised name, so a developer rename is reflected without drift (§4 rule 2).';
 
 -- Reads: 1:1 lookup by deal (the consumer + the deal detail cross-link), and the
@@ -120,44 +120,44 @@ comment on column public.receivable.developer_id is
 -- indexes deal_id; these back the active list, per-developer/source rollups and
 -- the year views. Partial on active for the common ledger read (archived excluded).
 create index receivable_active_idx
-  on public.receivable (workspace_id, status)
+  on commission.receivable (workspace_id, status)
   where archived_at is null;
 create index receivable_developer_idx
-  on public.receivable (workspace_id, developer_id)
+  on commission.receivable (workspace_id, developer_id)
   where developer_id is not null;
 create index receivable_lead_source_idx
-  on public.receivable (workspace_id, lead_source_id);
+  on commission.receivable (workspace_id, lead_source_id);
 create index receivable_booked_year_idx
-  on public.receivable (workspace_id, booked_year);
+  on commission.receivable (workspace_id, booked_year);
 
-alter table public.receivable enable row level security;
+alter table commission.receivable enable row level security;
 
 -- Tenant isolation is the RLS job (M0 rule 1), same shape as deal. There is NO
 -- delete policy for authenticated: a receivable is never user-deleted (§4 rule 1);
 -- it leaves only when its deal is hard-deleted, via the FK cascade (which does not
 -- consult RLS). INSERT/UPDATE exist for the SECURITY INVOKER consumer + mutations.
 create policy "receivable_select_member"
-  on public.receivable for select
+  on commission.receivable for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "receivable_insert_member"
-  on public.receivable for insert
+  on commission.receivable for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "receivable_update_member"
-  on public.receivable for update
+  on commission.receivable for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create trigger receivable_touch_updated_at
-  before update on public.receivable
-  for each row execute function app.touch_updated_at();
+  before update on commission.receivable
+  for each row execute function commission_private.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
 -- receivable_event_cursor — M4's own cursor over the deal event log
@@ -167,43 +167,43 @@ create trigger receivable_touch_updated_at
 -- proves replay-from-zero correctness — reset it and re-drain to re-project every
 -- deal identically). Each consumer of deal_event keeps its own cursor; there is no
 -- shared consumed stamp (m1_2 handoff).
-create table public.receivable_event_cursor (
-  workspace_id uuid primary key references public.workspace (id) on delete cascade,
+create table commission.receivable_event_cursor (
+  workspace_id uuid primary key references commission.workspace (id) on delete cascade,
   last_occurred_at timestamptz not null default '-infinity',
   last_event_id uuid,
   updated_at timestamptz not null default now()
 );
 
-comment on table public.receivable_event_cursor is
-  'M4.1. The receivable consumer''s high-water mark over public.deal_event, per workspace. Ordered by (occurred_at, id). Reset to defaults to replay the whole log; consume_deal_events is idempotent so a replay re-projects to the same state.';
+comment on table commission.receivable_event_cursor is
+  'M4.1. The receivable consumer''s high-water mark over commission.deal_event, per workspace. Ordered by (occurred_at, id). Reset to defaults to replay the whole log; consume_deal_events is idempotent so a replay re-projects to the same state.';
 
-alter table public.receivable_event_cursor enable row level security;
+alter table commission.receivable_event_cursor enable row level security;
 
 create policy "receivable_cursor_select_member"
-  on public.receivable_event_cursor for select
+  on commission.receivable_event_cursor for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "receivable_cursor_insert_member"
-  on public.receivable_event_cursor for insert
+  on commission.receivable_event_cursor for insert
   to authenticated
-  with check (app.is_workspace_member(workspace_id));
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "receivable_cursor_update_member"
-  on public.receivable_event_cursor for update
+  on commission.receivable_event_cursor for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- ---------------------------------------------------------------------------
--- public.consume_deal_events — drain M4's cursor, project receivables (FR-M4-01/02/03)
+-- commission.consume_deal_events — drain M4's cursor, project receivables (FR-M4-01/02/03)
 -- ---------------------------------------------------------------------------
 -- Reads deal events after the cursor and upserts each deal's receivable from the
 -- event's new_values snapshot: mirrors + Rule K anchors + archive state. The
 -- ON CONFLICT overwrites ONLY the mirror/anchor/archive columns — the user inputs
 -- (status, confirmed_collectible, next_action_note) are preserved across restates.
 -- SECURITY INVOKER, workspace-scoped by RLS. Idempotent + resumable by construction.
-create or replace function public.consume_deal_events(p_limit integer default 500)
+create or replace function commission.consume_deal_events(p_limit integer default 500)
 returns jsonb
 language plpgsql
 security invoker
@@ -222,7 +222,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_ws := app.current_workspace_id();
+  v_ws := commission_private.current_workspace_id();
   if v_ws is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -230,24 +230,24 @@ begin
   -- Load (or initialise) the cursor, locked so concurrent drains serialise on it
   -- and can never double-advance or interleave.
   select last_occurred_at, last_event_id into v_last_at, v_last_id
-  from public.receivable_event_cursor
+  from commission.receivable_event_cursor
   where workspace_id = v_ws
   for update;
 
   if not found then
-    insert into public.receivable_event_cursor (workspace_id)
+    insert into commission.receivable_event_cursor (workspace_id)
     values (v_ws)
     on conflict (workspace_id) do nothing;
 
     select last_occurred_at, last_event_id into v_last_at, v_last_id
-    from public.receivable_event_cursor
+    from commission.receivable_event_cursor
     where workspace_id = v_ws
     for update;
   end if;
 
   for r in
     select e.id, e.occurred_at, e.deal_id, e.new_values
-    from public.deal_event e
+    from commission.deal_event e
     where e.workspace_id = v_ws
       and (
         e.occurred_at > v_last_at
@@ -259,7 +259,7 @@ begin
     -- created/updated/archived/restored all carry the current snapshot in new_values.
     v_snap := r.new_values;
 
-    insert into public.receivable (
+    insert into commission.receivable (
       workspace_id, deal_id, deal_code, booked_year, developer_id, client_name,
       property_details, deal_type, lead_source_id, booking_date,
       booked_net_gci, default_total_collectible, archived_at, created_by, updated_by
@@ -271,7 +271,7 @@ begin
       (v_snap->>'developer_id')::uuid,
       v_snap->>'client_name',
       v_snap->>'property_details',
-      (v_snap->>'deal_type')::public.deal_type,
+      (v_snap->>'deal_type')::commission.deal_type,
       (v_snap->>'lead_source_id')::uuid,
       (v_snap->>'booked_date')::date,
       (v_snap->>'net_gci')::numeric,
@@ -299,7 +299,7 @@ begin
   end loop;
 
   if v_processed > 0 then
-    update public.receivable_event_cursor
+    update commission.receivable_event_cursor
     set last_occurred_at = v_last_at,
         last_event_id = v_last_id,
         updated_at = now()
@@ -310,18 +310,18 @@ begin
 end;
 $$;
 
-comment on function public.consume_deal_events is
-  'FR-M4-01/02/03. Drains M4''s cursor over public.deal_event, upserting each deal''s receivable from the event snapshot (mirrors + Rule K anchors + archive state; user inputs preserved). Idempotent (unique deal_id) and resumable (cursor). Call in a loop until processed = 0.';
+comment on function commission.consume_deal_events is
+  'FR-M4-01/02/03. Drains M4''s cursor over commission.deal_event, upserting each deal''s receivable from the event snapshot (mirrors + Rule K anchors + archive state; user inputs preserved). Idempotent (unique deal_id) and resumable (cursor). Call in a loop until processed = 0.';
 
-revoke all on function public.consume_deal_events(integer) from public;
-grant execute on function public.consume_deal_events(integer) to authenticated;
+revoke all on function commission.consume_deal_events(integer) from public;
+grant execute on function commission.consume_deal_events(integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.set_next_action_note — FR-M4-07 (a plain, audited edit; not gated)
+-- commission.set_next_action_note — FR-M4-07 (a plain, audited edit; not gated)
 -- ---------------------------------------------------------------------------
 -- The Next Action note is not money-restating, so it is a plain edit — no friction
 -- gate — but still audited (rule 12). Empty/blank clears it to null.
-create or replace function public.set_next_action_note(
+create or replace function commission.set_next_action_note(
   p_receivable_id uuid,
   p_note text
 )
@@ -332,7 +332,7 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
+  v_before commission.receivable;
   v_note text;
   v_audit_id uuid;
 begin
@@ -340,7 +340,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -354,13 +354,13 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_before.id);
   end if;
 
-  update public.receivable
+  update commission.receivable
   set next_action_note = v_note,
       version = v_before.version + 1,
       updated_by = v_uid
   where id = p_receivable_id;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'next_action_note', jsonb_build_object(
@@ -374,14 +374,14 @@ begin
 end;
 $$;
 
-comment on function public.set_next_action_note is
+comment on function commission.set_next_action_note is
   'FR-M4-07. Sets/clears the receivable''s Next Action note — a plain audited edit (not money-restating, no friction gate). Blank clears to null.';
 
-revoke all on function public.set_next_action_note(uuid, text) from public;
-grant execute on function public.set_next_action_note(uuid, text) to authenticated;
+revoke all on function commission.set_next_action_note(uuid, text) from public;
+grant execute on function commission.set_next_action_note(uuid, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
--- public.set_confirmed_collectible — FR-M4-06 (edge case 17: note REQUIRED)
+-- commission.set_confirmed_collectible — FR-M4-06 (edge case 17: note REQUIRED)
 -- ---------------------------------------------------------------------------
 -- The Confirmed Collectible override (§3.3 Corrections case 2). Setting a value
 -- REQUIRES a non-empty Next Action note (the note is the override's audit trail —
@@ -389,7 +389,7 @@ grant execute on function public.set_next_action_note(uuid, text) to authenticat
 -- reverts total_collectible to the Rule K.2 default; a note is captured when
 -- supplied. Every set/change/clear is audited old→new with the note snapshot.
 -- (The restated-override review flag + explicit confirmation dialog are M4.3.)
-create or replace function public.set_confirmed_collectible(
+create or replace function commission.set_confirmed_collectible(
   p_receivable_id uuid,
   p_value numeric,
   p_note text
@@ -401,8 +401,8 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := (select auth.uid());
-  v_before public.receivable;
-  v_after public.receivable;
+  v_before commission.receivable;
+  v_after commission.receivable;
   v_note text;
   v_audit_id uuid;
 begin
@@ -410,7 +410,7 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.receivable where id = p_receivable_id for update;
+  select * into v_before from commission.receivable where id = p_receivable_id for update;
   if not found then
     raise exception 'receivable not found' using errcode = 'no_data_found';
   end if;
@@ -430,7 +430,7 @@ begin
     end if;
   end if;
 
-  update public.receivable
+  update commission.receivable
   set confirmed_collectible = p_value,
       -- Capture the supplied note; on a clear with no note, keep the existing one.
       next_action_note = coalesce(v_note, next_action_note),
@@ -439,7 +439,7 @@ begin
   where id = p_receivable_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'receivable', p_receivable_id, 'update',
     jsonb_build_object(
       'confirmed_collectible', jsonb_build_object(
@@ -465,8 +465,8 @@ begin
 end;
 $$;
 
-comment on function public.set_confirmed_collectible is
+comment on function commission.set_confirmed_collectible is
   'FR-M4-06 / edge case 17. Sets/changes/clears the Confirmed Collectible override; setting REQUIRES a positive value and a non-empty note (the friction gate). Clearing reverts total_collectible to the Rule K.2 default. Audited old→new with the note. Restated-override flag is M4.3.';
 
-revoke all on function public.set_confirmed_collectible(uuid, numeric, text) from public;
-grant execute on function public.set_confirmed_collectible(uuid, numeric, text) to authenticated;
+revoke all on function commission.set_confirmed_collectible(uuid, numeric, text) from public;
+grant execute on function commission.set_confirmed_collectible(uuid, numeric, text) to authenticated;

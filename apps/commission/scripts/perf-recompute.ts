@@ -191,6 +191,7 @@ async function main() {
   }
 
   const admin = createClient(url, serviceKey, {
+    db: { schema: "commission" },
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
@@ -269,7 +270,7 @@ async function main() {
   console.log(`seeded ${N} deals in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
   // --- as the real user (JWT) for the RLS-scoped measurements ---------------
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 

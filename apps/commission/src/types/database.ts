@@ -29,8 +29,8 @@ import type { Database as Generated, Json } from "./database.generated";
 
 export type { Json };
 
-type PublicSchema = Generated["public"];
-type GeneratedTables = PublicSchema["Tables"];
+type CommissionSchema = Generated["commission"];
+type GeneratedTables = CommissionSchema["Tables"];
 
 /** Re-type `K` as the exact-decimal string it is fetched as. */
 type WithMoneyStrings<Row, K extends keyof Row> = Omit<Row, K> &
@@ -221,7 +221,7 @@ type YieldAggregateTable = GeneratedTables["yield_aggregate"];
  * The four sum columns are numeric(14,2) — JSON floats unless the read casts
  * `::text` (see @/lib/supabase/selects YIELD_AGGREGATE_SELECT). The table is
  * written exclusively by the SECURITY INVOKER consumer (consume_yield_events via
- * app.recompute_yield_cell), never through the client, so only the Row is re-typed;
+ * commission_private.recompute_yield_cell), never through the client, so only the Row is re-typed;
  * `deal_count` is a true integer and stays a number. M2.3 reads these rows for the
  * PlanningBasis API; M2.4 for the report table.
  */
@@ -283,9 +283,9 @@ type FunnelRatesOverride = Omit<FunnelRatesTable, "Row"> & {
 
 // --- Functions --------------------------------------------------------------
 
-type GeneratedFunctions = PublicSchema["Functions"];
+type GeneratedFunctions = CommissionSchema["Functions"];
 
-type DealIncentiveTaxable = Generated["public"]["Enums"]["deal_incentive_taxable"];
+type DealIncentiveTaxable = Generated["commission"]["Enums"]["deal_incentive_taxable"];
 
 /**
  * create_deal / update_deal — the same float trap from the argument side. The
@@ -469,8 +469,8 @@ type UpdateFunnelRatesOverride = Omit<UpdateFunnelRatesFn, "Args"> & {
 
 // --- the money-safe Database ------------------------------------------------
 
-export type Database = Omit<Generated, "public"> & {
-  public: Omit<PublicSchema, "Tables" | "Functions"> & {
+export type Database = Omit<Generated, "commission"> & {
+  commission: Omit<CommissionSchema, "Tables" | "Functions"> & {
     Tables: Omit<
       GeneratedTables,
       | "tax_settings"
@@ -524,17 +524,17 @@ export type Database = Omit<Generated, "public"> & {
 
 // --- helpers, bound to the overridden Database ------------------------------
 
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
+export type Tables<T extends keyof Database["commission"]["Tables"]> =
+  Database["commission"]["Tables"][T]["Row"];
 
-export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
+export type TablesInsert<T extends keyof Database["commission"]["Tables"]> =
+  Database["commission"]["Tables"][T]["Insert"];
 
-export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Update"];
+export type TablesUpdate<T extends keyof Database["commission"]["Tables"]> =
+  Database["commission"]["Tables"][T]["Update"];
 
-export type Enums<T extends keyof Database["public"]["Enums"]> =
-  Database["public"]["Enums"][T];
+export type Enums<T extends keyof Database["commission"]["Enums"]> =
+  Database["commission"]["Enums"][T];
 
 /** A single field's old→new pair. Decimals are strings, to stay exact. */
 export type FieldChange = {

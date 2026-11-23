@@ -28,6 +28,7 @@ const E = env();
 const HAVE_ENV = Boolean(E.NEXT_PUBLIC_SUPABASE_URL && E.SUPABASE_SERVICE_ROLE_KEY);
 const admin: SupabaseClient | null = HAVE_ENV
   ? createClient(E.NEXT_PUBLIC_SUPABASE_URL, E.SUPABASE_SERVICE_ROLE_KEY, {
+      db: { schema: "commission" },
       auth: { persistSession: false },
     })
   : null;

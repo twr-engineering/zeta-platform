@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { getSupabaseEnv } from "./env";
+import { DB_SCHEMA, getSupabaseEnv } from "./env";
 import type { Database } from "@/types/database";
 
 /**
@@ -16,6 +16,7 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, anonKey, {
+    db: { schema: DB_SCHEMA },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -48,6 +49,7 @@ export async function createServiceRoleClient() {
   }
 
   return createServerClient<Database>(url, serviceRoleKey, {
+    db: { schema: DB_SCHEMA },
     cookies: {
       getAll() {
         return [];

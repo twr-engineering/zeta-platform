@@ -6,7 +6,7 @@
  *   pnpm run perf:yield
  *
  * Seeds N deals (default 1,000) into a THROWAWAY workspace, rebuilds the materialized
- * yield_aggregate from them (the same GROUP BY over app.deal_segment the consumer would
+ * yield_aggregate from them (the same GROUP BY over commission_private.deal_segment the consumer would
  * produce) + a basis_version row, then measures the three reads getYieldSummaryView
  * runs in parallel:
  *   · loadYieldAggregates   — the report + planning basis (O(segments × years) cells)
@@ -162,7 +162,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
@@ -206,33 +206,33 @@ async function main() {
   // consumer produces) + a basis_version row, so the reads measure a realistic state.
   if (accessToken) {
     await runSql(url, accessToken,
-      `INSERT INTO public.yield_aggregate (workspace_id, segment, booked_year, deal_count, volume_sum, gci_sum, incentive_net_sum, referral_out_sum)
-       SELECT workspace_id, app.deal_segment(transaction_type, deal_type, representation) AS seg, booked_year,
+      `INSERT INTO commission.yield_aggregate (workspace_id, segment, booked_year, deal_count, volume_sum, gci_sum, incentive_net_sum, referral_out_sum)
+       SELECT workspace_id, commission_private.deal_segment(transaction_type, deal_type, representation) AS seg, booked_year,
               count(*), sum(list_price), sum(net_gci), sum(incentive_net), sum(referral_out)
-       FROM public.deal
+       FROM commission.deal
        WHERE workspace_id='${workspaceId}' AND archived_at IS NULL
-         AND app.deal_segment(transaction_type, deal_type, representation) IS NOT NULL
+         AND commission_private.deal_segment(transaction_type, deal_type, representation) IS NOT NULL
        GROUP BY workspace_id, seg, booked_year
        ON CONFLICT (workspace_id, segment, booked_year) DO NOTHING;`);
     await runSql(url, accessToken,
-      `INSERT INTO public.yield_basis_version (workspace_id, basis_version, computed_at)
+      `INSERT INTO commission.yield_basis_version (workspace_id, basis_version, computed_at)
        VALUES ('${workspaceId}', 1, now()) ON CONFLICT (workspace_id) DO UPDATE SET basis_version = 1;`);
   }
   console.log(`seeded ${N} deals + rebuilt aggregate in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
   // --- server exec of the three parallel reads (machine-independent) ---------
   const aggExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT segment, booked_year, deal_count, volume_sum::text, gci_sum::text, incentive_net_sum::text, referral_out_sum::text FROM public.yield_aggregate WHERE workspace_id='${workspaceId}' ORDER BY segment, booked_year`)
+    ? await explainMs(url, accessToken, `SELECT segment, booked_year, deal_count, volume_sum::text, gci_sum::text, incentive_net_sum::text, referral_out_sum::text FROM commission.yield_aggregate WHERE workspace_id='${workspaceId}' ORDER BY segment, booked_year`)
     : 0;
   const invExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT deal_code, transaction_type, deal_type, representation FROM public.deal WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
+    ? await explainMs(url, accessToken, `SELECT deal_code, transaction_type, deal_type, representation FROM commission.deal WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
     : 0;
   const verExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT basis_version, computed_at FROM public.yield_basis_version WHERE workspace_id='${workspaceId}'`)
+    ? await explainMs(url, accessToken, `SELECT basis_version, computed_at FROM commission.yield_basis_version WHERE workspace_id='${workspaceId}'`)
     : 0;
   const serverP95 = Math.max(aggExec, invExec, verExec);
 

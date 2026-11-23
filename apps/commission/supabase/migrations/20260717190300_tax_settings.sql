@@ -6,9 +6,9 @@
 -- Every rate is `numeric` — exact decimal, never float (Master PRD §4.3,
 -- M0 §8). The scales mirror the PRD's declared types exactly.
 
-create table public.tax_settings (
+create table commission.tax_settings (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- Settings C6 — "Output VAT on commission (BIR standard 12%)".
   vat_rate numeric(6, 4) not null default 0.1200,
@@ -53,30 +53,30 @@ create table public.tax_settings (
   constraint tax_settings_one_per_workspace unique (workspace_id)
 );
 
-comment on table public.tax_settings is
+comment on table commission.tax_settings is
   'Exactly one row per workspace (M0 §3.3). Consumed by M1 (engine), M5 (payment splits), M6 (chase flag).';
-comment on column public.tax_settings.vat_registered is
+comment on column commission.tax_settings.vat_registered is
   'Engine mode. true = VAT-registered agent; false = commission VAT off, EWT still applies. Flipping it is a confirmed-recompute event (M0 rule 3).';
-comment on column public.tax_settings.vat_registered_confirmed_at is
+comment on column commission.tax_settings.vat_registered_confirmed_at is
   'Set when the agent actually answers the onboarding question. NULL = unanswered — M10 must ask; never read the default as an answer.';
 
-alter table public.tax_settings enable row level security;
+alter table commission.tax_settings enable row level security;
 
 create policy "tax_settings_select_member"
-  on public.tax_settings for select
+  on commission.tax_settings for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "tax_settings_update_member"
-  on public.tax_settings for update
+  on commission.tax_settings for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- No INSERT/DELETE policies: the row is created by the signup bootstrap and
 -- lives as long as the workspace. `tax_settings_one_per_workspace` makes a
 -- second row impossible regardless.
 
 create trigger tax_settings_touch_updated_at
-  before update on public.tax_settings
-  for each row execute function app.touch_updated_at();
+  before update on commission.tax_settings
+  for each row execute function commission_private.touch_updated_at();

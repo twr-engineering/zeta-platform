@@ -160,7 +160,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
@@ -201,14 +201,14 @@ async function main() {
   }
   console.log(`seeded ${N} deals across 2024–2026 in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
   // The busiest booked year (2024 gets index%3==0, the most rows for N not divisible by 3).
   const YEAR = 2024;
-  const inc = `SELECT coalesce(sum(d.list_price),0)::text FROM public.deal d WHERE d.workspace_id='${workspaceId}' AND d.archived_at IS NULL AND d.booked_year=${YEAR} AND d.representation <> 'referrer' AND (true OR d.transaction_type='sale')`;
-  const exc = `SELECT coalesce(sum(d.list_price),0)::text FROM public.deal d WHERE d.workspace_id='${workspaceId}' AND d.archived_at IS NULL AND d.booked_year=${YEAR} AND d.representation <> 'referrer' AND (false OR d.transaction_type='sale')`;
+  const inc = `SELECT coalesce(sum(d.list_price),0)::text FROM commission.deal d WHERE d.workspace_id='${workspaceId}' AND d.archived_at IS NULL AND d.booked_year=${YEAR} AND d.representation <> 'referrer' AND (true OR d.transaction_type='sale')`;
+  const exc = `SELECT coalesce(sum(d.list_price),0)::text FROM commission.deal d WHERE d.workspace_id='${workspaceId}' AND d.archived_at IS NULL AND d.booked_year=${YEAR} AND d.representation <> 'referrer' AND (false OR d.transaction_type='sale')`;
 
   const incExec = accessToken ? await explain(url, accessToken, inc) : { ms: 0, node: "n/a" };
   const excExec = accessToken ? await explain(url, accessToken, exc) : { ms: 0, node: "n/a" };

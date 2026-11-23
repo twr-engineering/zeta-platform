@@ -42,6 +42,7 @@ if (
 }
 
 const admin = createClient(E.NEXT_PUBLIC_SUPABASE_URL, E.SUPABASE_SERVICE_ROLE_KEY, {
+  db: { schema: "commission" },
   auth: { persistSession: false },
 });
 
@@ -95,6 +96,7 @@ try {
   uid = made.user!.id;
 
   const asUser = createClient(E.NEXT_PUBLIC_SUPABASE_URL, E.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    db: { schema: "commission" },
     auth: { persistSession: false },
   });
   const { error: signErr } = await asUser.auth.signInWithPassword({ email, password });
@@ -120,6 +122,7 @@ try {
 
   // --- 4. anon cannot read content (SELECT is `to authenticated`)
   const anon = createClient(E.NEXT_PUBLIC_SUPABASE_URL, E.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    db: { schema: "commission" },
     auth: { persistSession: false },
   });
   const { data: anonRows } = await anon.from("help_article").select("key");

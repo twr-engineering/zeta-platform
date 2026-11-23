@@ -18,6 +18,6 @@
 -- WHY THIS IS ITS OWN MIGRATION: Postgres permits ALTER TYPE ... ADD VALUE
 -- inside a transaction block (PG 12+), but the new label cannot be *used* until
 -- that transaction commits. The next migration's functions reference
--- 'delete'::public.audit_action, so the label has to land in a transaction of
+-- 'delete'::commission.audit_action, so the label has to land in a transaction of
 -- its own first.
-alter type public.audit_action add value if not exists 'delete';
+alter type commission.audit_action add value if not exists 'delete';

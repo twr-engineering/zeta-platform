@@ -192,7 +192,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
   const created = await admin.auth.admin.createUser({ email: PERF_EMAIL, password: PERF_PASSWORD, email_confirm: true });
@@ -238,13 +238,13 @@ async function main() {
   }
   // ANALYZE so EXPLAIN reflects real planner statistics — a freshly bulk-inserted
   // table has stale stats, and an unanalyzed table makes every plan a guess.
-  await runSql(url, accessToken, "analyze public.deal; analyze public.receivable; analyze public.payment;");
+  await runSql(url, accessToken, "analyze commission.deal; analyze commission.receivable; analyze commission.payment;");
   console.log(`seeded into workspace ${workspaceId} (analyzed)\n`);
 
   const WS = `'${workspaceId}'::uuid`;
   // A selective needle (one matching row) — the real "find this client" case where
   // the workspace-scoped trigram GIN decisively beats a seq scan (PRD §8).
-  const needle = `public.zeta_search_needle('needlefind')`;
+  const needle = `commission.zeta_search_needle('needlefind')`;
   const contains = `d.search_blob like '%' || ${needle} || '%' escape '\\'`;
 
   // The raw SELECT each source function runs (same predicates / order / limit).
@@ -253,27 +253,27 @@ async function main() {
       label: "Deals · contains 'needlefind' (GIN)",
       mustUseTrgm: true,
       sql: `select count(*) over() c, d.id, dev.name, d.net_gci::text, d.booked_date
-            from public.deal d left join public.developer dev on dev.id=d.developer_id
+            from commission.deal d left join commission.developer dev on dev.id=d.developer_id
             where d.workspace_id=${WS} and ${contains}
             order by d.booked_date desc, d.deal_code asc limit 50`,
     },
     {
       label: "Deals · amount sort (net_gci desc)",
       sql: `select count(*) over() c, d.id, d.net_gci::text
-            from public.deal d where d.workspace_id=${WS}
+            from commission.deal d where d.workspace_id=${WS}
             order by d.net_gci desc, d.deal_code asc limit 50`,
     },
     {
       label: "Collectibles · Open + only-with-balance",
       sql: `select count(*) over() c, r.id, r.balance::text
-            from public.receivable r
+            from commission.receivable r
             where r.workspace_id=${WS} and r.status='open' and r.balance is not null and r.balance>0
             order by r.balance desc, r.deal_code asc limit 50`,
     },
     {
       label: "Payments · Year 2020 (paid-date range)",
       sql: `select count(*) over() c, p.id, p.payment_date, dd.deal_code
-            from public.payment p join public.deal dd on dd.id=p.deal_id
+            from commission.payment p join commission.deal dd on dd.id=p.deal_id
             where p.workspace_id=${WS}
               and p.payment_date>=make_date(2020,1,1) and p.payment_date<make_date(2021,1,1)
             order by p.payment_date desc, dd.deal_code asc, p.id asc limit 50`,
@@ -281,7 +281,7 @@ async function main() {
     {
       label: "Payments · Deal ID lookup",
       sql: `select count(*) over() c, p.id
-            from public.payment p join public.deal dd on dd.id=p.deal_id
+            from commission.payment p join commission.deal dd on dd.id=p.deal_id
             where p.workspace_id=${WS} and dd.deal_code='D000500'
             order by p.payment_date desc limit 50`,
     },
@@ -293,9 +293,9 @@ async function main() {
       label: "Collectibles · text+year+status combined (GIN)",
       mustUseTrgm: true,
       sql: `select count(*) over() c, r.id, r.balance::text
-            from public.receivable r
+            from commission.receivable r
             where r.workspace_id=${WS} and r.booked_year=${BASE_YEAR} and r.status='closed'
-              and r.search_blob like '%' || public.zeta_search_needle('needlefind') || '%' escape '\\'
+              and r.search_blob like '%' || commission.zeta_search_needle('needlefind') || '%' escape '\\'
             order by r.balance desc, r.deal_code asc limit 50`,
     },
   ];
@@ -334,7 +334,7 @@ async function main() {
 
   // Projection staleness (< 5 s, Rule 16): a just-inserted payment is findable now.
   const anyDeal = dealIdByCode.get("D000001")!;
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   const before = await user.rpc("search_payments", { p_deal_code: "D000001", p_limit: 200 });
   const beforeN = (before.data as unknown[] | null)?.length ?? 0;
@@ -464,10 +464,10 @@ async function main() {
       const ins = await admin.from("deal").insert(more.slice(i, i + 500));
       if (ins.error) throw new Error(`seed trigram-scale deals: ${ins.error.message}`);
     }
-    await runSql(url, accessToken, "analyze public.deal;");
+    await runSql(url, accessToken, "analyze commission.deal;");
   }
   const scaleContains = `select count(*) over() c, d.id, dev.name, d.net_gci::text, d.booked_date
-        from public.deal d left join public.developer dev on dev.id=d.developer_id
+        from commission.deal d left join commission.developer dev on dev.id=d.developer_id
         where d.workspace_id=${WS} and ${contains}
         order by d.booked_date desc, d.deal_code asc limit 50`;
   const scale = await p95Of(scaleContains);

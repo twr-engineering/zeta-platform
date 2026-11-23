@@ -199,7 +199,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
@@ -255,16 +255,16 @@ async function main() {
   }
   console.log(`seeded ${N} deals + ${N} receivables across ${SOURCES} sources in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
   // --- server exec of the two parallel reads (machine-independent) -----------
   const recvExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT lead_source_id, deal_type, booked_year, status, booked_net_gci::text, collected_net::text, balance::text FROM public.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
+    ? await explainMs(url, accessToken, `SELECT lead_source_id, deal_type, booked_year, status, booked_net_gci::text, collected_net::text, balance::text FROM commission.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL`)
     : 0;
   const srcExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT id, name, archived_at, sort_order FROM public.lead_source WHERE workspace_id='${workspaceId}' ORDER BY sort_order`)
+    ? await explainMs(url, accessToken, `SELECT id, name, archived_at, sort_order FROM commission.lead_source WHERE workspace_id='${workspaceId}' ORDER BY sort_order`)
     : 0;
   const serverReadP95 = Math.max(recvExec, srcExec);
 

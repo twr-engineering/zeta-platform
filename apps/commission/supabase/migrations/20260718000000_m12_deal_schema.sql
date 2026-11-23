@@ -29,30 +29,30 @@
 -- M0's own tokens (property_vat_rule 'always_vat', developer_comm_base 'net').
 -- ---------------------------------------------------------------------------
 
-create type public.deal_transaction_type as enum ('sale', 'rental');
+create type commission.deal_transaction_type as enum ('sale', 'rental');
 
 -- Rental ⇒ 'n_a' (rule 12); the coupling is enforced as a CHECK below.
-create type public.deal_type as enum ('developer', 'resale', 'n_a');
+create type commission.deal_type as enum ('developer', 'resale', 'n_a');
 
-create type public.deal_representation as enum (
+create type commission.deal_representation as enum (
   'double_ended', 'seller', 'buyer', 'lessor', 'lessee', 'referrer'
 );
 
-create type public.deal_mode_of_payment as enum (
+create type commission.deal_mode_of_payment as enum (
   'cash', 'bank', 'pagibig', 'deferred_cash'
 );
 
 -- Col Q. The engine's CommissionInput discriminant ('percent' | 'fixed').
-create type public.deal_commission_basis as enum ('percent', 'fixed');
+create type commission.deal_commission_basis as enum ('percent', 'fixed');
 
 -- Col Y (blank = Yes, stored as NULL — M1 PRD §3.1 field 24).
-create type public.deal_incentive_taxable as enum ('yes', 'no');
+create type commission.deal_incentive_taxable as enum ('yes', 'no');
 
 -- Col O (computed, Rule A). Non-developer deals are always 'n_a'.
-create type public.deal_property_vat as enum ('vat_able', 'exempt', 'n_a');
+create type commission.deal_property_vat as enum ('vat_able', 'exempt', 'n_a');
 
 -- Col T (computed, Rule C). 'n_a' for any non-developer deal.
-create type public.deal_comm_base_display as enum ('gross', 'net', 'n_a');
+create type commission.deal_comm_base_display as enum ('gross', 'net', 'n_a');
 
 -- Col V (computed, Rule D). An INVARIANT, not a user choice: a taxable deal of a
 -- VAT-registered workspace is 'inclusive', everything else 'n_a'.
@@ -65,12 +65,12 @@ create type public.deal_comm_base_display as enum ('gross', 'net', 'n_a');
 -- payment snapshots stay coherent (M5 keys off it) and a future per-developer
 -- reintroduction is `alter type ... add value 'exclusive'` — a feature release,
 -- not a data migration.
-create type public.deal_vat_basis as enum ('inclusive', 'n_a');
+create type commission.deal_vat_basis as enum ('inclusive', 'n_a');
 
 -- Event log discriminant (M1 PRD FR-M1-08). Hard delete emits NO event: it is
 -- permitted only with zero financial children, so nothing downstream consumed
 -- the created event into durable state (see the write-path migration).
-create type public.deal_event_type as enum (
+create type commission.deal_event_type as enum (
   'created', 'updated', 'archived', 'restored'
 );
 
@@ -78,9 +78,9 @@ create type public.deal_event_type as enum (
 -- deal (M1 PRD §3.1)
 -- ---------------------------------------------------------------------------
 
-create table public.deal (
+create table commission.deal (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- Field 1 (col B) — permanent code. 'D' + zero-padded sequence value, assigned
   -- once at creation from workspace.deal_id_sequence, NEVER renumbered, NEVER
@@ -91,19 +91,19 @@ create table public.deal (
   -- --- Inputs (user-editable) — M1 PRD §3.1 (I) ---------------------------
 
   booked_date date not null,                                    -- 2 (col C)
-  transaction_type public.deal_transaction_type not null,       -- 3 (col D)
-  deal_type public.deal_type not null,                          -- 4 (col E)
-  developer_id uuid references public.developer (id),           -- 5 (col F)
+  transaction_type commission.deal_transaction_type not null,       -- 3 (col D)
+  deal_type commission.deal_type not null,                          -- 4 (col E)
+  developer_id uuid references commission.developer (id),           -- 5 (col F)
   client_name text not null,                                    -- 6 (col G)
-  representation public.deal_representation not null,           -- 7 (col H)
-  property_type_id uuid not null references public.property_type (id), -- 8 (col I)
-  lead_source_id uuid not null references public.lead_source (id),     -- 9 (col J)
+  representation commission.deal_representation not null,           -- 7 (col H)
+  property_type_id uuid not null references commission.property_type (id), -- 8 (col I)
+  lead_source_id uuid not null references commission.lead_source (id),     -- 9 (col J)
   property_details text not null,                               -- 10 (col K)
-  mode_of_payment public.deal_mode_of_payment not null,         -- 11 (col L)
+  mode_of_payment commission.deal_mode_of_payment not null,         -- 11 (col L)
   list_price numeric(14, 2) not null,                           -- 12 (col M)
   force_vat boolean not null default false,                     -- 13 (col N)
 
-  commission_basis public.deal_commission_basis not null,       -- 16 (col Q)
+  commission_basis commission.deal_commission_basis not null,       -- 16 (col Q)
 
   -- 17 (col R) — the ONLY non-numeric money-adjacent input, deliberately TEXT.
   -- Rentals store the exact fraction 1/12 (§4 rule 17), which no fixed-scale
@@ -120,7 +120,7 @@ create table public.deal (
   receipt_issued boolean not null default false,
 
   incentive_billed numeric(14, 2) not null default 0,           -- 23 (col X)
-  incentive_taxable public.deal_incentive_taxable,              -- 24 (col Y)
+  incentive_taxable commission.deal_incentive_taxable,              -- 24 (col Y)
   referral_out_pct numeric(10, 6) not null default 0,           -- 26 (col AA)
   referral_out_fixed numeric(14, 2) not null default 0,         -- 27 (col AB)
   referral_paid boolean not null default false,                 -- 30 (col AE)
@@ -128,10 +128,10 @@ create table public.deal (
   -- --- Computed (never user-edited) — the M1.1 engine's DealDerived (C) -----
   -- Persisted by the write path from computeDeal()'s output, verbatim.
 
-  property_vat public.deal_property_vat not null,               -- 14 (col O)
+  property_vat commission.deal_property_vat not null,               -- 14 (col O)
   net_list_price numeric(14, 2) not null,                       -- 15 (col P)
-  comm_base public.deal_comm_base_display not null,             -- 19 (col T)
-  vat_basis public.deal_vat_basis not null,                     -- 21 (col V)
+  comm_base commission.deal_comm_base_display not null,             -- 19 (col T)
+  vat_basis commission.deal_vat_basis not null,                     -- 21 (col V)
   -- Rule E intermediate (computed panel §6); persisted for the detail view and
   -- so M5's payment form can show what was billed without re-deriving.
   billed_commission numeric(14, 2) not null,
@@ -209,39 +209,39 @@ create table public.deal (
   )
 );
 
-comment on table public.deal is
+comment on table commission.deal is
   'M1 PRD §3.1. The system of record for closed deals; computed columns are the M1.1 engine''s output persisted verbatim. Written only through create_deal/update_deal/set_deal_archived/delete_deal (M0.2 one-function-per-mutation pattern).';
-comment on column public.deal.deal_code is
+comment on column commission.deal.deal_code is
   'Permanent per-workspace code (§4 rule 1). Assigned once from workspace.deal_id_sequence; the guard trigger rejects any change. Retired on deletion, never reused.';
-comment on column public.deal.rate_pct is
+comment on column commission.deal.rate_pct is
   'Commission rate as an exact string ("0.05" or the fraction "1/12"), consumed as-is by the engine. TEXT, not numeric, so the 1/12 rental rate is exact (§4 rule 17).';
-comment on column public.deal.vat_basis is
+comment on column commission.deal.vat_basis is
   'Rule D invariant. Only ''inclusive''/''n_a'' are representable; ''exclusive'' is reserved for a future per-developer reintroduction (OQ1) and cannot be stored.';
-comment on column public.deal.version is
+comment on column commission.deal.version is
   'Optimistic-lock counter. update_deal refuses a write whose expected version is stale (§8).';
 
 -- Per-workspace code uniqueness (§4 rule 1). The write path allocates
 -- monotonically so a collision is unreachable in the success path; the index is
 -- the guarantee under any race.
-create unique index deal_code_unique on public.deal (workspace_id, deal_code);
+create unique index deal_code_unique on commission.deal (workspace_id, deal_code);
 
 -- List default sort is booked_date desc (FR-M1-02); the active list excludes
 -- archived deals, so the common read is covered by this partial index.
 create index deal_list_idx
-  on public.deal (workspace_id, booked_date desc)
+  on commission.deal (workspace_id, booked_date desc)
   where archived_at is null;
 
 -- Year filter drives every downstream year view (§4 rule 19).
-create index deal_booked_year_idx on public.deal (workspace_id, booked_year);
+create index deal_booked_year_idx on commission.deal (workspace_id, booked_year);
 
--- The three FK indexes back app.*_reference_count (turned real in the write-path
+-- The three FK indexes back commission_private.*_reference_count (turned real in the write-path
 -- migration): a delete-protection check must not table-scan the deal log.
-create index deal_property_type_idx on public.deal (property_type_id);
-create index deal_developer_idx on public.deal (developer_id) where developer_id is not null;
-create index deal_lead_source_idx on public.deal (lead_source_id);
+create index deal_property_type_idx on commission.deal (property_type_id);
+create index deal_developer_idx on commission.deal (developer_id) where developer_id is not null;
+create index deal_lead_source_idx on commission.deal (lead_source_id);
 
 -- ---------------------------------------------------------------------------
--- app.deal_payment_count — the delete-protection / edit-friction hook (§4 rule 2)
+-- commission_private.deal_payment_count — the delete-protection / edit-friction hook (§4 rule 2)
 -- ---------------------------------------------------------------------------
 -- Defined BEFORE the RLS policies: the delete policy calls it, and Postgres
 -- resolves a policy's functions at CREATE POLICY time (the ordering trap the
@@ -252,10 +252,10 @@ create index deal_lead_source_idx on public.deal (lead_source_id);
 -- This is the ONE body M5 replaces to turn on delete protection, the archive
 -- cascade, and the edit-after-payments friction gate product-wide:
 --
---   select count(*) from public.payment where deal_id = p_id;
+--   select count(*) from commission.payment where deal_id = p_id;
 --
 -- `stable`, not immutable: the count changes as payments are written.
-create or replace function app.deal_payment_count(p_id uuid)
+create or replace function commission_private.deal_payment_count(p_id uuid)
 returns bigint
 language sql
 stable
@@ -263,10 +263,10 @@ security invoker
 set search_path = ''
 as $$ select 0::bigint $$;
 
-comment on function app.deal_payment_count is
+comment on function commission_private.deal_payment_count is
   'M1 §4 rule 2. Returns 0 until M5 has payments — replace the body with a count over payment.deal_id. Called by the deal DELETE policy and delete_deal, so protection tightens automatically.';
 
-alter table public.deal enable row level security;
+alter table commission.deal enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- RLS — tenant isolation is the RLS job (M0 rule 1), same shape as M0.3.
@@ -282,34 +282,34 @@ alter table public.deal enable row level security;
 -- payments removes nothing once M5 makes the count real.
 
 create policy "deal_select_member"
-  on public.deal for select
+  on commission.deal for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "deal_insert_member"
-  on public.deal for insert
+  on commission.deal for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "deal_update_member"
-  on public.deal for update
+  on commission.deal for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 -- Delete protection at the policy, not just the function (§4 rule 2): a deal with
 -- payments logged against it can never be hard-deleted, whatever the caller does.
--- app.deal_payment_count is 0 until M5 makes it real (mirrors M0.3's reference
+-- commission_private.deal_payment_count is 0 until M5 makes it real (mirrors M0.3's reference
 -- counts) — the moment M5 replaces the body, this policy starts refusing.
 create policy "deal_delete_childless"
-  on public.deal for delete
+  on commission.deal for delete
   to authenticated
   using (
-    app.is_workspace_member(workspace_id)
-    and app.deal_payment_count(id) = 0
+    commission_private.is_workspace_member(workspace_id)
+    and commission_private.deal_payment_count(id) = 0
   );
 
 -- ---------------------------------------------------------------------------
@@ -319,7 +319,7 @@ create policy "deal_delete_childless"
 -- deal_code, workspace_id, created_at and created_by are write-once. The update
 -- function never sets them, but the guarantee must not depend on the function
 -- being the only writer — a direct PATCH must not be able to renumber a deal.
-create or replace function app.reject_deal_identity_change()
+create or replace function commission_private.reject_deal_identity_change()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -338,15 +338,15 @@ end;
 $$;
 
 create trigger deal_identity_immutable
-  before update on public.deal
-  for each row execute function app.reject_deal_identity_change();
+  before update on commission.deal
+  for each row execute function commission_private.reject_deal_identity_change();
 
 create trigger deal_touch_updated_at
-  before update on public.deal
-  for each row execute function app.touch_updated_at();
+  before update on commission.deal
+  for each row execute function commission_private.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
--- app.deal_snapshot — the LOCKED event payload shape (FR-M1-08)
+-- commission_private.deal_snapshot — the LOCKED event payload shape (FR-M1-08)
 -- ---------------------------------------------------------------------------
 
 -- The single definition of what a deal event carries. M4 (receivable upsert),
@@ -355,7 +355,7 @@ create trigger deal_touch_updated_at
 -- add keys, never rename or drop one. Money is ::text — exact decimal strings,
 -- never JSON floats (Master PRD §4.3), the same discipline as every ::text
 -- select. Documented for downstream in the M1.2 handoff.
-create or replace function app.deal_snapshot(d public.deal)
+create or replace function commission_private.deal_snapshot(d commission.deal)
 returns jsonb
 language sql
 immutable
@@ -399,7 +399,7 @@ as $$
   )
 $$;
 
-comment on function app.deal_snapshot is
+comment on function commission_private.deal_snapshot is
   'FR-M1-08. The locked deal-event payload shape (money as ::text). M4/M5/M2 read these keys; the OLD snapshot on an update is what M2/M4 restate against. Add keys, never rename/drop.';
 
 -- ---------------------------------------------------------------------------
@@ -412,9 +412,9 @@ comment on function app.deal_snapshot is
 -- segment aggregates, M5 reads join data — and a shared consumed stamp cannot
 -- serve them all. So this is an immutable append-only log; each consumer tracks
 -- its own cursor (M4.1/M2.2 define theirs). Nothing here is ever updated.
-create table public.deal_event (
+create table commission.deal_event (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   -- FK-free actor, pinned to auth.uid() by RLS — same reasoning as
   -- audit_log_entry.actor_user_id: the trail outlives the account.
@@ -424,10 +424,10 @@ create table public.deal_event (
   -- children (nothing consumed the created event into durable downstream state),
   -- so its events go with it. A soft-deleted (archived) deal keeps its row and
   -- therefore its events.
-  deal_id uuid not null references public.deal (id) on delete cascade,
+  deal_id uuid not null references commission.deal (id) on delete cascade,
   deal_code text not null,
 
-  event_type public.deal_event_type not null,
+  event_type commission.deal_event_type not null,
 
   -- created  → old NULL,      new snapshot
   -- updated  → old snapshot,  new snapshot,  field_changes = the money/input diff
@@ -439,7 +439,7 @@ create table public.deal_event (
 
   -- The audit entry written in the same transaction — every event has its
   -- human-readable counterpart (rule 12) and vice versa.
-  audit_entry_id uuid not null references public.audit_log_entry (id) on delete cascade,
+  audit_entry_id uuid not null references commission.audit_log_entry (id) on delete cascade,
 
   occurred_at timestamptz not null default now(),
 
@@ -453,32 +453,32 @@ create table public.deal_event (
   )
 );
 
-comment on table public.deal_event is
-  'FR-M1-08 append-only event log. created/updated/archived/restored carry old+new snapshots (app.deal_snapshot). Consumed by M4/M2/M5 via their own cursors — never mutated.';
+comment on table commission.deal_event is
+  'FR-M1-08 append-only event log. created/updated/archived/restored carry old+new snapshots (commission_private.deal_snapshot). Consumed by M4/M2/M5 via their own cursors — never mutated.';
 
-create index deal_event_workspace_idx on public.deal_event (workspace_id, occurred_at);
-create index deal_event_deal_idx on public.deal_event (workspace_id, deal_id, occurred_at);
-create index deal_event_type_idx on public.deal_event (workspace_id, event_type, occurred_at);
+create index deal_event_workspace_idx on commission.deal_event (workspace_id, occurred_at);
+create index deal_event_deal_idx on commission.deal_event (workspace_id, deal_id, occurred_at);
+create index deal_event_type_idx on commission.deal_event (workspace_id, event_type, occurred_at);
 
-alter table public.deal_event enable row level security;
+alter table commission.deal_event enable row level security;
 
 create policy "deal_event_select_member"
-  on public.deal_event for select
+  on commission.deal_event for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "deal_event_insert_member"
-  on public.deal_event for insert
+  on commission.deal_event for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and actor_user_id = (select auth.uid())
   );
 
 -- Append-only: no UPDATE/DELETE policy for authenticated, and a trigger binds
 -- every role (service_role bypasses policies) — same guarantee as audit_log.
 -- DELETE is left to the workspace/deal cascade; the trigger blocks UPDATE only.
-create or replace function app.reject_deal_event_mutation()
+create or replace function commission_private.reject_deal_event_mutation()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -491,5 +491,5 @@ end;
 $$;
 
 create trigger deal_event_is_append_only
-  before update on public.deal_event
-  for each row execute function app.reject_deal_event_mutation();
+  before update on commission.deal_event
+  for each row execute function commission_private.reject_deal_event_mutation();

@@ -60,7 +60,7 @@ if (!URL_ || URL_ === "PLACEHOLDER_PENDING_CREDENTIALS" || !SERVICE || !ANON) {
   process.exit(0);
 }
 
-const admin = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+const admin = createClient(URL_, SERVICE, { db: { schema: "commission" }, auth: { persistSession: false } });
 type Client = ReturnType<typeof createClient>;
 
 const fails: string[] = [];
@@ -74,7 +74,7 @@ async function makeUser(tag: string): Promise<{ uid: string; user: Client }> {
   const password = "throwaway-m23-pw";
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error) throw created.error;
-  const user = createClient(URL_, ANON, { auth: { persistSession: false } });
+  const user = createClient(URL_, ANON, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email, password });
   if (signIn.error) throw signIn.error;
   return { uid: created.data.user!.id, user };
@@ -212,10 +212,10 @@ async function main() {
   }
   const wallP95 = p95(durations);
   const cellsExec = await explainMs(
-    `SELECT segment, booked_year, deal_count, volume_sum::text, gci_sum::text, incentive_net_sum::text, referral_out_sum::text FROM public.yield_aggregate WHERE workspace_id='${workspaceId}' ORDER BY segment, booked_year`
+    `SELECT segment, booked_year, deal_count, volume_sum::text, gci_sum::text, incentive_net_sum::text, referral_out_sum::text FROM commission.yield_aggregate WHERE workspace_id='${workspaceId}' ORDER BY segment, booked_year`
   );
   const verExec = await explainMs(
-    `SELECT basis_version, computed_at FROM public.yield_basis_version WHERE workspace_id='${workspaceId}'`
+    `SELECT basis_version, computed_at FROM commission.yield_basis_version WHERE workspace_id='${workspaceId}'`
   );
   const serverExec = cellsExec !== null && verExec !== null ? Math.max(cellsExec, verExec) : null;
   console.log(`\n-- PERF (PlanningBasis read) --`);

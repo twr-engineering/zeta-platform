@@ -25,7 +25,7 @@
 -- M0 §3.4. Sheet: "Threshold = exempt if List price <= VAT threshold, else
 -- VAT-able. Always VAT / Always Exempt ignore price." The comparison M1 inherits
 -- is strictly "above threshold => VAT-able" (rule 4).
-create type public.property_vat_rule as enum (
+create type commission.property_vat_rule as enum (
   'threshold',
   'always_vat',
   'always_exempt'
@@ -33,18 +33,18 @@ create type public.property_vat_rule as enum (
 
 -- M0 §3.5. Sheet: "Gross (rate applies to gross TCP, e.g. Megaworld) or Net
 -- (net-of-VAT price). Default Net."
-create type public.developer_comm_base as enum ('gross', 'net');
+create type commission.developer_comm_base as enum ('gross', 'net');
 
 -- ---------------------------------------------------------------------------
 -- property_type (M0 §3.4)
 -- ---------------------------------------------------------------------------
 
-create table public.property_type (
+create table commission.property_type (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   name text not null,
-  vat_rule public.property_vat_rule not null,
+  vat_rule commission.property_vat_rule not null,
 
   -- Soft delete (M0 §3, rule 5): an archived type leaves the M1 dropdown and
   -- keeps every deal that references it computing exactly as before.
@@ -69,9 +69,9 @@ create table public.property_type (
   constraint property_type_name_max_len check (char_length(name) <= 80)
 );
 
-comment on table public.property_type is
+comment on table commission.property_type is
   'M0 §3.4. Feeds M1''s Type dropdown; vat_rule decides Property VAT (RR 1-2024). Seeded only by the M0.3 offer flow or M1''s importer — never silently (rule 11).';
-comment on column public.property_type.archived_at is
+comment on column commission.property_type.archived_at is
   'Rule 5: archived types leave dropdowns and keep history. A referenced type can only ever be archived, never hard-deleted.';
 
 -- Rule 7, enforced by the database rather than by the write path: the functions
@@ -82,26 +82,26 @@ comment on column public.property_type.archived_at is
 -- rename-propagation (rule 6) ambiguous. Re-adding an archived name is a
 -- RESTORE, and the create path says so.
 create unique index property_type_name_unique
-  on public.property_type (workspace_id, lower(name));
+  on commission.property_type (workspace_id, lower(name));
 
 -- The dropdown read (FR-M0-07: active items only).
 create index property_type_active_idx
-  on public.property_type (workspace_id, name)
+  on commission.property_type (workspace_id, name)
   where archived_at is null;
 
-alter table public.property_type enable row level security;
+alter table commission.property_type enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- developer (M0 §3.5)
 -- ---------------------------------------------------------------------------
 
-create table public.developer (
+create table commission.developer (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   name text not null,
   -- Default Net per §3.5 and the sheet's own note.
-  comm_base public.developer_comm_base not null default 'net',
+  comm_base commission.developer_comm_base not null default 'net',
 
   archived_at timestamptz,
   created_by uuid,
@@ -114,25 +114,25 @@ create table public.developer (
   constraint developer_name_max_len check (char_length(name) <= 120)
 );
 
-comment on table public.developer is
+comment on table commission.developer is
   'M0 §3.5. comm_base drives M1''s Comm Base column. Changing it is a rule-8 confirmed-recompute: it restates every deal booked against this developer.';
 
 create unique index developer_name_unique
-  on public.developer (workspace_id, lower(name));
+  on commission.developer (workspace_id, lower(name));
 
 create index developer_active_idx
-  on public.developer (workspace_id, name)
+  on commission.developer (workspace_id, name)
   where archived_at is null;
 
-alter table public.developer enable row level security;
+alter table commission.developer enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- lead_source (M0 §3.6)
 -- ---------------------------------------------------------------------------
 
-create table public.lead_source (
+create table commission.lead_source (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspace (id) on delete cascade,
+  workspace_id uuid not null references commission.workspace (id) on delete cascade,
 
   name text not null,
 
@@ -155,18 +155,18 @@ create table public.lead_source (
   constraint lead_source_sort_order_positive check (sort_order >= 1)
 );
 
-comment on table public.lead_source is
+comment on table commission.lead_source is
   'M0 §3.6. Feeds M1''s Source dropdown and M7''s Source Performance report. The sheet caps at 50 rows; there is no hard cap here — M0.3 warns past 50 so M7 stays legible (PRD open question 4: warning only).';
-comment on column public.lead_source.sort_order is
+comment on column commission.lead_source.sort_order is
   'Dense 1..N across the workspace''s rows, archived included. Maintained by reorder_lead_source; never unique (see the table definition).';
 
 create unique index lead_source_name_unique
-  on public.lead_source (workspace_id, lower(name));
+  on commission.lead_source (workspace_id, lower(name));
 
 create index lead_source_order_idx
-  on public.lead_source (workspace_id, sort_order);
+  on commission.lead_source (workspace_id, sort_order);
 
-alter table public.lead_source enable row level security;
+alter table commission.lead_source enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- Reference counts — the one thing M1 must implement (rule 5)
@@ -182,11 +182,11 @@ alter table public.lead_source enable row level security;
 -- count column in the UI and the blocked-delete audit trail all start carrying
 -- real counts with no other edit. M1 replaces each body with, e.g.:
 --
---   select count(*) from public.deal where property_type_id = p_id;
+--   select count(*) from commission.deal where property_type_id = p_id;
 --
 -- `stable` (not immutable): the count changes as deals are written, and an
 -- immutable marking would license the planner to cache it across statements.
-create or replace function app.property_type_reference_count(p_id uuid)
+create or replace function commission_private.property_type_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
@@ -194,7 +194,7 @@ security invoker
 set search_path = ''
 as $$ select 0::bigint $$;
 
-create or replace function app.developer_reference_count(p_id uuid)
+create or replace function commission_private.developer_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
@@ -202,7 +202,7 @@ security invoker
 set search_path = ''
 as $$ select 0::bigint $$;
 
-create or replace function app.lead_source_reference_count(p_id uuid)
+create or replace function commission_private.lead_source_reference_count(p_id uuid)
 returns bigint
 language sql
 stable
@@ -210,7 +210,7 @@ security invoker
 set search_path = ''
 as $$ select 0::bigint $$;
 
-comment on function app.property_type_reference_count is
+comment on function commission_private.property_type_reference_count is
   'M0 rule 5. Returns 0 until M1 has deals — replace the body with a count over deal.property_type_id. Called by RLS, so the delete policy tightens automatically.';
 
 -- ---------------------------------------------------------------------------
@@ -231,128 +231,128 @@ comment on function app.property_type_reference_count is
 -- FR-M0-04/05/06 require the unreferenced delete to work.
 
 create policy "property_type_select_member"
-  on public.property_type for select
+  on commission.property_type for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "property_type_insert_member"
-  on public.property_type for insert
+  on commission.property_type for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "property_type_update_member"
-  on public.property_type for update
+  on commission.property_type for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "property_type_delete_unreferenced"
-  on public.property_type for delete
+  on commission.property_type for delete
   to authenticated
   using (
-    app.is_workspace_member(workspace_id)
-    and app.property_type_reference_count(id) = 0
+    commission_private.is_workspace_member(workspace_id)
+    and commission_private.property_type_reference_count(id) = 0
   );
 
 create policy "developer_select_member"
-  on public.developer for select
+  on commission.developer for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "developer_insert_member"
-  on public.developer for insert
+  on commission.developer for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "developer_update_member"
-  on public.developer for update
+  on commission.developer for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "developer_delete_unreferenced"
-  on public.developer for delete
+  on commission.developer for delete
   to authenticated
   using (
-    app.is_workspace_member(workspace_id)
-    and app.developer_reference_count(id) = 0
+    commission_private.is_workspace_member(workspace_id)
+    and commission_private.developer_reference_count(id) = 0
   );
 
 create policy "lead_source_select_member"
-  on public.lead_source for select
+  on commission.lead_source for select
   to authenticated
-  using (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id));
 
 create policy "lead_source_insert_member"
-  on public.lead_source for insert
+  on commission.lead_source for insert
   to authenticated
   with check (
-    app.is_workspace_member(workspace_id)
+    commission_private.is_workspace_member(workspace_id)
     and created_by = (select auth.uid())
   );
 
 create policy "lead_source_update_member"
-  on public.lead_source for update
+  on commission.lead_source for update
   to authenticated
-  using (app.is_workspace_member(workspace_id))
-  with check (app.is_workspace_member(workspace_id));
+  using (commission_private.is_workspace_member(workspace_id))
+  with check (commission_private.is_workspace_member(workspace_id));
 
 create policy "lead_source_delete_unreferenced"
-  on public.lead_source for delete
+  on commission.lead_source for delete
   to authenticated
   using (
-    app.is_workspace_member(workspace_id)
-    and app.lead_source_reference_count(id) = 0
+    commission_private.is_workspace_member(workspace_id)
+    and commission_private.lead_source_reference_count(id) = 0
   );
 
 create trigger property_type_touch_updated_at
-  before update on public.property_type
-  for each row execute function app.touch_updated_at();
+  before update on commission.property_type
+  for each row execute function commission_private.touch_updated_at();
 
 create trigger developer_touch_updated_at
-  before update on public.developer
-  for each row execute function app.touch_updated_at();
+  before update on commission.developer
+  for each row execute function commission_private.touch_updated_at();
 
 create trigger lead_source_touch_updated_at
-  before update on public.lead_source
-  for each row execute function app.touch_updated_at();
+  before update on commission.lead_source
+  for each row execute function commission_private.touch_updated_at();
 
 -- ---------------------------------------------------------------------------
--- app.current_workspace_id — the caller's tenant, from the database's own view
+-- commission_private.current_workspace_id — the caller's tenant, from the database's own view
 -- ---------------------------------------------------------------------------
 
 -- v1 is one workspace per agent (M0 §3.1), and RLS narrows `workspace` to the
 -- caller's own row. Reading it here rather than accepting a p_workspace_id
 -- parameter keeps the tenant unforgeable for the same reason the actor is:
 -- there is nothing to forge.
-create or replace function app.current_workspace_id()
+create or replace function commission_private.current_workspace_id()
 returns uuid
 language sql
 stable
 security invoker
 set search_path = ''
-as $$ select id from public.workspace limit 1 $$;
+as $$ select id from commission.workspace limit 1 $$;
 
 -- Dense renumbering of a workspace's lead sources, preserving relative order.
 -- Defined before its callers: SQL-language bodies are validated at CREATE time,
 -- which is the ordering trap the foundation migrations already hit once.
-create or replace function app.renumber_lead_sources(p_workspace_id uuid)
+create or replace function commission_private.renumber_lead_sources(p_workspace_id uuid)
 returns void
 language sql
 security invoker
 set search_path = ''
 as $$
-  update public.lead_source ls
+  update commission.lead_source ls
   set sort_order = o.rn
   from (
     select id, row_number() over (order by sort_order, created_at) as rn
-    from public.lead_source
+    from commission.lead_source
     where workspace_id = p_workspace_id
   ) o
   where ls.id = o.id and ls.sort_order is distinct from o.rn::integer;
@@ -362,9 +362,9 @@ $$;
 -- property_type mutations (FR-M0-04)
 -- ---------------------------------------------------------------------------
 
-create or replace function public.create_property_type(
+create or replace function commission.create_property_type(
   p_name text,
-  p_vat_rule public.property_vat_rule
+  p_vat_rule commission.property_vat_rule
 )
 returns jsonb
 language plpgsql
@@ -374,8 +374,8 @@ as $$
 declare
   v_workspace_id uuid;
   v_name text := btrim(coalesce(p_name, ''));
-  v_existing public.property_type;
-  v_row public.property_type;
+  v_existing commission.property_type;
+  v_row commission.property_type;
   v_audit_id uuid;
 begin
   if (select auth.uid()) is null then
@@ -386,7 +386,7 @@ begin
     raise exception 'a property type needs a name' using errcode = '23514';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -396,7 +396,7 @@ begin
   -- archived collision is a different answer ("restore it") from an active one
   -- ("you already have this"), and the agent deserves the right one.
   select * into v_existing
-  from public.property_type
+  from commission.property_type
   where workspace_id = v_workspace_id and lower(name) = lower(v_name)
   limit 1;
 
@@ -409,13 +409,13 @@ begin
     );
   end if;
 
-  insert into public.property_type (workspace_id, name, vat_rule, created_by, updated_by)
+  insert into commission.property_type (workspace_id, name, vat_rule, created_by, updated_by)
   values (v_workspace_id, v_name, p_vat_rule, (select auth.uid()), (select auth.uid()))
   returning * into v_row;
 
   -- old = null on a create: the field went from not existing to a value, and
   -- the trail should read that way rather than inventing an empty string.
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_workspace_id, 'property_type', v_row.id, 'create',
     jsonb_build_object(
       'name', jsonb_build_object('old', null, 'new', v_row.name),
@@ -443,10 +443,10 @@ $$;
 -- A RENAME IS NOT a restatement (rule 6): deals reference this row by id, so a
 -- rename propagates to every display and aggregates under one bucket in M7 with
 -- no number moving.
-create or replace function public.update_property_type(
+create or replace function commission.update_property_type(
   p_id uuid,
   p_name text default null,
-  p_vat_rule public.property_vat_rule default null,
+  p_vat_rule commission.property_vat_rule default null,
   p_affected_deal_count integer default 0
 )
 returns jsonb
@@ -455,8 +455,8 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.property_type;
-  v_after public.property_type;
+  v_before commission.property_type;
+  v_after commission.property_type;
   v_name text := nullif(btrim(coalesce(p_name, '')), '');
   v_changes jsonb := '{}'::jsonb;
   v_restating jsonb := '{}'::jsonb;
@@ -476,14 +476,14 @@ begin
   -- not found — never a 200 with someone else's data (AC9). FOR UPDATE locks the
   -- row so the diff cannot race a concurrent save and record an old→new pair
   -- that never existed.
-  select * into v_before from public.property_type where id = p_id for update;
+  select * into v_before from commission.property_type where id = p_id for update;
   if not found then
     raise exception 'property type not found' using errcode = 'no_data_found';
   end if;
 
   if v_name is not null then
     select id into v_existing_id
-    from public.property_type
+    from commission.property_type
     where workspace_id = v_before.workspace_id
       and lower(name) = lower(v_name)
       and id <> p_id
@@ -494,7 +494,7 @@ begin
     end if;
   end if;
 
-  update public.property_type set
+  update commission.property_type set
     name = coalesce(v_name, name),
     vat_rule = coalesce(p_vat_rule, vat_rule),
     updated_by = (select auth.uid())
@@ -521,12 +521,12 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_after.id, 'name', v_after.name);
   end if;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'property_type', v_after.id, 'update', v_changes
   );
 
   if v_restating <> '{}'::jsonb then
-    insert into public.settings_change_event (
+    insert into commission.settings_change_event (
       workspace_id, actor_user_id, entity_type, entity_id,
       field_changes, affected_deal_count, audit_entry_id
     )
@@ -550,7 +550,7 @@ $$;
 -- and computes exactly as before. Rule 9 reserves gates for destructive and
 -- money-restating acts, and gating an ordinary toggle trains the agent to click
 -- through without reading.
-create or replace function public.set_property_type_archived(
+create or replace function commission.set_property_type_archived(
   p_id uuid,
   p_archived boolean
 )
@@ -560,14 +560,14 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.property_type;
-  v_after public.property_type;
+  v_before commission.property_type;
+  v_after commission.property_type;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.property_type where id = p_id for update;
+  select * into v_before from commission.property_type where id = p_id for update;
   if not found then
     raise exception 'property type not found' using errcode = 'no_data_found';
   end if;
@@ -576,15 +576,15 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_before.id, 'name', v_before.name);
   end if;
 
-  update public.property_type
+  update commission.property_type
   set archived_at = case when p_archived then now() else null end,
       updated_by = (select auth.uid())
   where id = p_id
   returning * into v_after;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_before.workspace_id, 'property_type', v_after.id,
-    case when p_archived then 'archive' else 'restore' end::public.audit_action,
+    case when p_archived then 'archive' else 'restore' end::commission.audit_action,
     jsonb_build_object(
       'name', jsonb_build_object('old', v_before.name, 'new', v_after.name),
       'archived_at', jsonb_build_object(
@@ -607,14 +607,14 @@ $$;
 -- refusal is a value, not an error, and the transaction commits with the trail
 -- intact. The DELETE policy is the actual enforcement; this is the part that
 -- explains itself to the agent and offers Archive instead (AC4).
-create or replace function public.delete_property_type(p_id uuid)
+create or replace function commission.delete_property_type(p_id uuid)
 returns jsonb
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_row public.property_type;
+  v_row commission.property_type;
   v_count bigint;
   v_deleted uuid;
 begin
@@ -622,17 +622,17 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_row from public.property_type where id = p_id for update;
+  select * into v_row from commission.property_type where id = p_id for update;
   if not found then
     raise exception 'property type not found' using errcode = 'no_data_found';
   end if;
 
-  v_count := app.property_type_reference_count(p_id);
+  v_count := commission_private.property_type_reference_count(p_id);
 
   if v_count > 0 then
     -- old = new: nothing moved. This entry records an ATTEMPT and the state that
     -- refused it, which is why the viewer renders equal pairs as a single value.
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_row.workspace_id, 'property_type', v_row.id, 'delete_blocked',
       jsonb_build_object(
         'name', jsonb_build_object('old', v_row.name, 'new', v_row.name),
@@ -646,7 +646,7 @@ begin
     );
   end if;
 
-  delete from public.property_type where id = p_id returning id into v_deleted;
+  delete from commission.property_type where id = p_id returning id into v_deleted;
 
   -- The policy disagreed with the count — i.e. M1 wired a real count into one
   -- and not the other. Fail loudly rather than reporting a delete that did not
@@ -656,7 +656,7 @@ begin
       using errcode = 'restrict_violation';
   end if;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_row.workspace_id, 'property_type', v_row.id, 'delete',
     jsonb_build_object(
       'name', jsonb_build_object('old', v_row.name, 'new', null),
@@ -672,9 +672,9 @@ $$;
 -- developer mutations (FR-M0-05)
 -- ---------------------------------------------------------------------------
 
-create or replace function public.create_developer(
+create or replace function commission.create_developer(
   p_name text,
-  p_comm_base public.developer_comm_base default 'net'
+  p_comm_base commission.developer_comm_base default 'net'
 )
 returns jsonb
 language plpgsql
@@ -684,8 +684,8 @@ as $$
 declare
   v_workspace_id uuid;
   v_name text := btrim(coalesce(p_name, ''));
-  v_existing public.developer;
-  v_row public.developer;
+  v_existing commission.developer;
+  v_row commission.developer;
   v_audit_id uuid;
 begin
   if (select auth.uid()) is null then
@@ -696,13 +696,13 @@ begin
     raise exception 'a developer needs a name' using errcode = '23514';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select * into v_existing
-  from public.developer
+  from commission.developer
   where workspace_id = v_workspace_id and lower(name) = lower(v_name)
   limit 1;
 
@@ -715,11 +715,11 @@ begin
     );
   end if;
 
-  insert into public.developer (workspace_id, name, comm_base, created_by, updated_by)
+  insert into commission.developer (workspace_id, name, comm_base, created_by, updated_by)
   values (v_workspace_id, v_name, coalesce(p_comm_base, 'net'), (select auth.uid()), (select auth.uid()))
   returning * into v_row;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_workspace_id, 'developer', v_row.id, 'create',
     jsonb_build_object(
       'name', jsonb_build_object('old', null, 'new', v_row.name),
@@ -738,10 +738,10 @@ $$;
 -- (with rule-3 confirmation), mirroring the sheet's live lookup." That is the
 -- settings_change_event emitted below — the queue M1 drains. The sheet does this
 -- live and silently; the whole point of the queue is that the SaaS does not.
-create or replace function public.update_developer(
+create or replace function commission.update_developer(
   p_id uuid,
   p_name text default null,
-  p_comm_base public.developer_comm_base default null,
+  p_comm_base commission.developer_comm_base default null,
   p_affected_deal_count integer default 0
 )
 returns jsonb
@@ -750,8 +750,8 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.developer;
-  v_after public.developer;
+  v_before commission.developer;
+  v_after commission.developer;
   v_name text := nullif(btrim(coalesce(p_name, '')), '');
   v_changes jsonb := '{}'::jsonb;
   v_restating jsonb := '{}'::jsonb;
@@ -767,14 +767,14 @@ begin
     raise exception 'a developer needs a name' using errcode = '23514';
   end if;
 
-  select * into v_before from public.developer where id = p_id for update;
+  select * into v_before from commission.developer where id = p_id for update;
   if not found then
     raise exception 'developer not found' using errcode = 'no_data_found';
   end if;
 
   if v_name is not null then
     select id into v_existing_id
-    from public.developer
+    from commission.developer
     where workspace_id = v_before.workspace_id
       and lower(name) = lower(v_name)
       and id <> p_id
@@ -785,7 +785,7 @@ begin
     end if;
   end if;
 
-  update public.developer set
+  update commission.developer set
     name = coalesce(v_name, name),
     comm_base = coalesce(p_comm_base, comm_base),
     updated_by = (select auth.uid())
@@ -808,12 +808,12 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_after.id, 'name', v_after.name);
   end if;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'developer', v_after.id, 'update', v_changes
   );
 
   if v_restating <> '{}'::jsonb then
-    insert into public.settings_change_event (
+    insert into commission.settings_change_event (
       workspace_id, actor_user_id, entity_type, entity_id,
       field_changes, affected_deal_count, audit_entry_id
     )
@@ -832,7 +832,7 @@ begin
 end;
 $$;
 
-create or replace function public.set_developer_archived(
+create or replace function commission.set_developer_archived(
   p_id uuid,
   p_archived boolean
 )
@@ -842,14 +842,14 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.developer;
-  v_after public.developer;
+  v_before commission.developer;
+  v_after commission.developer;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.developer where id = p_id for update;
+  select * into v_before from commission.developer where id = p_id for update;
   if not found then
     raise exception 'developer not found' using errcode = 'no_data_found';
   end if;
@@ -858,15 +858,15 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_before.id, 'name', v_before.name);
   end if;
 
-  update public.developer
+  update commission.developer
   set archived_at = case when p_archived then now() else null end,
       updated_by = (select auth.uid())
   where id = p_id
   returning * into v_after;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_before.workspace_id, 'developer', v_after.id,
-    case when p_archived then 'archive' else 'restore' end::public.audit_action,
+    case when p_archived then 'archive' else 'restore' end::commission.audit_action,
     jsonb_build_object(
       'name', jsonb_build_object('old', v_before.name, 'new', v_after.name),
       'archived_at', jsonb_build_object(
@@ -881,14 +881,14 @@ begin
 end;
 $$;
 
-create or replace function public.delete_developer(p_id uuid)
+create or replace function commission.delete_developer(p_id uuid)
 returns jsonb
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_row public.developer;
+  v_row commission.developer;
   v_count bigint;
   v_deleted uuid;
 begin
@@ -896,15 +896,15 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_row from public.developer where id = p_id for update;
+  select * into v_row from commission.developer where id = p_id for update;
   if not found then
     raise exception 'developer not found' using errcode = 'no_data_found';
   end if;
 
-  v_count := app.developer_reference_count(p_id);
+  v_count := commission_private.developer_reference_count(p_id);
 
   if v_count > 0 then
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_row.workspace_id, 'developer', v_row.id, 'delete_blocked',
       jsonb_build_object(
         'name', jsonb_build_object('old', v_row.name, 'new', v_row.name),
@@ -918,14 +918,14 @@ begin
     );
   end if;
 
-  delete from public.developer where id = p_id returning id into v_deleted;
+  delete from commission.developer where id = p_id returning id into v_deleted;
 
   if v_deleted is null then
     raise exception 'developer % could not be deleted: it is still referenced', p_id
       using errcode = 'restrict_violation';
   end if;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_row.workspace_id, 'developer', v_row.id, 'delete',
     jsonb_build_object(
       'name', jsonb_build_object('old', v_row.name, 'new', null),
@@ -941,7 +941,7 @@ $$;
 -- lead_source mutations (FR-M0-06)
 -- ---------------------------------------------------------------------------
 
-create or replace function public.create_lead_source(p_name text)
+create or replace function commission.create_lead_source(p_name text)
 returns jsonb
 language plpgsql
 security invoker
@@ -950,8 +950,8 @@ as $$
 declare
   v_workspace_id uuid;
   v_name text := btrim(coalesce(p_name, ''));
-  v_existing public.lead_source;
-  v_row public.lead_source;
+  v_existing commission.lead_source;
+  v_row commission.lead_source;
   v_audit_id uuid;
 begin
   if (select auth.uid()) is null then
@@ -962,13 +962,13 @@ begin
     raise exception 'a lead source needs a name' using errcode = '23514';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
 
   select * into v_existing
-  from public.lead_source
+  from commission.lead_source
   where workspace_id = v_workspace_id and lower(name) = lower(v_name)
   limit 1;
 
@@ -983,15 +983,15 @@ begin
 
   -- New sources land at the end of the agent's own ordering, which is where
   -- someone adding a row expects to find it.
-  insert into public.lead_source (workspace_id, name, sort_order, created_by, updated_by)
+  insert into commission.lead_source (workspace_id, name, sort_order, created_by, updated_by)
   values (
     v_workspace_id, v_name,
-    coalesce((select max(sort_order) from public.lead_source where workspace_id = v_workspace_id), 0) + 1,
+    coalesce((select max(sort_order) from commission.lead_source where workspace_id = v_workspace_id), 0) + 1,
     (select auth.uid()), (select auth.uid())
   )
   returning * into v_row;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_workspace_id, 'lead_source', v_row.id, 'create',
     jsonb_build_object('name', jsonb_build_object('old', null, 'new', v_row.name))
   );
@@ -1001,7 +1001,7 @@ begin
     'sort_order', v_row.sort_order, 'audit_entry_id', v_audit_id,
     -- The sheet's 50-row cap is a warning here, not a limit (PRD open question
     -- 4). The count is returned so the caller need not ask again.
-    'total', (select count(*) from public.lead_source where workspace_id = v_workspace_id)
+    'total', (select count(*) from commission.lead_source where workspace_id = v_workspace_id)
   );
 end;
 $$;
@@ -1009,7 +1009,7 @@ $$;
 -- A lead source has no money-bearing field: renaming is rule 6 (propagates by
 -- id, aggregates under one row in M7 with no orphan bucket), so nothing here
 -- restates and nothing is gated.
-create or replace function public.update_lead_source(
+create or replace function commission.update_lead_source(
   p_id uuid,
   p_name text
 )
@@ -1019,8 +1019,8 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.lead_source;
-  v_after public.lead_source;
+  v_before commission.lead_source;
+  v_after commission.lead_source;
   v_name text := btrim(coalesce(p_name, ''));
   v_existing_id uuid;
   v_audit_id uuid;
@@ -1033,13 +1033,13 @@ begin
     raise exception 'a lead source needs a name' using errcode = '23514';
   end if;
 
-  select * into v_before from public.lead_source where id = p_id for update;
+  select * into v_before from commission.lead_source where id = p_id for update;
   if not found then
     raise exception 'lead source not found' using errcode = 'no_data_found';
   end if;
 
   select id into v_existing_id
-  from public.lead_source
+  from commission.lead_source
   where workspace_id = v_before.workspace_id
     and lower(name) = lower(v_name)
     and id <> p_id
@@ -1053,12 +1053,12 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_before.id, 'name', v_before.name);
   end if;
 
-  update public.lead_source
+  update commission.lead_source
   set name = v_name, updated_by = (select auth.uid())
   where id = p_id
   returning * into v_after;
 
-  v_audit_id := app.write_audit_entry(
+  v_audit_id := commission_private.write_audit_entry(
     v_before.workspace_id, 'lead_source', v_after.id, 'update',
     jsonb_build_object('name', jsonb_build_object('old', v_before.name, 'new', v_after.name))
   );
@@ -1070,7 +1070,7 @@ begin
 end;
 $$;
 
-create or replace function public.set_lead_source_archived(
+create or replace function commission.set_lead_source_archived(
   p_id uuid,
   p_archived boolean
 )
@@ -1080,14 +1080,14 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_before public.lead_source;
-  v_after public.lead_source;
+  v_before commission.lead_source;
+  v_after commission.lead_source;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_before from public.lead_source where id = p_id for update;
+  select * into v_before from commission.lead_source where id = p_id for update;
   if not found then
     raise exception 'lead source not found' using errcode = 'no_data_found';
   end if;
@@ -1096,7 +1096,7 @@ begin
     return jsonb_build_object('ok', true, 'changed', false, 'id', v_before.id, 'name', v_before.name);
   end if;
 
-  update public.lead_source
+  update commission.lead_source
   set archived_at = case when p_archived then now() else null end,
       updated_by = (select auth.uid())
   where id = p_id
@@ -1105,9 +1105,9 @@ begin
   -- Rule 6 / prompt edge case 18: an archived source must never orphan deals —
   -- M7 keeps them as an "(inactive)" bucket, which is why this soft-deletes and
   -- the reporting read (FR-M0-07) returns archived rows too.
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_before.workspace_id, 'lead_source', v_after.id,
-    case when p_archived then 'archive' else 'restore' end::public.audit_action,
+    case when p_archived then 'archive' else 'restore' end::commission.audit_action,
     jsonb_build_object(
       'name', jsonb_build_object('old', v_before.name, 'new', v_after.name),
       'archived_at', jsonb_build_object(
@@ -1122,14 +1122,14 @@ begin
 end;
 $$;
 
-create or replace function public.delete_lead_source(p_id uuid)
+create or replace function commission.delete_lead_source(p_id uuid)
 returns jsonb
 language plpgsql
 security invoker
 set search_path = ''
 as $$
 declare
-  v_row public.lead_source;
+  v_row commission.lead_source;
   v_count bigint;
   v_deleted uuid;
 begin
@@ -1137,15 +1137,15 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_row from public.lead_source where id = p_id for update;
+  select * into v_row from commission.lead_source where id = p_id for update;
   if not found then
     raise exception 'lead source not found' using errcode = 'no_data_found';
   end if;
 
-  v_count := app.lead_source_reference_count(p_id);
+  v_count := commission_private.lead_source_reference_count(p_id);
 
   if v_count > 0 then
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_row.workspace_id, 'lead_source', v_row.id, 'delete_blocked',
       jsonb_build_object(
         'name', jsonb_build_object('old', v_row.name, 'new', v_row.name),
@@ -1159,21 +1159,21 @@ begin
     );
   end if;
 
-  delete from public.lead_source where id = p_id returning id into v_deleted;
+  delete from commission.lead_source where id = p_id returning id into v_deleted;
 
   if v_deleted is null then
     raise exception 'lead source % could not be deleted: it is still referenced', p_id
       using errcode = 'restrict_violation';
   end if;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_row.workspace_id, 'lead_source', v_row.id, 'delete',
     jsonb_build_object('name', jsonb_build_object('old', v_row.name, 'new', null))
   );
 
   -- The list keeps its dense 1..N ordering: a gap is not wrong, but it makes
   -- every later reorder reason about holes for no benefit.
-  perform app.renumber_lead_sources(v_row.workspace_id);
+  perform commission_private.renumber_lead_sources(v_row.workspace_id);
 
   return jsonb_build_object('ok', true, 'id', v_row.id, 'name', v_row.name);
 end;
@@ -1190,7 +1190,7 @@ $$;
 --
 -- p_position is a 1..N slot in the workspace's full ordering (archived rows
 -- included — they hold their place so restoring one is not a surprise).
-create or replace function public.reorder_lead_source(
+create or replace function commission.reorder_lead_source(
   p_id uuid,
   p_position integer
 )
@@ -1200,7 +1200,7 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_row public.lead_source;
+  v_row commission.lead_source;
   v_total integer;
   v_pos integer;
   v_old integer;
@@ -1209,17 +1209,17 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into v_row from public.lead_source where id = p_id for update;
+  select * into v_row from commission.lead_source where id = p_id for update;
   if not found then
     raise exception 'lead source not found' using errcode = 'no_data_found';
   end if;
 
   -- Renumber first: a list that has drifted (an older delete, an import) must
   -- not make positions mean different things to the client and the server.
-  perform app.renumber_lead_sources(v_row.workspace_id);
+  perform commission_private.renumber_lead_sources(v_row.workspace_id);
 
-  select count(*) into v_total from public.lead_source where workspace_id = v_row.workspace_id;
-  select sort_order into v_old from public.lead_source where id = p_id;
+  select count(*) into v_total from commission.lead_source where workspace_id = v_row.workspace_id;
+  select sort_order into v_old from commission.lead_source where id = p_id;
 
   -- Clamped, not rejected: a drop past the end of the list means "last", which
   -- is what the agent did, not an error to argue with.
@@ -1231,23 +1231,23 @@ begin
 
   -- Everyone else closes ranks and reopens at the target slot. sort_order is
   -- deliberately not unique, so these intermediate states need no deferral.
-  update public.lead_source ls
+  update commission.lead_source ls
   set sort_order = o.new_order
   from (
     select id, case when rn < v_pos then rn else rn + 1 end as new_order
     from (
       select id, row_number() over (order by sort_order, created_at) as rn
-      from public.lead_source
+      from commission.lead_source
       where workspace_id = v_row.workspace_id and id <> p_id
     ) x
   ) o
   where ls.id = o.id and ls.sort_order is distinct from o.new_order::integer;
 
-  update public.lead_source
+  update commission.lead_source
   set sort_order = v_pos, updated_by = (select auth.uid())
   where id = p_id;
 
-  perform app.write_audit_entry(
+  perform commission_private.write_audit_entry(
     v_row.workspace_id, 'lead_source', v_row.id, 'update',
     jsonb_build_object(
       'name', jsonb_build_object('old', v_row.name, 'new', v_row.name),
@@ -1277,7 +1277,7 @@ $$;
 -- Refusing a non-empty list is what makes accepting the offer idempotent: a
 -- double-click, a retry after a flaky connection, or M10 re-running its wizard
 -- cannot silently double the list.
-create or replace function public.seed_property_types(p_items jsonb)
+create or replace function commission.seed_property_types(p_items jsonb)
 returns jsonb
 language plpgsql
 security invoker
@@ -1286,14 +1286,14 @@ as $$
 declare
   v_workspace_id uuid;
   v_item jsonb;
-  v_row public.property_type;
+  v_row commission.property_type;
   v_created integer := 0;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -1302,16 +1302,16 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'empty');
   end if;
 
-  if exists (select 1 from public.property_type where workspace_id = v_workspace_id) then
+  if exists (select 1 from commission.property_type where workspace_id = v_workspace_id) then
     return jsonb_build_object('ok', false, 'reason', 'not_empty');
   end if;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
-    insert into public.property_type (workspace_id, name, vat_rule, created_by, updated_by)
+    insert into commission.property_type (workspace_id, name, vat_rule, created_by, updated_by)
     values (
       v_workspace_id,
       btrim(v_item ->> 'name'),
-      (v_item ->> 'vat_rule')::public.property_vat_rule,
+      (v_item ->> 'vat_rule')::commission.property_vat_rule,
       (select auth.uid()), (select auth.uid())
     )
     returning * into v_row;
@@ -1319,7 +1319,7 @@ begin
     -- One entry per row, not one for the batch: rule 12 is about what the list
     -- contains and where it came from, and "seeded 7 types" would leave the
     -- agent unable to answer "where did Condotel come from?" six months later.
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_workspace_id, 'property_type', v_row.id, 'create',
       jsonb_build_object(
         'name', jsonb_build_object('old', null, 'new', v_row.name),
@@ -1334,7 +1334,7 @@ begin
 end;
 $$;
 
-create or replace function public.seed_developers(p_items jsonb)
+create or replace function commission.seed_developers(p_items jsonb)
 returns jsonb
 language plpgsql
 security invoker
@@ -1343,14 +1343,14 @@ as $$
 declare
   v_workspace_id uuid;
   v_item jsonb;
-  v_row public.developer;
+  v_row commission.developer;
   v_created integer := 0;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -1359,21 +1359,21 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'empty');
   end if;
 
-  if exists (select 1 from public.developer where workspace_id = v_workspace_id) then
+  if exists (select 1 from commission.developer where workspace_id = v_workspace_id) then
     return jsonb_build_object('ok', false, 'reason', 'not_empty');
   end if;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
-    insert into public.developer (workspace_id, name, comm_base, created_by, updated_by)
+    insert into commission.developer (workspace_id, name, comm_base, created_by, updated_by)
     values (
       v_workspace_id,
       btrim(v_item ->> 'name'),
-      coalesce((v_item ->> 'comm_base')::public.developer_comm_base, 'net'),
+      coalesce((v_item ->> 'comm_base')::commission.developer_comm_base, 'net'),
       (select auth.uid()), (select auth.uid())
     )
     returning * into v_row;
 
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_workspace_id, 'developer', v_row.id, 'create',
       jsonb_build_object(
         'name', jsonb_build_object('old', null, 'new', v_row.name),
@@ -1388,7 +1388,7 @@ begin
 end;
 $$;
 
-create or replace function public.seed_lead_sources(p_items jsonb)
+create or replace function commission.seed_lead_sources(p_items jsonb)
 returns jsonb
 language plpgsql
 security invoker
@@ -1397,14 +1397,14 @@ as $$
 declare
   v_workspace_id uuid;
   v_item jsonb;
-  v_row public.lead_source;
+  v_row commission.lead_source;
   v_created integer := 0;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  v_workspace_id := app.current_workspace_id();
+  v_workspace_id := commission_private.current_workspace_id();
   if v_workspace_id is null then
     raise exception 'workspace not found' using errcode = 'no_data_found';
   end if;
@@ -1413,7 +1413,7 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'empty');
   end if;
 
-  if exists (select 1 from public.lead_source where workspace_id = v_workspace_id) then
+  if exists (select 1 from commission.lead_source where workspace_id = v_workspace_id) then
     return jsonb_build_object('ok', false, 'reason', 'not_empty');
   end if;
 
@@ -1423,14 +1423,14 @@ begin
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_created := v_created + 1;
 
-    insert into public.lead_source (workspace_id, name, sort_order, created_by, updated_by)
+    insert into commission.lead_source (workspace_id, name, sort_order, created_by, updated_by)
     values (
       v_workspace_id, btrim(v_item ->> 'name'), v_created,
       (select auth.uid()), (select auth.uid())
     )
     returning * into v_row;
 
-    perform app.write_audit_entry(
+    perform commission_private.write_audit_entry(
       v_workspace_id, 'lead_source', v_row.id, 'create',
       jsonb_build_object('name', jsonb_build_object('old', null, 'new', v_row.name))
     );
@@ -1446,40 +1446,40 @@ $$;
 
 -- Every function raises on a null auth.uid() and RLS refuses anon regardless;
 -- revoking is belt-and-braces so an anonymous caller cannot reach the body.
-revoke all on function public.create_property_type(text, public.property_vat_rule) from public;
-revoke all on function public.update_property_type(uuid, text, public.property_vat_rule, integer) from public;
-revoke all on function public.set_property_type_archived(uuid, boolean) from public;
-revoke all on function public.delete_property_type(uuid) from public;
-revoke all on function public.seed_property_types(jsonb) from public;
+revoke all on function commission.create_property_type(text, commission.property_vat_rule) from public;
+revoke all on function commission.update_property_type(uuid, text, commission.property_vat_rule, integer) from public;
+revoke all on function commission.set_property_type_archived(uuid, boolean) from public;
+revoke all on function commission.delete_property_type(uuid) from public;
+revoke all on function commission.seed_property_types(jsonb) from public;
 
-revoke all on function public.create_developer(text, public.developer_comm_base) from public;
-revoke all on function public.update_developer(uuid, text, public.developer_comm_base, integer) from public;
-revoke all on function public.set_developer_archived(uuid, boolean) from public;
-revoke all on function public.delete_developer(uuid) from public;
-revoke all on function public.seed_developers(jsonb) from public;
+revoke all on function commission.create_developer(text, commission.developer_comm_base) from public;
+revoke all on function commission.update_developer(uuid, text, commission.developer_comm_base, integer) from public;
+revoke all on function commission.set_developer_archived(uuid, boolean) from public;
+revoke all on function commission.delete_developer(uuid) from public;
+revoke all on function commission.seed_developers(jsonb) from public;
 
-revoke all on function public.create_lead_source(text) from public;
-revoke all on function public.update_lead_source(uuid, text) from public;
-revoke all on function public.set_lead_source_archived(uuid, boolean) from public;
-revoke all on function public.delete_lead_source(uuid) from public;
-revoke all on function public.reorder_lead_source(uuid, integer) from public;
-revoke all on function public.seed_lead_sources(jsonb) from public;
+revoke all on function commission.create_lead_source(text) from public;
+revoke all on function commission.update_lead_source(uuid, text) from public;
+revoke all on function commission.set_lead_source_archived(uuid, boolean) from public;
+revoke all on function commission.delete_lead_source(uuid) from public;
+revoke all on function commission.reorder_lead_source(uuid, integer) from public;
+revoke all on function commission.seed_lead_sources(jsonb) from public;
 
-grant execute on function public.create_property_type(text, public.property_vat_rule) to authenticated;
-grant execute on function public.update_property_type(uuid, text, public.property_vat_rule, integer) to authenticated;
-grant execute on function public.set_property_type_archived(uuid, boolean) to authenticated;
-grant execute on function public.delete_property_type(uuid) to authenticated;
-grant execute on function public.seed_property_types(jsonb) to authenticated;
+grant execute on function commission.create_property_type(text, commission.property_vat_rule) to authenticated;
+grant execute on function commission.update_property_type(uuid, text, commission.property_vat_rule, integer) to authenticated;
+grant execute on function commission.set_property_type_archived(uuid, boolean) to authenticated;
+grant execute on function commission.delete_property_type(uuid) to authenticated;
+grant execute on function commission.seed_property_types(jsonb) to authenticated;
 
-grant execute on function public.create_developer(text, public.developer_comm_base) to authenticated;
-grant execute on function public.update_developer(uuid, text, public.developer_comm_base, integer) to authenticated;
-grant execute on function public.set_developer_archived(uuid, boolean) to authenticated;
-grant execute on function public.delete_developer(uuid) to authenticated;
-grant execute on function public.seed_developers(jsonb) to authenticated;
+grant execute on function commission.create_developer(text, commission.developer_comm_base) to authenticated;
+grant execute on function commission.update_developer(uuid, text, commission.developer_comm_base, integer) to authenticated;
+grant execute on function commission.set_developer_archived(uuid, boolean) to authenticated;
+grant execute on function commission.delete_developer(uuid) to authenticated;
+grant execute on function commission.seed_developers(jsonb) to authenticated;
 
-grant execute on function public.create_lead_source(text) to authenticated;
-grant execute on function public.update_lead_source(uuid, text) to authenticated;
-grant execute on function public.set_lead_source_archived(uuid, boolean) to authenticated;
-grant execute on function public.delete_lead_source(uuid) to authenticated;
-grant execute on function public.reorder_lead_source(uuid, integer) to authenticated;
-grant execute on function public.seed_lead_sources(jsonb) to authenticated;
+grant execute on function commission.create_lead_source(text) to authenticated;
+grant execute on function commission.update_lead_source(uuid, text) to authenticated;
+grant execute on function commission.set_lead_source_archived(uuid, boolean) to authenticated;
+grant execute on function commission.delete_lead_source(uuid) to authenticated;
+grant execute on function commission.reorder_lead_source(uuid, integer) to authenticated;
+grant execute on function commission.seed_lead_sources(jsonb) to authenticated;

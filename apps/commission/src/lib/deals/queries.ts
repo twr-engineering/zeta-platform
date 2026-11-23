@@ -189,7 +189,7 @@ export async function resolveDealRefs(
  * How many payments are logged against a deal — the delete-protection / edit-
  * friction / archive-cascade signal (§4 rule 2).
  *
- * REAL SINCE M5.1 — a count over payment.deal_id (mirroring app.deal_payment_count
+ * REAL SINCE M5.1 — a count over payment.deal_id (mirroring commission_private.deal_payment_count
  * in SQL), which turns on the edit-after-payments friction gate and the archive-
  * cascade copy in the deal actions that already consult it, with no change there.
  * Counts ALL payment rows (archived included): a soft-deleted payment still has an

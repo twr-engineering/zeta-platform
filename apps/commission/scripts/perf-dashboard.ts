@@ -251,7 +251,7 @@ async function main() {
     return;
   }
 
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { db: { schema: "commission" }, auth: { autoRefreshToken: false, persistSession: false } });
 
   const existing = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.find((u) => u.email === PERF_EMAIL);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
@@ -305,7 +305,7 @@ async function main() {
   }
   console.log(`seeded ${N}×3 rows in ${((performance.now() - seedStart) / 1000).toFixed(1)}s`);
 
-  const user = createClient(url, anonKey, { auth: { persistSession: false } });
+  const user = createClient(url, anonKey, { db: { schema: "commission" }, auth: { persistSession: false } });
   const signIn = await user.auth.signInWithPassword({ email: PERF_EMAIL, password: PERF_PASSWORD });
   if (signIn.error) throw new Error(`sign in: ${signIn.error.message}`);
 
@@ -335,10 +335,10 @@ async function main() {
   // (a) server read execution — the two heavy reads run in PARALLEL in getDashboardData,
   //     so the read cost is the max of the two, plus the trivial referral/override reads.
   const recExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT ${RECEIVABLE_SELECT} FROM public.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL ORDER BY chase_priority DESC NULLS LAST, deal_code`)
+    ? await explainMs(url, accessToken, `SELECT ${RECEIVABLE_SELECT} FROM commission.receivable WHERE workspace_id='${workspaceId}' AND archived_at IS NULL ORDER BY chase_priority DESC NULLS LAST, deal_code`)
     : 0;
   const payExec = accessToken
-    ? await explainMs(url, accessToken, `SELECT ${PAYMENT_SELECT} FROM public.payment WHERE workspace_id='${workspaceId}' AND archived_at IS NULL ORDER BY payment_date DESC`)
+    ? await explainMs(url, accessToken, `SELECT ${PAYMENT_SELECT} FROM commission.payment WHERE workspace_id='${workspaceId}' AND archived_at IS NULL ORDER BY payment_date DESC`)
     : 0;
   const readServer = Math.max(recExec, payExec);
 

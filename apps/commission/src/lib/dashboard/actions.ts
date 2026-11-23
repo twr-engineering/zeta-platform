@@ -17,7 +17,7 @@ import type { ActionState } from "@/lib/forms/action-state";
  * mode 'checked', OQ3 default) and the DB function is the single writer + audit
  * (old→new). Same shape as every mutation since M0.2: authenticate → gate → let ONE
  * database function do the change + its audit entry in a single transaction. Tenant
- * isolation is RLS (the RPC resolves the workspace via app.current_workspace_id()).
+ * isolation is RLS (the RPC resolves the workspace via commission_private.current_workspace_id()).
  */
 
 type OverrideResult = {

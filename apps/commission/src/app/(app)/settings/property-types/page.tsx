@@ -31,7 +31,7 @@ export const metadata: Metadata = { title: "Property Types" };
  * The rows are real, read through RLS, and each reference count is the
  * database's own answer (a PostgREST computed column) rather than this page's
  * guess. It reads 0 for every row until M1 has deals — see
- * app.property_type_reference_count, the one function M1 changes to make the
+ * commission_private.property_type_reference_count, the one function M1 changes to make the
  * whole archive/delete contract live.
  *
  * The affected-deal count is computed on the server and passed down: the

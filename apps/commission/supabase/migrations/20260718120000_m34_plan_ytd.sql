@@ -25,10 +25,10 @@
 --
 -- TENANT ISOLATION (M0 rule 1 / AC9): SECURITY INVOKER runs under the caller's rights so
 -- deal_select_member RLS confines the scan to their workspace; the explicit
--- workspace_id = app.current_workspace_id() predicate is what lets the read ride the
+-- workspace_id = commission_private.current_workspace_id() predicate is what lets the read ride the
 -- (workspace_id, booked_year) index rather than an RLS-only seq scan.
 
-create or replace function public.plan_ytd_actual_sales(
+create or replace function commission.plan_ytd_actual_sales(
   p_year integer,
   p_include_rentals boolean default true
 )
@@ -39,16 +39,16 @@ security invoker
 set search_path = ''
 as $$
   select coalesce(sum(d.list_price), 0)::text
-  from public.deal d
-  where d.workspace_id = app.current_workspace_id()
+  from commission.deal d
+  where d.workspace_id = commission_private.current_workspace_id()
     and d.archived_at is null
     and d.booked_year = p_year
     and d.representation <> 'referrer'
     and (p_include_rentals or d.transaction_type = 'sale');
 $$;
 
-comment on function public.plan_ytd_actual_sales is
+comment on function commission.plan_ytd_actual_sales is
   'M3 Rule P12. Σ list_price of non-Referrer, non-archived deals booked in p_year — Sale always, Rental iff p_include_rentals (default true = the workbook''s sheet behaviour; OQ-1''s isolation point). Returns numeric(14,2) ::text; empty year → 0. Feeds the pace card''s YTD actual + balance-to-target (P13).';
 
-revoke all on function public.plan_ytd_actual_sales(integer, boolean) from public;
-grant execute on function public.plan_ytd_actual_sales(integer, boolean) to authenticated;
+revoke all on function commission.plan_ytd_actual_sales(integer, boolean) from public;
+grant execute on function commission.plan_ytd_actual_sales(integer, boolean) to authenticated;

@@ -28,7 +28,7 @@
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'content_bundle_status') then
-    create type public.content_bundle_status as enum ('draft', 'published', 'archived');
+    create type commission.content_bundle_status as enum ('draft', 'published', 'archived');
   end if;
 end
 $$;
@@ -36,27 +36,27 @@ $$;
 -- 2. Tables --------------------------------------------------------------------
 -- A content release. Immutable once published; created_at + published_at only (no
 -- updated_at — a published bundle is never mutated, it is superseded).
-create table if not exists public.content_bundle (
+create table if not exists commission.content_bundle (
   id uuid primary key default gen_random_uuid(),
   version text not null,
-  status public.content_bundle_status not null default 'draft',
+  status commission.content_bundle_status not null default 'draft',
   changelog text,
   published_at timestamptz,
   created_at timestamptz not null default now()
 );
 
-comment on table public.content_bundle is
+comment on table commission.content_bundle is
   'M10.1: a versioned, immutable help-content release (PRD §3.3, rule 11). Product-level. The app pins the latest status=published row.';
 
 -- Only one published bundle per version (republish = new row of a new version, or a
 -- status flip; a version string identifies one immutable payload).
 create unique index if not exists content_bundle_published_version_idx
-  on public.content_bundle (version)
+  on commission.content_bundle (version)
   where status = 'published';
 
-create table if not exists public.help_article (
+create table if not exists commission.help_article (
   id uuid primary key default gen_random_uuid(),
-  bundle_id uuid not null references public.content_bundle (id) on delete cascade,
+  bundle_id uuid not null references commission.content_bundle (id) on delete cascade,
   key text not null,
   title text not null,
   body_md text not null,
@@ -65,12 +65,12 @@ create table if not exists public.help_article (
   unique (bundle_id, key)
 );
 
-comment on table public.help_article is
+comment on table commission.help_article is
   'M10.1: a help/doctrine article within a bundle (PRD §3.3). body_md is verbatim doctrine for P0–P11 (rule 12). placements = surface slugs where it appears.';
 
-create table if not exists public.glossary_entry (
+create table if not exists commission.glossary_entry (
   id uuid primary key default gen_random_uuid(),
-  bundle_id uuid not null references public.content_bundle (id) on delete cascade,
+  bundle_id uuid not null references commission.content_bundle (id) on delete cascade,
   key text not null,
   term text not null,
   definition_md text not null,
@@ -79,24 +79,24 @@ create table if not exists public.glossary_entry (
   unique (bundle_id, key)
 );
 
-comment on table public.glossary_entry is
+comment on table commission.glossary_entry is
   'M10.1: an in-app glossary term within a bundle (PRD §3.4/§6.5). Deep-linkable at /glossary#<key>.';
 
 -- 3. RLS: readable by all authenticated users, writable by nobody via the API ---
-alter table public.content_bundle enable row level security;
-alter table public.help_article enable row level security;
-alter table public.glossary_entry enable row level security;
+alter table commission.content_bundle enable row level security;
+alter table commission.help_article enable row level security;
+alter table commission.glossary_entry enable row level security;
 
-drop policy if exists content_bundle_read on public.content_bundle;
-create policy content_bundle_read on public.content_bundle
+drop policy if exists content_bundle_read on commission.content_bundle;
+create policy content_bundle_read on commission.content_bundle
   for select to authenticated using (true);
 
-drop policy if exists help_article_read on public.help_article;
-create policy help_article_read on public.help_article
+drop policy if exists help_article_read on commission.help_article;
+create policy help_article_read on commission.help_article
   for select to authenticated using (true);
 
-drop policy if exists glossary_entry_read on public.glossary_entry;
-create policy glossary_entry_read on public.glossary_entry
+drop policy if exists glossary_entry_read on commission.glossary_entry;
+create policy glossary_entry_read on commission.glossary_entry
   for select to authenticated using (true);
 -- (No INSERT/UPDATE/DELETE policies by design — content writes are migration /
 --  service-role only. RLS with no write policy = deny for authenticated/anon.)
@@ -105,7 +105,7 @@ create policy glossary_entry_read on public.glossary_entry
 -- security invoker so the SELECT policy applies; returns the latest published bundle
 -- as one jsonb payload (version + articles + glossary), or NULL when none is
 -- published yet (the loader then falls back to the app's built-in bundle).
-create or replace function public.get_active_content_bundle()
+create or replace function commission.get_active_content_bundle()
 returns jsonb
 language sql
 stable
@@ -122,7 +122,7 @@ as $$
           'key', a.key, 'title', a.title, 'bodyMd', a.body_md, 'placements', a.placements
         ) order by a.key
       )
-      from public.help_article a where a.bundle_id = b.id
+      from commission.help_article a where a.bundle_id = b.id
     ), '[]'::jsonb),
     'glossary', coalesce((
       select jsonb_agg(
@@ -130,19 +130,19 @@ as $$
           'key', g.key, 'term', g.term, 'definitionMd', g.definition_md, 'relatedKeys', g.related_keys
         ) order by g.term
       )
-      from public.glossary_entry g where g.bundle_id = b.id
+      from commission.glossary_entry g where g.bundle_id = b.id
     ), '[]'::jsonb)
   )
-  from public.content_bundle b
+  from commission.content_bundle b
   where b.status = 'published'
   order by b.published_at desc nulls last, b.created_at desc
   limit 1
 $$;
 
-comment on function public.get_active_content_bundle() is
+comment on function commission.get_active_content_bundle() is
   'M10.1: the latest published content bundle as jsonb (PRD §3.3, FR-M10-17). NULL when none published — caller falls back to the built-in bundle.';
 
-grant execute on function public.get_active_content_bundle() to authenticated;
+grant execute on function commission.get_active_content_bundle() to authenticated;
 
 -- 5. Seed the initial published bundle (v1.0.0) ----------------------------------
 -- Generated byte-exact from PRD §6.3/§6.5 by scripts/gen-help-content.mjs. Idempotent:
@@ -152,17 +152,17 @@ declare
   v_bundle uuid;
 begin
   if exists (
-    select 1 from public.content_bundle
+    select 1 from commission.content_bundle
     where version = $md$1.0.0$md$ and status = 'published'
   ) then
     return;
   end if;
 
-  insert into public.content_bundle (version, status, changelog, published_at)
+  insert into commission.content_bundle (version, status, changelog, published_at)
   values ($md$1.0.0$md$, 'published', 'Initial M10.1 doctrine bundle (P0–P11), glossary and legend.', now())
   returning id into v_bundle;
 
-  insert into public.help_article (bundle_id, key, title, body_md, placements) values
+  insert into commission.help_article (bundle_id, key, title, body_md, placements) values
     (v_bundle, $md$philosophy$md$, $md$Philosophy$md$, $md$Track total commission owed per deal vs cash actually collected = balance left. No forecasting of buyer-to-developer payment cycles. Reactive logging. Only blue cells editable.$md$, array[$md$wizard.philosophy$md$, $md$dashboard.header$md$]::text[]),
     (v_bundle, $md$property-vat$md$, $md$Property VAT & Force VAT$md$, $md$Property VAT auto-computes per BIR RR 1-2024 (developer sales only). Threshold-rule types are exempt at or below ₱3,600,000 List Price; Lot / Commercial / Parking are always VAT-able. Force VAT? = Yes for the adjacent-property trap: 2+ adjacent units, same developer, same buyer, within 12 months, aggregating over the threshold — one deliberate toggle, no automation.$md$, array[$md$deal-form.property-vat$md$, $md$deal-form.force-vat$md$]::text[]),
     (v_bundle, $md$vat-inclusive-billing$md$, $md$VAT-inclusive billing + the Fixed-basis escape hatch$md$, $md$On a VAT-registered account, the commission a developer bills already has the 12% VAT inside it — the engine divides by 1.12 to get your income. Megaworld example: 3% × TCP = 322,369.80 billed; ÷1.12 = 287,830.18 income. Rare case: if a payor ever bills your commission *plus* VAT as separate lines, enter **Basis = Fixed** with the VAT-inclusive total (commission 100,000 + VAT 12,000 → Fixed 112,000) — the engine books ₱100,000 income correctly.$md$, array[$md$deal-form.commission-basis$md$]::text[]),
@@ -183,7 +183,7 @@ Every money surface in the app uses three affordances, so you always know whethe
 - **Computed** — a locked, read-only value with a lock icon. The engine calculates it; hover to read the formula (e.g. "GCI = billed ÷ 1.12"). It is never directly editable.
 - **Linked** — a value carried in from another module, marked with a link. Click it to jump to the source.$md$, array[$md$legend.explainer$md$]::text[]);
 
-  insert into public.glossary_entry (bundle_id, key, term, definition_md, related_keys) values
+  insert into commission.glossary_entry (bundle_id, key, term, definition_md, related_keys) values
     (v_bundle, $md$gci$md$, $md$GCI$md$, $md$Gross Commission Income. Booked GCI is always stated **Net of VAT** — the 12% output VAT is stripped out because it is remitted to the BIR, not earned.$md$, array[$md$output-vat$md$]::text[]),
     (v_bundle, $md$tcp-list-price$md$, $md$TCP / List Price$md$, $md$Total Contract Price of the property. Basis for volume and yield.$md$, array[]::text[]),
     (v_bundle, $md$net-gci$md$, $md$NET GCI$md$, $md$GCI + incentive (net) − referral out: what you actually earn.$md$, array[$md$gci$md$, $md$referrer-vs-referral-out$md$]::text[]),
