@@ -119,6 +119,13 @@ export const PENDING = {
     unblock: 'Bind Locations to their CRM province/municipality/town ids (WP-10 content migration).',
     interim: 'Counts match listings by municipality name, which over-counts (e.g. every Cagayan de Oro listing, not just the city page\'s own).',
   },
+  'location-defects': {
+    need: 'Barangay pages show placeholder tabs ("test 4/5/Test6", CD-18), mislabelled tabs and a malformed Agri query (CD-19): reproduce, or use the city-page tab set on both levels?',
+    refs: ['BPM-017', 'CD-18', 'CD-19'],
+    blockedOn: 'client',
+    unblock: 'Client decision (GP.5).',
+    interim: 'Both levels use the city-page tab set with each tab filtering as its label says.',
+  },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
     refs: ['BPM-007', 'FR-P11', 'OQ-23'],

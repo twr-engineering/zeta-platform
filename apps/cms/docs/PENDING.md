@@ -6,11 +6,12 @@ Each entry is a placeholder: the code runs an interim behaviour at the marked po
 `[parity:pending]` once. When a rule is captured and signed in the matrix, implement it, delete
 the entry, and let the type checker show the remaining call sites.
 
-## Waiting on the client (7)
+## Waiting on the client (8)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 | `recommendation-scope` | BPM-015, FR-A13 | The "Please sign up to see your recommendation" step has no recommendation behind it: the survey answers are never submitted. Port it as-is, drop it, or specify a real recommendation. | Client decision. | Not built. |
+| `location-defects` | BPM-017, CD-18, CD-19 | Barangay pages show placeholder tabs ("test 4/5/Test6", CD-18), mislabelled tabs and a malformed Agri query (CD-19): reproduce, or use the city-page tab set on both levels? | Client decision (GP.5). | Both levels use the city-page tab set with each tab filtering as its label says. |
 | `withdrawn-listing-url` | BPM-007, FR-P11, OQ-23 | What a sold / leased / withdrawn listing URL does (404, 301, or empty shell). | Client supplies one sold reference number; fetch it on production. | Withdrawn listings 404. |
 | `contact-forms` | FR-F02, FR-F03, FR-F04, FR-F06, OQ-17 | Field names, order, labels, validation, consent wording and routing for the live forms. | Client confirms which of the 89 wpcf7_contact_form records are live. | Inquiry slots render a placeholder; no submissions are accepted. |
 | `gated-downloads` | CD-08 | Whether the logged-out login-gate on /buy/ downloads is intended or an inverted condition. | Client supplies a login; compare /buy/ logged in vs logged out. | Download buttons render a placeholder. |

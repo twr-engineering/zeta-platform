@@ -212,3 +212,20 @@ describe('FR-SR14 free text (E-class)', () => {
     expect(parseSearch(new URLSearchParams('q=')).text).toBeNull()
   })
 })
+
+describe('BPM-012 module query + $_GET', async () => {
+  const { mergeModuleQuery } = await import('../src/search/params')
+  it('keeps the saved rule and layers request params on top', () => {
+    const m = mergeModuleQuery('property_for=1&sortby=priority_desc&type[]=_st_38', new URLSearchParams('pageid=2&min_bedroom=2'))
+    expect(m.getAll('type[]')).toEqual(['_st_38'])
+    expect(m.get('pageid')).toBe('2')
+    expect(m.get('min_bedroom')).toBe('2')
+  })
+  it('a requested key replaces the saved one, arrays as a whole', () => {
+    const m = mergeModuleQuery('property_for=1&type[]=_st_38', new URLSearchParams('type[]=_st_9&sortby=price_asc'))
+    expect(m.getAll('type[]')).toEqual(['_st_9'])
+    expect(m.get('sortby')).toBe('price_asc')
+  })
+  it('ignore_get=true uses the saved query alone', () =>
+    expect(mergeModuleQuery('property_for=1', new URLSearchParams('property_for=2'), true).get('property_for')).toBe('1'))
+})

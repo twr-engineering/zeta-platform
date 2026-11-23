@@ -286,6 +286,27 @@ main:has(> .home-hero) { max-width: none; padding: 0 0 32px; }
   .price-panel { width: auto; }
 }
 
+/* ---- page hero, shortlists, get in touch ---- */
+.page-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin: 8px 0 56px; }
+.page-hero h1 { font-size: 32px; font-weight: 500; }
+.page-hero p { color: var(--ink); }
+.page-hero-image { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 4px; position: static; }
+.page-hero:not(:has(.page-hero-image)) { grid-template-columns: minmax(0, 760px); }
+.eyebrow { font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 4px; }
+.btn-yellow-text { color: var(--yellow-hi); }
+.get-in-touch { margin: 72px auto 0; max-width: 760px; text-align: center; }
+.get-in-touch h2 { font-size: 32px; }
+@media (max-width: 767px) { .page-hero { grid-template-columns: 1fr; } }
+
+.listing-tabs .seg-tabs { flex-wrap: wrap; }
+.city-index { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+.city-index h3 a { color: var(--ink); text-decoration: none; }
+.city-index .area-list { columns: 1; }
+.area-list { list-style: none; columns: 3; padding: 0; margin: 0; }
+.area-list a { display: block; padding: 6px 0; color: var(--ink-2); text-decoration: none; }
+.area-list a:hover { color: var(--ink); }
+@media (max-width: 767px) { .area-list { columns: 1; } }
+
 /* ---- chips, counts, no results (FR-SR08, SR12, SR13) ---- */
 .opt-count { margin-left: 6px; color: var(--ink-3); font-size: 13px; }
 .is-zero { opacity: 0.55; }
