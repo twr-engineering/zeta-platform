@@ -18,9 +18,10 @@ export function ListingCard({ listing, rates, currency, measurement = 'metric' }
   const image = listing.images?.[0]?.url
   const { price } = formatPrice(listing.price, listing.currencyCode ?? 'PHP', currency, rates)
   const payload = (listing.crmPayload ?? {}) as Record<string, unknown>
-  const ribbons = cardRibbons(typeof payload.marketing_features === 'string' ? payload.marketing_features : null)
-  const subSub = typeof payload.property_sub_sub_name === 'string' ? payload.property_sub_sub_name : null
-  const type = subSub || listing.subTypeName
+  // The template keys on the English labels (marketing_features_en; marketing_features is the same on this single-language site).
+  const en = payload.marketing_features_en ?? payload.marketing_features
+  const ribbons = cardRibbons(typeof en === 'string' ? en : null)
+  const type = listing.subSubTypeName || listing.subTypeName
   const floor = displayArea(listing.builtSize, measurement)
   const lot = displayArea(listing.plotSize, measurement)
   const href = listingPath(listing)

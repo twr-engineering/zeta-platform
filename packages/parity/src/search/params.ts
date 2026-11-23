@@ -34,6 +34,8 @@ export type SearchQuery = {
   propertyFor: string | null
   /** type[]=_st_{n} — OR within. */
   subTypeIds: string[]
+  /** type[]=_sst_{n} — sub-sub-types (BPM-021); the CRM's sub_sub_property_type[]. */
+  subSubTypeIds: string[]
   /** sale_detail_type[] — OR within. */
   saleDetailTypeIds: string[]
   /** fa[]=a{n} — AND: use_and_operator_for_attr_fet=1 on 1,355 of 1,381 calls. */
@@ -50,6 +52,12 @@ export type SearchQuery = {
   page: number
   /** Calculator hand-off. Preserved, not applied (pending: amount-filter). */
   amount: string | null
+  /** payment_terms[] (BPM-021): passed to the CRM untouched; preserved, not applied (pending: payment-terms-filter). */
+  paymentTerms: string[]
+  /** min_storey[] (BPM-021, select capped at one; "5+" sanitises to 5). */
+  minStorey: number | null
+  /** min_built_year / max_built_year (BPM-021, AJAX path: raw years). */
+  builtYear: Range | null
 }
 
 /** Module configuration: what the WordPress block attributes supplied ($args). */
@@ -159,6 +167,9 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
     ['price', 'price'],
     ['bedroom', 'bedroom'],
     ['bathroom', 'bathroom'],
+    // BPM-021: the More Filters Lot Area / Floor Area boxes send min_/max_ pairs too.
+    ['plot_size', 'plot_size'],
+    ['total_built_size', 'total_built_size'],
   ] as const) {
     const min = sp.get(`min_${unit}`)
     const max = sp.get(`max_${unit}`)
@@ -187,10 +198,16 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
   const amount = sp.get('amount')
   if (amount !== null) pending('amount-filter')
   const keyword = resolveKeyword(sp)
+  const paymentTerms = getAll(sp, 'payment_terms')
+  if (paymentTerms.length) pending('payment-terms-filter')
+  const storey = Number.parseInt(sanitise(getAll(sp, 'min_storey')[0] ?? ''), 10)
+  const minYear = Number.parseInt(sp.get('min_built_year') ?? '', 10)
+  const maxYear = Number.parseInt(sp.get('max_built_year') ?? '', 10)
 
   return {
     propertyFor: sp.get('property_for'),
-    subTypeIds: getAll(sp, 'type').map((t) => t.replace(/^_st_/, '')),
+    subTypeIds: getAll(sp, 'type').filter((t) => !t.startsWith('_sst_')).map((t) => t.replace(/^_st_/, '')),
+    subSubTypeIds: getAll(sp, 'type').filter((t) => t.startsWith('_sst_')).map((t) => t.slice('_sst_'.length)),
     saleDetailTypeIds: getAll(sp, 'sale_detail_type'),
     attributeIds: getAll(sp, 'fa').map((a) => a.replace(/^a/, '')),
     municipalityIds: area.filter((a) => a.startsWith('municipality_')).map((a) => a.slice('municipality_'.length)),
@@ -203,6 +220,9 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
     perPage: resolvePerPage(sp.get('property_per_page'), config),
     page: Math.max(1, Number.parseInt(sp.get('pageid') ?? '1', 10) || 1),
     amount,
+    paymentTerms,
+    minStorey: Number.isFinite(storey) && storey > 0 ? storey : null,
+    builtYear: Number.isFinite(minYear) || Number.isFinite(maxYear) ? { min: Number.isFinite(minYear) ? minYear : 0, max: Number.isFinite(maxYear) ? maxYear : null } : null,
   }
 }
 
@@ -216,6 +236,7 @@ export function toCrmParams(q: SearchQuery): Record<string, string> {
   if (q.propertyFor) out.property_for = q.propertyFor
   arr('type', q.subTypeIds.map((id) => `_st_${id}`))
   arr('sub_property_type', q.subTypeIds)
+  arr('sub_sub_property_type', q.subSubTypeIds)
   arr('sale_detail_type', q.saleDetailTypeIds)
   arr('municipality', q.municipalityIds)
   arr('city', q.townIds)

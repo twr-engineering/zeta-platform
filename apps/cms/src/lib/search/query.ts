@@ -30,7 +30,15 @@ const SORTS: Record<SortValue, string[]> = {
 export function toWhere(q: SearchQuery): Where {
   const and: Where[] = [{ syncStatus: { equals: 'active' } }]
   if (q.propertyFor) and.push({ propertyForId: { equals: q.propertyFor } })
-  if (q.subTypeIds.length) and.push({ subTypeId: { in: q.subTypeIds } })
+  // One property-type facet: sub-types and sub-sub-types OR-ed — pending: type-tree-combination.
+  // The live tree never sends a parent with its own child (BPM-021).
+  const types: Where[] = []
+  if (q.subTypeIds.length) types.push({ subTypeId: { in: q.subTypeIds } })
+  if (q.subSubTypeIds.length) {
+    pending('type-tree-combination')
+    types.push({ subSubTypeId: { in: q.subSubTypeIds } })
+  }
+  if (types.length) and.push(types.length === 1 ? types[0] : { or: types })
   if (q.saleDetailTypeIds.length) and.push({ saleDetailTypeId: { in: q.saleDetailTypeIds } })
   // AND across selected attributes: the listing must carry every one.
   for (const id of q.attributeIds) and.push({ 'attributes.crmId': { equals: id } })
@@ -43,6 +51,13 @@ export function toWhere(q: SearchQuery): Where {
 
   if (q.complexIds.length) and.push({ 'geo.complexId': { in: q.complexIds } })
   if (q.referenceNos.length) and.push({ referenceNo: { in: q.referenceNos } })
+
+  if (q.attributeIds.length > 1) pending('fa-collision')
+  if (q.minStorey !== null) and.push({ storeys: { greater_than_equal: q.minStorey } })
+  if (q.builtYear) {
+    if (q.builtYear.min > 0) and.push({ builtYear: { greater_than_equal: q.builtYear.min } })
+    if (q.builtYear.max !== null) and.push({ builtYear: { less_than_equal: q.builtYear.max } })
+  }
 
   for (const [facet, r] of Object.entries(q.ranges) as [RangeFacet, NonNullable<SearchQuery['ranges'][RangeFacet]>][]) {
     const field = RANGE_FIELDS[facet]

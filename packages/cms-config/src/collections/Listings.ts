@@ -76,6 +76,13 @@ export const Listings: CollectionConfig = {
     {
       type: 'row',
       fields: [
+        { name: 'subSubTypeId', type: 'text', index: true, admin: { readOnly: true, description: 'Sub-sub-type id — the target of type[]=_sst_{n} filters (BPM-021).' } },
+        { name: 'subSubTypeName', type: 'text', admin: { readOnly: true } },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
         { name: 'saleDetailTypeId', type: 'text', index: true, admin: { readOnly: true, description: '1 Resale · 2 New Development (Preselling)' } },
         { name: 'saleDetailType', type: 'text', admin: { readOnly: true } },
       ],
@@ -92,6 +99,8 @@ export const Listings: CollectionConfig = {
     { name: 'builtSize', type: 'number', admin: { readOnly: true } },
     { name: 'plotSize', type: 'number', admin: { readOnly: true } },
     { name: 'areaUnit', type: 'text', admin: { readOnly: true } },
+    { name: 'storeys', type: 'number', index: true, admin: { readOnly: true, description: 'min_storey[] filter (BPM-021).' } },
+    { name: 'builtYear', type: 'number', index: true, admin: { readOnly: true, description: 'min/max_built_year filter (BPM-021).' } },
     {
       name: 'geo',
       type: 'group',

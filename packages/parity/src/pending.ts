@@ -91,6 +91,27 @@ export const PENDING = {
     unblock: 'Build the search filter panel (WP-04).',
     interim: 'The header search field links to /search_results/?property_for=1 (Sale).',
   },
+  'payment-terms-filter': {
+    need: 'Whether the CRM filters on payment_terms[] (More Filters → Payment Term), and against which field.',
+    refs: ['BPM-021', 'FR-SR06'],
+    blockedOn: 'live-check',
+    unblock: 'Pick one Payment Term on production and compare the result count with none picked.',
+    interim: 'The parameter is accepted and kept in the URL but does not filter.',
+  },
+  'type-tree-combination': {
+    need: 'How the CRM combines sub_property_type[] with sub_sub_property_type[] when both are sent (e.g. House + Condominium › Studio).',
+    refs: ['BPM-021', 'FR-SR02'],
+    blockedOn: 'live-check',
+    unblock: 'Select House and Studio together on production and compare counts with each alone.',
+    interim: 'OR across the two lists (one property-type facet).',
+  },
+  'fa-collision': {
+    need: 'Property View, Lot Type and Is Foreclosed all write fa[]: whether combining two selects sends both (AND) or only the last changed.',
+    refs: ['BPM-021', 'BPM-004'],
+    blockedOn: 'live-check',
+    unblock: 'Pick Mountain, then Corner on production and record the URL and the CRM call.',
+    interim: 'All selected attributes are sent and AND-ed (BPM-004).',
+  },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
     refs: ['BPM-007', 'FR-P11', 'OQ-23'],

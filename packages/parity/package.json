@@ -11,7 +11,8 @@
     "./card": "./src/card.ts",
     "./pending": "./src/pending.ts",
     "./search/params": "./src/search/params.ts",
-    "./search/device": "./src/search/device.ts"
+    "./search/device": "./src/search/device.ts",
+    "./search/form": "./src/search/form.ts"
   },
   "scripts": {
     "test": "vitest run"

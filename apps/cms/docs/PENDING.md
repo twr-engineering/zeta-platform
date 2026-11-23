@@ -18,7 +18,7 @@ the entry, and let the type checker show the remaining call sites.
 | `beachfront-query` | CD-13, OQ-22 | The correct sub-type for the Beachfront shortlist. | CRM payloads show _st_7 = "Commercial", so Commercial is right and Beachfront is the broken clone. Attribute 145 = "Beachfront" exists — ask the client: should Beachfront be fa[]=a145? (matrix S3-2) | Migrated as-is (byte-identical to Commercial). |
 | `respacio-credentials` | DG-01, DG-05, R-19 | Live Respacio API access for the sync. | Client/Respacio issue an API key; set RESPACIO_API_KEY (a network secret in cloud sessions). | The sync runs against the committed golden-master fixtures (RESPACIO_MODE=fixtures). |
 
-## Needs a check against production (12)
+## Needs a check against production (15)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
@@ -28,6 +28,9 @@ the entry, and let the type checker show the remaining call sites.
 | `listing-route-redirect` | BPM-007a | What a listing served under the other view page does (/long-term/{sale-ref}/, /r/{rent-ref}/, or any ?query): the source 302s to the canonical link. | Fetch a sale ref under /long-term/, a rent ref under /r/, and a ref with ?x=1 on production; record status codes and Location. | Both routes serve any listing; no redirect. |
 | `keyword-case` | BPM-016 | Whether the CRM's reference lookup for a typed keyword is case-sensitive, and prefix or contains. | Search keyword_1=ztp73 and keyword_1=TP73 on production and compare with keyword_1=ZTP73. | Case-insensitive contains on the reference number (identical to prefix for every ZTP reference). |
 | `account-registration` | BPM-014, FR-A04 | What a first-time sign-up creates: the source skips the mail for an unknown email, and the CRM sync only runs from the mail path. | Register a new test email on production; check the CRM for a contact and the inbox for an access link. | Not built. |
+| `payment-terms-filter` | BPM-021, FR-SR06 | Whether the CRM filters on payment_terms[] (More Filters → Payment Term), and against which field. | Pick one Payment Term on production and compare the result count with none picked. | The parameter is accepted and kept in the URL but does not filter. |
+| `type-tree-combination` | BPM-021, FR-SR02 | How the CRM combines sub_property_type[] with sub_sub_property_type[] when both are sent (e.g. House + Condominium › Studio). | Select House and Studio together on production and compare counts with each alone. | OR across the two lists (one property-type facet). |
+| `fa-collision` | BPM-021, BPM-004 | Property View, Lot Type and Is Foreclosed all write fa[]: whether combining two selects sends both (AND) or only the last changed. | Pick Mountain, then Corner on production and record the URL and the CRM call. | All selected attributes are sent and AND-ed (BPM-004). |
 | `location-page-live-checks` | BPM-017, FR-L02, FR-L03 | Location pages: which tab opens first, whether the UAG-hidden Bottom sections really hide, how the CRM combines city[] with municipality[], and the heading on the 20 pages without level meta. | Open one city page, one barangay page and one page without level meta on production. | Not built. |
 | `article-double-h1` | BPM-018, FR-E04 | Whether articles really render two H1s (the template title and the body's own first heading). | Open one article on production and count h1 elements. | Not built. |
 | `amount-filter` | BPM-001 | Whether ?amount= from the calculator actually filters search results, and how. | Retest the A/B with JS enabled on both variants (CD-15 confounded the first run). | The parameter is accepted and preserved in the URL but does not filter. |
