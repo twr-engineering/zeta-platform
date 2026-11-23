@@ -37,6 +37,9 @@ importers:
       '@payloadcms/storage-s3':
         specifier: 3.88.0
         version: 3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
+      '@payloadcms/storage-vercel-blob':
+        specifier: 3.88.0
+        version: 3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@payloadcms/ui':
         specifier: 3.88.0
         version: 3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
@@ -285,7 +288,7 @@ importers:
         version: 3.88.0(@faceless-ui/modal@3.0.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@faceless-ui/scroll-info@2.0.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@payloadcms/next@3.88.0(@types/react@19.2.14)(graphql@16.14.2)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)(yjs@13.6.32)
       '@payloadcms/storage-vercel-blob':
         specifier: 3.88.0
-        version: 3.88.0(@types/react@19.2.14)(next@16.3.2(@playwright/test@1.61.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
+        version: 3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@zeta/parity':
         specifier: workspace:*
         version: link:../parity
@@ -8011,7 +8014,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@payloadcms/storage-vercel-blob@3.88.0(@types/react@19.2.14)(next@16.3.2(@playwright/test@1.61.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)':
+  '@payloadcms/storage-vercel-blob@3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)':
     dependencies:
       '@payloadcms/plugin-cloud-storage': 3.88.0(@types/react@19.2.14)(monaco-editor@0.56.0)(next@16.3.2(@babel/core@7.29.7)(@playwright/test@1.61.1)(@types/node@24.12.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(sass@1.77.4))(payload@3.88.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@vercel/blob': 2.3.1
@@ -9662,7 +9665,7 @@ snapshots:
       '@next/eslint-plugin-next': 16.3.0(eslint@9.39.5(jiti@2.7.0))
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.7.0))
@@ -9705,7 +9708,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -9720,21 +9723,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0)):
-    dependencies:
-      '@nolyfill/is-core-module': 1.0.39
-      debug: 4.4.3
-      eslint: 9.39.5(jiti@2.7.0)
-      get-tsconfig: 4.14.0
-      is-bun-module: 2.0.0
-      stable-hash: 0.0.5
-      tinyglobby: 0.2.17
-      unrs-resolver: 1.12.2
-    optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.64.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
-    transitivePeerDependencies:
-      - supports-color
-
   eslint-module-utils@2.14.0(@typescript-eslint/parser@8.64.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       debug: 3.2.7
@@ -9746,14 +9734,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
+  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -9797,7 +9785,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
+      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.68.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
