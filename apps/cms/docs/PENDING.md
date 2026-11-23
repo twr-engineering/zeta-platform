@@ -6,12 +6,13 @@ Each entry is a placeholder: the code runs an interim behaviour at the marked po
 `[parity:pending]` once. When a rule is captured and signed in the matrix, implement it, delete
 the entry, and let the type checker show the remaining call sites.
 
-## Waiting on the client (8)
+## Waiting on the client (9)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 | `recommendation-scope` | BPM-015, FR-A13 | The "Please sign up to see your recommendation" step has no recommendation behind it: the survey answers are never submitted. Port it as-is, drop it, or specify a real recommendation. | Client decision. | Not built. |
 | `location-defects` | BPM-017, CD-18, CD-19 | Barangay pages show placeholder tabs ("test 4/5/Test6", CD-18), mislabelled tabs and a malformed Agri query (CD-19): reproduce, or use the city-page tab set on both levels? | Client decision (GP.5). | Both levels use the city-page tab set with each tab filtering as its label says. |
+| `listing-defects` | BPM-020, CD-21, CD-22, CD-23, CD-24, CD-25, CD-26, CD-27, CD-28, CD-29 | GP.5 decisions on the listing-page defects: no price on /long-term/ (CD-21), the literal "1 Parking" (CD-22), "House" for every type (CD-23), Beachfront missing from View (CD-24), Year Built from attribute ids (CD-25), the broken payment calculator (CD-26), share links fixed to ZTP116 (CD-27), Zeta Exclusive/Preselling ribbons (CD-28), Payment Term/Title Status reading the wrong field (CD-29). | Client decision per defect: reproduce or fix. | Fixed where reproducing would show wrong data (price on long-term, real parking/type/year/share URL/payment terms, a correct calculator); CD-24 and CD-28 are reproduced as captured. |
 | `withdrawn-listing-url` | BPM-007, FR-P11, OQ-23 | What a sold / leased / withdrawn listing URL does (404, 301, or empty shell). | Client supplies one sold reference number; fetch it on production. | Withdrawn listings 404. |
 | `contact-forms` | FR-F02, FR-F03, FR-F04, FR-F06, OQ-17 | Field names, order, labels, validation, consent wording and routing for the live forms. | Client confirms which of the 89 wpcf7_contact_form records are live. | Inquiry slots render a placeholder; no submissions are accepted. |
 | `gated-downloads` | CD-08 | Whether the logged-out login-gate on /buy/ downloads is intended or an inverted condition. | Client supplies a login; compare /buy/ logged in vs logged out. | Download buttons render a placeholder. |
@@ -44,11 +45,10 @@ the entry, and let the type checker show the remaining call sites.
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 
-## Captured, not built yet (4)
+## Captured, not built yet (3)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 | `account-area-build` | BPM-014, FR-A04, FR-A10, FR-G07 | The account area (log in / sign up, liked properties, saved searches, subscriptions) as captured in BPM-014, with signed, expiring access links. | Build the account area (WP-07); the drawer links to /my-account/ meanwhile. | The drawer shows "Log in / Sign up" pointing at /my-account/, which is not built. |
 | `global-search-modal` | FR-G08, FR-SR02 | FR-G08: the faceted search modal opened from the header on any page. | Build the search filter panel (WP-04). | The header search field is a free-text box (q, FR-SR14) that opens /search_results/; the faceted modal is not built. |
 | `location-counts` | FR-H06, BPM-017 | City Guide listing counts (FR-H06) need each Location bound to its CRM geography ids (crmGeography), set during content migration. | Bind Locations to their CRM province/municipality/town ids (WP-10 content migration). | Counts match listings by municipality name, which over-counts (e.g. every Cagayan de Oro listing, not just the city page's own). |
-| `listing-field-render-set` | BPM-020, FR-D01, FR-D04, FR-P01, FR-P02, FR-P10 | The listing detail page renders the captured field set: 45 rows in DOM order, with per-row conditions (BPM-020). | Build the listing page from BPM-020 with the design system (WP-03). Defect rows (CD-21..CD-27) need a GP.5 decision first. | Detail page renders a minimal provisional field set; everything else is in crmPayload. |

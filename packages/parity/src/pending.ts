@@ -126,19 +126,19 @@ export const PENDING = {
     unblock: 'Client decision (GP.5).',
     interim: 'Both levels use the city-page tab set with each tab filtering as its label says.',
   },
+  'listing-defects': {
+    need: 'GP.5 decisions on the listing-page defects: no price on /long-term/ (CD-21), the literal "1 Parking" (CD-22), "House" for every type (CD-23), Beachfront missing from View (CD-24), Year Built from attribute ids (CD-25), the broken payment calculator (CD-26), share links fixed to ZTP116 (CD-27), Zeta Exclusive/Preselling ribbons (CD-28), Payment Term/Title Status reading the wrong field (CD-29).',
+    refs: ['BPM-020', 'CD-21', 'CD-22', 'CD-23', 'CD-24', 'CD-25', 'CD-26', 'CD-27', 'CD-28', 'CD-29'],
+    blockedOn: 'client',
+    unblock: 'Client decision per defect: reproduce or fix.',
+    interim: 'Fixed where reproducing would show wrong data (price on long-term, real parking/type/year/share URL/payment terms, a correct calculator); CD-24 and CD-28 are reproduced as captured.',
+  },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
     refs: ['BPM-007', 'FR-P11', 'OQ-23'],
     blockedOn: 'client',
     unblock: 'Client supplies one sold reference number; fetch it on production.',
     interim: 'Withdrawn listings 404.',
-  },
-  'listing-field-render-set': {
-    need: 'The listing detail page renders the captured field set: 45 rows in DOM order, with per-row conditions (BPM-020).',
-    refs: ['BPM-020', 'FR-D01', 'FR-D04', 'FR-P01', 'FR-P02', 'FR-P10'],
-    blockedOn: 'build',
-    unblock: 'Build the listing page from BPM-020 with the design system (WP-03). Defect rows (CD-21..CD-27) need a GP.5 decision first.',
-    interim: 'Detail page renders a minimal provisional field set; everything else is in crmPayload.',
   },
   'location-page-live-checks': {
     need: 'Location pages: which tab opens first, whether the UAG-hidden Bottom sections really hide, how the CRM combines city[] with municipality[], and the heading on the 20 pages without level meta.',
