@@ -89,7 +89,7 @@ export const PENDING = {
     refs: ['FR-G08', 'FR-SR02'],
     blockedOn: 'build',
     unblock: 'Build the search filter panel (WP-04).',
-    interim: 'The header search field links to /search_results/?property_for=1 (Sale).',
+    interim: 'The header search field is a free-text box (q, FR-SR14) that opens /search_results/; the faceted modal is not built.',
   },
   'payment-terms-filter': {
     need: 'Whether the CRM filters on payment_terms[] (More Filters → Payment Term), and against which field.',
