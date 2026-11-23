@@ -43,10 +43,11 @@ the entry, and let the type checker show the remaining call sites.
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 
-## Captured, not built yet (3)
+## Captured, not built yet (4)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
 | `account-area-build` | BPM-014, FR-A04, FR-A10, FR-G07 | The account area (log in / sign up, liked properties, saved searches, subscriptions) as captured in BPM-014, with signed, expiring access links. | Build the account area (WP-07); the drawer links to /my-account/ meanwhile. | The drawer shows "Log in / Sign up" pointing at /my-account/, which is not built. |
 | `global-search-modal` | FR-G08, FR-SR02 | FR-G08: the faceted search modal opened from the header on any page. | Build the search filter panel (WP-04). | The header search field links to /search_results/?property_for=1 (Sale). |
+| `location-counts` | FR-H06, BPM-017 | City Guide listing counts (FR-H06) need each Location bound to its CRM geography ids (crmGeography), set during content migration. | Bind Locations to their CRM province/municipality/town ids (WP-10 content migration). | Counts match listings by municipality name, which over-counts (e.g. every Cagayan de Oro listing, not just the city page's own). |
 | `listing-field-render-set` | BPM-020, FR-D01, FR-D04, FR-P01, FR-P02, FR-P10 | The listing detail page renders the captured field set: 45 rows in DOM order, with per-row conditions (BPM-020). | Build the listing page from BPM-020 with the design system (WP-03). Defect rows (CD-21..CD-27) need a GP.5 decision first. | Detail page renders a minimal provisional field set; everything else is in crmPayload. |
