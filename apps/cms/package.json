@@ -1,7 +1,7 @@
 {
   "name": "zeta-payload",
   "version": "0.1.0",
-  "description": "Zeta Group property portal \u2014 Payload CMS 3 + Next.js rebuild of zetagroup.ph",
+  "description": "Zeta Group property portal — Payload CMS 3 + Next.js rebuild of zetagroup.ph",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
@@ -33,6 +33,7 @@
     "@payloadcms/plugin-seo": "3.88.0",
     "@payloadcms/richtext-lexical": "3.88.0",
     "@payloadcms/storage-s3": "3.88.0",
+    "@payloadcms/storage-vercel-blob": "3.88.0",
     "@payloadcms/ui": "3.88.0",
     "@zeta/cms-config": "workspace:*",
     "@zeta/parity": "workspace:*",
