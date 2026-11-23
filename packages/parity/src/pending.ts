@@ -19,7 +19,8 @@ export type PendingRule = {
   /** PRD requirement / matrix row ids. */
   refs: string[]
   /** What unblocks it: a capture task, a live check, or a client answer. */
-  blockedOn: 'capture' | 'live-check' | 'client'
+  /** `build`: the rule is captured in the matrix; the code still runs the interim until it is built. */
+  blockedOn: 'capture' | 'live-check' | 'client' | 'build'
   unblock: string
   /** What the code does in the meantime. Must be visibly provisional. */
   interim: string
@@ -41,19 +42,40 @@ export const PENDING = {
     unblock: 'Submit a banded facet with an open-ended top band on production and compare result counts.',
     interim: 'Treated as "no ceiling". The hull is still computed and transmitted exactly as the source does.',
   },
-  'phone-page-size': {
-    need: 'property_per_page_phone per listing module — server-side Mobile_Detect changes page size on phones.',
-    refs: ['BPM-006'],
-    blockedOn: 'capture',
-    unblock: 'Census property_per_page_phone across respacio-blocks/search-results block attributes.',
-    interim: 'Desktop page size everywhere.',
+  'phone-page-detection': {
+    need: 'Which page size phones actually receive on production, given WP Rocket serves one shared cache to phones and desktops.',
+    refs: ['BPM-006a'],
+    blockedOn: 'live-check',
+    unblock: 'Fetch /search_results/ with a phone UA and a cache-busting query string, and count the results.',
+    interim: 'Per request, as the source intends: Phone (isMobile && !isTablet) gets the module phone size, default 9.',
   },
-  'view-page-map': {
-    need: 'The prop_options slugs.view map: which view page (/r/ or /long-term/) each property_for_id + rent_amount_period resolves to.',
-    refs: ['BPM-007'],
-    blockedOn: 'capture',
-    unblock: 'Unserialize the respacio options row in wp_options and read slugs.view.',
-    interim: 'Rent + a rent period -> /long-term/{ref}/, everything else -> /r/{ref}/. Both routes serve any listing.',
+  'listing-route-redirect': {
+    need: 'What a listing served under the other view page does (/long-term/{sale-ref}/, /r/{rent-ref}/, or any ?query): the source 302s to the canonical link.',
+    refs: ['BPM-007a'],
+    blockedOn: 'live-check',
+    unblock: 'Fetch a sale ref under /long-term/, a rent ref under /r/, and a ref with ?x=1 on production; record status codes and Location.',
+    interim: 'Both routes serve any listing; no redirect.',
+  },
+  'keyword-case': {
+    need: "Whether the CRM's reference lookup for a typed keyword is case-sensitive, and prefix or contains.",
+    refs: ['BPM-016'],
+    blockedOn: 'live-check',
+    unblock: 'Search keyword_1=ztp73 and keyword_1=TP73 on production and compare with keyword_1=ZTP73.',
+    interim: 'Case-insensitive contains on the reference number (identical to prefix for every ZTP reference).',
+  },
+  'account-registration': {
+    need: 'What a first-time sign-up creates: the source skips the mail for an unknown email, and the CRM sync only runs from the mail path.',
+    refs: ['BPM-014', 'FR-A04'],
+    blockedOn: 'live-check',
+    unblock: 'Register a new test email on production; check the CRM for a contact and the inbox for an access link.',
+    interim: 'Not built.',
+  },
+  'recommendation-scope': {
+    need: 'The "Please sign up to see your recommendation" step has no recommendation behind it: the survey answers are never submitted. Port it as-is, drop it, or specify a real recommendation.',
+    refs: ['BPM-015', 'FR-A13'],
+    blockedOn: 'client',
+    unblock: 'Client decision.',
+    interim: 'Not built.',
   },
   'withdrawn-listing-url': {
     need: 'What a sold / leased / withdrawn listing URL does (404, 301, or empty shell).',
@@ -63,31 +85,24 @@ export const PENDING = {
     interim: 'Withdrawn listings 404.',
   },
   'listing-field-render-set': {
-    need: 'Which of the 113 detail fields + 24 collections the listing template renders, in what order.',
-    refs: ['FR-D01', 'FR-D04', 'FR-P01', 'FR-P02', 'FR-P10'],
-    blockedOn: 'capture',
-    unblock: 'Transcribe the properties/view template DSL records into matrix rows.',
+    need: 'The listing detail page renders the captured field set: 45 rows in DOM order, with per-row conditions (BPM-020).',
+    refs: ['BPM-020', 'FR-D01', 'FR-D04', 'FR-P01', 'FR-P02', 'FR-P10'],
+    blockedOn: 'build',
+    unblock: 'Build the listing page from BPM-020 with the design system (WP-03). Defect rows (CD-21..CD-27) need a GP.5 decision first.',
     interim: 'Detail page renders a minimal provisional field set; everything else is in crmPayload.',
   },
-  'location-templates': {
-    need: 'Module set, order and data source for city vs barangay location templates.',
-    refs: ['FR-L02', 'FR-L03'],
-    blockedOn: 'capture',
-    unblock: 'Read templates/customtemplates records and respacio_location_tree postmeta.',
-    interim: 'Location pages render intro + listings bound by crmGeography + content.',
-  },
-  'account-area': {
-    need: 'Whether e-mail verification is enforced; the account-area feature set.',
-    refs: ['FR-A04', 'FR-A10'],
-    blockedOn: 'capture',
-    unblock: 'Read functions.php:823–920, the my-account page body and contacts/* calls.',
+  'location-page-live-checks': {
+    need: 'Location pages: which tab opens first, whether the UAG-hidden Bottom sections really hide, how the CRM combines city[] with municipality[], and the heading on the 20 pages without level meta.',
+    refs: ['BPM-017', 'FR-L02', 'FR-L03'],
+    blockedOn: 'live-check',
+    unblock: 'Open one city page, one barangay page and one page without level meta on production.',
     interim: 'Not built.',
   },
-  'recommendation-gate': {
-    need: 'The rule behind "Please sign up to see your recommendation".',
-    refs: ['FR-A13'],
-    blockedOn: 'capture',
-    unblock: 'Read functions.php, contacts/check_contact and the my-account page.',
+  'article-double-h1': {
+    need: 'Whether articles really render two H1s (the template title and the body\'s own first heading).',
+    refs: ['BPM-018', 'FR-E04'],
+    blockedOn: 'live-check',
+    unblock: 'Open one article on production and count h1 elements.',
     interim: 'Not built.',
   },
   'contact-forms': {
@@ -103,20 +118,6 @@ export const PENDING = {
     blockedOn: 'client',
     unblock: 'Client supplies a login; compare /buy/ logged in vs logged out.',
     interim: 'Download buttons render a placeholder.',
-  },
-  'article-template': {
-    need: 'Article template field set and the block census across post bodies.',
-    refs: ['FR-E04', 'FR-E05'],
-    blockedOn: 'capture',
-    unblock: 'Census wp_posts of type post.',
-    interim: 'Not built.',
-  },
-  'directory-filters': {
-    need: 'Directory filter semantics.',
-    refs: ['FR-E20'],
-    blockedOn: 'capture',
-    unblock: 'Read includes/cpt-directory.php and respacio-blocks/infinity-directory-grid.',
-    interim: 'Not built.',
   },
   'shortlist-count': {
     need: 'What [respacio_shortlist_count] should count — it was never implemented.',
@@ -160,13 +161,6 @@ export const PENDING = {
     blockedOn: 'live-check',
     unblock: 'Select one municipality and one city in the same search on production and compare counts.',
     interim: 'OR within the area facet, like every other indexed facet.',
-  },
-  'keyword-search': {
-    need: 'The auto-suggest keyword path (filter_auto_suggest_direct -> reference_no[]).',
-    refs: ['FR-SR14'],
-    blockedOn: 'capture',
-    unblock: 'Read filter_auto_suggest_direct and the fields_custom keyword session config.',
-    interim: 'keyword= matches referenceNo exactly, else title contains.',
   },
   'respacio-credentials': {
     need: 'Live Respacio API access for the sync.',

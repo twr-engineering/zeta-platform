@@ -10,6 +10,7 @@ const GROUPS = [
   ['client', 'Waiting on the client'],
   ['live-check', 'Needs a check against production'],
   ['capture', 'Readable from the local artefacts (capture work)'],
+  ['build', 'Captured, not built yet'],
 ] as const
 const rows = Object.entries(PENDING)
 

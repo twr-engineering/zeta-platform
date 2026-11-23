@@ -3,7 +3,8 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { bandHull, getAll, parseSearch, resolvePerPage, resolveSort, toCrmParams } from '../src/search/params'
+import { deviceType } from '../src/search/device'
+import { bandHull, getAll, parseSearch, resolveKeyword, resolvePerPage, resolveSort, toCrmParams } from '../src/search/params'
 
 /**
  * GOLDEN MASTER — search URL contract. BPM-002..006, BPM-012.
@@ -49,6 +50,29 @@ describe('BPM-006 page size', () => {
   it('falls back to 9', () => expect(resolvePerPage(null, {})).toBe(9))
   it('?property_per_page overrides config', () => expect(resolvePerPage('12', { propertyPerPage: 8 })).toBe(12))
   it('…except on card_only layouts', () => expect(resolvePerPage('12', { propertyPerPage: 8, layout: 'card_only' })).toBe(8))
+})
+
+describe('BPM-006a phone page size (search-results.php:730–738, block defaults)', () => {
+  it('a phone gets the block default 9 when the module sets no phone size, whatever the desktop size', () => {
+    expect(resolvePerPage(null, { propertyPerPage: 12, device: 'Phone' })).toBe(9) // /search_results/, shortlists
+    expect(resolvePerPage(null, { propertyPerPage: 8, device: 'Phone' })).toBe(9) // City/Municipality Middle
+    expect(resolvePerPage(null, { propertyPerPage: 30, device: 'Phone' })).toBe(9) // Complex Middle
+  })
+  it("a module's explicit phone size wins on a phone only", () => {
+    expect(resolvePerPage(null, { propertyPerPage: 4, propertyPerPagePhone: 3, device: 'Phone' })).toBe(3) // /r/ similar
+    expect(resolvePerPage(null, { propertyPerPage: 4, propertyPerPagePhone: 3, device: 'Tablet' })).toBe(4)
+    expect(resolvePerPage(null, { propertyPerPage: 4, propertyPerPagePhone: 3, device: 'Computer' })).toBe(4)
+  })
+  it('?property_per_page still overrides on a phone', () =>
+    expect(resolvePerPage('12', { propertyPerPagePhone: 3, device: 'Phone' })).toBe(12))
+  it('a tablet is not a phone (detect.php:66–68)', () => {
+    expect(deviceType('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148')).toBe('Phone')
+    expect(deviceType('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36')).toBe('Phone')
+    expect(deviceType('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) Mobile/15E148')).toBe('Tablet')
+    expect(deviceType('Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 Chrome/120 Safari/537.36')).toBe('Tablet')
+    expect(deviceType('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Safari/605.1.15')).toBe('Computer')
+    expect(deviceType(null)).toBe('Computer')
+  })
 })
 
 describe('BPM-003 direct bounds', () => {
@@ -118,5 +142,23 @@ describe('corpus replay — the translation the plugin performed', () => {
       expect(c.params.order_by, `call ${c.id}`).toBe(orderBy)
       if (order) expect(c.params.order, `call ${c.id}`).toBe(order)
     }
+  })
+})
+
+describe('BPM-016 keyword field (search-results.php:464–500)', () => {
+  const kw = (qs: string) => resolveKeyword(new URLSearchParams(qs))
+  it('reads keyword_1, the live field, for Sale or no property_for', () => {
+    expect(kw('keyword_1=ZTP73')).toBe('ZTP73')
+    expect(kw('property_for=1&keyword_1=ZTP73')).toBe('ZTP73')
+  })
+  it('drops a suffix that does not match ?property_for', () => {
+    expect(kw('property_for=2&keyword_1=ZTP73')).toBeNull()
+    expect(kw('property_for=2&keyword_2=ZTP73')).toBe('ZTP73')
+    expect(kw('property_for=6&keyword_1=ZTP73')).toBe('ZTP73') // only 1–5 are excluded
+  })
+  it('keyword_5 is never a keyword: its suffix is not stripped', () => expect(kw('property_for=5&keyword_5=ZTP73')).toBeNull())
+  it('a bare keyword always counts; empty values are skipped; the value is raw', () => {
+    expect(kw('property_for=2&keyword=ztp 7')).toBe('ztp 7')
+    expect(kw('keyword=')).toBeNull()
   })
 })
