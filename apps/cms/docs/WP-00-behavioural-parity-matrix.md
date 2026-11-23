@@ -613,7 +613,7 @@ The separate select-picker suggestion field (`property_filter`) exists only in v
 | 13 | Media tabs | Overview · Photos · 360 Virtual Tour · Floor Plan · Video | `iframe_url`, `floor_plans`, `video` | each rm when empty | |
 | 14 | Breadcrumb | "House in {Home / municipality / city / complex / ref}" | `municipality_name`, `city_name`, `complex_name`, `reference_no` | complex only with a city | "House" is literal for every type (CD-23) |
 | 15 | Overview | — | `description` | always | `nl2br`; for New Development (`sale_detail_type_id` 2) `[Label: a - b]` → "Label from a to b." |
-| 16 | Features | "Features" | feature values (Nearby Amenities, Transport, Community, Location) minus attribute values | heading always | lower-cased, de-duplicated, sorted A–Z, two columns |
+| 16 | Features | "Features" | feature values (Nearby Amenities, Transport, Community, Location); when the listing has attribute values, the **symmetric difference**: attribute values not among the features (sorted), then feature values not among the attributes (sorted) (spv:1258–1302, corrected on build) | heading always | lower-cased, de-duplicated, two columns |
 | 17 | Location | "Location" | `latitude`, `longitude` | map rm when either is empty | |
 | 18 | Property Info | Type | `property_sub_name` | always | |
 | 19 | 〃 | Subtype | `property_sub_sub_name` | rm if empty | |
@@ -678,6 +678,8 @@ The separate select-picker suggestion field (`property_filter`) exists only in v
 The "Show {n} results" count is the same AJAX response's `totalrecords`, written only when > 0.
 
 **Build notes.** `@zeta/parity/search/form` holds the options, the tree rule (`toggleType`) and the URL writer (`withParam`, resets `pageid`); `parseSearch` now reads `_sst_`, the area boxes, storey, year built and payment terms; the mirror gains `subSubTypeId/Name`, `storeys`, `builtYear`. Each change navigates to the same URL and the server renders it (**E**: same URL, same results, server-rendered). "Clear Filters" returns to `?property_for={n}` (the live outer link points at a non-existent `/search_result/`, CD-32).
+
+**Build notes (24 Nov 2026).** Built as `ListingView` (both routes) from `@zeta/parity/listing` (`newDevelopmentDescription`, `priceHistoryRows`, `featureList`, `attributeRows`, `similarPriceBounds`), reading the CRM detail payload (`crmPayload.view`) where synced. Defects CD-21/22/23/25/26/27/29 are fixed in the interim and CD-24/28 reproduced, pending the client's GP.5 decisions (`listing-defects`). The live Google maps become an OpenStreetMap embed; Places of Interest is a list until a map is chosen.
 
 **Sign-off:** ☐
 

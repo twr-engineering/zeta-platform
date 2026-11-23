@@ -1,5 +1,11 @@
-/** /long-term/{ref}/ — the second view page (BPM-007). Same template until view-page-map is captured. */
-export { default, generateMetadata } from '../../r/[ref]/page'
+import { ListingView } from '@/components/listing/ListingView'
 
-// Route segment config is parsed statically and cannot be re-exported (next build rejects it).
+/** /long-term/{reference_no}/ — the rent view page (BPM-007a): Rent, short and long rent. */
+export { generateMetadata } from '../../r/[ref]/page'
 export const dynamic = 'force-dynamic'
+
+type Props = { params: Promise<{ ref: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }
+
+export default async function LongTermListingPage({ params, searchParams }: Props) {
+  return <ListingView refNo={(await params).ref} view="long-term" searchParams={await searchParams} />
+}
