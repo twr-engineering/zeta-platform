@@ -27,8 +27,20 @@ export function typeColors(allDeals: DealJSON[], types: TypeJSON[]): TypeColors 
 
 /** One type filtered: r = rank / max(n − 1, 1), step = min(4, ⌊5r⌋), token --s{step+1}. */
 export function shadeOf(pp: number, sortedPps: number[]): string {
-  const r = sortedPps.indexOf(pp) / Math.max(sortedPps.length - 1, 1)
-  return `--s${Math.min(4, Math.floor(r * 5)) + 1}`
+  return makeShader(sortedPps)(pp)
+}
+
+/**
+ * The same rule for many deals at once: ranks come from a lookup built once (first index of each
+ * value, as indexOf), instead of an indexOf per deal, which is quadratic over thousands (NFR-002).
+ */
+export function makeShader(sortedPps: number[]): (pp: number) => string {
+  const first = new Map<number, number>()
+  sortedPps.forEach((v, i) => {
+    if (!first.has(v)) first.set(v, i)
+  })
+  const top = Math.max(sortedPps.length - 1, 1)
+  return (pp) => `--s${Math.min(4, Math.floor(((first.get(pp) ?? -1) / top) * 5)) + 1}`
 }
 
 /** "₱26k / sqm" for the selected deal's tooltip (§9.2.2). */

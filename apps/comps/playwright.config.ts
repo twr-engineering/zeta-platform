@@ -5,9 +5,12 @@ import { defineConfig, devices } from '@playwright/test'
  * Runs against `next start` on :3913 (build first). Needs DATABASE_URI (migrated by apps/cms),
  * PAYLOAD_SECRET and APP_ENV (not production). The setup project signs the shared admin in
  * once; screen tests reuse that cookie.
+ * Staging (M9): set E2E_BASE_URL to a deployed URL to run the same suite against it; no local
+ * server is started, and DATABASE_URI must point at the database that deployment uses.
  */
 const PORT = 3913
-const baseURL = `http://localhost:${PORT}`
+const REMOTE = process.env.E2E_BASE_URL?.replace(/\/$/, '')
+const baseURL = REMOTE ?? `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -34,10 +37,12 @@ export default defineConfig({
       dependencies: ['chromium-light', 'chromium-dark', 'webkit-light', 'webkit-dark'],
     },
   ],
-  webServer: {
-    command: `pnpm exec next start -p ${PORT}`,
-    url: `${baseURL}/login`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: REMOTE
+    ? undefined
+    : {
+        command: `pnpm exec next start -p ${PORT}`,
+        url: `${baseURL}/login`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 60_000,
+      },
 })

@@ -157,3 +157,14 @@ describe('location suggestion (§7.4.2, ADD-008)', () => {
     expect(suggestionHint(null).key).toBe('')
   })
 })
+
+describe('Asia/Manila dates on the server (NFR-006)', () => {
+  it('17:00 UTC on 4 Nov is already 5 Nov in Manila: a deal dated 5 Nov is accepted', async () => {
+    const { manilaISO } = await import('@/lib/format')
+    const today = manilaISO(new Date('2026-11-04T17:00:00Z'))
+    expect(today).toBe('2026-11-05')
+    expect(checkDeal({ ...ok, date: '2026-11-05' }, ctx({ today }))).toBeNull()
+    expect(checkDeal({ ...ok, date: '2026-11-06' }, ctx({ today }))?.message).toBe('The date sold is in the future.')
+    expect(manilaISO(new Date('2026-11-04T15:59:59Z'))).toBe('2026-11-04')
+  })
+})

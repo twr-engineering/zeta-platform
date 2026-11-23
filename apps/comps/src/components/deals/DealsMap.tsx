@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css'
 
 import type * as Leaflet from 'leaflet'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/Confirm'
 import { coarse, createZetaMap, cssVar, DEFAULT_VIEW, type L } from '@/components/map/zetaMap'
@@ -12,7 +12,7 @@ import { useToast } from '@/components/Toast'
 import type { DealJSON, LocationJSON } from '@/lib/data'
 import { nearName, refKey, suggestFor } from '@/lib/deals'
 import { peso, pinText } from '@/lib/format'
-import { kPerSqm, shadeOf, typeColors } from '@/lib/mapColors'
+import { kPerSqm, makeShader, typeColors } from '@/lib/mapColors'
 import { pinOk } from '@/lib/settings'
 import { metres } from '@/lib/stats'
 import { draftHasText, emptyDraft, useData } from '@/lib/store'
@@ -41,10 +41,9 @@ export function DealsMap() {
   const deals = useData((s) => s.deals)
   const types = useData((s) => s.types)
   const locations = useData((s) => s.locations)
-  const fType = useData((s) => s.bar.fType)
   const selDeal = useData((s) => s.selDeal)
   const hovDeal = useData((s) => s.hovDeal)
-  const { list } = useShownDeals()
+  const { list, fType } = useMapView()
 
   const box = useRef<HTMLDivElement>(null)
   const st = useRef<{
@@ -66,7 +65,8 @@ export function DealsMap() {
   const tc = useMemo(() => typeColors(deals, types), [deals, types])
   const sortedPps = useMemo(() => list.map((d) => d.pp).sort((a, b) => a - b), [list])
   const shade = !!fType
-  const colorOf = (d: DealJSON) => (shade ? shadeOf(d.pp, sortedPps) : tc.color(refKey(d.type)))
+  const shader = useMemo(() => makeShader(sortedPps), [sortedPps])
+  const colorOf = (d: DealJSON) => (shade ? shader(d.pp) : tc.color(refKey(d.type)))
 
   const wire = (m: Leaflet.CircleMarker, d: DealJSON) => {
     const { setHovDeal, setSelDeal } = useData.getState()
@@ -170,16 +170,15 @@ export function DealsMap() {
   }, [])
 
   // ----- markers -----
-  useEffect(() => {
-    const s = st.current
-    if (!s || !ready) return
-    live.current.list = list
-    live.current.locations = locations
+  const drawMarkers = (s: NonNullable<typeof st.current>) => {
     const { L: Lf, layer, renderer } = s
     layer.clearLayers()
     s.markers.clear()
     const big = coarse()
     const surface = cssVar('--surface')
+    // One computed-style lookup per color token, not one per marker (NFR-002).
+    const colors = new Map<string, string>()
+    const color = (token: string) => colors.get(token) ?? (colors.set(token, cssVar(token)), colors.get(token)!)
     const sel = list.find((d) => d.id === selDeal) ?? null
     for (const d of list) {
       if (d.id === selDeal) continue
@@ -188,11 +187,12 @@ export function DealsMap() {
         radius: big ? 9 : 7,
         color: surface,
         weight: 1.5,
-        fillColor: cssVar(colorOf(d)),
+        fillColor: color(colorOf(d)),
         fillOpacity: shade ? 1 : 0.85,
         bubblingMouseEvents: false,
       })
-      m.bindTooltip(`${d.location.name}, ${peso(d.pp)} per sqm`, { direction: 'top', offset: [0, -6] })
+      // Text built when the tooltip opens, not up front for every marker (NFR-002).
+      m.bindTooltip(() => `${d.location.name}, ${peso(d.pp)} per sqm`, { direction: 'top', offset: [0, -6] })
       wire(m, d)
       m.addTo(layer)
       s.markers.set(d.id, m)
@@ -207,6 +207,16 @@ export function DealsMap() {
     // One marker per visible deal (MAP-001, MAP-009), readable by tests.
     box.current?.setAttribute('data-markers', String(s.markers.size))
     layoutLabels()
+  }
+
+  useEffect(() => {
+    const s = st.current
+    if (!s || !ready) return
+    live.current.list = list
+    live.current.locations = locations
+    // Rebuilt after the next paint: with thousands of deals this takes a few hundred ms on a phone,
+    // and the list (and whatever else changed) must reach the screen first (NFR-002).
+    return afterPaint(() => drawMarkers(s))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, list, selDeal, tc, shade, sortedPps, theme, locations])
 
@@ -338,12 +348,36 @@ function PinCard({ pin, map, near, onClose, onAdd }: { pin: LatLng; map: Leaflet
   )
 }
 
+/** Run `fn` once the browser has painted the next frame; returns a cancel function. */
+function afterPaint(fn: () => void): () => void {
+  let t: ReturnType<typeof setTimeout> | undefined
+  const raf = requestAnimationFrame(() => {
+    t = setTimeout(fn, 0)
+  })
+  return () => {
+    cancelAnimationFrame(raf)
+    clearTimeout(t)
+  }
+}
+
+/**
+ * The deals and type the map and legend draw, deferred as one snapshot: after a filter change the
+ * list paints first and the map catches up in the next render, instead of rebuilding thousands of
+ * markers before the screen can update (NFR-002). One snapshot, so the map never pairs a new list
+ * with an old color mode or the reverse.
+ */
+function useMapView() {
+  const { list } = useShownDeals()
+  const fType = useData((s) => s.bar.fType)
+  const now = useMemo(() => ({ list, fType }), [list, fType])
+  return useDeferredValue(now)
+}
+
 /** The legend under the map (§9.2.4): type swatches, or the price shades for one type. */
 export function MapLegend() {
   const deals = useData((s) => s.deals)
   const types = useData((s) => s.types)
-  const fType = useData((s) => s.bar.fType)
-  const { list } = useShownDeals()
+  const { list, fType } = useMapView()
   const tc = useMemo(() => typeColors(deals, types), [deals, types])
   if (!list.length) return <div className="legend" id="mapLegend" />
   if (fType)
