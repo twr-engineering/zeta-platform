@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -51,7 +52,7 @@ export default async function ShortlistPage({ params, searchParams }: Props) {
           </p>
           <Link href="/contact/" className="btn btn-dark btn-yellow-text">Speak to a Property Specialist</Link>
         </div>
-        {hero?.url ? <img src={hero.url} alt="" className="page-hero-image" /> : <div className="page-hero-image tile-noimg" />}
+        {hero?.url ? <Image src={hero.url} alt="" className="page-hero-image" width={hero.width ?? 1080} height={hero.height ?? 720} priority sizes="(max-width: 767px) 100vw, 560px" /> : <div className="page-hero-image tile-noimg" />}
       </header>
       <p className="results-count">{result.totalDocs} properties</p>
       <ResultsGrid result={result} sp={sp} rates={rates} currency={currency} measurement={measurement} />

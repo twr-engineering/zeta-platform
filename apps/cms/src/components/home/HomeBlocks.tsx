@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { locationHref } from '@/lib/site/locations-menu'
@@ -27,7 +28,8 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
           case 'homeHero': {
             const bg = media(b.backgroundImage)
             return (
-              <section key={i} className="home-hero" style={bg?.url ? { backgroundImage: `url(${bg.url})` } : undefined}>
+              <section key={i} className="home-hero">
+                {bg?.url && <Image className="home-hero-image" src={bg.url} alt="" fill priority sizes="100vw" />}
                 {b.backgroundVideoUrl && (
                   <video className="home-hero-video" src={b.backgroundVideoUrl} poster={bg?.url ?? undefined} autoPlay muted loop playsInline aria-hidden="true" />
                 )}
@@ -91,7 +93,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
                     const img = media(l.heroImage)
                     return (
                       <Link key={l.id} href={locationHref(l)} className="tile">
-                        {img?.url ? <img src={img.url} alt="" loading="lazy" /> : <div className="tile-noimg" />}
+                        {img?.url ? <Image src={img.url} alt="" fill sizes="(max-width: 767px) 100vw, 300px" /> : <div className="tile-noimg" />}
                         <span className="tile-body">
                           <strong>Properties for sale in {l.name}</strong>
                           {data.locationCounts[l.id] !== undefined && <span>{data.locationCounts[l.id]} Properties</span>}
@@ -109,7 +111,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
             const img = media(b.image)
             return (
               <section key={i} className={`home-section container home-cta${b.imageSide === 'right' ? ' is-reversed' : ''}`}>
-                {img?.url && <img className="home-cta-image" src={img.url} alt={img.alt ?? ''} loading="lazy" />}
+                {img?.url && <Image className="home-cta-image" src={img.url} alt={img.alt ?? ''} width={img.width ?? 800} height={img.height ?? 600} sizes="(max-width: 991px) 100vw, 560px" />}
                 <div className="home-cta-copy">
                   <h2>{b.heading}</h2>
                   {b.text && <p>{b.text}</p>}
@@ -128,7 +130,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
                     const img = media(s.heroImage)
                     return (
                       <Link key={s.id} href={`/shortlist/${s.slug}/`} className="tile">
-                        {img?.url ? <img src={img.url} alt="" loading="lazy" /> : <div className="tile-noimg" />}
+                        {img?.url ? <Image src={img.url} alt="" fill sizes="(max-width: 767px) 100vw, 300px" /> : <div className="tile-noimg" />}
                         <span className="tile-body">
                           <strong>{s.title}</strong>
                           <span className="tile-more">Find out More</span>

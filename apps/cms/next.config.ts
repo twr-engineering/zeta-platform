@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         pathname: '/api/media/file/**',
       },
     ],
+    // Listing photos are the CRM's S3 originals (0.3–1.6 MB, eu-west-3) and editor media is on
+    // Vercel Blob; the optimiser resizes both to the rendered size, as WebP, cached at the edge.
+    remotePatterns: [
+      { protocol: 'https', hostname: 's3.eu-west-3.amazonaws.com', pathname: '/respacio-b6f2533a04ad44064505dafc89e3aa54/**' },
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
+    ],
+    formats: ['image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {

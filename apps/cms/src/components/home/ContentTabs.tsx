@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -21,7 +22,7 @@ export function ContentTabs({ posts, shorts, moreLabel, moreHref }: { posts: Ite
         <div className={tab === 'blogs' ? 'post-list' : 'short-grid'}>
           {items.map((it) => (
             <Link key={it.id} href={it.href} className={tab === 'blogs' ? 'post-row' : 'short-card'}>
-              {it.image ? <img src={it.image} alt="" loading="lazy" /> : <div className="tile-noimg" />}
+              <span className="media-box">{it.image ? <Image src={it.image} alt="" fill sizes="(max-width: 767px) 100vw, 260px" /> : <span className="tile-noimg" />}</span>
               <span>
                 <strong>{it.title}</strong>
                 {it.excerpt && <span className="post-excerpt">{it.excerpt}</span>}
