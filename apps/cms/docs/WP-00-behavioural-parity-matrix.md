@@ -776,6 +776,19 @@ Read-only GETs against production (desktop: `?res_dev=1440`, phone: iPhone UA + 
 | `location-grid-images` (WP-10) | `/preselling-developments/` renders 2 tiles (Kensington Sky Garden, Teakwood Hills) of the 26 locations tagged `new-developments` — exactly the 2 with a featured image; tile text "Property for sale in {name}, {parent name}" | **BPM-022**: the location grid lists tagged locations that have a featured image (limit 12). Built in `migrate:wp` and the `homeLocations` development tile style |
 | `new-development-url` | `/new-development/` → device shim → 404 "Page not found" | CD-33 |
 
+### 4.3 Search page side by side — 24 Nov 2026
+
+Production and the rebuild driven in a browser on the same URL (`/search_results/?property_for=1`).
+
+| Live | Rule (source) | Build |
+|---|---|---|
+| The header search is a **location picker** (bootstrap-select on `select[name="area_1[]"]`): municipalities shown as "(City)"; typing shows matching barangays ("- Patag") and developments under their municipality; Select All / Deselect all on what is listed; "Search" (or closing with a selection) submits | `search-form.php` area options (levels municipality, city, complexname; data-parent); `search-results.php:4258–4300`: on `/search_results/` the picker is one of the results filters (other filters kept, page reset); elsewhere the header form starts a Sale search | `LocationPicker` in the header; options from the CRM location tree (`properties/province_municipality_city_complex`, stored in `crm-state` by the sync; fixture recorded from the production picker). Typed text with nothing ticked runs the E-class free-text search (`q`) |
+| Picker URLs are `area_1[]=municipality_25956` | `search-results.php:470–503`: a key ending `_1`…`_5` applies only when `property_for` is that number (or absent), suffix stripped; `:505–527`: `area` values `province_`, `municipality_`, `city_`, `complexname_`/`complex_` | `normaliseSuffixedKeys` + `parseSearch` (parity tests). Before this, live picker links returned unfiltered results here |
+| Card type line: "House", "Commercial" | Template 276562 `.subtype`: the sub-sub type span is removed when a sub type exists | `cardTypeLabel` (sub type, else sub-sub type). The build had it reversed |
+| Card photos page with ‹ › and carry a favourite star | `[property_slider]`, `[property_favourite]` | `CardMedia`; the star leads to sign-in until the account area exists. List payloads carry one photo, so the slider shows where the mirror has the detail gallery |
+| Order By shows the placeholder "Order By" when no `sortby` is set | — | CD-30 no longer reproduces as recorded (it showed "Newest"); the rebuild's "Featured" label stays |
+| Show Map toggle; Save Search | `[property_showonmap]`; saved searches | Not built: map view next (FR-SR16); Save Search needs the account area |
+
 ---
 
 ## 5. Golden-master seeding (FR-PY03, FR-PY07)

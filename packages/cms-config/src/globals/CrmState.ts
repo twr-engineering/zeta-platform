@@ -15,6 +15,11 @@ export const CrmState: GlobalConfig = {
   access: { read: isStaff, update: nobody },
   fields: [
     { name: 'currencyConverter', type: 'json', admin: { readOnly: true } },
+    {
+      name: 'locationTree',
+      type: 'json',
+      admin: { readOnly: true, description: 'CRM province → municipality → town → complex tree: the search location picker and its name lookups.' },
+    },
     { name: 'lastSyncAt', type: 'date', admin: { readOnly: true } },
     { name: 'lastSyncMode', type: 'text', admin: { readOnly: true, description: 'live or fixtures' } },
     { name: 'lastSyncResult', type: 'json', admin: { readOnly: true } },

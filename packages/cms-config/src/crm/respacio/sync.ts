@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 
 import { getRespacioClient, type RespacioClient } from './client'
 import { fromListItem, withDetail } from './mapper'
-import type { CrmListItem } from './types'
+import type { CrmListItem, CrmLocationTree } from './types'
 
 /**
  * Full mirror sync: CRM -> Listings. FR-C01, FR-C07.
@@ -116,11 +116,21 @@ export async function syncRespacio(
     if (missed >= WITHDRAW_AFTER) result.withdrawn++
   }
 
+  // The search picker's location tree (FR-SR02 area). A failure keeps the last stored tree.
+  let locationTree: CrmLocationTree | undefined
+  try {
+    const tree = await client.locationTree()
+    if (tree.data?.length) locationTree = tree
+  } catch (err) {
+    result.errors.push(`location tree: ${(err as Error).message}`)
+  }
+
   await payload.updateGlobal({
     slug: 'crm-state',
     overrideAccess: true,
     data: {
       ...(rates ? { currencyConverter: rates } : {}),
+      ...(locationTree ? { locationTree } : {}),
       lastSyncAt: new Date().toISOString(),
       lastSyncMode: client.mode,
       lastSyncResult: result,

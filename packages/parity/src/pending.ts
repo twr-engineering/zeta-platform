@@ -60,8 +60,8 @@ export const PENDING = {
     need: 'FR-G08: the faceted search modal opened from the header on any page.',
     refs: ['FR-G08', 'FR-SR02'],
     blockedOn: 'build',
-    unblock: 'Build the search filter panel (WP-04).',
-    interim: 'The header search field is a free-text box (q, FR-SR14) that opens /search_results/; the faceted modal is not built.',
+    unblock: 'Decide whether FR-G08’s faceted modal is still wanted now that the header carries the live location picker.',
+    interim: 'The header carries the live location picker (area[], plus free text q when nothing is ticked); no faceted modal.',
   },
   'payment-terms-filter': {
     need: 'Whether the CRM filters on payment_terms[] (More Filters → Payment Term), and against which field.',

@@ -7,6 +7,7 @@ import * as migration_20261124_062616_page_blocks from './20261124_062616_page_b
 import * as migration_20261124_125706_location_tile_style from './20261124_125706_location_tile_style';
 import * as migration_20261124_132428_directory_excerpt from './20261124_132428_directory_excerpt';
 import * as migration_20261124_132447_directory_categories from './20261124_132447_directory_categories';
+import * as migration_20261124_143116_crm_location_tree from './20261124_143116_crm_location_tree';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261124_132447_directory_categories.up,
     down: migration_20261124_132447_directory_categories.down,
-    name: '20261124_132447_directory_categories'
+    name: '20261124_132447_directory_categories',
+  },
+  {
+    up: migration_20261124_143116_crm_location_tree.up,
+    down: migration_20261124_143116_crm_location_tree.down,
+    name: '20261124_143116_crm_location_tree'
   },
 ];

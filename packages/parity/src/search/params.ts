@@ -40,7 +40,11 @@ export type SearchQuery = {
   saleDetailTypeIds: string[]
   /** fa[]=a{n} — AND: use_and_operator_for_attr_fet=1 on 1,355 of 1,381 calls. */
   attributeIds: string[]
-  /** area[]=municipality_{id} | city_{id}. city ids are CRM town_id. */
+  /**
+   * area[]=province_{id} | municipality_{id} | city_{id} | complexname_{id} (or complex_{id})
+   * (search-results.php:505–527). city ids are CRM town_id; complexes also come from complex_name[].
+   */
+  provinceIds: string[]
   municipalityIds: string[]
   townIds: string[]
   complexIds: string[]
@@ -88,6 +92,31 @@ export function getAll(sp: Sp, key: string): string[] {
   }
   // array_filter: PHP drops empty strings.
   return out.filter((v) => v !== '')
+}
+
+/**
+ * search-results.php:470–503 — a parameter whose name ends in _1.._5 belongs to the search form of
+ * that property_for (1 Sale, 2 Rent, 3 Rent and Sale, 4 Short rent, 5 Long rent): it is skipped when
+ * the request's property_for is another of 1..5, and otherwise applies with the suffix stripped.
+ * The live header search writes `area_1[]=…` this way. keyword_N keeps its own rule (resolveKeyword,
+ * BPM-016), so it is left as written. Unsuffixed keys come first, then the stripped ones, matching
+ * the PHP loop that appends both to the same CRM list.
+ */
+export function normaliseSuffixedKeys(sp: Sp): Sp {
+  const pf = sp.get('property_for')
+  const plain = new URLSearchParams()
+  const stripped: [string, string][] = []
+  for (const [k, v] of sp) {
+    const m = /^(.+?)_([1-5])((?:\[\d*\])?)$/.exec(k)
+    if (!m || m[1] === 'keyword') {
+      plain.append(k, v)
+      continue
+    }
+    if (pf && ['1', '2', '3', '4', '5'].includes(pf) && pf !== m[2]) continue
+    stripped.push([`${m[1]}${m[3]}`, v])
+  }
+  for (const [k, v] of stripped) plain.append(k, v)
+  return plain
 }
 
 const sanitise = (v: string) => v.replace(/[^A-Za-z0-9. -]/g, '')
@@ -164,7 +193,11 @@ export function resolveKeyword(sp: Sp): string | null {
   return found
 }
 
-export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuery {
+/** explode('_', $areaval): the prefix before the first underscore picks the CRM list. */
+const areaIds = (area: string[], prefix: string) => area.filter((a) => a.split('_')[0] === prefix).map((a) => a.split('_')[1] ?? '').filter(Boolean)
+
+export function parseSearch(raw: Sp, config: SearchModuleConfig = {}): SearchQuery {
+  const sp = normaliseSuffixedKeys(raw)
   const ranges: SearchQuery['ranges'] = {}
 
   // Path A — direct bounds (BPM-003).
@@ -215,9 +248,10 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
     subSubTypeIds: getAll(sp, 'type').filter((t) => t.startsWith('_sst_')).map((t) => t.slice('_sst_'.length)),
     saleDetailTypeIds: getAll(sp, 'sale_detail_type'),
     attributeIds: getAll(sp, 'fa').map((a) => a.replace(/^a/, '')),
-    municipalityIds: area.filter((a) => a.startsWith('municipality_')).map((a) => a.slice('municipality_'.length)),
-    townIds: area.filter((a) => a.startsWith('city_')).map((a) => a.slice('city_'.length)),
-    complexIds: getAll(sp, 'complex_name'),
+    provinceIds: areaIds(area, 'province'),
+    municipalityIds: areaIds(area, 'municipality'),
+    townIds: areaIds(area, 'city'),
+    complexIds: [...getAll(sp, 'complex_name'), ...areaIds(area, 'complexname'), ...areaIds(area, 'complex')],
     referenceNos: getAll(sp, 'reference_no'),
     keyword: keyword || null,
     text: sp.get('q')?.trim() || null,
@@ -244,8 +278,10 @@ export function toCrmParams(q: SearchQuery): Record<string, string> {
   arr('sub_property_type', q.subTypeIds)
   arr('sub_sub_property_type', q.subSubTypeIds)
   arr('sale_detail_type', q.saleDetailTypeIds)
+  arr('province', q.provinceIds)
   arr('municipality', q.municipalityIds)
   arr('city', q.townIds)
+  arr('complex_name', q.complexIds)
   const [orderBy, order] = q.sort.split('_')
   out.order_by = orderBy
   out.order = order

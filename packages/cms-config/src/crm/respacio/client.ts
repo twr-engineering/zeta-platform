@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { pending } from '@zeta/parity/pending'
 
-import type { CrmListItem, CrmListResponse, CrmParams, CrmViewResponse } from './types'
+import type { CrmListItem, CrmListResponse, CrmLocationTree, CrmParams, CrmViewResponse } from './types'
 
 /**
  * Respacio CRM client. The ONLY module that talks to crm.respacio.com (PRD §15.5).
@@ -27,6 +27,8 @@ export type RespacioClient = {
   mode: 'live' | 'fixtures'
   listProperties(params: CrmParams): Promise<CrmListResponse>
   viewProperty(referenceNo: string, propertyFor: string): Promise<CrmViewResponse>
+  /** The search picker's location tree (province → municipality → town → complex). */
+  locationTree(): Promise<CrmLocationTree>
 }
 
 const VENDOR_BASIC_AUTH = 'Basic YWRtaW46MTIzNA=='
@@ -57,6 +59,9 @@ function liveClient(apiKey: string, baseUrl: string): RespacioClient {
     listProperties: (params) => get('properties', params),
     viewProperty: (referenceNo, propertyFor) =>
       get('properties/view', { property_reference: referenceNo, property_for: propertyFor, language: 'en' }),
+    // The site's respacio_miscLocationinactive is "yes" (not "all"), so the plugin sends
+    // get_inactive_location=1 (functions.php:5663–5666).
+    locationTree: () => get('properties/province_municipality_city_complex', { lang_code: 'en', get_inactive_location: '1' }),
   }
 }
 
@@ -83,6 +88,9 @@ function fixtureClient(): RespacioClient {
         currency_converter: { EUR: '1.0000000000', USD: '1.1687567934', PHP: '72.1823096972' },
         data: { properties: scoped.slice(offset, offset + perPage) },
       }
+    },
+    async locationTree() {
+      return JSON.parse(await readFile(path.join(FIXTURES_DIR, 'location-tree.json'), 'utf8'))
     },
     async viewProperty(referenceNo) {
       try {

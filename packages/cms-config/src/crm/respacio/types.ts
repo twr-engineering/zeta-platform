@@ -113,3 +113,18 @@ export type CrmViewResponse = Envelope & {
 
 /** Query params exactly as the WordPress plugin sends them (array keys included). */
 export type CrmParams = Record<string, string | string[]>
+
+/** properties/province_municipality_city_complex (functions.php:5653 get_location_tree_elements). */
+export type CrmLocationTree = {
+  status?: string
+  is_record?: number
+  data?: {
+    province_id: string | null
+    province_name: string | null
+    municipality_array?: {
+      municipality_id: string
+      municipality_name: string
+      city_array?: { city_id: string; city_name: string; complex_array?: { complex_id: string; complex_name: string }[] }[]
+    }[]
+  }[]
+}

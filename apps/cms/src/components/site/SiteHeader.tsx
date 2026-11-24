@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 
 import { pending } from '@/lib/parity/pending'
+import { LocationPicker } from '@/components/search/LocationPicker'
+import type { AreaOption } from '@/lib/site/area-options'
 import type { LocationGroup } from '@/lib/site/locations-menu'
 import { setPreferences } from '@/lib/site/preferences'
 
@@ -14,6 +16,7 @@ type Props = {
   menu: MenuItem[]
   cta: { label?: string | null; url?: string | null }
   locations: LocationGroup[]
+  areaOptions: AreaOption[]
   currency: string
   currencies: readonly string[]
   measurement: 'metric' | 'imperial'
@@ -25,7 +28,7 @@ type Props = {
  * The menu opens a right-hand drawer. FR-G01/G02/G05/G07/G11 controls live inside the drawer
  * (decision 23 Nov 2026), so nothing the PRD requires is lost and the live look is unchanged.
  */
-export function SiteHeader({ menu, cta, locations, currency, currencies, measurement }: Props) {
+export function SiteHeader({ menu, cta, locations, areaOptions, currency, currencies, measurement }: Props) {
   const path = usePathname()
   const overHero = path === '/'
   const [scrolled, setScrolled] = useState(false)
@@ -63,7 +66,11 @@ export function SiteHeader({ menu, cta, locations, currency, currencies, measure
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size brand mark */}
           <img src="/zeta-logo-light.png" alt="" width={128} height={35} />
         </Link>
-        {solid && <HeaderSearch />}
+        {solid && (
+          <Suspense fallback={<div className="location-picker" />}>
+            <HeaderSearch options={areaOptions} />
+          </Suspense>
+        )}
         <div className="site-header-actions">
           {solid && cta.label && cta.url && (
             <Link href={cta.url} className="btn btn-soft site-cta">
@@ -147,16 +154,9 @@ export function SiteHeader({ menu, cta, locations, currency, currencies, measure
   )
 }
 
-function HeaderSearch() {
+function HeaderSearch({ options }: { options: AreaOption[] }) {
   pending('global-search-modal')
-  // FR-SR14 free text from any page: a plain GET form, so it works without JavaScript.
-  return (
-    <form className="header-search" action="/search_results/" method="get" role="search">
-      <SearchIcon />
-      <input type="hidden" name="property_for" value="1" />
-      <input type="search" name="q" aria-label="Search properties" placeholder="Search a development, neighborhood, or city" />
-    </form>
-  )
+  return <LocationPicker options={options} />
 }
 
 function AccountLink({ onNavigate }: { onNavigate: () => void }) {
@@ -214,7 +214,4 @@ const MenuIcon = () => (
 )
 const CloseIcon = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-)
-const SearchIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
 )

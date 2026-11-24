@@ -1,28 +1,29 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { displayArea, type Measurement } from '@zeta/parity/area'
-import { cardCount, cardFloorArea, cardLotArea, cardRibbons } from '@zeta/parity/card'
+import { cardCount, cardFloorArea, cardLotArea, cardRibbons, cardTypeLabel } from '@zeta/parity/card'
 import { formatPrice, type Rates } from '@/lib/price'
 import { listingPath } from '@/lib/site/listing-path'
 import type { Listing } from '@/payload-types'
+
+import { CardMedia } from './CardMedia'
 
 type Props = { listing: Listing; rates: Rates; currency: string; measurement?: Measurement }
 
 /**
  * Result card — live template "Custom Property Grid Template – 4" (customtemplates 276562):
- * image with marketing ribbons, price and a call button, the title (two lines), the type (sub-sub
- * type, else sub type), then bedrooms · bathrooms · {unit}.floor · {unit}.lot. Figures follow the
+ * photo slider with marketing ribbons and the favourite star, price and a call button, the title
+ * (two lines), the type (sub type, else sub-sub type: cardTypeLabel), then bedrooms · bathrooms · {unit}.floor · {unit}.lot. Figures follow the
  * live page scripts (@zeta/parity/card); the unit follows the visitor's preference (FR-G05).
  */
 export function ListingCard({ listing, rates, currency, measurement = 'metric' }: Props) {
-  const image = listing.images?.[0]?.url
+  const images = (listing.images ?? []).map((im) => im.url).filter((u): u is string => !!u)
   const { price } = formatPrice(listing.price, listing.currencyCode ?? 'PHP', currency, rates)
   const payload = (listing.crmPayload ?? {}) as Record<string, unknown>
   // The template keys on the English labels (marketing_features_en; marketing_features is the same on this single-language site).
   const en = payload.marketing_features_en ?? payload.marketing_features
   const ribbons = cardRibbons(typeof en === 'string' ? en : null)
-  const type = listing.subSubTypeName || listing.subTypeName
+  const type = cardTypeLabel(listing.subTypeName, listing.subSubTypeName)
   const floor = displayArea(listing.builtSize, measurement)
   const lot = displayArea(listing.plotSize, measurement)
   const href = listingPath(listing)
@@ -30,14 +31,7 @@ export function ListingCard({ listing, rates, currency, measurement = 'metric' }
 
   return (
     <article className="card">
-      <Link href={href} className="card-link" aria-label={listing.propertyTitle ?? listing.referenceNo ?? 'Property'}>
-        <figure className="card-media">
-          {image ? <Image src={image} alt="" fill sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 300px" /> : <div className="card-noimg" />}
-          {ribbons.length > 0 && (
-            <div className="card-ribbons">{ribbons.map((r) => <span key={r} className="ribbon">{r}</span>)}</div>
-          )}
-        </figure>
-      </Link>
+      <CardMedia href={href} label={listing.propertyTitle ?? listing.referenceNo ?? 'Property'} images={images} ribbons={ribbons} />
       <div className="card-body">
         <div className="card-price-row">
           <p className="card-price">{priceLine}</p>

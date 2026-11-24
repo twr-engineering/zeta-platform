@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { cardCount, cardFloorArea, cardLotArea, cardRibbons } from '../src/card'
+import { cardCount, cardFloorArea, cardLotArea, cardRibbons, cardTypeLabel } from '../src/card'
 
 // Live card scripts 297342.js, 298806.js, 285108.js (custom-css-js) — see src/card.ts.
 describe('result-card figures', () => {
@@ -40,5 +40,16 @@ describe('card ribbons (template 276562)', () => {
     expect(cardRibbons('Foreclosed,Direct Listing')).toEqual(['Direct Listing'])
     expect(cardRibbons('Direct Listing,Preselling')).toEqual(['Direct Listing'])
     expect(cardRibbons(null)).toEqual([])
+  })
+})
+
+describe('template 276562 .subtype — sub type, else sub-sub type (production 24 Nov 2026)', () => {
+  it('shows the sub type when both exist', () => {
+    expect(cardTypeLabel('House', 'Single Detached')).toBe('House')
+    expect(cardTypeLabel('Commercial', 'Commercial Lot')).toBe('Commercial')
+  })
+  it('falls back to the sub-sub type', () => {
+    expect(cardTypeLabel('', 'Studio')).toBe('Studio')
+    expect(cardTypeLabel(null, 'Studio')).toBe('Studio')
   })
 })
