@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -126,8 +127,9 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
       {images.length > 0 && (
         <section className="lp-gallery" aria-label="Photos">
           {images.slice(0, 5).map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element -- Respacio S3 originals until WP-10 rebinds media
-            <img key={src} src={src} alt={`${listing.propertyTitle ?? ''} — photo ${i + 1}`} loading={i ? 'lazy' : 'eager'} />
+            <span key={src} className="lp-gallery-item">
+              <Image src={src} alt={`${listing.propertyTitle ?? ''} — photo ${i + 1}`} fill priority={i === 0} sizes={i === 0 ? '(max-width: 991px) 100vw, 760px' : '(max-width: 991px) 50vw, 380px'} />
+            </span>
           ))}
           {images.length > 5 && <a className="lp-all-photos" href="#photos">Show {images.length} photos and videos</a>}
         </section>
@@ -222,8 +224,9 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
               {videos.map((v) => <video key={v} className="lp-video" src={v} controls preload="none" />)}
               <div className="lp-photo-grid">
                 {[...images, ...floorPlans].map((src, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element -- Respacio S3 originals until WP-10 rebinds media
-                  <img key={`${src}-${i}`} src={src} alt="" loading="lazy" />
+                  <span key={`${src}-${i}`} className="lp-photo-item">
+                    <Image src={src} alt="" fill sizes="(max-width: 767px) 50vw, 240px" />
+                  </span>
                 ))}
               </div>
             </section>

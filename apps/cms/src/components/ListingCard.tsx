@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { displayArea, type Measurement } from '@zeta/parity/area'
@@ -31,8 +32,7 @@ export function ListingCard({ listing, rates, currency, measurement = 'metric' }
     <article className="card">
       <Link href={href} className="card-link" aria-label={listing.propertyTitle ?? listing.referenceNo ?? 'Property'}>
         <figure className="card-media">
-          {/* Respacio S3 originals; rebinding to Media is WP-10, so no next/image optimisation yet. */}
-          {image ? <img src={image} alt="" loading="lazy" /> : <div className="card-noimg" />}
+          {image ? <Image src={image} alt="" fill sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 300px" /> : <div className="card-noimg" />}
           {ribbons.length > 0 && (
             <div className="card-ribbons">{ribbons.map((r) => <span key={r} className="ribbon">{r}</span>)}</div>
           )}

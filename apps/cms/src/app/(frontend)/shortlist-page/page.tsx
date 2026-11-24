@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { GetInTouch } from '@/components/site/GetInTouch'
@@ -27,7 +28,7 @@ export default async function ShortlistIndex() {
           const img = s.heroImage && typeof s.heroImage === 'object' ? (s.heroImage as Media) : null
           return (
             <Link key={s.id} href={`/shortlist/${s.slug}/`} className="tile">
-              {img?.url ? <img src={img.url} alt="" loading="lazy" /> : <div className="tile-noimg" />}
+              {img?.url ? <Image src={img.url} alt="" fill sizes="(max-width: 767px) 100vw, 300px" /> : <div className="tile-noimg" />}
               <span className="tile-body">
                 <strong>{s.title}</strong>
                 <span className="tile-more">Find out More</span>

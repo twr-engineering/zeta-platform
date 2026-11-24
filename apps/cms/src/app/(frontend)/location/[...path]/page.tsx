@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Where } from 'payload'
@@ -78,7 +79,7 @@ export default async function LocationPage({ params }: Props) {
             <p>There are {resale[0].totalDocs + preselling[0].totalDocs} property for sale in {location.name}</p>
           )}
         </div>
-        {hero?.url && <img src={hero.url} alt="" className="page-hero-image" />}
+        {hero?.url && <Image src={hero.url} alt="" className="page-hero-image" width={hero.width ?? 1080} height={hero.height ?? 720} priority sizes="(max-width: 767px) 100vw, 560px" />}
       </header>
 
       <section className="home-section">
