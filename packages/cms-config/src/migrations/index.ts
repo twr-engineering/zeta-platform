@@ -5,6 +5,8 @@ import * as migration_20261123_174557_wp04_listing_filter_fields from './2026112
 import * as migration_20261123_180241_home_blocks from './20261123_180241_home_blocks';
 import * as migration_20261124_062616_page_blocks from './20261124_062616_page_blocks';
 import * as migration_20261124_125706_location_tile_style from './20261124_125706_location_tile_style';
+import * as migration_20261124_132428_directory_excerpt from './20261124_132428_directory_excerpt';
+import * as migration_20261124_132447_directory_categories from './20261124_132447_directory_categories';
 
 export const migrations = [
   {
@@ -40,6 +42,16 @@ export const migrations = [
   {
     up: migration_20261124_125706_location_tile_style.up,
     down: migration_20261124_125706_location_tile_style.down,
-    name: '20261124_125706_location_tile_style'
+    name: '20261124_125706_location_tile_style',
+  },
+  {
+    up: migration_20261124_132428_directory_excerpt.up,
+    down: migration_20261124_132428_directory_excerpt.down,
+    name: '20261124_132428_directory_excerpt',
+  },
+  {
+    up: migration_20261124_132447_directory_categories.up,
+    down: migration_20261124_132447_directory_categories.down,
+    name: '20261124_132447_directory_categories'
   },
 ];
