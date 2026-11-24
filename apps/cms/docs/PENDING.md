@@ -20,7 +20,7 @@ the entry, and let the type checker show the remaining call sites.
 | `beachfront-query` | CD-13, OQ-22 | The correct sub-type for the Beachfront shortlist. | CRM payloads show _st_7 = "Commercial", so Commercial is right and Beachfront is the broken clone. Attribute 145 = "Beachfront" exists — ask the client: should Beachfront be fa[]=a145? (matrix S3-2) | Migrated as-is (byte-identical to Commercial). |
 | `respacio-credentials` | DG-01, DG-05, R-19 | Live Respacio API access for the sync. | Client/Respacio issue an API key; set RESPACIO_API_KEY (a network secret in cloud sessions). | The sync runs against the committed golden-master fixtures (RESPACIO_MODE=fixtures). |
 
-## Needs a check against production (15)
+## Needs a check against production (17)
 
 | Id | Refs | Needed | Unblocks when | Interim |
 |---|---|---|---|---|
@@ -35,6 +35,8 @@ the entry, and let the type checker show the remaining call sites.
 | `fa-collision` | BPM-021, BPM-004 | Property View, Lot Type and Is Foreclosed all write fa[]: whether combining two selects sends both (AND) or only the last changed. | Pick Mountain, then Corner on production and record the URL and the CRM call. | All selected attributes are sent and AND-ed (BPM-004). |
 | `location-page-live-checks` | BPM-017, FR-L02, FR-L03 | Location pages: which tab opens first, whether the UAG-hidden Bottom sections really hide, how the CRM combines city[] with municipality[], and the heading on the 20 pages without level meta. | Open one city page, one barangay page and one page without level meta on production. | Not built. |
 | `article-double-h1` | BPM-018, FR-E04 | Whether articles really render two H1s (the template title and the body's own first heading). | Open one article on production and count h1 elements. | Not built. |
+| `location-grid-images` | WP-10, FR-H06 | Where the live location grids (Preselling Developments, tag new-developments) take their tile photos: only 2 of the 26 tagged locations have a WordPress featured image. | Compare /preselling-developments/ tiles with the location posts (featured image, CRM complex photo or template default). | Tiles without a featured image show the dark placeholder; editors can set a hero image per location. |
+| `new-development-url` | WP-10 | What /new-development/ serves live: the Buy page’s "Explore Pre-selling Properties" button links there, but no page has that slug (a redirect or rewrite outside the content tables). | Open https://zetagroup.ph/new-development/ and record the response (redirect target or page). | The button keeps the live URL, which 404s here until the target is known. |
 | `amount-filter` | BPM-001 | Whether ?amount= from the calculator actually filters search results, and how. | Retest the A/B with JS enabled on both variants (CD-15 confounded the first run). | The parameter is accepted and preserved in the URL but does not filter. |
 | `price-display-live` | BPM-008, CD-03 | The exact rendered price string — format_price depends on the server ICU version and get_locale(). | Copy three rendered prices (PHP listing, PHP listing in USD, EUR listing) from production. | en-US ICU with the code->symbol substitution, e.g. "₱ 8,000,000". |
 | `sort-field-semantics` | BPM-002 | Which listing timestamp `date` sorts on, and how `priorityprice` orders ties. | Compare a date_desc and a priorityprice_desc result page on production against the CRM fields. | date -> crmModifiedAt; priorityprice -> priority desc, then price in the given direction. |

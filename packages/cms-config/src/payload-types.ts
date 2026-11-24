@@ -758,7 +758,7 @@ export interface Page {
   layout?:
     | (
         | {
-            heading: string;
+            heading?: string | null;
             backgroundImage?: (number | null) | Media;
             /**
              * Optional MP4 played muted behind the headline; the image is its poster and the fallback.
@@ -775,7 +775,7 @@ export interface Page {
             blockType: 'homeHero';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             testimonials?: (number | Testimonial)[] | null;
             moreLink?: {
@@ -787,7 +787,7 @@ export interface Page {
             blockType: 'homeTestimonials';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             items?:
               | {
@@ -805,7 +805,7 @@ export interface Page {
             blockType: 'homeStats';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             locations?: (number | Location)[] | null;
             moreLink?: {
@@ -817,7 +817,7 @@ export interface Page {
             blockType: 'homeLocations';
           }
         | {
-            heading: string;
+            heading?: string | null;
             text?: string | null;
             image?: (number | null) | Media;
             imageSide?: ('left' | 'right') | null;
@@ -830,7 +830,7 @@ export interface Page {
             blockType: 'homeCta';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             shortlists?: (number | Shortlist)[] | null;
             moreLink?: {
@@ -842,7 +842,7 @@ export interface Page {
             blockType: 'homeShortlists';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             /**
              * Leave empty for the latest 8.
@@ -861,7 +861,7 @@ export interface Page {
             blockType: 'homeContent';
           }
         | {
-            heading: string;
+            heading?: string | null;
             intro?: string | null;
             items?:
               | {
@@ -873,6 +873,193 @@ export interface Page {
             id?: string | null;
             blockName?: string | null;
             blockType: 'homeFaq';
+          }
+        | {
+            body?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            image?: (number | null) | Media;
+            /**
+             * YouTube link; shown instead of the image.
+             */
+            videoUrl?: string | null;
+            mediaSide?: ('left' | 'right') | null;
+            buttons?:
+              | {
+                  label: string;
+                  /**
+                   * Leave empty for a gated download (pending, OQ-17).
+                   */
+                  url?: string | null;
+                  style?: ('primary' | 'secondary' | 'download') | null;
+                  id?: string | null;
+                }[]
+              | null;
+            tone?: ('plain' | 'panel' | 'dark') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'content';
+          }
+        | {
+            heading?: string | null;
+            intro?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            items?:
+              | {
+                  question: string;
+                  answer?: {
+                    root: {
+                      type: string;
+                      children: {
+                        type: any;
+                        version: number;
+                        [k: string]: unknown;
+                      }[];
+                      direction: ('ltr' | 'rtl') | null;
+                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                      indent: number;
+                      version: number;
+                    };
+                    [k: string]: unknown;
+                  } | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'accordion';
+          }
+        | {
+            heading?: string | null;
+            intro?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            tabs?:
+              | {
+                  label: string;
+                  body?: {
+                    root: {
+                      type: string;
+                      children: {
+                        type: any;
+                        version: number;
+                        [k: string]: unknown;
+                      }[];
+                      direction: ('ltr' | 'rtl') | null;
+                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                      indent: number;
+                      version: number;
+                    };
+                    [k: string]: unknown;
+                  } | null;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'tabs';
+          }
+        | {
+            body?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            mapAddress?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'contactDetails';
+          }
+        | {
+            body?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            /**
+             * The live form’s name, e.g. "Get in touch form".
+             */
+            form: string;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'form';
+          }
+        | {
+            body?: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            } | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'calculator';
           }
       )[]
     | null;
@@ -1890,6 +2077,78 @@ export interface PagesSelect<T extends boolean = true> {
                     answer?: T;
                     id?: T;
                   };
+              id?: T;
+              blockName?: T;
+            };
+        content?:
+          | T
+          | {
+              body?: T;
+              image?: T;
+              videoUrl?: T;
+              mediaSide?: T;
+              buttons?:
+                | T
+                | {
+                    label?: T;
+                    url?: T;
+                    style?: T;
+                    id?: T;
+                  };
+              tone?: T;
+              id?: T;
+              blockName?: T;
+            };
+        accordion?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              items?:
+                | T
+                | {
+                    question?: T;
+                    answer?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        tabs?:
+          | T
+          | {
+              heading?: T;
+              intro?: T;
+              tabs?:
+                | T
+                | {
+                    label?: T;
+                    body?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
+        contactDetails?:
+          | T
+          | {
+              body?: T;
+              mapAddress?: T;
+              id?: T;
+              blockName?: T;
+            };
+        form?:
+          | T
+          | {
+              body?: T;
+              form?: T;
+              id?: T;
+              blockName?: T;
+            };
+        calculator?:
+          | T
+          | {
+              body?: T;
               id?: T;
               blockName?: T;
             };

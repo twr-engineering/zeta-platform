@@ -290,6 +290,45 @@ main:has(> .home-hero) { max-width: none; padding: 0 0 32px; }
   .price-panel { width: auto; }
 }
 
+/* ---- CMS pages: general blocks (blocks/page.ts) ---- */
+main:has(> .cms-page) { max-width: none; padding-left: 0; padding-right: 0; }
+.cms-page > .home-section.container, .cms-page > .home-section:first-child { padding-top: 48px; }
+.page-block { padding-top: 64px; }
+.cms-page > .page-block:first-child { padding-top: 24px; }
+.rich { color: var(--ink-2); line-height: 1.7; }
+.rich > :first-child { margin-top: 0; }
+.rich h1, .rich h2, .rich h3, .rich h4 { color: var(--ink); line-height: 1.25; margin: 1.2em 0 0.5em; }
+.rich h1, .rich h2 { font-size: 36px; font-weight: 600; }
+.rich h3 { font-size: 22px; }
+.rich img { max-width: 100%; height: auto; border-radius: var(--radius-card); }
+.rich a { color: var(--ink); }
+.content-block-inner { display: grid; gap: 48px; align-items: center; }
+.content-block.has-media .content-block-inner { grid-template-columns: 1fr 1fr; }
+.content-block.media-left .content-block-media { order: -1; }
+.content-block-media img { width: 100%; height: auto; border-radius: var(--radius-card); }
+.content-block.tone-panel { background: var(--panel); padding-bottom: 64px; margin-top: 64px; }
+.content-block.tone-dark { background: var(--ink); color: var(--paper); padding-bottom: 64px; margin-top: 64px; }
+.content-block.tone-dark .rich, .content-block.tone-dark .rich h2 { color: var(--paper); }
+.video-embed { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius-card); background: #000; }
+.block-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.btn-outline { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn-outline:hover { background: var(--panel); }
+.btn.is-disabled { opacity: 0.55; cursor: not-allowed; }
+.accordion-block > .faq, .tabs-block > .tab-panel, .calculator-block > form, .form-block > .pending { max-width: 900px; }
+.accordion-block h1, .accordion-block h2, .tabs-block h1, .tabs-block h2 { font-size: 36px; font-weight: 600; margin-bottom: 16px; }
+.accordion-block .faq, .tabs-block .tab-panel { margin-top: 24px; }
+.faq details .rich { padding: 0 4px 16px; }
+.tab-panel { border-bottom: 1px solid var(--line); }
+.tab-panel summary { min-height: 56px; padding: 12px 4px; font-weight: 600; cursor: pointer; }
+.contact-block { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+.contact-map { width: 100%; height: 400px; border: 0; border-radius: var(--radius-card); background: var(--panel); }
+.form-block .pending { margin-top: 16px; }
+@media (max-width: 991px) {
+  .content-block.has-media .content-block-inner, .contact-block { grid-template-columns: 1fr; gap: 28px; }
+  .content-block.media-left .content-block-media { order: 0; }
+  .rich h1, .rich h2, .accordion-block h2, .tabs-block h2 { font-size: 28px; }
+}
+
 /* ---- articles, insights, shorts (BPM-018) ---- */
 main:has(> .article) { max-width: none; padding-left: 0; padding-right: 0; padding-top: var(--header-h); }
 .article-hero { position: relative; display: flex; align-items: flex-end; min-height: 220px; padding: 40px var(--gutter); background: var(--panel); }

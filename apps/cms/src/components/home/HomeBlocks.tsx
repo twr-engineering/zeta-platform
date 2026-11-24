@@ -1,9 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { pending } from '@/lib/parity/pending'
 import { locationHref } from '@/lib/site/locations-menu'
 import { youtubeThumb } from '@/lib/site/youtube'
 import type { Location, Media, Page, Post, Short, Shortlist, Testimonial } from '@/payload-types'
+
+import { PageBlock } from '@/components/page/PageBlocks'
 
 import { FaqList } from './FaqList'
 import { HeroSearch } from './HeroSearch'
@@ -15,12 +18,13 @@ export type HomeData = {
   latestPosts: Post[]
   latestShorts: Short[]
   searchLocations: { label: string; value: string }[]
+  incomeMultiple: number
 }
 
 const media = (m: unknown): Media | null => (m && typeof m === 'object' ? (m as Media) : null)
 const docs = <T,>(list: unknown): T[] => (Array.isArray(list) ? list.filter((d): d is T => !!d && typeof d === 'object') : [])
 
-/** Renders the home page's blocks in their editor-set order (FR-H01, FR-H10). */
+/** Renders a page's blocks in their editor-set order (FR-H01, FR-H10): home blocks here, the rest in PageBlock. */
 export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }) {
   return (
     <>
@@ -86,6 +90,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
             )
           case 'homeLocations': {
             const locs = docs<Location>(b.locations)
+            if (locs.some((l) => !l.heroImage)) pending('location-grid-images')
             return (
               <section key={i} className="home-section container">
                 <SectionHead heading={b.heading} intro={b.intro} centered />
@@ -167,17 +172,18 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
               </section>
             )
           default:
-            return null
+            return <PageBlock key={i} block={b} incomeMultiple={data.incomeMultiple} first={i === 0} />
         }
       })}
     </>
   )
 }
 
-function SectionHead({ heading, intro, centered }: { heading: string; intro?: string | null; centered?: boolean }) {
+function SectionHead({ heading, intro, centered }: { heading?: string | null; intro?: string | null; centered?: boolean }) {
+  if (!heading && !intro) return null
   return (
     <header className={`section-head${centered ? ' is-centered' : ''}`}>
-      <h2>{heading}</h2>
+      {heading && <h2>{heading}</h2>}
       {intro && <p>{intro}</p>}
     </header>
   )
