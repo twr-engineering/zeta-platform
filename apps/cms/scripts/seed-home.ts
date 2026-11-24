@@ -13,6 +13,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { getPayload } from 'payload'
+import sharp from 'sharp'
 
 import config from '../src/payload.config'
 
@@ -25,6 +26,8 @@ type LocalContent = {
   testimonials?: { clientName: string; quote: string }[]
   faq?: { question: string; answer: string }[]
   heroImage?: string
+  /** slug → featured image in the offline pull (the WordPress _thumbnail_id of that location/shortlist). */
+  tileImages?: Record<string, string>
 }
 const contentPath = process.env.HOME_CONTENT ?? path.resolve(process.cwd(), '../../.local/home-content.json')
 const local: LocalContent = existsSync(contentPath) ? JSON.parse(readFileSync(contentPath, 'utf8')) : {}
@@ -33,6 +36,21 @@ const expand = (p: string) => p.replace(/^~(?=\/)/, os.homedir())
 
 const payload = await getPayload({ config })
 const opts = { overrideAccess: true } as const
+
+/**
+ * Uploads a local image once (by its resized file name). Originals in the pull reach 51 MB, so they
+ * are scaled to 1600 px wide JPEG first; the site's image optimiser does the rest per request.
+ */
+async function uploadImage(file: string, alt: string): Promise<number | undefined> {
+  const src = expand(file)
+  if (!existsSync(src)) return undefined
+  const name = `${path.basename(src, path.extname(src))}.jpg`
+  const existing = await payload.find({ collection: 'media', where: { filename: { equals: name } }, limit: 1, ...opts })
+  if (existing.docs[0]) return existing.docs[0].id as number
+  const data = await sharp(src).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer()
+  const doc = await payload.create({ collection: 'media', data: { alt }, file: { data, mimetype: 'image/jpeg', name, size: data.length }, ...opts })
+  return doc.id as number
+}
 
 async function upsert<T extends Record<string, unknown>>(collection: 'shortlists' | 'locations' | 'testimonials', where: Record<string, unknown>, data: T) {
   const found = await payload.find({ collection, where: where as never, limit: 1, depth: 0, ...opts })
@@ -53,7 +71,8 @@ const SHORTLISTS: [string, string, string][] = [
 ]
 const shortlistIds: number[] = []
 for (const [title, slug, savedQuery] of SHORTLISTS) {
-  shortlistIds.push(await upsert('shortlists', { slug: { equals: slug } }, { title, slug, savedQuery, _status: 'published' }))
+  const heroImage = local.tileImages?.[slug] ? await uploadImage(local.tileImages[slug], title) : undefined
+  shortlistIds.push(await upsert('shortlists', { slug: { equals: slug } }, { title, slug, savedQuery, ...(heroImage ? { heroImage } : {}), _status: 'published' }))
 }
 
 // The four featured cities, in live order.
@@ -65,7 +84,8 @@ const CITIES: [string, string, 'luzon' | 'visayas' | 'mindanao' | 'island-destin
 ]
 const locationIds: number[] = []
 for (const [name, slug, islandGroup] of CITIES) {
-  locationIds.push(await upsert('locations', { slug: { equals: slug } }, { name, slug, type: 'city', islandGroup, _status: 'published' }))
+  const heroImage = local.tileImages?.[slug] ? await uploadImage(local.tileImages[slug], name) : undefined
+  locationIds.push(await upsert('locations', { slug: { equals: slug } }, { name, slug, type: 'city', islandGroup, ...(heroImage ? { heroImage } : {}), _status: 'published' }))
 }
 
 const testimonialIds: number[] = []
@@ -101,5 +121,5 @@ const layout = [
 const found = await payload.find({ collection: 'pages', where: { slug: { equals: 'home' } }, limit: 1, ...opts })
 const data = { title: 'Home', slug: 'home', layout, _status: 'published' } as never
 const page = found.docs[0] ? await payload.update({ collection: 'pages', id: found.docs[0].id, data, ...opts }) : await payload.create({ collection: 'pages', data, ...opts })
-console.log(`seed:home: page ${page.id} — ${layout.length} blocks, ${shortlistIds.length} shortlists, ${locationIds.length} cities, ${testimonialIds.length} testimonials, ${local.faq?.length ?? 0} FAQs, hero image ${heroImage ? 'set' : 'skipped'}.`)
+console.log(`seed:home: page ${page.id} — ${layout.length} blocks, ${shortlistIds.length} shortlists, ${locationIds.length} cities, ${Object.keys(local.tileImages ?? {}).length} tile images, ${testimonialIds.length} testimonials, ${local.faq?.length ?? 0} FAQs, hero image ${heroImage ? 'set' : 'skipped'}.`)
 process.exit(0)
