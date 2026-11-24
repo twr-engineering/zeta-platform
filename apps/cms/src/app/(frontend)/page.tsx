@@ -44,11 +44,10 @@ async function homeData(layout: NonNullable<Awaited<ReturnType<typeof findHome>>
   await Promise.all(
     featured.map(async (l) => {
       const g = l.crmGeography
-      const geo: Where | null = g?.townId
-        ? { 'geo.townId': { equals: g.townId } }
-        : g?.municipalityId
-          ? { 'geo.municipalityId': { equals: g.municipalityId } }
-          : (pending('location-counts'), { 'geo.municipalityName': { like: l.name.replace(/ City$/i, '') } })
+      const nameMatch: Where = { 'geo.municipalityName': { like: l.name.replace(/ City$/i, '') } }
+      const idMatch: Where | null = g?.townId ? { 'geo.townId': { equals: g.townId } } : g?.municipalityId ? { 'geo.municipalityId': { equals: g.municipalityId } } : null
+      pending('location-counts')
+      const geo: Where = idMatch ? { or: [idMatch, nameMatch] } : nameMatch
       const { totalDocs } = await p.count({ collection: 'listings', where: { and: [{ syncStatus: { equals: 'active' } }, { propertyForId: { equals: '1' } }, geo] } })
       locationCounts[l.id] = totalDocs
     }),
