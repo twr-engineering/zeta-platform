@@ -90,8 +90,14 @@ for (const [name, slug, islandGroup] of CITIES) {
 
 const testimonialIds: number[] = []
 for (const t of local.testimonials ?? []) {
+  // Match by client name: migrate:wp imports the same testimonials under their WordPress slugs.
+  const existing = await payload.find({ collection: 'testimonials', where: { clientName: { equals: t.clientName } }, sort: 'id', limit: 1, depth: 0, ...opts })
   const slug = t.clientName.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-  testimonialIds.push(await upsert('testimonials', { slug: { equals: slug } }, { clientName: t.clientName, slug, quote: t.quote, _status: 'published' }))
+  testimonialIds.push(
+    existing.docs[0]
+      ? (existing.docs[0].id as number)
+      : await upsert('testimonials', { slug: { equals: slug } }, { clientName: t.clientName, slug, quote: t.quote, _status: 'published' }),
+  )
 }
 
 let heroImage: number | undefined
