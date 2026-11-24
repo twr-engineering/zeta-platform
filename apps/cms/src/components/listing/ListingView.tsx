@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 import { ListingCard } from '@/components/ListingCard'
 import { Pending } from '@/components/Pending'
@@ -14,6 +14,7 @@ import { deviceType } from '@/lib/search/device'
 import { parseSearch } from '@/lib/search/params'
 import { searchListings } from '@/lib/search/query'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
+import { listingPath } from '@/lib/site/listing-path'
 import { getRates, payload } from '@/lib/site/payload'
 import { resolveMeasurement } from '@/lib/site/units'
 import type { Listing } from '@/payload-types'
@@ -43,6 +44,11 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
     pending('withdrawn-listing-url')
     notFound()
   }
+  // BPM-007a (live check 2026-11-24): a listing under the other view page (a sale ref under
+  // /long-term/, a rent ref under /r/) redirects to its canonical link. The source answers 302;
+  // Next's server-component redirect is a 307 (also temporary). Query strings: src/proxy.ts.
+  const canonical = listingPath(listing)
+  if (canonical !== `/${view}/${listing.referenceNo}/`) redirect(canonical)
   pending('listing-defects')
 
   const payloadData = (listing.crmPayload ?? {}) as { list?: Raw; view?: Raw }

@@ -303,11 +303,12 @@ if (want('pages')) {
           layout.push({ blockType: 'homeTestimonials', heading: b.heading, intro: b.intro ?? null, testimonials: testimonialIds, moreLink: { label: null, url: null } })
           break
         case 'homeLocations': {
-          // The live grid: 12 locations with this location tag, newest first. Tile photos: pending('location-grid-images').
-          const slugs = wp.locations.filter((l) => l.locationTags?.includes(b.tag)).sort((x, y) => y.date.localeCompare(x.date)).slice(0, 12).map((l) => l.slug)
+          // BPM-022 (live check 2026-11-24): the grid lists the tagged locations that have a featured
+          // image, newest first, up to 12 — 2 of the 26 new-developments locations on production.
+          const slugs = wp.locations.filter((l) => l.locationTags?.includes(b.tag) && l.thumb).sort((x, y) => y.date.localeCompare(x.date)).slice(0, 12).map((l) => l.slug)
           const found = await payload.find({ collection: 'locations', where: { slug: { in: slugs } }, limit: 50, depth: 0, ...opts })
           const ids = slugs.map((s) => found.docs.find((d) => d.slug === s)?.id).filter(Boolean)
-          layout.push({ blockType: 'homeLocations', heading: b.heading ?? null, intro: b.intro ?? null, locations: ids, moreLink: { label: null, url: null } })
+          layout.push({ blockType: 'homeLocations', heading: b.heading ?? null, intro: b.intro ?? null, locations: ids, tileStyle: 'development', moreLink: { label: null, url: null } })
           break
         }
       }

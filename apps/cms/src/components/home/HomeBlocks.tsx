@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-import { pending } from '@/lib/parity/pending'
 import { locationHref } from '@/lib/site/locations-menu'
 import { youtubeThumb } from '@/lib/site/youtube'
 import type { Location, Media, Page, Post, Short, Shortlist, Testimonial } from '@/payload-types'
@@ -90,7 +89,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
             )
           case 'homeLocations': {
             const locs = docs<Location>(b.locations)
-            if (locs.some((l) => !l.heroImage)) pending('location-grid-images')
+            const development = b.tileStyle === 'development'
             return (
               <section key={i} className="home-section container">
                 <SectionHead heading={b.heading} intro={b.intro} centered />
@@ -101,8 +100,13 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
                       <Link key={l.id} href={locationHref(l)} className="tile">
                         {img?.url ? <Image src={img.url} alt="" fill sizes="(max-width: 767px) 100vw, 300px" /> : <div className="tile-noimg" />}
                         <span className="tile-body">
-                          <strong>Properties for sale in {l.name}</strong>
-                          {data.locationCounts[l.id] !== undefined && <span>{data.locationCounts[l.id]} Properties</span>}
+                          {development ? (
+                            // BPM-022: the location grid's tile names the parent location, no count.
+                            <strong>Property for sale in {l.name}{parentName(l) ? `, ${parentName(l)}` : ''}</strong>
+                          ) : (
+                            <strong>Properties for sale in {l.name}</strong>
+                          )}
+                          {!development && data.locationCounts[l.id] !== undefined && <span>{data.locationCounts[l.id]} Properties</span>}
                           <span className="tile-more">Find out More</span>
                         </span>
                       </Link>
@@ -178,6 +182,9 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
     </>
   )
 }
+
+/** The parent location's name, from the nested-docs breadcrumbs (no extra populate needed). */
+const parentName = (l: Location) => (l.breadcrumbs && l.breadcrumbs.length > 1 ? l.breadcrumbs[l.breadcrumbs.length - 2]?.label : null) ?? null
 
 function SectionHead({ heading, intro, centered }: { heading?: string | null; intro?: string | null; centered?: boolean }) {
   if (!heading && !intro) return null

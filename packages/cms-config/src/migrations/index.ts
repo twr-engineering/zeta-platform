@@ -4,6 +4,7 @@ import * as migration_20261123_170700_wp03_tracking_consent from './20261123_170
 import * as migration_20261123_174557_wp04_listing_filter_fields from './20261123_174557_wp04_listing_filter_fields';
 import * as migration_20261123_180241_home_blocks from './20261123_180241_home_blocks';
 import * as migration_20261124_062616_page_blocks from './20261124_062616_page_blocks';
+import * as migration_20261124_125706_location_tile_style from './20261124_125706_location_tile_style';
 
 export const migrations = [
   {
@@ -34,6 +35,11 @@ export const migrations = [
   {
     up: migration_20261124_062616_page_blocks.up,
     down: migration_20261124_062616_page_blocks.down,
-    name: '20261124_062616_page_blocks'
+    name: '20261124_062616_page_blocks',
+  },
+  {
+    up: migration_20261124_125706_location_tile_style.up,
+    down: migration_20261124_125706_location_tile_style.down,
+    name: '20261124_125706_location_tile_style'
   },
 ];

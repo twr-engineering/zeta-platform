@@ -30,24 +30,22 @@ const SORTS: Record<SortValue, string[]> = {
 export function toWhere(q: SearchQuery): Where {
   const and: Where[] = [{ syncStatus: { equals: 'active' } }]
   if (q.propertyFor) and.push({ propertyForId: { equals: q.propertyFor } })
-  // One property-type facet: sub-types and sub-sub-types OR-ed — pending: type-tree-combination.
-  // The live tree never sends a parent with its own child (BPM-021).
+  // One property-type facet: sub-types and sub-sub-types OR-ed (live check 2026-11-24: House 131 +
+  // Studio 30 = House+Studio 161). The live tree never sends a parent with its own child (BPM-021).
   const types: Where[] = []
   if (q.subTypeIds.length) types.push({ subTypeId: { in: q.subTypeIds } })
-  if (q.subSubTypeIds.length) {
-    pending('type-tree-combination')
-    types.push({ subSubTypeId: { in: q.subSubTypeIds } })
-  }
+  if (q.subSubTypeIds.length) types.push({ subSubTypeId: { in: q.subSubTypeIds } })
   if (types.length) and.push(types.length === 1 ? types[0] : { or: types })
   if (q.saleDetailTypeIds.length) and.push({ saleDetailTypeId: { in: q.saleDetailTypeIds } })
-  // AND across selected attributes: the listing must carry every one.
+  // AND across selected attributes: the listing must carry every one (live check 2026-11-24:
+  // Mountain 117, Corner 43, both 17).
   for (const id of q.attributeIds) and.push({ 'attributes.crmId': { equals: id } })
 
-  // One area facet, OR-ed internally — pending: area-facet-combination.
-  const area: Where[] = []
-  if (q.municipalityIds.length) area.push({ 'geo.municipalityId': { in: q.municipalityIds } })
-  if (q.townIds.length) area.push({ 'geo.townId': { in: q.townIds } })
-  if (area.length) and.push(area.length === 1 ? area[0] : { or: area })
+  // BPM-004 area[] (live check 2026-11-24): values of one level are OR-ed, levels are AND-ed —
+  // Davao + CDO municipalities = 24 + 334 = 358; Patag + Carmen barangays = 2 + 44 = 46;
+  // CDO + Patag = 2 (Patag's own count); Davao + Patag = 0. Complexes are a third level (below).
+  if (q.municipalityIds.length) and.push({ 'geo.municipalityId': { in: q.municipalityIds } })
+  if (q.townIds.length) and.push({ 'geo.townId': { in: q.townIds } })
 
   if (q.complexIds.length) and.push({ 'geo.complexId': { in: q.complexIds } })
   if (q.referenceNos.length) and.push({ referenceNo: { in: q.referenceNos } })
@@ -79,14 +77,13 @@ export function toWhere(q: SearchQuery): Where {
  * `filter_property` with fields=reference_no, the request's property_for (default '1', Sale) and
  * property_per_page=50. The matches are appended to reference_no[] and AND-ed with every other
  * facet; none → the fake reference, i.e. zero results. Titles are never matched.
- * The CRM's match is partial (ZTP73 → ZTP730–739); prefix vs contains is indistinguishable on the
- * corpus (every ref starts ZTP), so contains is used. Which 50 the CRM returns is CRM-side.
+ * The CRM's match is case-insensitive and contains, not prefix (live check 2026-11-24: ztp135 and
+ * TP135 both find ZTP135); Payload's `contains` is ILIKE '%…%'. Which 50 the CRM returns is CRM-side.
  */
 export const KEYWORD_LOOKUP_CAP = 50
 export const NO_MATCH_REF = 'no results fake reference'
 
 export async function keywordRefs(payload: Payload, keyword: string, propertyFor: string | null): Promise<string[]> {
-  pending('keyword-case')
   const { docs } = await payload.find({
     collection: 'listings',
     where: { and: [{ syncStatus: { equals: 'active' } }, { propertyForId: { equals: propertyFor || '1' } }, { referenceNo: { contains: keyword } }] },

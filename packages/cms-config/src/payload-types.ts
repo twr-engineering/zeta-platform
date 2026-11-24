@@ -808,6 +808,7 @@ export interface Page {
             heading?: string | null;
             intro?: string | null;
             locations?: (number | Location)[] | null;
+            tileStyle?: ('city' | 'development') | null;
             moreLink?: {
               label?: string | null;
               url?: string | null;
@@ -2009,6 +2010,7 @@ export interface PagesSelect<T extends boolean = true> {
               heading?: T;
               intro?: T;
               locations?: T;
+              tileStyle?: T;
               moreLink?:
                 | T
                 | {

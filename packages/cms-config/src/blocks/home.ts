@@ -77,6 +77,15 @@ export const HomeLocations: Block = {
     heading('City Guide'),
     intro('Virtually search through the key cities in the Philippines to find the right property for you.'),
     { name: 'locations', type: 'relationship', relationTo: 'locations', hasMany: true },
+    {
+      name: 'tileStyle',
+      type: 'select',
+      defaultValue: 'city',
+      options: [
+        { label: 'City: “Properties for sale in {name}” with its listing count', value: 'city' },
+        { label: 'Development: “Property for sale in {name}, {parent}” (location grid, BPM-022)', value: 'development' },
+      ],
+    },
     link('moreLink', 'View More Locations', '/location/'),
   ],
 }

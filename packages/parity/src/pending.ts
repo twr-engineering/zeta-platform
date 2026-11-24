@@ -35,34 +35,6 @@ export const PENDING = {
     interim:
       'Source path A: a max_* containing "+" is dropped (no ceiling). But $_GET decodes a raw "+" to a space, so only %2B reaches that branch; a raw "+" keeps the ceiling. Both reproduced.',
   },
-  'band-max-zero': {
-    need: 'Whether the CRM reads max_X=0 (sent after an open-ended "+" band) as "no ceiling" or literal zero.',
-    refs: ['BPM-005'],
-    blockedOn: 'live-check',
-    unblock: 'Submit a banded facet with an open-ended top band on production and compare result counts.',
-    interim: 'Treated as "no ceiling". The hull is still computed and transmitted exactly as the source does.',
-  },
-  'phone-page-detection': {
-    need: 'Which page size phones actually receive on production, given WP Rocket serves one shared cache to phones and desktops.',
-    refs: ['BPM-006a'],
-    blockedOn: 'live-check',
-    unblock: 'Fetch /search_results/ with a phone UA and a cache-busting query string, and count the results.',
-    interim: 'Per request, as the source intends: Phone (isMobile && !isTablet) gets the module phone size, default 9.',
-  },
-  'listing-route-redirect': {
-    need: 'What a listing served under the other view page does (/long-term/{sale-ref}/, /r/{rent-ref}/, or any ?query): the source 302s to the canonical link.',
-    refs: ['BPM-007a'],
-    blockedOn: 'live-check',
-    unblock: 'Fetch a sale ref under /long-term/, a rent ref under /r/, and a ref with ?x=1 on production; record status codes and Location.',
-    interim: 'Both routes serve any listing; no redirect.',
-  },
-  'keyword-case': {
-    need: "Whether the CRM's reference lookup for a typed keyword is case-sensitive, and prefix or contains.",
-    refs: ['BPM-016'],
-    blockedOn: 'live-check',
-    unblock: 'Search keyword_1=ztp73 and keyword_1=TP73 on production and compare with keyword_1=ZTP73.',
-    interim: 'Case-insensitive contains on the reference number (identical to prefix for every ZTP reference).',
-  },
   'account-registration': {
     need: 'What a first-time sign-up creates: the source skips the mail for an unknown email, and the CRM sync only runs from the mail path.',
     refs: ['BPM-014', 'FR-A04'],
@@ -98,18 +70,11 @@ export const PENDING = {
     unblock: 'Pick one Payment Term on production and compare the result count with none picked.',
     interim: 'The parameter is accepted and kept in the URL but does not filter.',
   },
-  'type-tree-combination': {
-    need: 'How the CRM combines sub_property_type[] with sub_sub_property_type[] when both are sent (e.g. House + Condominium › Studio).',
-    refs: ['BPM-021', 'FR-SR02'],
-    blockedOn: 'live-check',
-    unblock: 'Select House and Studio together on production and compare counts with each alone.',
-    interim: 'OR across the two lists (one property-type facet).',
-  },
   'fa-collision': {
     need: 'Property View, Lot Type and Is Foreclosed all write fa[]: whether combining two selects sends both (AND) or only the last changed.',
     refs: ['BPM-021', 'BPM-004'],
     blockedOn: 'live-check',
-    unblock: 'Pick Mountain, then Corner on production and record the URL and the CRM call.',
+    unblock: 'In a browser, pick Mountain, then Corner on production and record the URL. (CRM side checked 24 Nov 2026: fa[] values are AND-ed — Mountain 117, Corner 43, both 17.)',
     interim: 'All selected attributes are sent and AND-ed (BPM-004).',
   },
   'location-counts': {
@@ -168,20 +133,6 @@ export const PENDING = {
     unblock: 'Client supplies a login; compare /buy/ logged in vs logged out.',
     interim: 'Download buttons render a placeholder.',
   },
-  'location-grid-images': {
-    need: 'Where the live location grids (Preselling Developments, tag new-developments) take their tile photos: only 2 of the 26 tagged locations have a WordPress featured image.',
-    refs: ['WP-10', 'FR-H06'],
-    blockedOn: 'live-check',
-    unblock: 'Compare /preselling-developments/ tiles with the location posts (featured image, CRM complex photo or template default).',
-    interim: 'Tiles without a featured image show the dark placeholder; editors can set a hero image per location.',
-  },
-  'new-development-url': {
-    need: 'What /new-development/ serves live: the Buy page’s "Explore Pre-selling Properties" button links there, but no page has that slug (a redirect or rewrite outside the content tables).',
-    refs: ['WP-10'],
-    blockedOn: 'live-check',
-    unblock: 'Open https://zetagroup.ph/new-development/ and record the response (redirect target or page).',
-    interim: 'The button keeps the live URL, which 404s here until the target is known.',
-  },
   'shortlist-count': {
     need: 'What [respacio_shortlist_count] should count — it was never implemented.',
     refs: ['BPM-009', 'CD-01'],
@@ -217,13 +168,6 @@ export const PENDING = {
     blockedOn: 'live-check',
     unblock: 'Compare a date_desc and a priorityprice_desc result page on production against the CRM fields.',
     interim: 'date -> crmModifiedAt; priorityprice -> priority desc, then price in the given direction.',
-  },
-  'area-facet-combination': {
-    need: 'Whether municipality_* and city_* values inside one area[] selection are OR-ed (as one facet) or AND-ed.',
-    refs: ['BPM-004'],
-    blockedOn: 'live-check',
-    unblock: 'Select one municipality and one city in the same search on production and compare counts.',
-    interim: 'OR within the area facet, like every other indexed facet.',
   },
   'respacio-credentials': {
     need: 'Live Respacio API access for the sync.',
