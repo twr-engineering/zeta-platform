@@ -42,14 +42,17 @@ export async function generateMetadata({ params }: Props) {
 export default async function LocationPage({ params }: Props) {
   const location = await findLocation((await params).path)
   if (!location) notFound()
+  // Bound locations match listings by CRM id; most mirrored listings carry only names (the list
+  // payload has no geography ids), so a name match is OR-ed in until the live sync fills the ids.
   const g = location.crmGeography
-  const area = location.type === 'barangay' ? (g?.townId ? `city_${g.townId}` : null) : g?.municipalityId ? `municipality_${g.municipalityId}` : null
-  let byName: Where | undefined
-  if (!area) {
-    pending('location-counts')
-    const field = location.type === 'barangay' ? 'geo.cityName' : 'geo.municipalityName'
-    byName = { [field]: { like: location.name.replace(/ City$/i, '') } }
-  }
+  const level = location.type === 'subdivision' ? 'complex' : location.type === 'barangay' ? 'town' : 'municipality'
+  const ID = { complex: g?.complexId, town: g?.townId, municipality: g?.municipalityId }[level]
+  const NAME = { complex: 'geo.complexName', town: 'geo.cityName', municipality: 'geo.municipalityName' }[level]
+  const idMatch: Where | null = ID ? { [`geo.${level}Id`]: { equals: ID } } : null
+  const nameMatch: Where = { [NAME]: { like: location.name.replace(/ City$/i, '') } }
+  pending('location-counts')
+  const byName: Where = idMatch ? { or: [idMatch, nameMatch] } : nameMatch
+  const area: string | null = null
   pending('location-defects')
 
   const p = await payload()
@@ -75,7 +78,7 @@ export default async function LocationPage({ params }: Props) {
       <header className="page-hero">
         <div>
           <h1>{location.name}</h1>
-          {location.type === 'barangay' && (
+          {level !== 'municipality' && (
             <p>There are {resale[0].totalDocs + preselling[0].totalDocs} property for sale in {location.name}</p>
           )}
         </div>

@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 's3.eu-west-3.amazonaws.com', pathname: '/respacio-b6f2533a04ad44064505dafc89e3aa54/**' },
       { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
+      { protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' },
     ],
     formats: ['image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 30,

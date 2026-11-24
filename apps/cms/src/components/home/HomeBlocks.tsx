@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { locationHref } from '@/lib/site/locations-menu'
+import { youtubeThumb } from '@/lib/site/youtube'
 import type { Location, Media, Page, Post, Short, Shortlist, Testimonial } from '@/payload-types'
 
 import { FaqList } from './FaqList'
@@ -151,7 +152,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
                 <SectionHead heading={b.heading} intro={b.intro} />
                 <ContentTabs
                   posts={posts.map((p) => ({ id: p.id, title: p.title, excerpt: p.excerpt ?? '', href: `/${p.slug}/`, image: media(p.heroImage)?.url ?? null }))}
-                  shorts={shorts.map((s) => ({ id: s.id, title: s.title, href: `/shorts/${s.slug}/`, image: media(s.thumbnail)?.url ?? null }))}
+                  shorts={shorts.map((s) => ({ id: s.id, title: s.title, href: `/shorts/${s.slug}/`, image: media(s.thumbnail)?.url ?? youtubeThumb(s.videoUrl) }))}
                   moreLabel={b.moreLink?.label ?? 'View More blogs'}
                   moreHref={b.moreLink?.url ?? '/insights/'}
                 />
