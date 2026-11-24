@@ -59,3 +59,13 @@ export function cardRibbons(marketingFeaturesEn: string | null | undefined): str
   }
   return CARD_RIBBON_KEYS.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []))
 }
+
+/**
+ * Template 276562 `.subtype`: `<span class="subsub_type remove_[remove_sub_type nempty]_">[subsub_type]</span>
+ * <span class="sub_type remove_[remove_sub_type]_">[sub_type]</span>` — the sub-sub type is removed
+ * whenever a sub type exists, so the card shows the sub type, else the sub-sub type. Verified on
+ * production 24 Nov 2026: "House" (not "Single Detached"), "Commercial" (not "Commercial Lot").
+ */
+export function cardTypeLabel(subType: string | null | undefined, subSubType: string | null | undefined): string {
+  return (subType ?? '').trim() || (subSubType ?? '').trim()
+}

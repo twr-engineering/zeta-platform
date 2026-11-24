@@ -8,6 +8,7 @@ import { SiteHeader, type MenuItem } from '@/components/site/SiteHeader'
 import { activeCategories, CONSENT_COOKIE, parseConsent } from '@/lib/site/consent'
 import { CURRENCIES } from '@/lib/site/currencies'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
+import { getAreaIndex } from '@/lib/site/area-options'
 import { getLocationMenu, getSiteSettings } from '@/lib/site/settings'
 import { resolveMeasurement } from '@/lib/site/units'
 import { TrackingScripts } from '@/components/site/TrackingScripts'
@@ -24,9 +25,10 @@ export const metadata = {
 
 /** WP-03 shell: the live zetagroup.ph header, drawer and footer (FR-G01..G12). */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, locations, currency, measurement] = await Promise.all([
+  const [settings, locations, areas, currency, measurement] = await Promise.all([
     getSiteSettings(),
     getLocationMenu(),
+    getAreaIndex(),
     resolveDisplayCurrency(),
     resolveMeasurement(),
   ])
@@ -40,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           menu={(settings.mainMenu ?? []) as MenuItem[]}
           cta={settings.headerCta ?? {}}
           locations={locations}
+          areaOptions={areas.options}
           currency={currency}
           currencies={CURRENCIES}
           measurement={measurement}

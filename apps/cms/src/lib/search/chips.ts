@@ -20,7 +20,8 @@ const FA_LABELS = new Map([...PROPERTY_VIEWS.map((o) => [o.value, `${o.label} vi
 const SALES_LABELS = new Map(SALES_DETAILS.map((o) => [o.value, o.label]))
 const peso = (n: string) => `₱${Number(n).toLocaleString('en-US')}`
 
-export function filterChips(sp: URLSearchParams, path = '/search_results/'): Chip[] {
+/** `areaLabels`: area[] value to location name (the picker options); an unknown value reads "Location". */
+export function filterChips(sp: URLSearchParams, path = '/search_results/', areaLabels: Record<string, string> = {}): Chip[] {
   const chips: Chip[] = []
   const href = (next: URLSearchParams) => `${path}?${next.toString()}`
   const multi = (key: string, label: (v: string) => string | undefined) => {
@@ -50,7 +51,7 @@ export function filterChips(sp: URLSearchParams, path = '/search_results/'): Chi
   multi('fa', (v) => FA_LABELS.get(v))
   multi('payment_terms', (v) => v)
   multi('min_storey', (v) => `${v.replace('+', '')}+ storeys`)
-  multi('area', () => 'Location')
+  multi('area', (v) => areaLabels[v] ?? 'Location')
   single('min_plot_size', (v) => `Lot ≥ ${v}`)
   single('max_plot_size', (v) => `Lot ≤ ${v}`)
   single('min_total_built_size', (v) => `Floor ≥ ${v}`)

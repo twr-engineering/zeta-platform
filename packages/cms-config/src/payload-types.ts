@@ -2613,6 +2613,18 @@ export interface CrmState {
     | number
     | boolean
     | null;
+  /**
+   * CRM province → municipality → town → complex tree: the search location picker and its name lookups.
+   */
+  locationTree?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   lastSyncAt?: string | null;
   /**
    * live or fixtures
@@ -2755,6 +2767,7 @@ export interface CalculatorDefaultsSelect<T extends boolean = true> {
  */
 export interface CrmStateSelect<T extends boolean = true> {
   currencyConverter?: T;
+  locationTree?: T;
   lastSyncAt?: T;
   lastSyncMode?: T;
   lastSyncResult?: T;

@@ -1,4 +1,5 @@
 import { pending } from '@/lib/parity/pending'
+import { getAreaIndex } from '@/lib/site/area-options'
 import type { Payload, Where } from 'payload'
 
 import type { RangeFacet, SearchQuery, SortValue } from './params'
@@ -27,7 +28,15 @@ const SORTS: Record<SortValue, string[]> = {
   priorityprice_desc: ['-priority', '-price'],
 }
 
-export function toWhere(q: SearchQuery): Where {
+/**
+ * Names of the selected areas, from the CRM location tree. The list payload the mirror is built
+ * from carries geography names but rarely ids (71 of 513 fixtures have ids), so an area matches
+ * a listing by id OR by name until every listing carries ids — pending: location-counts.
+ */
+export type AreaNames = { municipality: string[]; town: { name: string; municipality: string }[]; complex: string[] }
+export type ResolvedQuery = SearchQuery & { areaNames?: AreaNames }
+
+export function toWhere(q: ResolvedQuery): Where {
   const and: Where[] = [{ syncStatus: { equals: 'active' } }]
   if (q.propertyFor) and.push({ propertyForId: { equals: q.propertyFor } })
   // One property-type facet: sub-types and sub-sub-types OR-ed (live check 2026-11-24: House 131 +
@@ -43,11 +52,21 @@ export function toWhere(q: SearchQuery): Where {
 
   // BPM-004 area[] (live check 2026-11-24): values of one level are OR-ed, levels are AND-ed —
   // Davao + CDO municipalities = 24 + 334 = 358; Patag + Carmen barangays = 2 + 44 = 46;
-  // CDO + Patag = 2 (Patag's own count); Davao + Patag = 0. Complexes are a third level (below).
-  if (q.municipalityIds.length) and.push({ 'geo.municipalityId': { in: q.municipalityIds } })
-  if (q.townIds.length) and.push({ 'geo.townId': { in: q.townIds } })
+  // CDO + Patag = 2 (Patag's own count); Davao + Patag = 0. Provinces and complexes are levels too.
+  const names = q.areaNames
+  const idOrName = (id: Where, byName: Where[]): Where => (byName.length ? { or: [id, ...byName] } : id)
+  if (q.provinceIds.length) and.push({ 'geo.provinceId': { in: q.provinceIds } })
+  if (q.municipalityIds.length) {
+    and.push(idOrName({ 'geo.municipalityId': { in: q.municipalityIds } }, names?.municipality.length ? [{ 'geo.municipalityName': { in: names.municipality } }] : []))
+  }
+  if (q.townIds.length) {
+    // Barangay names repeat across cities (Poblacion), so a name match also needs its municipality.
+    and.push(idOrName({ 'geo.townId': { in: q.townIds } }, (names?.town ?? []).map((t): Where => ({ and: [{ 'geo.cityName': { equals: t.name } }, { 'geo.municipalityName': { equals: t.municipality } }] }))))
+  }
 
-  if (q.complexIds.length) and.push({ 'geo.complexId': { in: q.complexIds } })
+  if (q.complexIds.length) {
+    and.push(idOrName({ 'geo.complexId': { in: q.complexIds } }, names?.complex.length ? [{ 'geo.complexName': { in: names.complex } }] : []))
+  }
   if (q.referenceNos.length) and.push({ referenceNo: { in: q.referenceNos } })
 
   // FR-SR14: free text, every word must appear in one of these fields (Payload `like`).
@@ -96,7 +115,20 @@ export async function keywordRefs(payload: Payload, keyword: string, propertyFor
 }
 
 /** Folds the keyword lookup (BPM-016) into referenceNos, so every query below sees the same set. */
-export async function resolveQuery(payload: Payload, q: SearchQuery): Promise<SearchQuery> {
+export async function resolveQuery(payload: Payload, query: SearchQuery): Promise<ResolvedQuery> {
+  let q: ResolvedQuery = query
+  if (q.municipalityIds.length || q.townIds.length || q.complexIds.length) {
+    pending('location-counts')
+    const index = await getAreaIndex()
+    q = {
+      ...q,
+      areaNames: {
+        municipality: q.municipalityIds.map((id) => index.municipality[id]).filter((n): n is string => !!n),
+        town: q.townIds.map((id) => index.town[id]).filter((t): t is { name: string; municipality: string } => !!t),
+        complex: q.complexIds.map((id) => index.complex[id]).filter((n): n is string => !!n),
+      },
+    }
+  }
   if (q.keyword === null) return q
   const refs = await keywordRefs(payload, q.keyword, q.propertyFor)
   return { ...q, referenceNos: [...q.referenceNos, ...(refs.length ? refs : [NO_MATCH_REF])] }

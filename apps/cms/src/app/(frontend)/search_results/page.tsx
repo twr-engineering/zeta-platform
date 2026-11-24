@@ -6,9 +6,10 @@ import { SearchFilters } from '@/components/search/SearchFilters'
 import { CURRENCIES } from '@/lib/site/currencies'
 import { Pending } from '@/components/Pending'
 import { deviceType } from '@/lib/search/device'
-import { parseSearch, type SearchModuleConfig } from '@/lib/search/params'
+import { normaliseSuffixedKeys, parseSearch, type SearchModuleConfig } from '@/lib/search/params'
 import { filterChips } from '@/lib/search/chips'
 import { countListings, facetCounts, searchListings } from '@/lib/search/query'
+import { getAreaIndex } from '@/lib/site/area-options'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
 import { resolveMeasurement } from '@/lib/site/units'
 import { getRates, payload } from '@/lib/site/payload'
@@ -43,7 +44,9 @@ function toSp(raw: Record<string, string | string[] | undefined>) {
 
 export default async function SearchResults({ searchParams }: Props) {
   const raw = await searchParams
-  const sp = toSp(raw)
+  // Live links carry form-suffixed keys (area_1[]=…, search-results.php:470); the filters, chips
+  // and every link built from them use the normalised form, so those selections show and clear.
+  const sp = normaliseSuffixedKeys(toSp(raw))
   const q = parseSearch(sp, { ...MODULE, device: deviceType((await headers()).get('user-agent')) })
   const p = await payload()
   const [result, rates, currency, measurement, counts] = await Promise.all([
@@ -53,7 +56,8 @@ export default async function SearchResults({ searchParams }: Props) {
     resolveMeasurement(),
     facetCounts(p, q),
   ])
-  const chips = filterChips(sp)
+  const areaLabels = Object.fromEntries((await getAreaIndex()).options.map((o) => [o.value, o.label]))
+  const chips = filterChips(sp, '/search_results/', areaLabels)
   // FR-SR13: with no results, suggest removing the filter that brings back the most.
   let relax: { label: string; href: string; total: number } | null = null
   if (result.totalDocs === 0 && chips.length) {

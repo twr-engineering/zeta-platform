@@ -1,0 +1,1178 @@
+{
+ "_source": "Captured 24 Nov 2026 from the production picker HTML on /search_results/ (select[name=\"area_1[]\"]), which the plugin renders from properties/province_municipality_city_complex (functions.php:5653). Province ids are not in that HTML, so all municipalities sit under one null province.",
+ "status": "success",
+ "is_record": 1,
+ "data": [
+  {
+   "province_id": null,
+   "province_name": null,
+   "municipality_array": [
+    {
+     "municipality_id": "25256",
+     "municipality_name": "Agutaya",
+     "city_array": []
+    },
+    {
+     "municipality_id": "25960",
+     "municipality_name": "Alubijid",
+     "city_array": [
+      {
+       "city_id": "50292",
+       "city_name": "Loguilo",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25516",
+     "municipality_name": "Bacolod City",
+     "city_array": [
+      {
+       "city_id": "40665",
+       "city_name": "Granada",
+       "complex_array": []
+      },
+      {
+       "city_id": "40675",
+       "city_name": "Villamonte",
+       "complex_array": [
+        {
+         "complex_id": "116",
+         "complex_name": "Kensington Sky Garden"
+        }
+       ]
+      },
+      {
+       "city_id": "52770",
+       "city_name": "Upper East By Megaworld",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "26069",
+     "municipality_name": "Butuan",
+     "city_array": [
+      {
+       "city_id": "52766",
+       "city_name": "Bonbon",
+       "complex_array": [
+        {
+         "complex_id": "117",
+         "complex_name": "West Highlands"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "municipality_id": "25956",
+     "municipality_name": "Cagayan de Oro City",
+     "city_array": [
+      {
+       "city_id": "50350",
+       "city_name": "Agusan",
+       "complex_array": [
+        {
+         "complex_id": "86",
+         "complex_name": "Teakwood Hills"
+        },
+        {
+         "complex_id": "87",
+         "complex_name": "Velmiro Heights"
+        },
+        {
+         "complex_id": "128",
+         "complex_name": "Teakwood Crest"
+        }
+       ]
+      },
+      {
+       "city_id": "50353",
+       "city_name": "Balubal",
+       "complex_array": [
+        {
+         "complex_id": "89",
+         "complex_name": "Teakwood Crest"
+        }
+       ]
+      },
+      {
+       "city_id": "50354",
+       "city_name": "Balulang",
+       "complex_array": [
+        {
+         "complex_id": "23",
+         "complex_name": "Camella Homes"
+        },
+        {
+         "complex_id": "24",
+         "complex_name": "Xavier Heights Subdivision"
+        },
+        {
+         "complex_id": "25",
+         "complex_name": "Xavier Estates"
+        },
+        {
+         "complex_id": "31",
+         "complex_name": "Xavier Estates - Ventura Residences 1"
+        },
+        {
+         "complex_id": "32",
+         "complex_name": "Xavier Estates - Ventura Residences 2"
+        },
+        {
+         "complex_id": "33",
+         "complex_name": "Xavier Estates - Ignatius Enclave 1"
+        },
+        {
+         "complex_id": "34",
+         "complex_name": "Xavier Estates - Ignatius Enclave 2"
+        },
+        {
+         "complex_id": "35",
+         "complex_name": "Adelaida Park Residences"
+        },
+        {
+         "complex_id": "39",
+         "complex_name": "Skyline Residences"
+        },
+        {
+         "complex_id": "41",
+         "complex_name": "Montierra Subdivision"
+        },
+        {
+         "complex_id": "42",
+         "complex_name": "Verona Apartments"
+        },
+        {
+         "complex_id": "43",
+         "complex_name": "Uptown Metropolis - Alexandrite Columns"
+        },
+        {
+         "complex_id": "141",
+         "complex_name": "River Grand"
+        }
+       ]
+      },
+      {
+       "city_id": "50421",
+       "city_name": "Barangay 1",
+       "complex_array": []
+      },
+      {
+       "city_id": "50355",
+       "city_name": "Barangay 10",
+       "complex_array": []
+      },
+      {
+       "city_id": "50361",
+       "city_name": "Barangay 16",
+       "complex_array": []
+      },
+      {
+       "city_id": "50367",
+       "city_name": "Barangay 22",
+       "complex_array": []
+      },
+      {
+       "city_id": "50369",
+       "city_name": "Barangay 24",
+       "complex_array": [
+        {
+         "complex_id": "74",
+         "complex_name": "Aspira Towers"
+        }
+       ]
+      },
+      {
+       "city_id": "50370",
+       "city_name": "Barangay 26",
+       "complex_array": [
+        {
+         "complex_id": "136",
+         "complex_name": "Mesaverte Residences"
+        },
+        {
+         "complex_id": "137",
+         "complex_name": "Centrio Tower"
+        }
+       ]
+      },
+      {
+       "city_id": "50425",
+       "city_name": "Barangay 29",
+       "complex_array": []
+      },
+      {
+       "city_id": "50373",
+       "city_name": "Barangay 3",
+       "complex_array": []
+      },
+      {
+       "city_id": "50376",
+       "city_name": "Barangay 33",
+       "complex_array": []
+      },
+      {
+       "city_id": "50427",
+       "city_name": "Barangay 35",
+       "complex_array": [
+        {
+         "complex_id": "129",
+         "complex_name": "The Loop"
+        }
+       ]
+      },
+      {
+       "city_id": "50380",
+       "city_name": "Barangay 4",
+       "complex_array": []
+      },
+      {
+       "city_id": "50381",
+       "city_name": "Barangay 40",
+       "complex_array": []
+      },
+      {
+       "city_id": "50422",
+       "city_name": "Barangay 7",
+       "complex_array": []
+      },
+      {
+       "city_id": "50386",
+       "city_name": "Bayabas",
+       "complex_array": []
+      },
+      {
+       "city_id": "50387",
+       "city_name": "Bayanga",
+       "complex_array": [
+        {
+         "complex_id": "108",
+         "complex_name": "Xavier South Ridge"
+        }
+       ]
+      },
+      {
+       "city_id": "50352",
+       "city_name": "Bulua",
+       "complex_array": []
+      },
+      {
+       "city_id": "50391",
+       "city_name": "Camaman-an",
+       "complex_array": [
+        {
+         "complex_id": "134",
+         "complex_name": "One Oasis"
+        }
+       ]
+      },
+      {
+       "city_id": "50392",
+       "city_name": "Canito-an",
+       "complex_array": [
+        {
+         "complex_id": "96",
+         "complex_name": "Velmiro Uptown"
+        },
+        {
+         "complex_id": "98",
+         "complex_name": "Westwood Storey"
+        },
+        {
+         "complex_id": "99",
+         "complex_name": "Westwoods Village"
+        },
+        {
+         "complex_id": "101",
+         "complex_name": "San Agustin Valley Homes"
+        },
+        {
+         "complex_id": "102",
+         "complex_name": "Intalio Estates"
+        }
+       ]
+      },
+      {
+       "city_id": "50393",
+       "city_name": "Carmen",
+       "complex_array": [
+        {
+         "complex_id": "1",
+         "complex_name": "Pueblo De Oro Business Park"
+        },
+        {
+         "complex_id": "3",
+         "complex_name": "Philam Life Village"
+        },
+        {
+         "complex_id": "4",
+         "complex_name": "Hillsborough Pointe"
+        },
+        {
+         "complex_id": "5",
+         "complex_name": "Golden Glow Village"
+        },
+        {
+         "complex_id": "8",
+         "complex_name": "Bellevue"
+        },
+        {
+         "complex_id": "11",
+         "complex_name": "Pontefino Estates - St. Francis Heights"
+        },
+        {
+         "complex_id": "12",
+         "complex_name": "Vista Verde Village"
+        },
+        {
+         "complex_id": "18",
+         "complex_name": "Primavera City"
+        },
+        {
+         "complex_id": "19",
+         "complex_name": "Primavera Residences"
+        },
+        {
+         "complex_id": "92",
+         "complex_name": "Golden Village"
+        }
+       ]
+      },
+      {
+       "city_id": "50395",
+       "city_name": "Cugman",
+       "complex_array": []
+      },
+      {
+       "city_id": "50398",
+       "city_name": "Gusa",
+       "complex_array": [
+        {
+         "complex_id": "93",
+         "complex_name": "Capistrano Complex"
+        },
+        {
+         "complex_id": "94",
+         "complex_name": "Sta. Cecilia Village"
+        },
+        {
+         "complex_id": "126",
+         "complex_name": "Mega Heights Subdivision"
+        },
+        {
+         "complex_id": "135",
+         "complex_name": "Mountain Meadows"
+        }
+       ]
+      },
+      {
+       "city_id": "50399",
+       "city_name": "Indahag",
+       "complex_array": [
+        {
+         "complex_id": "76",
+         "complex_name": "Alegria Hills"
+        }
+       ]
+      },
+      {
+       "city_id": "50400",
+       "city_name": "Iponan",
+       "complex_array": []
+      },
+      {
+       "city_id": "50401",
+       "city_name": "Kauswagan",
+       "complex_array": [
+        {
+         "complex_id": "77",
+         "complex_name": "Tuscania"
+        },
+        {
+         "complex_id": "78",
+         "complex_name": "Sta Barbara"
+        },
+        {
+         "complex_id": "79",
+         "complex_name": "Scions Subdivision"
+        },
+        {
+         "complex_id": "80",
+         "complex_name": "R.E.R"
+        },
+        {
+         "complex_id": "81",
+         "complex_name": "NHA"
+        },
+        {
+         "complex_id": "82",
+         "complex_name": "Casa Mira"
+        }
+       ]
+      },
+      {
+       "city_id": "50402",
+       "city_name": "Lapasan",
+       "complex_array": []
+      },
+      {
+       "city_id": "50403",
+       "city_name": "Lumbia",
+       "complex_array": [
+        {
+         "complex_id": "44",
+         "complex_name": "Pueblo Golf Estates"
+        },
+        {
+         "complex_id": "45",
+         "complex_name": "The Enclave at Pueblo Golf"
+        },
+        {
+         "complex_id": "47",
+         "complex_name": "La Buena Vida  2"
+        },
+        {
+         "complex_id": "50",
+         "complex_name": "La Mirande Crest"
+        },
+        {
+         "complex_id": "51",
+         "complex_name": "La Mirande Trails"
+        },
+        {
+         "complex_id": "52",
+         "complex_name": "Lessandra Heights"
+        },
+        {
+         "complex_id": "54",
+         "complex_name": "Portico 1"
+        },
+        {
+         "complex_id": "58",
+         "complex_name": "Vista Grande"
+        },
+        {
+         "complex_id": "59",
+         "complex_name": "Fresno Parkview"
+        },
+        {
+         "complex_id": "60",
+         "complex_name": "Bloomfields"
+        },
+        {
+         "complex_id": "61",
+         "complex_name": "Green East Village"
+        },
+        {
+         "complex_id": "64",
+         "complex_name": "Familia Verde"
+        }
+       ]
+      },
+      {
+       "city_id": "50404",
+       "city_name": "Macabalan",
+       "complex_array": []
+      },
+      {
+       "city_id": "50405",
+       "city_name": "Macasandig",
+       "complex_array": []
+      },
+      {
+       "city_id": "50407",
+       "city_name": "Nazareth",
+       "complex_array": []
+      },
+      {
+       "city_id": "50410",
+       "city_name": "Patag",
+       "complex_array": [
+        {
+         "complex_id": "138",
+         "complex_name": "Apovel Subdivision"
+        }
+       ]
+      },
+      {
+       "city_id": "50412",
+       "city_name": "Puerto",
+       "complex_array": [
+        {
+         "complex_id": "95",
+         "complex_name": "Puerto Heights Village"
+        }
+       ]
+      },
+      {
+       "city_id": "50413",
+       "city_name": "Puntod",
+       "complex_array": []
+      },
+      {
+       "city_id": "50415",
+       "city_name": "Tablon",
+       "complex_array": [
+        {
+         "complex_id": "109",
+         "complex_name": "Bayview Heights"
+        }
+       ]
+      },
+      {
+       "city_id": "52763",
+       "city_name": "Downtown CDO",
+       "complex_array": []
+      },
+      {
+       "city_id": "52767",
+       "city_name": "Uptown CDO",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25142",
+     "municipality_name": "Calamba City",
+     "city_array": [
+      {
+       "city_id": "30377",
+       "city_name": "Canlubang",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25606",
+     "municipality_name": "Cebu City",
+     "city_array": [
+      {
+       "city_id": "42865",
+       "city_name": "Apas",
+       "complex_array": [
+        {
+         "complex_id": "114",
+         "complex_name": "38th Park Avenue"
+        }
+       ]
+      },
+      {
+       "city_id": "42888",
+       "city_name": "Guadalupe",
+       "complex_array": []
+      },
+      {
+       "city_id": "42899",
+       "city_name": "Lahug",
+       "complex_array": [
+        {
+         "complex_id": "139",
+         "complex_name": "32 Sanson"
+        }
+       ]
+      },
+      {
+       "city_id": "42902",
+       "city_name": "Luz",
+       "complex_array": [
+        {
+         "complex_id": "113",
+         "complex_name": "Solinea"
+        }
+       ]
+      },
+      {
+       "city_id": "52768",
+       "city_name": "Cebu Business Park",
+       "complex_array": []
+      },
+      {
+       "city_id": "52760",
+       "city_name": "Cebu IT Park",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25955",
+     "municipality_name": "Claveria",
+     "city_array": [
+      {
+       "city_id": "50438",
+       "city_name": "Lanise",
+       "complex_array": []
+      },
+      {
+       "city_id": "50440",
+       "city_name": "Madaguing",
+       "complex_array": []
+      },
+      {
+       "city_id": "50451",
+       "city_name": "Santa Cruz",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25550",
+     "municipality_name": "Dauis",
+     "city_array": [
+      {
+       "city_id": "41765",
+       "city_name": "Totolan",
+       "complex_array": [
+        {
+         "complex_id": "111",
+         "complex_name": "Costa Mira"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "municipality_id": "25981",
+     "municipality_name": "Davao City",
+     "city_array": [
+      {
+       "city_id": "51164",
+       "city_name": "Barangay 11-B",
+       "complex_array": []
+      },
+      {
+       "city_id": "51172",
+       "city_name": "Barangay 19-B",
+       "complex_array": [
+        {
+         "complex_id": "131",
+         "complex_name": "Avida Towers Abreeza"
+        }
+       ]
+      },
+      {
+       "city_id": "51173",
+       "city_name": "Barangay 20-B",
+       "complex_array": [
+        {
+         "complex_id": "130",
+         "complex_name": "Patio Suites"
+        }
+       ]
+      },
+      {
+       "city_id": "51055",
+       "city_name": "Buhangin",
+       "complex_array": []
+      },
+      {
+       "city_id": "51201",
+       "city_name": "Gov. Paciano Bangoy",
+       "complex_array": []
+      },
+      {
+       "city_id": "51093",
+       "city_name": "Ma-a",
+       "complex_array": [
+        {
+         "complex_id": "132",
+         "complex_name": "8 Spatial Futura"
+        }
+       ]
+      },
+      {
+       "city_id": "51107",
+       "city_name": "Matina Crossing",
+       "complex_array": [
+        {
+         "complex_id": "118",
+         "complex_name": "The East Village at DGT"
+        }
+       ]
+      },
+      {
+       "city_id": "51115",
+       "city_name": "Pampanga",
+       "complex_array": []
+      },
+      {
+       "city_id": "51147",
+       "city_name": "Tigatto",
+       "complex_array": []
+      },
+      {
+       "city_id": "52762",
+       "city_name": "Davao Global Township",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25245",
+     "municipality_name": "El Nido",
+     "city_array": [
+      {
+       "city_id": "33429",
+       "city_name": "Bucana",
+       "complex_array": []
+      },
+      {
+       "city_id": "33424",
+       "city_name": "San Fernando",
+       "complex_array": []
+      },
+      {
+       "city_id": "33425",
+       "city_name": "Sibaltan",
+       "complex_array": []
+      },
+      {
+       "city_id": "33426",
+       "city_name": "Teneguiban",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25954",
+     "municipality_name": "El Salvador City",
+     "city_array": [
+      {
+       "city_id": "50455",
+       "city_name": "Bolisong",
+       "complex_array": []
+      },
+      {
+       "city_id": "50461",
+       "city_name": "Kalabaylabay",
+       "complex_array": []
+      },
+      {
+       "city_id": "50466",
+       "city_name": "Sinaloc",
+       "complex_array": []
+      },
+      {
+       "city_id": "52772",
+       "city_name": "Tambaling",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25953",
+     "municipality_name": "Gingoog City",
+     "city_array": [
+      {
+       "city_id": "50488",
+       "city_name": "Lunotan",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25952",
+     "municipality_name": "Gitagum",
+     "city_array": [
+      {
+       "city_id": "50553",
+       "city_name": "Matangad",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25893",
+     "municipality_name": "Guinsiliban",
+     "city_array": [
+      {
+       "city_id": "49253",
+       "city_name": "North Poblacion",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25464",
+     "municipality_name": "Iloilo City",
+     "city_array": [
+      {
+       "city_id": "39436",
+       "city_name": "Camalig",
+       "complex_array": []
+      },
+      {
+       "city_id": "52764",
+       "city_name": "Mandurriao",
+       "complex_array": [
+        {
+         "complex_id": "115",
+         "complex_name": "Firenze Residence"
+        }
+       ]
+      },
+      {
+       "city_id": "52765",
+       "city_name": "IloIlo Business Park",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25951",
+     "municipality_name": "Initao",
+     "city_array": [
+      {
+       "city_id": "50564",
+       "city_name": "Jampason",
+       "complex_array": []
+      },
+      {
+       "city_id": "50568",
+       "city_name": "Pagahan",
+       "complex_array": [
+        {
+         "complex_id": "106",
+         "complex_name": "Coral Resort Estates"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "municipality_id": "25947",
+     "municipality_name": "Laguindingan",
+     "city_array": [
+      {
+       "city_id": "50617",
+       "city_name": "Kibaghot",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25879",
+     "municipality_name": "Lantapan",
+     "city_array": [
+      {
+       "city_id": "48970",
+       "city_name": "Capitan Juan",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25597",
+     "municipality_name": "Lapu-Lapu City",
+     "city_array": [
+      {
+       "city_id": "43140",
+       "city_name": "Agus",
+       "complex_array": []
+      },
+      {
+       "city_id": "43144",
+       "city_name": "Basak",
+       "complex_array": [
+        {
+         "complex_id": "122",
+         "complex_name": "Royal Ocean Crest Mactan"
+        }
+       ]
+      },
+      {
+       "city_id": "43154",
+       "city_name": "Mactan",
+       "complex_array": [
+        {
+         "complex_id": "123",
+         "complex_name": "8 Newtown Residences"
+        },
+        {
+         "complex_id": "124",
+         "complex_name": "One Pacific Residences"
+        },
+        {
+         "complex_id": "125",
+         "complex_name": "La Victoria Global Residences"
+        }
+       ]
+      },
+      {
+       "city_id": "43165",
+       "city_name": "Subabasbas",
+       "complex_array": []
+      },
+      {
+       "city_id": "52771",
+       "city_name": "Mactan Newtown",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25878",
+     "municipality_name": "Libona",
+     "city_array": [
+      {
+       "city_id": "48979",
+       "city_name": "Gango",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25946",
+     "municipality_name": "Libertad",
+     "city_array": [
+      {
+       "city_id": "50630",
+       "city_name": "Poblacion",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25394",
+     "municipality_name": "Malay",
+     "city_array": [
+      {
+       "city_id": "37552",
+       "city_name": "Balabag",
+       "complex_array": []
+      },
+      {
+       "city_id": "37566",
+       "city_name": "Yapak",
+       "complex_array": [
+        {
+         "complex_id": "120",
+         "complex_name": "Boracay Newcoast"
+        }
+       ]
+      },
+      {
+       "city_id": "52761",
+       "city_name": "Boracay",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25877",
+     "municipality_name": "Malaybalay City",
+     "city_array": [
+      {
+       "city_id": "48994",
+       "city_name": "Cabangahan",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25891",
+     "municipality_name": "Mambajao",
+     "city_array": [
+      {
+       "city_id": "49270",
+       "city_name": "Balbagon",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25875",
+     "municipality_name": "Manolo Fortich",
+     "city_array": [
+      {
+       "city_id": "49049",
+       "city_name": "Alae",
+       "complex_array": []
+      },
+      {
+       "city_id": "49050",
+       "city_name": "Dahilayan",
+       "complex_array": []
+      },
+      {
+       "city_id": "49052",
+       "city_name": "Damilag",
+       "complex_array": []
+      },
+      {
+       "city_id": "49064",
+       "city_name": "Tankulan",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25941",
+     "municipality_name": "Naawan",
+     "city_array": []
+    },
+    {
+     "municipality_id": "25940",
+     "municipality_name": "Opol",
+     "city_array": [
+      {
+       "city_id": "50712",
+       "city_name": "Barra",
+       "complex_array": []
+      },
+      {
+       "city_id": "50715",
+       "city_name": "Igpit",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25835",
+     "municipality_name": "Pagadian",
+     "city_array": []
+    },
+    {
+     "municipality_id": "26346",
+     "municipality_name": "Panglao Island",
+     "city_array": []
+    },
+    {
+     "municipality_id": "26333",
+     "municipality_name": "Pasig City",
+     "city_array": [
+      {
+       "city_id": "52180",
+       "city_name": "Rosario",
+       "complex_array": []
+      },
+      {
+       "city_id": "52190",
+       "city_name": "Santolan",
+       "complex_array": [
+        {
+         "complex_id": "127",
+         "complex_name": "Mirea Residences"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "municipality_id": "25240",
+     "municipality_name": "Puerto Princesa City",
+     "city_array": [
+      {
+       "city_id": "33522",
+       "city_name": "San Pedro",
+       "complex_array": [
+        {
+         "complex_id": "119",
+         "complex_name": "Casa Mira Towers Palawan"
+        }
+       ]
+      },
+      {
+       "city_id": "33529",
+       "city_name": "Sicsican",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25119",
+     "municipality_name": "Santa Rosa City",
+     "city_array": [
+      {
+       "city_id": "30939",
+       "city_name": "Malitlit",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25236",
+     "municipality_name": "San Vicente",
+     "city_array": [
+      {
+       "city_id": "33599",
+       "city_name": "Binga",
+       "complex_array": []
+      },
+      {
+       "city_id": "33601",
+       "city_name": "Kemdeng",
+       "complex_array": [
+        {
+         "complex_id": "112",
+         "complex_name": "Paragua Coastown"
+        }
+       ]
+      },
+      {
+       "city_id": "33603",
+       "city_name": "New Canipo",
+       "complex_array": []
+      },
+      {
+       "city_id": "33605",
+       "city_name": "Poblacion",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25938",
+     "municipality_name": "Sugbongcogon",
+     "city_array": []
+    },
+    {
+     "municipality_id": "25870",
+     "municipality_name": "Sumilao",
+     "city_array": [
+      {
+       "city_id": "49172",
+       "city_name": "Poblacion",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25937",
+     "municipality_name": "Tagoloan",
+     "city_array": [
+      {
+       "city_id": "50761",
+       "city_name": "Sugbongcogon",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25190",
+     "municipality_name": "Tanay",
+     "city_array": [
+      {
+       "city_id": "32383",
+       "city_name": "Sampaloc",
+       "complex_array": []
+      }
+     ]
+    },
+    {
+     "municipality_id": "25868",
+     "municipality_name": "Valencia City",
+     "city_array": [
+      {
+       "city_id": "49225",
+       "city_name": "Poblacion",
+       "complex_array": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

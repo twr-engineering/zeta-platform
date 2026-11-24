@@ -229,3 +229,34 @@ describe('BPM-012 module query + $_GET', async () => {
   it('ignore_get=true uses the saved query alone', () =>
     expect(mergeModuleQuery('property_for=1', new URLSearchParams('property_for=2'), true).get('property_for')).toBe('1'))
 })
+
+describe('search-results.php:470–527 — suffixed keys and area prefixes (live header search writes area_1[])', () => {
+  const parse = (qs: string) => parseSearch(new URLSearchParams(qs))
+  it('area_1[] applies to a Sale search, with the suffix stripped', () => {
+    expect(parse('property_for=1&area_1%5B%5D=municipality_25956').municipalityIds).toEqual(['25956'])
+  })
+  it('a suffix for another property_for is skipped', () => {
+    expect(parse('property_for=2&area_1%5B%5D=municipality_25956').municipalityIds).toEqual([])
+    expect(parse('property_for=2&area_2%5B%5D=city_50410').townIds).toEqual(['50410'])
+  })
+  it('without property_for every suffix applies', () => {
+    expect(parse('area_3%5B%5D=city_1&area_1%5B%5D=city_2').townIds).toEqual(['1', '2'])
+  })
+  it('area and area_N merge into one list, unsuffixed first', () => {
+    expect(parse('property_for=1&area_1%5B%5D=city_2&area%5B%5D=city_1').townIds).toEqual(['1', '2'])
+  })
+  it('suffixes apply to every facet, not only area', () => {
+    const q = parse('property_for=1&type_1%5B%5D=_st_9&min_bedroom_1=3')
+    expect(q.subTypeIds).toEqual(['9'])
+    expect(q.ranges.bedroom?.min).toBe(3)
+  })
+  it('complexname_ / complex_ / province_ area values (the picker’s development and province options)', () => {
+    const q = parse('area%5B%5D=complexname_116&area%5B%5D=complex_7&area%5B%5D=province_4689&complex_name%5B%5D=9')
+    expect(q.complexIds).toEqual(['9', '116', '7'])
+    expect(q.provinceIds).toEqual(['4689'])
+  })
+  it('keyword_N keeps its own rule (BPM-016)', () => {
+    expect(parse('property_for=1&keyword_1=ZTP135').keyword).toBe('ZTP135')
+    expect(parse('property_for=2&keyword_1=ZTP135').keyword).toBe(null)
+  })
+})
