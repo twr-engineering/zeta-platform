@@ -685,6 +685,14 @@ The "Show {n} results" count is the same AJAX response's `totalrecords`, written
 
 ---
 
+### BPM-022 · WP-10 / FR-H06 · Location grid (respacio-blocks/location-grid)
+
+**Source:** page 285273 (`/preselling-developments/`) `respacio-blocks/location-grid` {tag: new-developments, post_limit 12, grid col-lg-3}; production HTML 24 Nov 2026.
+
+**Rule.** The grid lists location posts carrying the block's location tag **and a featured image**, newest first, up to `post_limit`. Each tile: the featured image, "Property for sale in {location}, {parent location}", "Find out More" to the location URL; no listing count. On production 26 locations are tagged `new-developments` and 2 have a featured image (Kensington Sky Garden, Teakwood Hills), so the page shows 2 tiles.
+
+**Build.** `migrate:wp` selects the same set into a `homeLocations` block with `tileStyle: development`; editors add locations by hand afterwards.
+
 ## 3. Defects discovered during capture
 
 New since PRD v2.1. **None may be silently fixed** — each is either reproduced or raised through GP.5.
@@ -717,6 +725,7 @@ New since PRD v2.1. **None may be silently fixed** — each is either reproduced
 | **CD-30** | Order By shows "Newest" when no `sortby` is set, while the results are `priority_desc` (BPM-002) | `search-form.php:6205–6221` | **F** — the rebuild labels that state "Featured" |
 | **CD-31** | Year Built on a page load runs `new DateTime($v)->format('Y')`: "2015" parses as a time (20:15) and gives the current year; "1990" may throw. The AJAX path sends it raw, so a reload can change results | `search-results.php:197–204` | **F** — the rebuild uses the raw year |
 | **CD-32** | The outer "Clear Filters" link goes to `/search_result/` (singular); no such page exists | 305520 `javascript` | **F** — the rebuild clears to `?property_for={n}` |
+| **CD-33** | The Buy page's "Explore Pre-selling Properties" button links to `/new-development/`, which is a 404 ("Page not found") on production | page 285440 `core/button`; live check 24 Nov 2026 | **P** — link kept as-is (parity); client to choose the target (likely `/preselling-developments/`) |
 
 **CD-11 is the one to look at hardest.** Arbitrary user-controlled strings are reaching a third-party API in a parameter that names a sort column. It is at minimum a correctness bug and potentially an injection surface on the CRM side. It should be reported to Respacio regardless of what this project does.
 
@@ -743,11 +752,27 @@ Run 22 August 2026 against production via Playwright. Four items closed, two sti
 | ~~Verify the calculator formula end-to-end~~ | BPM-001 | ✅ **Done** — exact to the centavo. `GM-CALC-001` |
 | ~~Load `/buy/` logged out~~ | CD-08 | ⚠️ **Half done** — logged-out confirmed; **needs a logged-in comparison** |
 | Exercise the price slider at its top stop; capture the outbound request | BPM-003 — the `+` semantics | ⬜ Outstanding |
-| Submit a banded facet with an open-ended top band; confirm whether `max_X=0` means "no ceiling" or "zero" | BPM-005 | ⬜ Outstanding |
+| ~~Submit a banded facet with an open-ended top band; confirm whether `max_X=0` means "no ceiling" or "zero"~~ | BPM-005 | ✅ **Done** 24 Nov (§4.2) — no ceiling |
 | Fetch one sold/withdrawn reference number | BPM-007 / FR-P11 | ⬜ **Blocked** — needs a sold reference number from the client |
 | Does `?amount=` actually filter the search? | BPM-001 follow-on | ⬜ **Inconclusive** — the A/B was confounded by CD-15's JS bootstrap and by per-query-string page caching. Retest with JS enabled on both variants |
 
 **Two credentials-blocked items** now gate the rest: a staff login (CD-08) and one sold reference number (FR-P11). Both are one-line asks to the client.
+
+### 4.2 Live check sweep 2 — 24 Nov 2026
+
+Read-only GETs against production (desktop: `?res_dev=1440`, phone: iPhone UA + `?res_dev=390`; result totals = (last `pageid` − 1) × page size + last page). Sale listings, 487 in total that day.
+
+| Check | Observation | Rule / effect |
+|---|---|---|
+| `phone-page-detection` (BPM-006a) | Phone 9 cards, desktop 12, with and without a cache-buster; the body class follows `res_dev` | Phones get the module phone size (9). Interim confirmed; no change |
+| `listing-route-redirect` (BPM-007a) | `/long-term/ZTP135/` → 302 `/r/ZTP135/`; `/r/ZTP611/` (rent) → 302 `/long-term/ZTP611/`; any query (`?x=1`, `?currency=USD`, `?res_dev=`) → 302 to the bare path, no currency cookie set | Built: `src/proxy.ts` (query → 302) and `ListingView` (wrong view page → redirect; Next answers 307) |
+| `keyword-case` (BPM-016) | `ZTP135`, `ztp135`, `TP135` → ZTP135; `ZTP13` → 8 | Case-insensitive contains. Matches the build (`contains` = ILIKE) |
+| `type-tree-combination` (BPM-021) | House 131, Studio 30, both 161 | OR across sub-type and sub-sub-type. Interim confirmed |
+| `area-facet-combination` (BPM-004) | Davao 24 + CDO 334 → 358; Patag 2 + Carmen 44 → 46; CDO + Patag → 2; Davao + Patag → 0 | **OR within a level, AND across levels** (municipality, barangay, complex). Interim (OR across all) was wrong; fixed in `query.ts` |
+| `fa-collision` CRM side (BPM-004) | Mountain 117, Corner 43, both 17 | The CRM ANDs `fa[]`. Whether the live form sends both selects still needs a browser |
+| `band-max-zero` (BPM-005) | `min_bedroom=3` 124; with `max_bedroom=0` 124 | `max=0` is no ceiling. Interim confirmed |
+| `location-grid-images` (WP-10) | `/preselling-developments/` renders 2 tiles (Kensington Sky Garden, Teakwood Hills) of the 26 locations tagged `new-developments` — exactly the 2 with a featured image; tile text "Property for sale in {name}, {parent name}" | **BPM-022**: the location grid lists tagged locations that have a featured image (limit 12). Built in `migrate:wp` and the `homeLocations` development tile style |
+| `new-development-url` | `/new-development/` → device shim → 404 "Page not found" | CD-33 |
 
 ---
 

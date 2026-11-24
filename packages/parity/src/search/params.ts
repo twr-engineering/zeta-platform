@@ -139,7 +139,6 @@ export function resolveSort(requested: string | null, config?: string): SortValu
  */
 export const MAX_PER_PAGE = 50
 export function resolvePerPage(requested: string | null, config: SearchModuleConfig): number {
-  if (config.device === 'Phone') pending('phone-page-detection')
   const fromConfig = config.device === 'Phone' ? (config.propertyPerPagePhone ?? 9) : (config.propertyPerPage ?? 9)
   const n = config.layout !== 'card_only' && requested ? Number.parseInt(requested, 10) : fromConfig
   // Production leaves ?property_per_page unbounded. Bounding at the corpus maximum (50) is a
@@ -194,7 +193,7 @@ export function parseSearch(sp: Sp, config: SearchModuleConfig = {}): SearchQuer
     const bands = getAll(sp, facet)
     if (!bands.length) continue
     const { min, max } = bandHull(bands)
-    if (max === 0) pending('band-max-zero')
+    // max = 0 after an open-ended band is no ceiling (live check 2026-11-24: 124 = 124).
     ranges[facet] = { min, max: max === 0 ? null : max }
   }
 
