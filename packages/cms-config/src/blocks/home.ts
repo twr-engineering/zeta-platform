@@ -7,7 +7,7 @@ import type { Block, Field } from 'payload'
  * starts identical to production.
  */
 
-const heading = (defaultValue: string): Field => ({ name: 'heading', type: 'text', required: true, defaultValue })
+const heading = (defaultValue: string): Field => ({ name: 'heading', type: 'text', defaultValue })
 const intro = (defaultValue: string): Field => ({ name: 'intro', type: 'textarea', defaultValue })
 const link = (name: string, label: string, url: string): Field => ({
   name,

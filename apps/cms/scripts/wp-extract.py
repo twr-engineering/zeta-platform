@@ -6,7 +6,7 @@ never committed). Run with -I so nothing next to the dump is imported:
 
     python3 -I apps/cms/scripts/wp-extract.py ~/Projects/zeta-group/_db/<dump>.sql.gz .local/wp-export.json
 
-Published records of: post, shorts, location, directory, testimonial, shortlist; their categories,
+Published records of: post, shorts, location, directory, testimonial, shortlist, page; their categories,
 featured images (as paths under wp-content/uploads) and the postmeta the platform uses.
 """
 import gzip
@@ -17,7 +17,7 @@ import sys
 POST_COLS = ['ID', 'post_author', 'post_date', 'post_date_gmt', 'post_content', 'post_title', 'post_excerpt', 'post_status',
              'comment_status', 'ping_status', 'post_password', 'post_name', 'to_ping', 'pinged', 'post_modified', 'post_modified_gmt',
              'post_content_filtered', 'post_parent', 'guid', 'menu_order', 'post_type', 'post_mime_type', 'comment_count']
-TYPES = {'post', 'shorts', 'location', 'directory', 'testimonial', 'shortlist'}
+TYPES = {'post', 'shorts', 'location', 'directory', 'testimonial', 'shortlist', 'page'}
 META_KEYS = {
     '_thumbnail_id', '_wp_attached_file', '_wp_attachment_image_alt', '_yoast_wpseo_title', '_yoast_wpseo_metadesc',
     '_yoast_wpseo_primary_category', '_respacio_province_muni_town_complex_name', '_respacio_province_muni_town_complex_level',
@@ -120,7 +120,7 @@ def main(dump, out_path):
             'thumb': attachment(m.get('_thumbnail_id')), 'seoTitle': m.get('_yoast_wpseo_title'), 'seoDescription': m.get('_yoast_wpseo_metadesc'),
         }
 
-    export = {k: [] for k in ['posts', 'shorts', 'locations', 'directory', 'testimonials', 'shortlists']}
+    export = {k: [] for k in ['posts', 'shorts', 'locations', 'directory', 'testimonials', 'shortlists', 'pages']}
     for p in posts.values():
         if p['post_status'] != 'publish' or p['post_type'] not in TYPES:
             continue
@@ -137,6 +137,7 @@ def main(dump, out_path):
             export['locations'].append(rec | {
                 'geo': m.get('_respacio_province_muni_town_complex_name'), 'level': m.get('_respacio_province_muni_town_complex_level'),
                 'crmName': m.get('_respacio_location_name'), 'lat': m.get('_respacio_location_add_lat_id'), 'lng': m.get('_respacio_location_add_long_id'),
+                'locationTags': sorted({terms[x]['slug'] for x in term_list(p['ID'], 'location-tag') if x in terms}),
             })
         elif p['post_type'] == 'directory':
             export['directory'].append(rec | {'categories': term_list(p['ID'], 'directory-category'), 'logo': attachment(m.get('logo')), 'summary': m.get('excerpt')})
@@ -144,6 +145,8 @@ def main(dump, out_path):
             export['testimonials'].append(rec | {'categories': term_list(p['ID'], 'testimonial-category')})
         elif p['post_type'] == 'shortlist':
             export['shortlists'].append(rec)
+        elif p['post_type'] == 'page':
+            export['pages'].append(rec)
 
     def taxonomy_terms(tax):
         return [{'termId': x['term'], 'name': html.unescape(terms[x['term']]['name']), 'slug': terms[x['term']]['slug'], 'parent': x['parent']}

@@ -168,6 +168,20 @@ export const PENDING = {
     unblock: 'Client supplies a login; compare /buy/ logged in vs logged out.',
     interim: 'Download buttons render a placeholder.',
   },
+  'location-grid-images': {
+    need: 'Where the live location grids (Preselling Developments, tag new-developments) take their tile photos: only 2 of the 26 tagged locations have a WordPress featured image.',
+    refs: ['WP-10', 'FR-H06'],
+    blockedOn: 'live-check',
+    unblock: 'Compare /preselling-developments/ tiles with the location posts (featured image, CRM complex photo or template default).',
+    interim: 'Tiles without a featured image show the dark placeholder; editors can set a hero image per location.',
+  },
+  'new-development-url': {
+    need: 'What /new-development/ serves live: the Buy page’s "Explore Pre-selling Properties" button links there, but no page has that slug (a redirect or rewrite outside the content tables).',
+    refs: ['WP-10'],
+    blockedOn: 'live-check',
+    unblock: 'Open https://zetagroup.ph/new-development/ and record the response (redirect target or page).',
+    interim: 'The button keeps the live URL, which 404s here until the target is known.',
+  },
   'shortlist-count': {
     need: 'What [respacio_shortlist_count] should count — it was never implemented.',
     refs: ['BPM-009', 'CD-01'],

@@ -6,7 +6,8 @@
  * Inputs stay local (client content): WP_EXPORT (default ../../.local/wp-export.json) and
  * WP_UPLOADS (default ~/Projects/zeta-group/site/wp-content/uploads) for featured images, which are
  * scaled to 1600 px JPEG before upload. Idempotent: records match on their WordPress URL (legacyUrls)
- * or slug, so a re-run updates instead of duplicating. Page bodies (UAGB layouts) are not scripted.
+ * or slug, so a re-run updates instead of duplicating. Content pages are recomposed into layout
+ * blocks by scripts/wp-pages.ts (--only=pages); app-rendered pages are routes and are skipped.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import os from 'node:os'
@@ -18,6 +19,7 @@ import { getPayload } from 'payload'
 import sharp from 'sharp'
 
 import config from '../src/payload.config'
+import { decode, planPage, relativeLinks } from './wp-pages'
 
 type Thumb = { file: string; alt: string } | null
 type Base = { wpId: number; title: string; slug: string; date: string; content: string; excerpt: string; parent: number; thumb: Thumb; seoTitle?: string | null; seoDescription?: string | null }
@@ -25,9 +27,10 @@ type Term = { termId: string; name: string; slug: string; parent: string }
 type Export = {
   posts: (Base & { categories: string[]; tags: string[]; primaryCategory?: string | null })[]
   shorts: (Base & { videoUrl?: string | null })[]
-  locations: (Base & { geo?: string | null; level?: string | null; crmName?: string | null; lat?: string | null; lng?: string | null })[]
+  locations: (Base & { geo?: string | null; level?: string | null; crmName?: string | null; lat?: string | null; lng?: string | null; locationTags?: string[] })[]
   directory: (Base & { categories: string[]; logo: Thumb; summary?: string | null })[]
   testimonials: (Base & { categories: string[] })[]
+  pages: Base[]
   categories: Term[]
   tags: Term[]
   directoryCategories: Term[]
@@ -111,7 +114,7 @@ async function upload(thumb: Thumb, alt: string): Promise<number | undefined> {
   return doc.id as number
 }
 
-type Coll = 'categories' | 'tags' | 'posts' | 'shorts' | 'locations' | 'directory' | 'directory-categories' | 'testimonials' | 'testimonial-categories'
+type Coll = 'pages' | 'categories' | 'tags' | 'posts' | 'shorts' | 'locations' | 'directory' | 'directory-categories' | 'testimonials' | 'testimonial-categories'
 async function upsert(collection: Coll, where: Record<string, unknown>, data: Record<string, unknown>): Promise<number> {
   const found = await payload.find({ collection, where: where as never, limit: 1, depth: 0, ...opts })
   const doc = found.docs[0]
@@ -245,13 +248,74 @@ if (want('testimonials')) {
     await upsert('testimonials', { slug: { equals: t.slug } }, {
       clientName: t.title,
       slug: t.slug,
-      quote: gutenberg(t.content).replace(/<\/p>\s*<p>/g, '\n\n').replace(/<[^>]+>/g, '').trim() || t.excerpt || t.title,
+      quote: decode(gutenberg(t.content).replace(/<\/p>\s*<p>/g, '\n\n').replace(/<[^>]+>/g, '')).trim() || t.excerpt || t.title,
       category: testiCatIds.get(t.categories[0] ?? ''),
       photo: await upload(t.thumb, t.title),
       _status: 'published',
     })
   }
   log(`${wp.testimonials.length} testimonials`)
+}
+
+// ---- pages ---------------------------------------------------------------------------------
+if (want('pages')) {
+  // Content pages only: search, listings, locations, shortlists, insights, account and 404 are routes.
+  const CONTENT = ['about-us', 'services', 'buy', 'rent', 'sell', 'contact', 'preselling-developments', 'cookies-policy', 'terms-and-conditions', 'privacy-policy', 'data-deletion']
+  const TITLES: Record<string, string> = { contact: 'Contact' }
+  const isEmpty = (html: string) => !html.replace(/<(?!img)[^>]+>/g, '').replace(/&nbsp;|\s/g, '')
+  // Links without a real target (href="#", modal triggers) keep their text and lose the link.
+  const realLinks = (html: string) => html.replace(/<a\b(?![^>]*\shref="[^"#\s][^"]*")[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+  const rich = async (html: string, alt: string) => (isEmpty(html) ? undefined : await toLexical(realLinks(relativeLinks(html)), alt))
+  const testimonialIds = (await payload.find({ collection: 'testimonials', limit: 100, depth: 0, sort: 'id', ...opts })).docs.map((t) => t.id)
+  let n = 0
+  for (const page of wp.pages.filter((p) => CONTENT.includes(p.slug))) {
+    const title = TITLES[page.slug] ?? page.title
+    const layout: Record<string, unknown>[] = []
+    for (const b of planPage(page.content)) {
+      switch (b.kind) {
+        case 'content':
+          layout.push({ blockType: 'content', body: await rich(b.html, title), videoUrl: b.videoUrl, image: b.imageFile ? await upload({ file: b.imageFile, alt: '' }, title) : undefined, buttons: b.buttons })
+          break
+        case 'accordion':
+          layout.push({
+            blockType: 'accordion',
+            heading: b.heading,
+            intro: await rich(b.introHtml, title),
+            items: await Promise.all(b.items.map(async (it) => ({ question: it.question, answer: await rich(`<p>${it.answerHtml}</p>`, title) }))),
+          })
+          break
+        case 'tabs':
+          layout.push({ blockType: 'tabs', heading: b.heading, intro: await rich(b.introHtml, title), tabs: await Promise.all(b.tabs.map(async (t) => ({ label: t.label, body: await rich(t.html, title) }))) })
+          break
+        case 'contactDetails':
+          layout.push({ blockType: 'contactDetails', body: await rich(b.html, title), mapAddress: b.mapAddress })
+          break
+        case 'form':
+          layout.push({ blockType: 'form', body: await rich(b.html, title), form: b.form })
+          break
+        case 'calculator':
+          layout.push({ blockType: 'calculator', body: await rich(b.html, title) })
+          break
+        case 'homeContent':
+          layout.push({ blockType: 'homeContent', heading: b.heading, intro: null })
+          break
+        case 'homeTestimonials':
+          layout.push({ blockType: 'homeTestimonials', heading: b.heading, intro: b.intro ?? null, testimonials: testimonialIds, moreLink: { label: null, url: null } })
+          break
+        case 'homeLocations': {
+          // The live grid: 12 locations with this location tag, newest first. Tile photos: pending('location-grid-images').
+          const slugs = wp.locations.filter((l) => l.locationTags?.includes(b.tag)).sort((x, y) => y.date.localeCompare(x.date)).slice(0, 12).map((l) => l.slug)
+          const found = await payload.find({ collection: 'locations', where: { slug: { in: slugs } }, limit: 50, depth: 0, ...opts })
+          const ids = slugs.map((s) => found.docs.find((d) => d.slug === s)?.id).filter(Boolean)
+          layout.push({ blockType: 'homeLocations', heading: b.heading ?? null, intro: b.intro ?? null, locations: ids, moreLink: { label: null, url: null } })
+          break
+        }
+      }
+    }
+    await upsert('pages', { slug: { equals: page.slug } }, { title, slug: page.slug, layout, seo: { title: seoText(page.seoTitle), description: seoText(page.seoDescription) }, _status: 'published' })
+    n++
+  }
+  log(`${n} pages`)
 }
 
 process.exit(0)

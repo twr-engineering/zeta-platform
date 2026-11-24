@@ -3,7 +3,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { HomeBlocks } from '@/components/home/HomeBlocks'
 import { pending } from '@/lib/parity/pending'
+import { blocksData } from '@/lib/site/blocks-data'
 import { payload } from '@/lib/site/payload'
 import type { Media, Post } from '@/payload-types'
 
@@ -14,17 +16,29 @@ type Props = { params: Promise<{ slug: string }> }
 const findPost = async (slug: string) =>
   (await (await payload()).find({ collection: 'posts', where: { slug: { equals: slug } }, depth: 2, limit: 1 })).docs[0] ?? null
 
+const findPage = async (slug: string) =>
+  slug === 'home' ? null : ((await (await payload()).find({ collection: 'pages', where: { slug: { equals: slug } }, depth: 2, limit: 1 })).docs[0] ?? null)
+
 export async function generateMetadata({ params }: Props) {
-  const post = await findPost((await params).slug)
+  const slug = (await params).slug
+  const page = await findPage(slug)
+  if (page) return { title: page.seo?.title || page.title, description: page.seo?.description || undefined }
+  const post = await findPost(slug)
   return post ? { title: post.seo?.title || post.title, description: post.seo?.description || post.excerpt || undefined } : {}
 }
 
 /**
+ * /{slug}/ — a CMS page (About, Services, Buy, Rent, Sell, Contact, the legal pages…) when one has
+ * this slug, else an article. Both live at the root in WordPress, and their slugs do not collide.
+ *
  * Article page — /{post-slug}/, the live URL form. BPM-018: title over the featured-image banner,
  * the body, then previous / next by publish date in any category; no author, date or category line.
  */
-export default async function ArticlePage({ params }: Props) {
-  const post = await findPost((await params).slug)
+export default async function SlugPage({ params }: Props) {
+  const slug = (await params).slug
+  const page = await findPage(slug)
+  if (page) return <div className="cms-page"><HomeBlocks blocks={page.layout ?? []} data={await blocksData(page.layout)} /></div>
+  const post = await findPost(slug)
   if (!post) notFound()
   pending('article-double-h1')
   const p = await payload()
