@@ -229,13 +229,17 @@ if (want('locations')) {
 // ---- directory -----------------------------------------------------------------------------
 if (want('directory')) {
   for (const d of wp.directory) {
+    const text = (d.summary || gutenberg(d.content).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim()
     await upsert('directory', { slug: { equals: d.slug } }, {
       name: d.title,
       slug: d.slug,
-      category: dirCatIds.get(d.categories[0] ?? ''),
-      description: (d.summary || gutenberg(d.content).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim() || undefined,
+      // Every category: the grid's exclusions test all of them (BPM-019).
+      categories: d.categories.map((c) => dirCatIds.get(c)).filter(Boolean),
+      excerpt: decode(text) || undefined,
+      description: await toLexical(d.content, d.title),
       image: await upload(d.thumb, d.title),
-      legacyUrls: [{ path: `/directory/${d.slug}/` }],
+      // The grid sorts by WordPress publish date, newest first (BPM-019).
+      createdAt: new Date(`${d.date.replace(' ', 'T')}Z`).toISOString(),
       _status: 'published',
     })
   }

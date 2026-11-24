@@ -4,8 +4,9 @@ import { slugField } from '../fields/slug'
 import { seoGroup } from '../fields/seo'
 
 /**
- * 25 entries across 12 categories (PRD §2.3).
- * Filter semantics (FR-E20) are NOT yet captured — see the WP-00 outstanding list.
+ * 25 entries across 12 categories (PRD §2.3). An entry can sit in several categories, and the
+ * directory grid's exclusions test every one of them (BPM-019: an entry in Parks + Complex is
+ * excluded by "!Complex"). Pages live at /directory/{slug}/.
  */
 export const DirectoryEntries: CollectionConfig = {
   slug: 'directory',
@@ -15,7 +16,8 @@ export const DirectoryEntries: CollectionConfig = {
   fields: [
     { name: 'name', type: 'text', required: true },
     ...slugField(),
-    { name: 'category', type: 'relationship', relationTo: 'directory-categories' },
+    { name: 'categories', type: 'relationship', relationTo: 'directory-categories', hasMany: true },
+    { name: 'excerpt', type: 'textarea', admin: { description: 'The card text in directory grids.' } },
     { name: 'location', type: 'relationship', relationTo: 'locations' },
     { name: 'description', type: 'richText' },
     { name: 'image', type: 'upload', relationTo: 'media' },

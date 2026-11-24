@@ -5,8 +5,10 @@ import { notFound } from 'next/navigation'
 import type { Where } from 'payload'
 
 import { ListingCard } from '@/components/ListingCard'
+import { DirectoryGrid } from '@/components/directory/DirectoryGrid'
 import { ListingTabs } from '@/components/location/ListingTabs'
 import { GetInTouch } from '@/components/site/GetInTouch'
+import { directoryGrid } from '@/lib/site/directory'
 import { pending } from '@/lib/parity/pending'
 import { deviceType } from '@/lib/search/device'
 import { parseSearch } from '@/lib/search/params'
@@ -100,6 +102,13 @@ export default async function LocationPage({ params }: Props) {
           <ul className="area-list">
             {(children.docs as Location[]).map((c) => <li key={c.id}><Link href={locationHref(c)}>{c.name}</Link></li>)}
           </ul>
+        </section>
+      )}
+      {level === 'complex' && (
+        // BPM-019: "Complex Bottom" opens with the directory grid on every development page.
+        <section className="home-section">
+          <h2>Directory</h2>
+          <DirectoryGrid data={await directoryGrid()} />
         </section>
       )}
       <GetInTouch />

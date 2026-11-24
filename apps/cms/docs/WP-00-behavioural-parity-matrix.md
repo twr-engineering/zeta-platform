@@ -566,7 +566,7 @@ The separate select-picker suggestion field (`property_filter`) exists only in v
 
 | | |
 |---|---|
-| **Class** | P\* (feature not built) |
+| **Class** | P\* — built 24 Nov 2026 (`@zeta/parity/directory`, development pages, `/directory/{slug}/`) |
 | **Source** | respacio `includes/cpt-directory.php`; `blocks/infinity-directory-grid/`; `respacio.php:1078–1110`; `templates/post-loop.php`; `includes/functions.php:2042–2786`; `dynamicsection` 290013, 308024, 275262, 275268; `customtemplates` 289463 |
 | **Confidence** | **Extracted** |
 
@@ -579,6 +579,8 @@ The separate select-picker suggestion field (`property_filter`) exists only in v
 - Worked result, Complex Bottom: 8 posts survive the exclusions; tabs **All, Mall, Public Services**; the schools and parks posts are unreachable.
 
 **Side finding:** BPM-013's 6 per page is the post-grid block's registered default `post_limit` `'6'` (`blocks/post-grid/post-grid.php:61`); its `category` is reset at `post-loop.php:13`.
+
+**Build.** `selectDirectory` (`@zeta/parity/directory`, parity tests reproduce the worked result) feeds the "Directory" section on every development (subdivision) page; tabs are client-side swaps of server-selected cards. Entries keep all their categories (`categories` hasMany) and their WordPress date (`createdAt`). `?q=` text search is not built: no live link sets it on a location page.
 
 **Sign-off:** ☐
 

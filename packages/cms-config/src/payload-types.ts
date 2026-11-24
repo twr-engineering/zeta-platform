@@ -1173,7 +1173,11 @@ export interface Directory {
         id?: string | null;
       }[]
     | null;
-  category?: (number | null) | DirectoryCategory;
+  categories?: (number | DirectoryCategory)[] | null;
+  /**
+   * The card text in directory grids.
+   */
+  excerpt?: string | null;
   location?: (number | null) | Location;
   description?: {
     root: {
@@ -2224,7 +2228,8 @@ export interface DirectorySelect<T extends boolean = true> {
         path?: T;
         id?: T;
       };
-  category?: T;
+  categories?: T;
+  excerpt?: T;
   location?: T;
   description?: T;
   image?: T;
