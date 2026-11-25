@@ -3,8 +3,8 @@
 import { useState, type ReactNode } from 'react'
 
 /** Tabbed listing modules (BPM-017): every panel is server-rendered; the tabs only switch which shows. */
-export function ListingTabs({ label, tabs }: { label: string; tabs: { label: string; count: number; panel: ReactNode }[] }) {
-  const [active, setActive] = useState(0)
+export function ListingTabs({ label, tabs, initial = 0 }: { label: string; tabs: { label: string; count: number; panel: ReactNode }[]; initial?: number }) {
+  const [active, setActive] = useState(initial)
   return (
     <div className="listing-tabs">
       <div className="seg-tabs" role="tablist" aria-label={label}>

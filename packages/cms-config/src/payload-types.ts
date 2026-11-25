@@ -205,7 +205,7 @@ export interface Location {
   };
   heroImage?: (number | null) | Media;
   /**
-   * Above the listing modules.
+   * The description under the heading (the part shown before "Read more").
    */
   intro?: {
     root: {
@@ -223,7 +223,7 @@ export interface Location {
     [k: string]: unknown;
   } | null;
   /**
-   * Long-form SEO copy below the listing modules.
+   * The rest of the description, revealed by "Read more".
    */
   content?: {
     root: {
@@ -240,6 +240,29 @@ export interface Location {
     };
     [k: string]: unknown;
   } | null;
+  guideHeading?: string | null;
+  guideTabs?:
+    | {
+        label: string;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  newDevelopment?: boolean | null;
   /**
    * Optional at launch; required for the Phase 2 map (P2-01).
    */
@@ -350,6 +373,10 @@ export interface Post {
   } | null;
   category?: (number | null) | Category;
   tags?: (number | Tag)[] | null;
+  /**
+   * CRM locations this post is about (from WordPress).
+   */
+  crmLocationTree?: string | null;
   publishedAt?: string | null;
   /**
    * Migrated from Yoast. Empty fields fall back to the record title and excerpt.
@@ -1645,6 +1672,15 @@ export interface LocationsSelect<T extends boolean = true> {
   heroImage?: T;
   intro?: T;
   content?: T;
+  guideHeading?: T;
+  guideTabs?:
+    | T
+    | {
+        label?: T;
+        body?: T;
+        id?: T;
+      };
+  newDevelopment?: T;
   coordinates?:
     | T
     | {
@@ -1842,6 +1878,7 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   category?: T;
   tags?: T;
+  crmLocationTree?: T;
   publishedAt?: T;
   seo?:
     | T
