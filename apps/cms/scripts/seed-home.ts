@@ -27,6 +27,8 @@ type LocalContent = {
   faq?: { question: string; answer: string }[]
   heroImage?: string
   agentPhoto?: string
+  /** The "Sell with confidence." photo (home page, image right of the text). */
+  sellImage?: string
   /** slug → featured image in the offline pull (the WordPress _thumbnail_id of that location/shortlist). */
   tileImages?: Record<string, string>
 }
@@ -108,6 +110,7 @@ if (heroPath && existsSync(heroPath)) {
   heroImage = (existing.docs[0] ?? (await payload.create({ collection: 'media', data: { alt: 'Alex Zeta-Guingao' }, filePath: heroPath, ...opts }))).id as number
 }
 
+const sellImage = local.sellImage ? await uploadImage(local.sellImage, 'House for sale') : undefined
 const layout = [
   { blockType: 'homeHero', heading: 'Your Ultimate Real Estate Resource in the Philippines', backgroundImage: heroImage, presenterName: 'Alex Zeta-Guingao', presenterTagline: 'Truly Wealthy Realty', guideLink: { label: 'Learn how to buy in the Philippines', url: '/buy/' } },
   { blockType: 'homeTestimonials', heading: 'What our clients say', intro: 'Zeta clients are always a top priority. Here’s what they have to say.', testimonials: testimonialIds, moreLink: { label: 'View more reviews', url: '/about-us/' } },
@@ -118,7 +121,7 @@ const layout = [
     { value: '500+', label: 'Transactions since 2012' },
   ], moreLink: { label: 'More about the Zeta Group', url: '/about-us/' } },
   { blockType: 'homeLocations', heading: 'City Guide', intro: 'Virtually search through the key cities in the Philippines to find the right property for you.', locations: locationIds, moreLink: { label: 'View More Locations', url: '/location/' } },
-  { blockType: 'homeCta', heading: 'Sell with confidence.', text: 'Sell your property in the Philippines free from worry and doubt. Zeta Group has a track record of serving foreign buyers, OFWs, and local residents. Our huge database of people looking for properties in the Philippines can help you sell your property with ease and confidence.', imageSide: 'left', button: { label: 'Get Started', url: '/sell/' } },
+  { blockType: 'homeCta', heading: 'Sell with confidence.', text: 'Sell your property in the Philippines free from worry and doubt. Zeta Group has a track record of serving foreign buyers, OFWs, and local residents. Our huge database of people looking for properties in the Philippines can help you sell your property with ease and confidence.', imageSide: 'right', image: sellImage, button: { label: 'Get Started', url: '/sell/' } },
   { blockType: 'homeShortlists', heading: 'Interesting Properties you might like', intro: 'Carefully curated properties in the Philippines that will resonate with you.', shortlists: shortlistIds, moreLink: { label: 'View More Shortlists', url: '/shortlist-page/' } },
   { blockType: 'homeCta', heading: 'Home Buying Guide', text: 'Easily navigate the process of buying your dream property in the Philippines by downloading your copy of Zeta Group’s Philippine Home Buying Guide for FREE!', imageSide: 'right', button: { label: 'Get your FREE Home Buying Guide', url: '/buy/' } },
   { blockType: 'homeContent', heading: 'Featured Content', intro: 'Real estate information at your fingertips. Alex, an expert real estate broker and consultant in the Philippines will help you understand the ins and outs of the Philippine real estate process through her hand-picked and easy-to-follow content.', moreLink: { label: 'View More blogs', url: '/insights/' } },
