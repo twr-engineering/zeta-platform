@@ -26,6 +26,18 @@ export const SiteSettings: GlobalConfig = {
     { name: 'siteName', type: 'text', defaultValue: 'Zeta Group' },
     { name: 'logo', type: 'upload', relationTo: 'media' },
     { name: 'brokerLicence', type: 'text', admin: { description: 'PRC Broker Lic. No. — required on public pages.' } },
+    {
+      // BPM-020 row 42: the listing page's sticky enquiry card (template 288102 .agent_details).
+      name: 'listingAgent',
+      type: 'group',
+      admin: { description: 'The agent card above the enquiry form on every listing page.' },
+      fields: [
+        { name: 'heading', type: 'text', defaultValue: 'Speak to Alex' },
+        { name: 'licence', type: 'text', defaultValue: 'Broker License No. 0007755' },
+        { name: 'text', type: 'textarea', defaultValue: 'Leave your details below and Alex will be in touch with you within 24 hours' },
+        { name: 'photo', type: 'upload', relationTo: 'media' },
+      ],
+    },
     { name: 'officeAddress', type: 'textarea' },
     { name: 'phone', type: 'text' },
     { name: 'email', type: 'email' },

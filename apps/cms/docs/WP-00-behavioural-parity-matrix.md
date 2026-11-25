@@ -727,6 +727,7 @@ New since PRD v2.1. **None may be silently fixed** — each is either reproduced
 | **CD-30** | Order By shows "Newest" when no `sortby` is set, while the results are `priority_desc` (BPM-002) | `search-form.php:6205–6221` | **F** — the rebuild labels that state "Featured" |
 | **CD-31** | Year Built on a page load runs `new DateTime($v)->format('Y')`: "2015" parses as a time (20:15) and gives the current year; "1990" may throw. The AJAX path sends it raw, so a reload can change results | `search-results.php:197–204` | **F** — the rebuild uses the raw year |
 | **CD-32** | The outer "Clear Filters" link goes to `/search_result/` (singular); no such page exists | 305520 `javascript` | **F** — the rebuild clears to `?property_for={n}` |
+| **CD-34** | The search page's "Show Map" switch does nothing: `toggleContent()`'s show/hide lines are commented out in the definition the page runs | live check 24 Nov 2026; page template `#switch_to_map` | **P** — not reproduced (no dead control); a map view would be an E-class addition (FR-SR16) |
 | **CD-33** | The Buy page's "Explore Pre-selling Properties" button links to `/new-development/`, which is a 404 ("Page not found") on production | page 285440 `core/button`; live check 24 Nov 2026 | **P** — link kept as-is (parity); client to choose the target (likely `/preselling-developments/`) |
 
 **CD-11 is the one to look at hardest.** Arbitrary user-controlled strings are reaching a third-party API in a parameter that names a sort column. It is at minimum a correctness bug and potentially an injection surface on the CRM side. It should be reported to Respacio regardless of what this project does.
@@ -787,7 +788,22 @@ Production and the rebuild driven in a browser on the same URL (`/search_results
 | Card type line: "House", "Commercial" | Template 276562 `.subtype`: the sub-sub type span is removed when a sub type exists | `cardTypeLabel` (sub type, else sub-sub type). The build had it reversed |
 | Card photos page with ‹ › and carry a favourite star | `[property_slider]`, `[property_favourite]` | `CardMedia`; the star leads to sign-in until the account area exists. List payloads carry one photo, so the slider shows where the mirror has the detail gallery |
 | Order By shows the placeholder "Order By" when no `sortby` is set | — | CD-30 no longer reproduces as recorded (it showed "Newest"); the rebuild's "Featured" label stays |
-| Show Map toggle; Save Search | `[property_showonmap]`; saved searches | Not built: map view next (FR-SR16); Save Search needs the account area |
+| Show Map toggle; Save Search | `[property_showonmap]`; saved searches | Save Search needs the account area. The Show Map switch is dead on production (CD-34): no map view built |
+
+### 4.4 Listing page side by side — 24–25 Nov 2026
+
+`/r/ZTP815/` and `/r/ZTP128/` on production and the rebuild. Rows refer to BPM-020.
+
+| Row | Live | Build before | Now |
+|---|---|---|---|
+| 10 | Save (`[property_favourite]`) + Share | Share only | Save (sign-in until the account area) + Share |
+| 11 | "Back" (`window.history.back()`) first in the sub-nav | missing | `BackLink` |
+| 12–13 | Gallery tiles and the media tabs Overview · Photos · 360 Virtual Tour · Floor Plan · Video open the gallery modal | tiles only; media in a separate section when > 5 photos | `ListingGallery`: tiles, tabs (each removed when empty) and a viewer dialog |
+| 39 | The 10 place filters and the map always show (no `nearest_location` in any recorded listing) | a list, or "No places of interest listed" | `PlacesOfInterest`: filters + map always |
+| 41 | Opens at Price, Downpayment 10, Payment Term 1 Year, Interest Rate 6.55 | 20 years, 7 %, 20 % | the live opening values and labels; CD-26's arithmetic fix stays |
+| 42 | Agent card: Avatar, "Speak to Alex", "Broker License No. 0007755", "Leave your details below and Alex will be in touch with you within 24 hours" | generic heading | Site Settings → Listing agent (defaults = live copy; photo in Media) |
+
+Data, not build: ZTP815's Features, Location map and gallery are empty here because the recorded corpus has no detail payload for it (73 of 513); the similar grid shows 4 (the block's `property_per_page` is 4) where production had only 3 matches.
 
 ---
 

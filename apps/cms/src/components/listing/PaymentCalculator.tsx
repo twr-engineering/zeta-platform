@@ -11,11 +11,13 @@ const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-US')}`
  * downpayment 10–90 %). CD-26: the live script subtracts the slider as pesos, truncates the rate
  * and does not recalculate on a rate change; this computes a standard fixed-rate amortisation
  * (pending: listing-defects). Distinct from the frozen home-loan calculator (BPM-001).
+ * Opening values and labels follow production (24 Nov 2026): Price, Downpayment 10 %, Payment Term
+ * 1 Year, Interest Rate 6.55.
  */
 export function PaymentCalculator({ price }: { price: number }) {
-  const [years, setYears] = useState(20)
-  const [rate, setRate] = useState(7)
-  const [down, setDown] = useState(20)
+  const [years, setYears] = useState(1)
+  const [rate, setRate] = useState(6.55)
+  const [down, setDown] = useState(10)
   const principal = price * (1 - down / 100)
   const r = rate / 100 / 12
   const n = years * 12
@@ -26,10 +28,13 @@ export function PaymentCalculator({ price }: { price: number }) {
       <p className="pay-monthly"><strong>{peso(monthly)}</strong> per month</p>
       <p className="pay-sub">{years} year fixed {rate}% interest</p>
       <div className="pay-fields">
-        <label>Loan term
-          <select value={years} onChange={(e) => setYears(Number(e.target.value))}>{TERMS.map((t) => <option key={t} value={t}>{t} {t === 1 ? 'year' : 'years'}</option>)}</select>
+        <label className="pay-price">Price
+          <input type="text" value={Math.round(price).toLocaleString('en-US')} readOnly />
         </label>
-        <label>Interest rate
+        <label>Payment Term
+          <select value={years} onChange={(e) => setYears(Number(e.target.value))}>{TERMS.map((t) => <option key={t} value={t}>{t} {t === 1 ? 'Year' : 'Years'}</option>)}</select>
+        </label>
+        <label>Interest Rate
           <select value={rate} onChange={(e) => setRate(Number(e.target.value))}>{RATES.map((t) => <option key={t} value={t}>{t}%</option>)}</select>
         </label>
         <label>Downpayment: {down}% ({peso(price * (down / 100))})
