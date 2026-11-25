@@ -73,6 +73,10 @@ export function SiteFooter({ explore, columns, tagline, newsletter, social, brok
         <div className="container footer-legal">
           <span>© {new Date().getFullYear()} Zeta Group</span>
           {brokerLicence && <span>PRC Broker Lic. No. {brokerLicence}</span>}
+          {/* The live footer's legal links (PRIVACY POLICY · TERMS · COOKIES), to the migrated pages. */}
+          <Link href="/privacy-policy/">Privacy Policy</Link>
+          <Link href="/terms-and-conditions/">Terms</Link>
+          <Link href="/cookies-policy/">Cookies</Link>
           <CookieSettingsLink />
         </div>
       </div>
