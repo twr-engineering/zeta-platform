@@ -73,8 +73,29 @@ export const Locations: CollectionConfig = {
       ],
     },
     { name: 'heroImage', type: 'upload', relationTo: 'media' },
-    { name: 'intro', type: 'richText', admin: { description: 'Above the listing modules.' } },
-    { name: 'content', type: 'richText', admin: { description: 'Long-form SEO copy below the listing modules.' } },
+    { name: 'intro', type: 'richText', admin: { description: 'The description under the heading (the part shown before "Read more").' } },
+    { name: 'content', type: 'richText', admin: { description: 'The rest of the description, revealed by "Read more".' } },
+    {
+      // BPM-017: the city page's guide (the location post's own uagb/tabs, e.g. Government Agency
+      // Offices, Schools, Hospitals …), shown below the listing modules and the map.
+      name: 'guideHeading',
+      type: 'text',
+    },
+    {
+      name: 'guideTabs',
+      type: 'array',
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        { name: 'body', type: 'richText' },
+      ],
+    },
+    {
+      // location-tag "new-developments": the Explore Areas "Preselling" column and the Preselling
+      // Developments grid (BPM-017, BPM-022).
+      name: 'newDevelopment',
+      type: 'checkbox',
+      defaultValue: false,
+    },
     /**
      * Deliberately NOT Payload's `point` type.
      *

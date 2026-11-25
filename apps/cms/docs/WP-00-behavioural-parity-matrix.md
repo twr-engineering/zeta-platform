@@ -727,6 +727,8 @@ New since PRD v2.1. **None may be silently fixed** — each is either reproduced
 | **CD-30** | Order By shows "Newest" when no `sortby` is set, while the results are `priority_desc` (BPM-002) | `search-form.php:6205–6221` | **F** — the rebuild labels that state "Featured" |
 | **CD-31** | Year Built on a page load runs `new DateTime($v)->format('Y')`: "2015" parses as a time (20:15) and gives the current year; "1990" may throw. The AJAX path sends it raw, so a reload can change results | `search-results.php:197–204` | **F** — the rebuild uses the raw year |
 | **CD-32** | The outer "Clear Filters" link goes to `/search_result/` (singular); no such page exists | 305520 `javascript` | **F** — the rebuild clears to `?property_for={n}` |
+| **CD-35** | The location pages' Google map shows "Oops! Something went wrong" | live check 25 Nov 2026 | **F** — OpenStreetMap at the location's coordinates |
+| **CD-36** | Barangay pages state "There are 0 property for sale in …" from stale page meta (`_respacio_count`) while listings exist | live check 25 Nov 2026 | **F** — the live listing count |
 | **CD-34** | The search page's "Show Map" switch does nothing: `toggleContent()`'s show/hide lines are commented out in the definition the page runs | live check 24 Nov 2026; page template `#switch_to_map` | **P** — not reproduced (no dead control); a map view would be an E-class addition (FR-SR16) |
 | **CD-33** | The Buy page's "Explore Pre-selling Properties" button links to `/new-development/`, which is a 404 ("Page not found") on production | page 285440 `core/button`; live check 24 Nov 2026 | **P** — link kept as-is (parity); client to choose the target (likely `/preselling-developments/`) |
 
@@ -802,6 +804,23 @@ Production and the rebuild driven in a browser on the same URL (`/search_results
 | 39 | The 10 place filters and the map always show (no `nearest_location` in any recorded listing) | a list, or "No places of interest listed" | `PlacesOfInterest`: filters + map always |
 | 41 | Opens at Price, Downpayment 10, Payment Term 1 Year, Interest Rate 6.55 | 20 years, 7 %, 20 % | the live opening values and labels; CD-26's arithmetic fix stays |
 | 42 | Agent card: Avatar, "Speak to Alex", "Broker License No. 0007755", "Leave your details below and Alex will be in touch with you within 24 hours" | generic heading | Site Settings → Listing agent (defaults = live copy; photo in Media) |
+
+### 4.5 Location pages side by side — 25 Nov 2026
+
+`/location/cagayan-de-oro-city/`, `…/balulang/`, `…/balulang/xavier-estates/` on production and the rebuild (BPM-017).
+
+| Live | Build before | Now |
+|---|---|---|
+| Breadcrumb "Home › Properties for sale in …"; the location post's description with a "Read more" button; "Save this Location" | name + photo | breadcrumb; description (`intro` before the button, `content` after, migrated from the post body); Save (sign-in until the account area) |
+| Resale / Pre-selling tab modules with a numbered pager and Next | first page only | per-module pager (`?rtab=&rpage=`, `?ptab=&ppage=`) |
+| "Location of {name}" map shows Google's "Oops! Something went wrong" | — | OpenStreetMap view at the location's coordinates (CD-35) |
+| City page: the post's own "City Guide" tabs (Government Agency Offices, Schools, Hospitals, …) **are visible** | — | `guideHeading` + `guideTabs` (9 locations carry them) |
+| "More About {name}": Blogs / Shorts — posts whose `_respacio_multi_location` holds the page's level and id | — | `crmLocationTree` on posts; LIKE `{municipality\|city\|complex}:{id}`; "No data found" when empty |
+| Explore: three columns from the CRM tree — Neighborhoods "Name (count)", Developments, Preselling (new developments, ≤ 9, title DESC); barangay pages show their city's lists, own barangay marked | one flat list of child pages | `locationExplore`; names link only where a location page exists (live links every name, many to pages that do not exist) |
+| Barangay: "There are 0 property for sale in Balulang…" (page meta `_respacio_count`, stale) | count of listings | the live listing count (CD-36) |
+| Barangay: "Developments located in …" tiles with empty `href` | — | tiles of the child development pages, linked |
+| No "Get in touch" band | a band | removed |
+| Development page tabs: Resale "All, Just Listed"; Pre-selling "House, Lot, Commercial, Condo" | city tab set | not changed — the complex-level tab queries are uncaptured (`location-defects`) |
 
 Data, not build: ZTP815's Features, Location map and gallery are empty here because the recorded corpus has no detail payload for it (73 of 513); the similar grid shows 4 (the block's `property_per_page` is 4) where production had only 3 matches.
 

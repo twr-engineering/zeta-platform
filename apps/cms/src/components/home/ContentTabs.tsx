@@ -17,7 +17,7 @@ export function ContentTabs({ posts, shorts, moreLabel, moreHref }: { posts: Ite
         <button type="button" role="tab" aria-selected={tab === 'shorts'} className={tab === 'shorts' ? 'is-on' : ''} onClick={() => setTab('shorts')}>Shorts</button>
       </div>
       {items.length === 0 ? (
-        <p className="empty-note">Articles and shorts appear here once content is migrated (WP-10).</p>
+        <p className="empty-note">No data found</p>
       ) : (
         <div className={tab === 'blogs' ? 'post-list' : 'short-grid'}>
           {items.map((it) => (

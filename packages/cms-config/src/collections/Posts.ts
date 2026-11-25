@@ -22,6 +22,13 @@ export const Posts: CollectionConfig = {
     { name: 'content', type: 'richText' },
     { name: 'category', type: 'relationship', relationTo: 'categories' },
     { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true },
+    {
+      // _respacio_multi_location ("{province:4689|municipality:25956|city:52767},…"): location pages
+      // list a post in "More About …" when this holds their CRM level and id (meta LIKE, BPM-017).
+      name: 'crmLocationTree',
+      type: 'text',
+      admin: { readOnly: true, position: 'sidebar', description: 'CRM locations this post is about (from WordPress).' },
+    },
     { name: 'publishedAt', type: 'date', admin: { position: 'sidebar' } },
     seoGroup,
   ],

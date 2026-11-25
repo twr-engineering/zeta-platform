@@ -19,13 +19,13 @@ import { getPayload } from 'payload'
 import sharp from 'sharp'
 
 import config from '../src/payload.config'
-import { decode, planPage, relativeLinks } from './wp-pages'
+import { decode, parseBlocks, planPage, relativeLinks, type GBlock } from './wp-pages'
 
 type Thumb = { file: string; alt: string } | null
 type Base = { wpId: number; title: string; slug: string; date: string; content: string; excerpt: string; parent: number; thumb: Thumb; seoTitle?: string | null; seoDescription?: string | null }
 type Term = { termId: string; name: string; slug: string; parent: string }
 type Export = {
-  posts: (Base & { categories: string[]; tags: string[]; primaryCategory?: string | null })[]
+  posts: (Base & { categories: string[]; tags: string[]; primaryCategory?: string | null; locationTree?: string | null })[]
   shorts: (Base & { videoUrl?: string | null })[]
   locations: (Base & { geo?: string | null; level?: string | null; crmName?: string | null; lat?: string | null; lng?: string | null; locationTags?: string[] })[]
   directory: (Base & { categories: string[]; logo: Thumb; summary?: string | null })[]
@@ -151,6 +151,7 @@ if (want('posts')) {
       publishedAt: new Date(`${p.date.replace(' ', 'T')}Z`).toISOString(),
       legacyUrls: [{ path: `/${p.slug}/` }],
       seo: { title: seoText(p.seoTitle), description: seoText(p.seoDescription) },
+      crmLocationTree: p.locationTree || null,
       _status: 'published',
     })
     n++
@@ -172,6 +173,47 @@ if (want('shorts')) {
     })
   }
   log(`${wp.shorts.length} shorts`)
+}
+
+
+/**
+ * A location post's own body (BPM-017): the description container — paragraphs, a "Read more"
+ * button, more paragraphs — and, on city pages, a heading with uagb/tabs (the city guide). The
+ * dynamic sections between them are the shared template parts, rendered by the page itself.
+ */
+async function locationBody(content: string, name: string) {
+  const ordered: GBlock[] = []
+  const walk = (b: GBlock) => {
+    if (/^(paragraph|heading|list|buttons|uagb\/tabs)$/.test(b.name)) ordered.push(b)
+    else b.children.forEach(walk)
+  }
+  parseBlocks(content).forEach(walk)
+  const tabsAt = ordered.findIndex((b) => b.name === 'uagb/tabs')
+  const desc = tabsAt === -1 ? ordered : ordered.slice(0, tabsAt)
+  // The guide's heading sits right before its tabs.
+  const guideHeadingBlock = tabsAt > 0 && ordered[tabsAt - 1].name === 'heading' ? ordered[tabsAt - 1] : null
+  const descBlocks = desc.filter((b) => b !== guideHeadingBlock)
+  const cut = descBlocks.findIndex((b) => b.name === 'buttons')
+  const html = (list: GBlock[]) => list.filter((b) => b.name !== 'buttons').map((b) => b.raw).join('\n')
+  const before = cut === -1 ? descBlocks : descBlocks.slice(0, cut)
+  const after = cut === -1 ? [] : descBlocks.slice(cut + 1)
+  const text = (h: string) => h.replace(/<!--[\s\S]*?-->|<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  const rich = async (h: string) => (text(h) ? await toLexical(relativeLinks(h), name) : null)
+  const tabs = tabsAt === -1 ? null : ordered[tabsAt]
+  const headers = (tabs?.attrs.tabHeaders as string[] | undefined) ?? []
+  const guideTabs = tabs
+    ? await Promise.all(
+        tabs.children
+          .filter((c) => c.name === 'uagb/tabs-child')
+          .map(async (c, i) => ({ label: decode(String(c.attrs.header ?? headers[i] ?? `Tab ${i + 1}`)), body: await rich(c.inner) })),
+      )
+    : []
+  return {
+    intro: await rich(html(before)),
+    content: await rich(html(after)),
+    guideHeading: guideHeadingBlock ? decode(text(guideHeadingBlock.inner)) : null,
+    guideTabs,
+  }
 }
 
 // ---- locations -----------------------------------------------------------------------------
@@ -214,6 +256,8 @@ if (want('locations')) {
       crmGeography: { provinceId: g.province, municipalityId: g.municipality, townId: g.city, complexId: g.complex },
       coordinates: { latitude: l.lat ? Number(l.lat) : undefined, longitude: l.lng ? Number(l.lng) : undefined },
       heroImage: await upload(l.thumb, name),
+      ...(await locationBody(l.content, name)),
+      newDevelopment: !!l.locationTags?.includes('new-developments'),
       legacyUrls: [{ path: legacy }],
       seo: { title: seoText(l.seoTitle), description: seoText(l.seoDescription)?.replace(/\[global_location_property_count\]/g, '').replace(/\s{2,}/g, ' ') },
       _status: 'published',

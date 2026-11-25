@@ -587,3 +587,22 @@ main:has(> .article) { max-width: none; padding-left: 0; padding-right: 0; paddi
 .post-list .tile-more { display: none; }
 @media (max-width: 991px) { .post-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 575px) { .post-list { grid-template-columns: 1fr; } }
+
+/* Location page parity (BPM-017) */
+.loc-hero { align-items: start; }
+.loc-crumbs { font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
+.loc-crumbs a { color: var(--ink-2); }
+.loc-desc { margin: 12px 0; }
+.loc-desc .rich p { margin-bottom: 0.8em; }
+.loc-readmore { margin-top: 4px; }
+.loc-save { margin-top: 12px; }
+.seg-tabs-wrap { flex-wrap: wrap; height: auto; }
+.guide-tabs [role=tabpanel] { margin-top: 18px; }
+.loc-explore-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.loc-explore-cols h3 { font-size: 18px; margin-bottom: 10px; }
+.loc-explore-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.loc-explore-cols a { color: var(--ink-2); text-decoration: none; }
+.loc-explore-cols a:hover { color: var(--ink); text-decoration: underline; }
+.loc-explore-cols .is-active a, .loc-explore-cols .is-active span { font-weight: 600; color: var(--ink); }
+.pager-gap { padding: 0 6px; color: var(--ink-2); }
+@media (max-width: 767px) { .loc-explore-cols { grid-template-columns: 1fr; } }
