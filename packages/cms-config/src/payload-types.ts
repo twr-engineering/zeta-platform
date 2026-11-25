@@ -2671,6 +2671,25 @@ export interface CrmState {
     | number
     | boolean
     | null;
+  /**
+   * Where the running sync cycle continues (property_for, offset, CRM ids seen). Empty between cycles.
+   */
+  syncCursor?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Last sync step (each cron call runs one).
+   */
+  lastStepAt?: string | null;
+  /**
+   * Last completed sync cycle.
+   */
   lastSyncAt?: string | null;
   /**
    * live or fixtures
@@ -2822,6 +2841,8 @@ export interface CalculatorDefaultsSelect<T extends boolean = true> {
 export interface CrmStateSelect<T extends boolean = true> {
   currencyConverter?: T;
   locationTree?: T;
+  syncCursor?: T;
+  lastStepAt?: T;
   lastSyncAt?: T;
   lastSyncMode?: T;
   lastSyncResult?: T;

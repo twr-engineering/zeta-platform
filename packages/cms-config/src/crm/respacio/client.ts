@@ -47,9 +47,11 @@ export function buildQuery(params: CrmParams): string {
 function liveClient(apiKey: string, baseUrl: string): RespacioClient {
   const get = async <T>(wsName: string, params: CrmParams): Promise<T> => {
     const url = `${baseUrl.replace(/\/$/, '')}/${wsName}?${buildQuery(params)}`
-    const res = await fetch(url, {
-      headers: { authorization: VENDOR_BASIC_AUTH, 'x-api-key': apiKey },
-      cache: 'no-store',
+    // One retry on a network failure (a live run lost ZTP785 to a single "fetch failed").
+    const once = () => fetch(url, { headers: { authorization: VENDOR_BASIC_AUTH, 'x-api-key': apiKey }, cache: 'no-store' })
+    const res = await once().catch(async () => {
+      await new Promise((r) => setTimeout(r, 2000))
+      return once()
     })
     if (!res.ok) throw new Error(`Respacio ${wsName} HTTP ${res.status}`)
     return (await res.json()) as T

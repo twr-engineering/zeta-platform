@@ -10,6 +10,7 @@ import * as migration_20261124_132447_directory_categories from './20261124_1324
 import * as migration_20261124_143116_crm_location_tree from './20261124_143116_crm_location_tree';
 import * as migration_20261125_023744_listing_agent from './20261125_023744_listing_agent';
 import * as migration_20261125_025939_location_guide from './20261125_025939_location_guide';
+import * as migration_20261125_070920_crm_sync_cursor from './20261125_070920_crm_sync_cursor';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20261125_025939_location_guide.up,
     down: migration_20261125_025939_location_guide.down,
-    name: '20261125_025939_location_guide'
+    name: '20261125_025939_location_guide',
+  },
+  {
+    up: migration_20261125_070920_crm_sync_cursor.up,
+    down: migration_20261125_070920_crm_sync_cursor.down,
+    name: '20261125_070920_crm_sync_cursor'
   },
 ];
