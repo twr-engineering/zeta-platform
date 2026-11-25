@@ -26,6 +26,7 @@ type LocalContent = {
   testimonials?: { clientName: string; quote: string }[]
   faq?: { question: string; answer: string }[]
   heroImage?: string
+  agentPhoto?: string
   /** slug → featured image in the offline pull (the WordPress _thumbnail_id of that location/shortlist). */
   tileImages?: Record<string, string>
 }
@@ -47,7 +48,7 @@ async function uploadImage(file: string, alt: string): Promise<number | undefine
   const name = `${path.basename(src, path.extname(src))}.jpg`
   const existing = await payload.find({ collection: 'media', where: { filename: { equals: name } }, limit: 1, ...opts })
   if (existing.docs[0]) return existing.docs[0].id as number
-  const data = await sharp(src).resize({ width: 1600, withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer()
+  const data = await sharp(src).resize({ width: 1600, withoutEnlargement: true }).flatten({ background: '#ffffff' }).jpeg({ quality: 82 }).toBuffer()
   const doc = await payload.create({ collection: 'media', data: { alt }, file: { data, mimetype: 'image/jpeg', name, size: data.length }, ...opts })
   return doc.id as number
 }
@@ -127,5 +128,10 @@ const layout = [
 const found = await payload.find({ collection: 'pages', where: { slug: { equals: 'home' } }, limit: 1, ...opts })
 const data = { title: 'Home', slug: 'home', layout, _status: 'published' } as never
 const page = found.docs[0] ? await payload.update({ collection: 'pages', id: found.docs[0].id, data, ...opts }) : await payload.create({ collection: 'pages', data, ...opts })
+// BPM-020 row 42: the listing page agent card photo (the template's Avatar.png).
+const agentPhoto = local.agentPhoto ? await uploadImage(local.agentPhoto, 'Alex Zeta-Guingao') : undefined
+if (agentPhoto) await payload.updateGlobal({ slug: 'site-settings', data: { listingAgent: { photo: agentPhoto } } as never, ...opts })
+
+console.log(`seed:home: agent photo ${agentPhoto ? 'set' : 'skipped'}.`)
 console.log(`seed:home: page ${page.id} — ${layout.length} blocks, ${shortlistIds.length} shortlists, ${locationIds.length} cities, ${Object.keys(local.tileImages ?? {}).length} tile images, ${testimonialIds.length} testimonials, ${local.faq?.length ?? 0} FAQs, hero image ${heroImage ? 'set' : 'skipped'}.`)
 process.exit(0)

@@ -2488,6 +2488,15 @@ export interface SiteSetting {
    * PRC Broker Lic. No. — required on public pages.
    */
   brokerLicence?: string | null;
+  /**
+   * The agent card above the enquiry form on every listing page.
+   */
+  listingAgent?: {
+    heading?: string | null;
+    licence?: string | null;
+    text?: string | null;
+    photo?: (number | null) | Media;
+  };
   officeAddress?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -2668,6 +2677,14 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
   logo?: T;
   brokerLicence?: T;
+  listingAgent?:
+    | T
+    | {
+        heading?: T;
+        licence?: T;
+        text?: T;
+        photo?: T;
+      };
   officeAddress?: T;
   phone?: T;
   email?: T;

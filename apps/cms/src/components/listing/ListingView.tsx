@@ -15,11 +15,15 @@ import { parseSearch } from '@/lib/search/params'
 import { searchListings } from '@/lib/search/query'
 import { resolveDisplayCurrency } from '@/lib/site/currency'
 import { listingPath } from '@/lib/site/listing-path'
+import { getSiteSettings } from '@/lib/site/settings'
 import { getRates, payload } from '@/lib/site/payload'
 import { resolveMeasurement } from '@/lib/site/units'
-import type { Listing } from '@/payload-types'
+import type { Listing, Media } from '@/payload-types'
 
+import { BackLink } from './BackLink'
+import { ListingGallery } from './ListingGallery'
 import { PaymentCalculator } from './PaymentCalculator'
+import { PlacesOfInterest } from './PlacesOfInterest'
 import { ShareButton } from './ShareButton'
 
 type View = 'r' | 'long-term'
@@ -100,6 +104,8 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
     { referenceNo: { not_equals: listing.referenceNo } },
   )
   const similarDocs = similar.docs
+  const agent = (await getSiteSettings()).listingAgent ?? {}
+  const agentPhoto = agent.photo && typeof agent.photo === 'object' ? (agent.photo as Media) : null
 
   return (
     <article className="listing-page">
@@ -120,26 +126,23 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
           </ul>
         </div>
         <div className="lp-actions">
+          {/* Row 10: [property_favourite] Save — favourites need the account area (BPM-014). */}
+          <Link href="/my-account/" className="lp-save">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>
+            Save
+          </Link>
           <ShareButton title={listing.propertyTitle ?? listing.referenceNo ?? 'Property'} />
         </div>
       </header>
 
       <nav className="lp-subnav" aria-label="On this page">
+        <BackLink />
         {[['#overview', 'Overview'], ['#features', 'Feature'], ['#location', 'Location'], ['#info', 'Property Info'], ['#places', 'Places of Interest'], ['#price-history', 'Price History'], ['#payment', 'Payment Calculation'], ['#similar', 'Similar properties']].map(([h, l]) => (
           <a key={h} href={h}>{l}</a>
         ))}
       </nav>
 
-      {images.length > 0 && (
-        <section className="lp-gallery" aria-label="Photos">
-          {images.slice(0, 5).map((src, i) => (
-            <span key={src} className="lp-gallery-item">
-              <Image src={src} alt={`${listing.propertyTitle ?? ''} — photo ${i + 1}`} fill priority={i === 0} sizes={i === 0 ? '(max-width: 991px) 100vw, 760px' : '(max-width: 991px) 50vw, 380px'} />
-            </span>
-          ))}
-          {images.length > 5 && <a className="lp-all-photos" href="#photos">Show {images.length} photos and videos</a>}
-        </section>
-      )}
+      <ListingGallery title={listing.propertyTitle ?? listing.referenceNo ?? 'Property'} images={images} floorPlans={floorPlans} videos={videos} tour={tour ?? null} />
 
       <p className="lp-crumbs">
         {/* CD-23: the live line reads "House in …" for every type; the real type is used. */}
@@ -189,11 +192,12 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
 
           <section id="places" className="lp-section">
             <h2>Places of Interest</h2>
-            {places.length ? (
-              <ul className="lp-places">{places.map((pl, i) => <li key={i}><strong>{str(pl.label as unknown)}</strong> {str(pl.location_name as unknown) ?? ''}</li>)}</ul>
-            ) : (
-              <p className="empty-note">No places of interest listed.</p>
-            )}
+            <PlacesOfInterest
+              title={listing.propertyTitle ?? 'the property'}
+              lat={lat ?? null}
+              lng={lng ?? null}
+              places={places.map((pl) => ({ label: str(pl.label as unknown) ?? '', name: str(pl.location_name as unknown) ?? '' })).filter((pl) => pl.label || pl.name)}
+            />
           </section>
 
           <section id="price-history" className="lp-section">
@@ -223,26 +227,19 @@ export async function ListingView({ refNo, view, searchParams }: { refNo: string
             </section>
           ) : null}
 
-          {(videos.length > 0 || floorPlans.length > 0 || tour || images.length > 5) && (
-            <section id="photos" className="lp-section">
-              <h2>Photos and media</h2>
-              {tour && <iframe className="lp-tour" title="360 Virtual Tour" src={tour} loading="lazy" allowFullScreen />}
-              {videos.map((v) => <video key={v} className="lp-video" src={v} controls preload="none" />)}
-              <div className="lp-photo-grid">
-                {[...images, ...floorPlans].map((src, i) => (
-                  <span key={`${src}-${i}`} className="lp-photo-item">
-                    <Image src={src} alt="" fill sizes="(max-width: 767px) 50vw, 240px" />
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
 
         <aside className="lp-aside">
           <div className="lp-enquiry">
-            <h2>Speak to a Property Specialist</h2>
-            <p>Ask about {listing.referenceNo}.</p>
+            {/* Row 42: the agent card (Site Settings → Listing agent), then the enquiry form. */}
+            <div className="lp-agent">
+              {agentPhoto?.url && <Image src={agentPhoto.url} alt="" width={72} height={72} className="lp-agent-photo" />}
+              <div>
+                <h2>{agent.heading || 'Speak to Alex'}</h2>
+                {agent.licence && <p className="lp-agent-licence">{agent.licence}</p>}
+                {agent.text && <p>{agent.text}</p>}
+              </div>
+            </div>
             <Pending id="contact-forms">The enquiry form (CF7 235756) waits for the live form list (OQ-17).</Pending>
           </div>
         </aside>
