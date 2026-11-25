@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { wpExcerpt } from '@/lib/site/excerpt'
 import { payload } from '@/lib/site/payload'
 import type { Media } from '@/payload-types'
 
@@ -28,7 +29,7 @@ export default async function Insights({ searchParams }: Props) {
             <Link key={post.id} href={`/${post.slug}/`} className="insight-card">
               <span className="media-box">{img?.url ? <Image src={img.url} alt="" fill sizes="(max-width: 767px) 100vw, 360px" /> : <span className="tile-noimg" />}</span>
               <strong>{post.title}</strong>
-              {post.excerpt && <span className="post-excerpt">{post.excerpt}</span>}
+              {wpExcerpt(post.excerpt, post.content) && <span className="post-excerpt">{wpExcerpt(post.excerpt, post.content)}</span>}
               <span className="tile-more">Read More</span>
             </Link>
           )

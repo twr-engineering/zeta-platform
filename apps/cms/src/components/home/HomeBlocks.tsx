@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { locationHref } from '@/lib/site/locations-menu'
+import { wpExcerpt } from '@/lib/site/excerpt'
 import { youtubeThumb } from '@/lib/site/youtube'
 import type { Location, Media, Page, Post, Short, Shortlist, Testimonial } from '@/payload-types'
 
@@ -63,7 +64,10 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
                     <figure key={t.id} className="testimonial">
                       <span className="quote-mark" aria-hidden="true">„</span>
                       <blockquote>{t.quote}</blockquote>
-                      <figcaption>{t.clientName}</figcaption>
+                      <figcaption>
+                        {media(t.photo)?.url && <Image className="testimonial-photo" src={media(t.photo)!.url!} alt="" width={40} height={40} />}
+                        {t.clientName}
+                      </figcaption>
                     </figure>
                   ))}
                 </div>
@@ -160,7 +164,7 @@ export function HomeBlocks({ blocks, data }: { blocks: Block[]; data: HomeData }
               <section key={i} className="home-section container">
                 <SectionHead heading={b.heading} intro={b.intro} />
                 <ContentTabs
-                  posts={posts.map((p) => ({ id: p.id, title: p.title, excerpt: p.excerpt ?? '', href: `/${p.slug}/`, image: media(p.heroImage)?.url ?? null }))}
+                  posts={posts.map((p) => ({ id: p.id, title: p.title, excerpt: wpExcerpt(p.excerpt, p.content), href: `/${p.slug}/`, image: media(p.heroImage)?.url ?? null }))}
                   shorts={shorts.map((s) => ({ id: s.id, title: s.title, href: `/shorts/${s.slug}/`, image: media(s.thumbnail)?.url ?? youtubeThumb(s.videoUrl) }))}
                   moreLabel={b.moreLink?.label ?? 'View More blogs'}
                   moreHref={b.moreLink?.url ?? '/insights/'}
